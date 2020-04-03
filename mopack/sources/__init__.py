@@ -5,6 +5,9 @@ class Package:
     def __init__(self, name):
         self.name = name
 
+    def __repr__(self):
+        return '<{}({!r})>'.format(type(self).__name__, self.name)
+
 
 def make_package(name, config):
     source = config.pop('source')

@@ -8,12 +8,11 @@ from ..builders import make_builder
 
 
 class TarballPackage(Package):
-    def __init__(self, name, build, url=None, path=None, files=None):
+    def __init__(self, name, *, build, url=None, path=None, files=None):
         super().__init__(name)
 
         if (url is None) == (path is None):
-            raise ValueError('exactly one of `url` or `path` must be ' +
-                             'specified')
+            raise TypeError('exactly one of `url` or `path` must be specified')
         self.url = url
         self.path = path
         self.files = files
