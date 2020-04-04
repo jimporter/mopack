@@ -2,3 +2,4 @@
 .coverage
 /htmlcov/
 /mopack.egg-info/
+/test/stage/

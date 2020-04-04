@@ -20,7 +20,11 @@ class Coverage(Command):
 
     def run(self):
         env = dict(os.environ)
+        pythonpath = os.path.join(root_dir, 'test', 'scripts')
+        if env.get('PYTHONPATH'):
+            pythonpath += os.pathsep + env['PYTHONPATH']
         env.update({
+            'PYTHONPATH': pythonpath,
             'COVERAGE_FILE': os.path.join(root_dir, '.coverage'),
             'COVERAGE_PROCESS_START': os.path.join(root_dir, '.coveragerc'),
         })
@@ -91,8 +95,8 @@ setup(
 
     install_requires=['pyyaml', 'setuptools'],
     extras_require={
-        'dev': ['coverage', 'flake8 >= 3.0', 'pypandoc'],
-        'test': ['bfg9000', 'coverage', 'flake8 >= 3.0'],
+        'dev': ['bfg9000', 'coverage', 'flake8 >= 3.6', 'pypandoc'],
+        'test': ['bfg9000', 'coverage', 'flake8 >= 3.6'],
     },
 
     entry_points={

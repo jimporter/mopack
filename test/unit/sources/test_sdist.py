@@ -21,7 +21,8 @@ def mock_open_after_first():
 class TestDirectory(TestCase):
     def test_path(self):
         path = os.path.join(test_data_dir, 'bfg_project')
-        pkg = DirectoryPackage('foo', build='bfg9000', path=path)
+        pkg = DirectoryPackage('foo', build='bfg9000', path=path,
+                               _config_file='/path/to/mopack.yml')
         self.assertEqual(pkg.path, path)
 
         with mock.patch('builtins.open', mock.mock_open()) as m, \
@@ -33,13 +34,15 @@ class TestDirectory(TestCase):
 
 class TestTarball(TestCase):
     def test_url(self):
-        p = TarballPackage('foo', build='bfg9000', url='http://example.com')
-        self.assertEqual(p.url, 'http://example.com')
-        self.assertEqual(p.path, None)
+        pkg = TarballPackage('foo', build='bfg9000', url='http://example.com',
+                             _config_file='/path/to/mopack.yml')
+        self.assertEqual(pkg.url, 'http://example.com')
+        self.assertEqual(pkg.path, None)
 
     def test_path(self):
         path = os.path.join(test_data_dir, 'bfg_project.tar.gz')
-        pkg = TarballPackage('foo', build='bfg9000', path=path)
+        pkg = TarballPackage('foo', build='bfg9000', path=path,
+                             _config_file='/path/to/mopack.yml')
         self.assertEqual(pkg.url, None)
         self.assertEqual(pkg.path, path)
 
@@ -49,7 +52,9 @@ class TestTarball(TestCase):
              mock.patch('subprocess.check_call'):  # noqa
             pkg.fetch()
             mo.assert_called_with('foo.log', 'w')
+            mt.assert_called_once_with()
 
     def test_missing_url_path(self):
         with self.assertRaises(TypeError):
-            TarballPackage('foo', build='bfg9000')
+            TarballPackage('foo', build='bfg9000',
+                           _config_file='/path/to/mopack.yml')

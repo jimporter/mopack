@@ -13,6 +13,8 @@ def accumulate_config(filename, config=None):
         config = {'packages': {}}
     with open(filename) as f:
         next_config = yaml.safe_load(f)
+        for v in next_config['packages'].values():
+            v['_config_file'] = os.path.abspath(filename)
         config['packages'].update(next_config['packages'])
     return config
 

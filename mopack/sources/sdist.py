@@ -8,8 +8,8 @@ from ..builders import make_builder
 
 
 class SDistPackage(Package):
-    def __init__(self, name, *, build):
-        super().__init__(name)
+    def __init__(self, name, *, build, **kwargs):
+        super().__init__(name, **kwargs)
         self.builder = make_builder(name, build)
 
     def _build(self, srcdir):
@@ -34,7 +34,8 @@ class TarballPackage(SDistPackage):
         if (url is None) == (path is None):
             raise TypeError('exactly one of `url` or `path` must be specified')
         self.url = url
-        self.path = path
+        self.path = (os.path.join(self.config_dir, path)
+                     if path is not None else None)
         self.files = files
 
     def fetch(self):
