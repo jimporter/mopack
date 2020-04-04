@@ -92,7 +92,7 @@ setup(
     install_requires=['pyyaml', 'setuptools'],
     extras_require={
         'dev': ['coverage', 'flake8 >= 3.0', 'pypandoc'],
-        'test': ['coverage', 'flake8 >= 3.0'],
+        'test': ['bfg9000', 'coverage', 'flake8 >= 3.0'],
     },
 
     entry_points={
@@ -100,7 +100,8 @@ setup(
             'mopack=mopack.driver:main'
         ],
         'mopack.sources': [
-            'tarball=mopack.sources.tarball:TarballPackage',
+            'directory=mopack.sources.sdist:DirectoryPackage',
+            'tarball=mopack.sources.sdist:TarballPackage',
         ],
         'mopack.builders': [
             'bfg9000=mopack.builders.bfg9000:Bfg9000Builder',

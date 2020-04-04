@@ -1,0 +1,10 @@
+# -*- python -*-
+
+project('hello', '1.0')
+
+include = header_directory('include', include='*.hpp')
+lib = library('hello', files=['src/hello.cpp'], includes=[include])
+
+install(lib, include)
+
+pkg_config()
