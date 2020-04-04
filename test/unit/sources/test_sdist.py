@@ -28,8 +28,8 @@ class TestDirectory(TestCase):
         with mock.patch('builtins.open', mock.mock_open()) as m, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.check_call'):  # noqa
-            pkg.fetch()
-            m.assert_called_with('foo.log', 'w')
+            pkg.fetch('/path/to/builddir/mopack')
+            m.assert_called_with('/path/to/builddir/mopack/foo.log', 'w')
 
 
 class TestTarball(TestCase):
@@ -50,9 +50,9 @@ class TestTarball(TestCase):
              mock.patch('tarfile.TarFile.extractall') as mt, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.check_call'):  # noqa
-            pkg.fetch()
-            mo.assert_called_with('foo.log', 'w')
-            mt.assert_called_once_with()
+            pkg.fetch('/path/to/builddir/mopack')
+            mo.assert_called_with('/path/to/builddir/mopack/foo.log', 'w')
+            mt.assert_called_once_with('/path/to/builddir/mopack')
 
     def test_missing_url_path(self):
         with self.assertRaises(TypeError):

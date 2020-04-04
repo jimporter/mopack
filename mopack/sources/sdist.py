@@ -12,8 +12,8 @@ class SDistPackage(Package):
         super().__init__(name, **kwargs)
         self.builder = make_builder(name, build)
 
-    def _build(self, srcdir):
-        builddir = self.builder.build(srcdir)
+    def _build(self, pkgdir, srcdir):
+        builddir = self.builder.build(pkgdir, srcdir)
         pkgconfig = os.path.join(builddir, 'pkgconfig')
         return {'usage': 'pkgconfig', 'path': pkgconfig}
 
@@ -21,10 +21,10 @@ class SDistPackage(Package):
 class DirectoryPackage(SDistPackage):
     def __init__(self, name, *, path, **kwargs):
         super().__init__(name, **kwargs)
-        self.path = path
+        self.path = os.path.join(self.config_dir, path)
 
-    def fetch(self):
-        return self._build(self.path)
+    def fetch(self, pkgdir):
+        return self._build(pkgdir, self.path)
 
 
 class TarballPackage(SDistPackage):
@@ -38,7 +38,7 @@ class TarballPackage(SDistPackage):
                      if path is not None else None)
         self.files = files
 
-    def fetch(self):
+    def fetch(self, pkgdir):
         with (BytesIO(urlopen(self.url).read()) if self.url else
               open(self.path, 'rb')) as f:
             # XXX: Support more than just gzip.
@@ -46,8 +46,8 @@ class TarballPackage(SDistPackage):
                 srcdir = tar.next().name.split('/', 1)[0]
                 if self.files:
                     for i in self.files:
-                        tar.extract(i)
+                        tar.extract(i, pkgdir)
                 else:
-                    tar.extractall()
+                    tar.extractall(pkgdir)
 
-        return self._build(srcdir)
+        return self._build(pkgdir, os.path.join(pkgdir, srcdir))

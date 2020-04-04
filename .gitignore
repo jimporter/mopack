@@ -1,5 +1,6 @@
 *.pyc
-.coverage
+/.coverage
+/.coverage.*
 /htmlcov/
 /mopack.egg-info/
 /test/stage/

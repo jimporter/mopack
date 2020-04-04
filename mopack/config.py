@@ -2,10 +2,10 @@ import json
 import os
 import yaml
 
-from .path import pushd
 from .sources import make_package
 
-metadata_file = 'mopack.json'
+mopack_dirname = 'mopack'
+metadata_filename = 'mopack.json'
 
 
 def accumulate_config(filename, config=None):
@@ -26,16 +26,17 @@ def finalize_config(config):
     return result
 
 
-def fetch(config, directory):
-    info = {}
-    with pushd(directory, makedirs=True, exist_ok=True):
-        for i in config['packages']:
-            x = i.fetch()
-            info[i.name] = x
-        with open(metadata_file, 'w') as f:
-            json.dump(info, f)
+def fetch(config, builddir):
+    pkgdir = os.path.join(builddir, mopack_dirname)
+    metadata = {}
+    for i in config['packages']:
+        x = i.fetch(pkgdir)
+        metadata[i.name] = x
+    with open(os.path.join(pkgdir, metadata_filename), 'w') as f:
+        json.dump(metadata, f)
 
 
-def get_metadata(directory):
-    with open(os.path.join(directory, metadata_file)) as f:
+def get_metadata(builddir):
+    pkgdir = os.path.join(builddir, mopack_dirname)
+    with open(os.path.join(pkgdir, metadata_filename)) as f:
         return json.load(f)

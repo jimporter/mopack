@@ -14,11 +14,14 @@ class Bfg9000Builder:
         self.srcdir = srcdir
         self.builddir = builddir
 
-    def build(self, guessed_srcdir):
+    def build(self, pkgdir, guessed_srcdir):
         srcdir = self.srcdir or guessed_srcdir
+        # FIXME: This puts the builddir in the wrong spot for `directory`
+        # sources.
         builddir = os.path.join(srcdir, self.builddir)
 
-        with open('{}.log'.format(self.name), 'w') as log:
+        logname = os.path.join(pkgdir, '{}.log'.format(self.name))
+        with open(logname, 'w') as log:
             with pushd(srcdir):
                 check_call_log(['9k', self.builddir, '--debug'], log=log)
             with pushd(builddir):
