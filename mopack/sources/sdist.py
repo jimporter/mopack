@@ -28,7 +28,8 @@ class DirectoryPackage(SDistPackage):
 
 
 class TarballPackage(SDistPackage):
-    def __init__(self, name, *, url=None, path=None, files=None, **kwargs):
+    def __init__(self, name, *, url=None, path=None, files=None, srcdir=None,
+                 **kwargs):
         super().__init__(name, **kwargs)
 
         if (url is None) == (path is None):
@@ -36,14 +37,17 @@ class TarballPackage(SDistPackage):
         self.url = url
         self.path = (os.path.join(self.config_dir, path)
                      if path is not None else None)
+        self.srcdir = srcdir
         self.files = files
 
     def fetch(self, pkgdir):
+        srcdir = self.srcdir
         with (BytesIO(urlopen(self.url).read()) if self.url else
               open(self.path, 'rb')) as f:
             # XXX: Support more than just gzip.
             with tarfile.open(mode='r:gz', fileobj=f) as tar:
-                srcdir = tar.next().name.split('/', 1)[0]
+                if srcdir is None:
+                    srcdir = tar.next().name.split('/', 1)[0]
                 if self.files:
                     for i in self.files:
                         tar.extract(i, pkgdir)

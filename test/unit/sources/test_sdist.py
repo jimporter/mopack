@@ -1,6 +1,7 @@
 import os
 from unittest import mock, TestCase
 
+from .. import mock_open_log
 from ... import *
 
 from mopack.sources.sdist import DirectoryPackage, TarballPackage
@@ -25,7 +26,7 @@ class TestDirectory(TestCase):
                                _config_file='/path/to/mopack.yml')
         self.assertEqual(pkg.path, path)
 
-        with mock.patch('builtins.open', mock.mock_open()) as m, \
+        with mock_open_log() as m, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.check_call'):  # noqa
             pkg.fetch('/path/to/builddir/mopack')
@@ -46,7 +47,7 @@ class TestTarball(TestCase):
         self.assertEqual(pkg.url, None)
         self.assertEqual(pkg.path, path)
 
-        with mock.patch('builtins.open', mock_open_after_first()) as mo, \
+        with mock_open_log(mock_open_after_first()) as mo, \
              mock.patch('tarfile.TarFile.extractall') as mt, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.check_call'):  # noqa

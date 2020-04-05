@@ -1,4 +1,3 @@
-import errno
 import os
 from contextlib import contextmanager
 

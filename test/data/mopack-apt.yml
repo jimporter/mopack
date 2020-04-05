@@ -1,0 +1,7 @@
+packages:
+  ogg:
+    source: apt
+    depends: [libogg-dev]
+  zlib:
+    source: apt
+    depends: [zlib1g-dev]

@@ -104,6 +104,7 @@ setup(
             'mopack=mopack.driver:main'
         ],
         'mopack.sources': [
+            'apt=mopack.sources.apt:AptPackage',
             'directory=mopack.sources.sdist:DirectoryPackage',
             'tarball=mopack.sources.sdist:TarballPackage',
         ],

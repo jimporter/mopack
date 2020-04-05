@@ -4,9 +4,9 @@ from unittest import TestCase
 from . import *
 
 
-class TestBasic(TestCase):
+class TestSdist(TestCase):
     def setUp(self):
-        self.stage = stage_dir('basic')
+        self.stage = stage_dir('sdist')
 
     def assertExists(self, path):
         if not os.path.exists(path):
