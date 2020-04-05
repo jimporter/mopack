@@ -19,7 +19,6 @@ class SubprocessError(unittest.TestCase.failureException):
         )
 
 
-
 class IntegrationTest(unittest.TestCase):
     def assertExists(self, path):
         if not os.path.exists(path):
@@ -36,7 +35,6 @@ class IntegrationTest(unittest.TestCase):
         if proc.returncode != returncode:
             raise SubprocessError(output)
         return output
-
 
     def assertOutput(test, command, output, *args, **kwargs):
         test.assertEqual(assertPopen(command, *args, **kwargs), output)

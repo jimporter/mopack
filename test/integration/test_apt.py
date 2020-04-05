@@ -1,6 +1,6 @@
 import json
 import os
-from unittest import skipIf, TestCase
+from unittest import skipIf
 
 from . import *
 
@@ -18,4 +18,7 @@ class TestApt(IntegrationTest):
         self.assertExists('mopack/mopack.json')
 
         output = json.loads(self.assertPopen(['mopack', 'info', 'ogg']))
-        self.assertEqual(output, {'usage': 'apt'})
+        self.assertEqual(output, {'usage': 'apt', 'remote': 'libogg-dev'})
+
+        output = json.loads(self.assertPopen(['mopack', 'info', 'zlib']))
+        self.assertEqual(output, {'usage': 'apt', 'remote': 'zlib1g-dev'})
