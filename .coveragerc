@@ -1,5 +1,5 @@
 [run]
-source = mopack
+include = ${TOP}/mopack/*
 parallel = True
 branch = True
 
