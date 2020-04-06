@@ -106,6 +106,7 @@ setup(
         ],
         'mopack.sources': [
             'apt=mopack.sources.apt:AptPackage',
+            'conan=mopack.sources.conan:ConanPackage',
             'directory=mopack.sources.sdist:DirectoryPackage',
             'tarball=mopack.sources.sdist:TarballPackage',
         ],

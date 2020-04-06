@@ -1,0 +1,6 @@
+packages:
+  zlib:
+    source: conan
+    remote: zlib/1.2.11@conan/stable
+    options:
+      shared: true
