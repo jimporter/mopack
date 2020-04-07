@@ -29,7 +29,7 @@ class TestDirectory(TestCase):
         with mock_open_log() as m, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.check_call'):  # noqa
-            pkg.fetch('/path/to/builddir/mopack')
+            pkg.resolve('/path/to/builddir/mopack')
             m.assert_called_with('/path/to/builddir/mopack/foo.log', 'w')
 
 
@@ -51,7 +51,7 @@ class TestTarball(TestCase):
              mock.patch('tarfile.TarFile.extractall') as mt, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.check_call'):  # noqa
-            pkg.fetch('/path/to/builddir/mopack')
+            pkg.resolve('/path/to/builddir/mopack')
             mo.assert_called_with('/path/to/builddir/mopack/foo.log', 'w')
             mt.assert_called_once_with('/path/to/builddir/mopack')
 

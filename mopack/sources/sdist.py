@@ -23,7 +23,7 @@ class DirectoryPackage(SDistPackage):
         super().__init__(name, **kwargs)
         self.path = os.path.join(self.config_dir, path)
 
-    def fetch(self, pkgdir):
+    def resolve(self, pkgdir):
         return self._build(pkgdir, self.path)
 
 
@@ -40,7 +40,8 @@ class TarballPackage(SDistPackage):
         self.srcdir = srcdir
         self.files = files
 
-    def fetch(self, pkgdir):
+    def resolve(self, pkgdir):
+        # XXX: Support resolving nested mopack deps.
         srcdir = self.srcdir
         with (BytesIO(urlopen(self.url).read()) if self.url else
               open(self.path, 'rb')) as f:

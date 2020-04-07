@@ -15,7 +15,7 @@ class ConanPackage(Package):
         return self.remote.split('/')[0]
 
     @staticmethod
-    def fetch_all(pkgdir, packages):
+    def resolve_all(pkgdir, packages):
         os.makedirs(pkgdir, exist_ok=True)
         with open(os.path.join(pkgdir, 'conanfile.txt'), 'w') as conan:
             print('[requires]', file=conan)

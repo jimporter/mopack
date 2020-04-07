@@ -9,7 +9,7 @@ class AptPackage(Package):
         self.remote = remote or 'lib{}-dev'.format(name)
 
     @staticmethod
-    def fetch_all(pkgdir, packages):
+    def resolve_all(pkgdir, packages):
         remotes = [i.remote for i in packages]
         with open_log(pkgdir, 'apt') as log:
             check_call_log(['sudo', 'apt-get', 'install', '-y'] + remotes,

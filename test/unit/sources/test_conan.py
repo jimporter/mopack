@@ -32,7 +32,7 @@ class TestConan(TestCase):
 
         with mock_open_log(mock_open_write()) as mo, \
              mock.patch('subprocess.check_call') as mc:  # noqa
-            ConanPackage.fetch_all('/path/to/builddir/mopack', [pkg])
+            ConanPackage.resolve_all('/path/to/builddir/mopack', [pkg])
             self.assertEqual(mo.mock_file.getvalue(), dedent("""\
                 [requires]
                 foo/1.2.3@conan/stable
@@ -53,7 +53,7 @@ class TestConan(TestCase):
 
         with mock_open_log(mock_open_write()) as mo, \
              mock.patch('subprocess.check_call') as mc:  # noqa
-            ConanPackage.fetch_all('/path/to/builddir/mopack', [pkg])
+            ConanPackage.resolve_all('/path/to/builddir/mopack', [pkg])
             self.assertEqual(mo.mock_file.getvalue(), dedent("""\
                 [requires]
                 foo/1.2.3@conan/stable
@@ -75,7 +75,7 @@ class TestConan(TestCase):
 
         with mock_open_log(mock_open_write()) as mo, \
              mock.patch('subprocess.check_call') as mc:  # noqa
-            ConanPackage.fetch_all('/path/to/builddir/mopack', [pkg1, pkg2])
+            ConanPackage.resolve_all('/path/to/builddir/mopack', [pkg1, pkg2])
             self.assertEqual(mo.mock_file.getvalue(), dedent("""\
                 [requires]
                 foo/1.2.3@conan/stable

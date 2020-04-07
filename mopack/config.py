@@ -29,17 +29,17 @@ def finalize_config(config):
     return result
 
 
-def fetch(config, builddir):
+def resolve(config, builddir):
     pkgdir = os.path.join(builddir, mopack_dirname)
     metadata, pending = {}, {}
     for i in config['packages']:
-        if hasattr(i, 'fetch_all'):
+        if hasattr(i, 'resolve_all'):
             pending.setdefault(type(i), []).append(i)
         else:
-            metadata[i.name] = i.fetch(pkgdir)
+            metadata[i.name] = i.resolve(pkgdir)
 
     for k, v in pending.items():
-        metadata.update(k.fetch_all(pkgdir, v))
+        metadata.update(k.resolve_all(pkgdir, v))
 
     with open(os.path.join(pkgdir, metadata_filename), 'w') as f:
         json.dump(metadata, f)

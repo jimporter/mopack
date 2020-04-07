@@ -4,13 +4,13 @@ import json
 from . import config
 
 
-def fetch(parser, subparser, args):
+def resolve(parser, subparser, args):
     config_data = None
     for i in args.file:
         config_data = config.accumulate_config(i, config_data)
     config_data = config.finalize_config(config_data)
 
-    config.fetch(config_data, args.directory)
+    config.resolve(config_data, args.directory)
 
 
 def info(parser, subparser, args):
@@ -22,12 +22,12 @@ def main():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(metavar='COMMAND')
 
-    fetch_p = subparsers.add_parser(
-        'fetch', help='fetch and build package dependencies'
+    resolve_p = subparsers.add_parser(
+        'resolve', help='fetch and build package dependencies'
     )
-    fetch_p.set_defaults(func=fetch, parser=fetch_p)
-    fetch_p.add_argument('--directory', default='.')
-    fetch_p.add_argument('file', nargs='+')
+    resolve_p.set_defaults(func=resolve, parser=resolve_p)
+    resolve_p.add_argument('--directory', default='.')
+    resolve_p.add_argument('file', nargs='+')
 
     info_p = subparsers.add_parser(
         'info', help='retrieve info about a package'

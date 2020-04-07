@@ -11,9 +11,9 @@ class TestApt(IntegrationTest):
     def setUp(self):
         self.stage = stage_dir('apt')
 
-    def test_fetch(self):
+    def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-apt.yml')
-        self.assertPopen(['mopack', 'fetch', config])
+        self.assertPopen(['mopack', 'resolve', config])
         self.assertExists('mopack/apt.log')
         self.assertExists('mopack/mopack.json')
 
