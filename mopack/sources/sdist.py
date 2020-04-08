@@ -12,6 +12,11 @@ class SDistPackage(Package):
         super().__init__(name, **kwargs)
         self.builder = make_builder(name, build)
 
+    def _find_mopack(self, srcdir):
+        mopack = os.path.join(srcdir, 'mopack.yml')
+        return mopack if os.path.exists(mopack) else None
+
+
     def _build(self, pkgdir, srcdir):
         builddir = self.builder.build(pkgdir, srcdir)
         pkgconfig = os.path.join(builddir, 'pkgconfig')
@@ -22,6 +27,9 @@ class DirectoryPackage(SDistPackage):
     def __init__(self, name, *, path, **kwargs):
         super().__init__(name, **kwargs)
         self.path = os.path.join(self.config_dir, path)
+
+    def fetch(self, pkgdir):
+        return self._find_mopack(self.path)
 
     def resolve(self, pkgdir):
         return self._build(pkgdir, self.path)
@@ -40,19 +48,24 @@ class TarballPackage(SDistPackage):
         self.srcdir = srcdir
         self.files = files
 
-    def resolve(self, pkgdir):
-        # XXX: Support resolving nested mopack deps.
-        srcdir = self.srcdir
+    def fetch(self, pkgdir):
+        base_srcdir = os.path.join(pkgdir, 'src')
         with (BytesIO(urlopen(self.url).read()) if self.url else
               open(self.path, 'rb')) as f:
             # XXX: Support more than just gzip.
             with tarfile.open(mode='r:gz', fileobj=f) as tar:
-                if srcdir is None:
-                    srcdir = tar.next().name.split('/', 1)[0]
+                # XXX: Should we be manipulating this object here, or should it
+                # be frozen by the time we call fetch()?
+                if self.srcdir is None:
+                    self.srcdir = tar.next().name.split('/', 1)[0]
                 if self.files:
                     for i in self.files:
-                        tar.extract(i, pkgdir)
+                        tar.extract(i, base_srcdir)
                 else:
-                    tar.extractall(pkgdir)
+                    tar.extractall(base_srcdir)
 
-        return self._build(pkgdir, os.path.join(pkgdir, srcdir))
+        return self._find_mopack(self.srcdir)
+
+    def resolve(self, pkgdir):
+        base_srcdir = os.path.join(pkgdir, 'src')
+        return self._build(pkgdir, os.path.join(base_srcdir, self.srcdir))

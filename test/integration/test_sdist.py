@@ -11,14 +11,14 @@ class TestSdist(IntegrationTest):
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-tarball.yml')
         self.assertPopen(['mopack', 'resolve', config])
-        self.assertExists('mopack/bfg_project/build.bfg')
-        self.assertExists('mopack/bfg_project/build/')
+        self.assertExists('mopack/src/bfg_project/build.bfg')
+        self.assertExists('mopack/build/foo/')
         self.assertExists('mopack/foo.log')
         self.assertExists('mopack/mopack.json')
 
         output = json.loads(self.assertPopen(['mopack', 'info', 'foo']))
         self.assertEqual(output, {
             'usage': 'pkgconfig',
-            'path': os.path.join(self.stage, 'mopack', 'bfg_project', 'build',
+            'path': os.path.join(self.stage, 'mopack', 'build', 'foo',
                                  'pkgconfig'),
         })

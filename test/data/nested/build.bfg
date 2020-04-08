@@ -1,0 +1,13 @@
+# -*- python -*-
+
+project('greeter', '1.0')
+
+libhello = package('hello', '>=1.0')
+
+include = header_directory('include', include='*.hpp')
+lib = library('greeter', files=['src/greeter.cpp'], includes=[include],
+              packages=[libhello])
+
+install(lib, include)
+
+pkg_config()

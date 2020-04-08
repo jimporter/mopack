@@ -26,6 +26,8 @@ class TestDirectory(TestCase):
                                _config_file='/path/to/mopack.yml')
         self.assertEqual(pkg.path, path)
 
+        pkg.fetch('/path/to/builddir/mopack')
+
         with mock_open_log() as m, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.check_call'):  # noqa
@@ -47,13 +49,15 @@ class TestTarball(TestCase):
         self.assertEqual(pkg.url, None)
         self.assertEqual(pkg.path, path)
 
-        with mock_open_log(mock_open_after_first()) as mo, \
-             mock.patch('tarfile.TarFile.extractall') as mt, \
+        with mock.patch('tarfile.TarFile.extractall') as mt:
+            pkg.fetch('/path/to/builddir/mopack')
+            mt.assert_called_once_with('/path/to/builddir/mopack/src')
+
+        with mock_open_log() as mo, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.check_call'):  # noqa
             pkg.resolve('/path/to/builddir/mopack')
             mo.assert_called_with('/path/to/builddir/mopack/foo.log', 'w')
-            mt.assert_called_once_with('/path/to/builddir/mopack')
 
     def test_missing_url_path(self):
         with self.assertRaises(TypeError):

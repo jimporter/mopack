@@ -1,0 +1,6 @@
+packages:
+  greeter:
+    source: directory
+    path: nested
+    build:
+      type: bfg9000

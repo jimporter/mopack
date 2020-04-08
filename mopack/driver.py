@@ -1,19 +1,27 @@
 import argparse
+import os
 import json
 
 from . import config
 
+# This environment variable is set to the top builddir when `mopack resolve` is
+# executed so that nested invocations of `mopack` consistently point to the
+# same mopack directory. XXX: There might be a smarter way to do this, but this
+# should be ok for the time being at least...
+nested_invoke = 'MOPACK_NESTED_INVOCATION'
+
 
 def resolve(parser, subparser, args):
-    config_data = None
-    for i in args.file:
-        config_data = config.accumulate_config(i, config_data)
-    config_data = config.finalize_config(config_data)
+    if os.environ.get(nested_invoke):
+        return
 
+    os.environ[nested_invoke] = os.path.abspath(args.directory)
+    config_data = config.Config(args.file)
     config.resolve(config_data, args.directory)
 
 
 def info(parser, subparser, args):
+    args.directory = os.environ.get(nested_invoke, args.directory)
     metadata = config.get_metadata(args.directory)
     print(json.dumps(metadata[args.package]))
 

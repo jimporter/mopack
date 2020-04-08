@@ -1,0 +1,5 @@
+packages:
+  hello:
+    source: tarball
+    path: ../bfg_project.tar.gz
+    build: bfg9000
