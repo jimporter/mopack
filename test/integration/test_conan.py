@@ -15,4 +15,11 @@ class TestConan(IntegrationTest):
         self.assertExists('mopack/mopack.json')
 
         output = json.loads(self.assertPopen(['mopack', 'info', 'zlib']))
-        self.assertEqual(output, {'usage': 'conan'})
+        self.assertEqual(output, {
+            'source': 'conan',
+            'remote': 'zlib/1.2.11@conan/stable',
+            'usage': {
+                'type': 'pkgconfig',
+                'path': os.path.join(self.stage, 'mopack', 'conan')
+            }
+        })

@@ -28,10 +28,14 @@ class ConanPackage(Package):
                 for k, v in i.options.items():
                     print('{}:{}={}'.format(i.remote_name, k, v), file=conan)
 
+        installdir = os.path.join(pkgdir, 'conan')
         with open_log(pkgdir, 'conan') as log:
-            installdir = os.path.join(pkgdir, 'conan')
             check_call_log(['conan', 'install', '-g', 'pkg_config',
                             '-if', installdir, pkgdir],
                            log=log)
 
-        return {i.name: {'usage': 'conan'} for i in packages}
+        return {i.name: {
+            'source': 'conan',
+            'remote': i.remote,
+            'usage': {'type': 'pkgconfig', 'path': os.path.abspath(installdir)}
+        } for i in packages}

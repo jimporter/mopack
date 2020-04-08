@@ -18,7 +18,15 @@ class TestApt(IntegrationTest):
         self.assertExists('mopack/mopack.json')
 
         output = json.loads(self.assertPopen(['mopack', 'info', 'ogg']))
-        self.assertEqual(output, {'usage': 'apt', 'remote': 'libogg-dev'})
+        self.assertEqual(output, {
+            'source': 'apt',
+            'remote': 'libogg-dev',
+            'usage': {'type': 'system'}
+        })
 
         output = json.loads(self.assertPopen(['mopack', 'info', 'zlib']))
-        self.assertEqual(output, {'usage': 'apt', 'remote': 'zlib1g-dev'})
+        self.assertEqual(output, {
+            'source': 'apt',
+            'remote': 'zlib1g-dev',
+            'usage': {'type': 'system'}
+        })

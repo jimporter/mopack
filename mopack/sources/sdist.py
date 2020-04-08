@@ -20,7 +20,7 @@ class SDistPackage(Package):
     def _build(self, pkgdir, srcdir):
         builddir = self.builder.build(pkgdir, srcdir)
         pkgconfig = os.path.join(builddir, 'pkgconfig')
-        return {'usage': 'pkgconfig', 'path': pkgconfig}
+        return {'type': 'pkgconfig', 'path': pkgconfig}
 
 
 class DirectoryPackage(SDistPackage):
@@ -32,7 +32,8 @@ class DirectoryPackage(SDistPackage):
         return self._find_mopack(self.path)
 
     def resolve(self, pkgdir):
-        return self._build(pkgdir, self.path)
+        usage = self._build(pkgdir, self.path)
+        return {'source': 'directory', 'usage': usage}
 
 
 class TarballPackage(SDistPackage):
@@ -68,4 +69,5 @@ class TarballPackage(SDistPackage):
 
     def resolve(self, pkgdir):
         base_srcdir = os.path.join(pkgdir, 'src')
-        return self._build(pkgdir, os.path.join(base_srcdir, self.srcdir))
+        usage = self._build(pkgdir, os.path.join(base_srcdir, self.srcdir))
+        return {'source': 'tarball', 'usage': usage}

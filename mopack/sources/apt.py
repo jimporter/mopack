@@ -14,4 +14,9 @@ class AptPackage(Package):
         with open_log(pkgdir, 'apt') as log:
             check_call_log(['sudo', 'apt-get', 'install', '-y'] + remotes,
                            log=log)
-        return {i.name: {'usage': 'apt', 'remote': i.remote} for i in packages}
+
+        return {i.name: {
+            'source': 'apt',
+            'remote': i.remote,
+            'usage': {'type': 'system'}
+        } for i in packages}

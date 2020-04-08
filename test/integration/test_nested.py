@@ -20,14 +20,20 @@ class TestNested(IntegrationTest):
 
         output = json.loads(self.assertPopen(['mopack', 'info', 'greeter']))
         self.assertEqual(output, {
-            'usage': 'pkgconfig',
-            'path': os.path.join(self.stage, 'mopack', 'build', 'greeter',
-                                 'pkgconfig'),
+            'source': 'directory',
+            'usage': {
+                'type': 'pkgconfig',
+                'path': os.path.join(self.stage, 'mopack', 'build', 'greeter',
+                                     'pkgconfig'),
+            }
         })
 
         output = json.loads(self.assertPopen(['mopack', 'info', 'hello']))
         self.assertEqual(output, {
-            'usage': 'pkgconfig',
-            'path': os.path.join(self.stage, 'mopack', 'build', 'hello',
-                                 'pkgconfig'),
+            'source': 'tarball',
+            'usage': {
+                'type': 'pkgconfig',
+                'path': os.path.join(self.stage, 'mopack', 'build', 'hello',
+                                     'pkgconfig'),
+            }
         })

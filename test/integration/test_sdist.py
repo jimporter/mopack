@@ -18,7 +18,10 @@ class TestSdist(IntegrationTest):
 
         output = json.loads(self.assertPopen(['mopack', 'info', 'foo']))
         self.assertEqual(output, {
-            'usage': 'pkgconfig',
-            'path': os.path.join(self.stage, 'mopack', 'build', 'foo',
-                                 'pkgconfig'),
+            'source': 'tarball',
+            'usage': {
+                'type': 'pkgconfig',
+                'path': os.path.join(self.stage, 'mopack', 'build', 'foo',
+                                     'pkgconfig'),
+            }
         })
