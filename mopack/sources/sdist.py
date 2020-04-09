@@ -16,7 +16,6 @@ class SDistPackage(Package):
         mopack = os.path.join(srcdir, 'mopack.yml')
         return mopack if os.path.exists(mopack) else None
 
-
     def _build(self, pkgdir, srcdir):
         builddir = self.builder.build(pkgdir, srcdir)
         pkgconfig = os.path.join(builddir, 'pkgconfig')

@@ -8,6 +8,10 @@ mopack_dirname = 'mopack'
 metadata_filename = 'mopack.json'
 
 
+def get_package_dir(builddir):
+    return os.path.join(builddir, mopack_dirname)
+
+
 class Config:
     def __init__(self, filenames, parent=None):
         self.packages = {}
@@ -54,8 +58,7 @@ def fetch(config, pkgdir):
     config.add_children(child_configs)
 
 
-def resolve(config, builddir):
-    pkgdir = os.path.join(builddir, mopack_dirname)
+def resolve(config, pkgdir):
     metadata, packages, batch_packages = {}, [], {}
     fetch(config, pkgdir)
 
@@ -73,21 +76,21 @@ def resolve(config, builddir):
     # this for all *source* packages, but currently a package is non-batched
     # iff it's a source package. Revisit this when we have a better idea of
     # what the abstractions are.
-    save_metadata(metadata, builddir)
+    save_metadata(metadata, pkgdir)
     for i in packages:
         metadata[i.name] = i.resolve(pkgdir)
-        save_metadata(metadata, builddir)
+        save_metadata(metadata, pkgdir)
 
 
-def _metadata_path(builddir):
-    return os.path.join(builddir, mopack_dirname, metadata_filename)
+def _metadata_path(pkgdir):
+    return os.path.join(pkgdir, metadata_filename)
 
 
-def save_metadata(metadata, builddir):
-    with open(_metadata_path(builddir), 'w') as f:
+def save_metadata(metadata, pkgdir):
+    with open(_metadata_path(pkgdir), 'w') as f:
         json.dump(metadata, f)
 
 
-def get_metadata(builddir):
-    with open(_metadata_path(builddir)) as f:
+def get_metadata(pkgdir):
+    with open(_metadata_path(pkgdir)) as f:
         return json.load(f)

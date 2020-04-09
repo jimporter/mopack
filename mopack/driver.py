@@ -17,12 +17,12 @@ def resolve(parser, subparser, args):
 
     os.environ[nested_invoke] = os.path.abspath(args.directory)
     config_data = config.Config(args.file)
-    config.resolve(config_data, args.directory)
+    config.resolve(config_data, config.get_package_dir(args.directory))
 
 
 def info(parser, subparser, args):
     args.directory = os.environ.get(nested_invoke, args.directory)
-    metadata = config.get_metadata(args.directory)
+    metadata = config.get_metadata(config.get_package_dir(args.directory))
     print(json.dumps(metadata[args.package]))
 
 
