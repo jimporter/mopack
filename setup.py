@@ -2,6 +2,8 @@ import os
 import subprocess
 from setuptools import setup, find_packages, Command
 
+from mopack.app_version import version
+
 root_dir = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -18,6 +20,22 @@ class Coverage(Command):
     def finalize_options(self):
         pass
 
+    def _make_subproc_rc(self):
+        # For reasons I don't fully understand, coverage.py doesn't correctly
+        # cover files in integration tests using our normal `.coveragerc`. To
+        # fix this, change that line to `include = ${TOP}/mopack/*` so we get
+        # full coverage. We don't do this universally, since using `source`
+        # makes sure that if we run a subset of tests, coverage.py picks up
+        # files with 0 coverage.
+        with open(os.path.join(root_dir, '.coveragerc')) as f:
+            rc = f.read()
+        fixed = rc.replace('source = mopack', 'include = ${TOP}/mopack/*')
+
+        result = os.path.join(root_dir, '.coveragerc-subproc')
+        with open(result, 'w') as f:
+            f.write(fixed)
+        return result
+
     def run(self):
         env = dict(os.environ)
         pythonpath = os.path.join(root_dir, 'test', 'scripts')
@@ -27,7 +45,7 @@ class Coverage(Command):
             'TOP': root_dir,
             'PYTHONPATH': pythonpath,
             'COVERAGE_FILE': os.path.join(root_dir, '.coverage'),
-            'COVERAGE_PROCESS_START': os.path.join(root_dir, '.coveragerc'),
+            'COVERAGE_PROCESS_START': self._make_subproc_rc(),
         })
 
         subprocess.check_call(['coverage', 'erase'])
@@ -67,7 +85,7 @@ except ImportError:
 
 setup(
     name='mopack',
-    version='0.1.dev0',
+    version=version,
 
     description='A multiple-origin package manager',
     long_description=long_desc,
@@ -94,7 +112,7 @@ setup(
 
     packages=find_packages(exclude=['test', 'test.*']),
 
-    install_requires=['pyyaml', 'setuptools'],
+    install_requires=['colorama', 'pyyaml', 'setuptools'],
     extras_require={
         'dev': ['bfg9000', 'coverage', 'flake8 >= 3.6', 'pypandoc'],
         'test': ['bfg9000', 'coverage', 'flake8 >= 3.6'],

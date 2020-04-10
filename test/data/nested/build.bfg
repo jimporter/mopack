@@ -7,6 +7,11 @@ libhello = package('hello', '>=1.0')
 include = header_directory('include', include='*.hpp')
 lib = library('greeter', files=['src/greeter.cpp'], includes=[include],
               packages=[libhello])
+default(lib)
+
+if argv.extra:
+    info('copying extra file')
+    default(copy_file('extra.txt'))
 
 install(lib, include)
 

@@ -1,0 +1,4 @@
+# -*- python -*-
+
+argument('extra', action='store_true',
+         help='copy an extra file into the build directory')

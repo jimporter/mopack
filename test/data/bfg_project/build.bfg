@@ -4,6 +4,11 @@ project('hello', '1.0')
 
 include = header_directory('include', include='*.hpp')
 lib = library('hello', files=['src/hello.cpp'], includes=[include])
+default(lib)
+
+if argv.extra:
+    info('copying extra file')
+    default(copy_file('extra.txt'))
 
 install(lib, include)
 

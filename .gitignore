@@ -1,5 +1,6 @@
 *.pyc
 /.coverage
+/.coveragerc-subproc
 /.coverage.*
 /htmlcov/
 /mopack.egg-info/

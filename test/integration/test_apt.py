@@ -19,14 +19,22 @@ class TestApt(IntegrationTest):
 
         output = json.loads(self.assertPopen(['mopack', 'info', 'ogg']))
         self.assertEqual(output, {
-            'source': 'apt',
-            'remote': 'libogg-dev',
+            'config': {
+                'name': 'ogg',
+                'config_file': config,
+                'source': 'apt',
+                'remote': 'libogg-dev',
+            },
             'usage': {'type': 'system'}
         })
 
         output = json.loads(self.assertPopen(['mopack', 'info', 'zlib']))
         self.assertEqual(output, {
-            'source': 'apt',
-            'remote': 'zlib1g-dev',
+            'config': {
+                'name': 'zlib',
+                'config_file': config,
+                'source': 'apt',
+                'remote': 'zlib1g-dev',
+            },
             'usage': {'type': 'system'}
         })

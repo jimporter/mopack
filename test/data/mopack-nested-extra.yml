@@ -1,0 +1,13 @@
+packages:
+  greeter:
+    source: directory
+    path: nested
+    build: &bfg-debug
+      type: bfg9000
+      extra_args: ['--extra']
+
+  hello:
+    source: directory
+    path: bfg_project
+    build: *bfg-debug
+

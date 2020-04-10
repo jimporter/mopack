@@ -23,7 +23,13 @@ class IntegrationTest(unittest.TestCase):
     def assertExists(self, path):
         if not os.path.exists(path):
             raise unittest.TestCase.failureException(
-                "'{}' does not exist".format(path)
+                '{!r} does not exist'.format(os.path.normpath(path))
+            )
+
+    def assertNotExists(self, path):
+        if os.path.exists(path):
+            raise unittest.TestCase.failureException(
+                '{!r} exists'.format(os.path.normpath(path))
             )
 
     def assertPopen(self, command, returncode=0):

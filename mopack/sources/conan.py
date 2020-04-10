@@ -1,10 +1,12 @@
 import os
 
 from . import Package
-from ..log import check_call_log, open_log
+from .. import log
 
 
 class ConanPackage(Package):
+    source = 'conan'
+
     def __init__(self, name, remote, options=None, **kwargs):
         super().__init__(name, **kwargs)
         self.remote = remote
@@ -14,8 +16,23 @@ class ConanPackage(Package):
     def remote_name(self):
         return self.remote.split('/')[0]
 
-    @staticmethod
-    def resolve_all(pkgdir, packages):
+    def clean_needed(self, pkgdir, new_package):
+        if new_package and new_package.source == self.source:
+            return False
+
+        log.info('cleaning {!r}'.format(self.name))
+        try:
+            os.remove(os.path.join(pkgdir, 'conan', self.name + '.pc'))
+        except FileNotFoundError:
+            pass
+        return True
+
+    @classmethod
+    def resolve_all(cls, pkgdir, packages):
+        log.info('resolving {} from {}'.format(
+            ', '.join(repr(i.name) for i in packages), cls.source
+        ))
+
         os.makedirs(pkgdir, exist_ok=True)
         with open(os.path.join(pkgdir, 'conanfile.txt'), 'w') as conan:
             print('[requires]', file=conan)
@@ -29,13 +46,11 @@ class ConanPackage(Package):
                     print('{}:{}={}'.format(i.remote_name, k, v), file=conan)
 
         installdir = os.path.join(pkgdir, 'conan')
-        with open_log(pkgdir, 'conan') as log:
-            check_call_log(['conan', 'install', '-g', 'pkg_config',
-                            '-if', installdir, pkgdir],
-                           log=log)
+        with log.open_log(pkgdir, 'conan') as logfile:
+            log.check_call_log(['conan', 'install', '-g', 'pkg_config',
+                                '-if', installdir, pkgdir],
+                               log=logfile)
 
-        return {i.name: {
-            'source': 'conan',
-            'remote': i.remote,
-            'usage': {'type': 'pkgconfig', 'path': os.path.abspath(installdir)}
-        } for i in packages}
+        return cls.resolved_metadata_all(packages, {
+            'type': 'pkgconfig', 'path': os.path.abspath(installdir)
+        })
