@@ -34,7 +34,7 @@ class SDistPackage(Package):
         builddir = self.builder.build(pkgdir, srcdir)
         pkgconfig = os.path.join(builddir, 'pkgconfig')
         usage = {'type': 'pkgconfig', 'path': pkgconfig}
-        return self.resolved_metadata(usage)
+        return self._resolved_metadata(usage)
 
 
 class DirectoryPackage(SDistPackage):

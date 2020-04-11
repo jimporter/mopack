@@ -51,6 +51,6 @@ class ConanPackage(Package):
                                 '-if', installdir, pkgdir],
                                log=logfile)
 
-        return cls.resolved_metadata_all(packages, {
+        return cls._resolved_metadata_all(packages, {
             'type': 'pkgconfig', 'path': os.path.abspath(installdir)
         })

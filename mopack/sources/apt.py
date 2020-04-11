@@ -21,4 +21,4 @@ class AptPackage(Package):
             log.check_call_log(['sudo', 'apt-get', 'install', '-y'] + remotes,
                                log=logfile)
 
-        return cls.resolved_metadata_all(packages, {'type': 'system'})
+        return cls._resolved_metadata_all(packages, {'type': 'system'})

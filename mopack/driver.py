@@ -2,7 +2,7 @@ import argparse
 import os
 import json
 
-from . import config, log
+from . import commands, config, log
 from .app_version import version
 
 # This environment variable is set to the top builddir when `mopack resolve` is
@@ -18,18 +18,18 @@ def resolve(parser, subparser, args):
 
     os.environ[nested_invoke] = os.path.abspath(args.directory)
     config_data = config.Config(args.file)
-    config.resolve(config_data, config.get_package_dir(args.directory))
+    commands.resolve(config_data, commands.get_package_dir(args.directory))
 
 
 def info(parser, subparser, args):
     args.directory = os.environ.get(nested_invoke, args.directory)
-    metadata = config.get_metadata(config.get_package_dir(args.directory))
-    print(json.dumps(metadata[args.package]))
+    metadata = commands.Metadata.load(commands.get_package_dir(args.directory))
+    print(json.dumps(metadata.packages[args.package]))
 
 
 def clean(parser, subparser, args):
     assert nested_invoke not in os.environ
-    config.clean(config.get_package_dir(args.directory))
+    commands.clean(commands.get_package_dir(args.directory))
 
 
 def main():

@@ -30,12 +30,12 @@ class Package(FreezeDried):
     def fetch(self, pkgdir):
         pass
 
-    def resolved_metadata(self, usage):
+    def _resolved_metadata(self, usage):
         return {'config': self.dehydrate(), 'usage': usage}
 
     @staticmethod
-    def resolved_metadata_all(packages, usage):
-        return {i.name: i.resolved_metadata(usage) for i in packages}
+    def _resolved_metadata_all(packages, usage):
+        return [i._resolved_metadata(usage) for i in packages]
 
     def __repr__(self):
         return '<{}({!r})>'.format(type(self).__name__, self.name)

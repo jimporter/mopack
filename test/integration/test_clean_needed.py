@@ -4,7 +4,7 @@ import os
 from . import *
 
 
-class TestSdist(IntegrationTest):
+class TestCleanNeeded(IntegrationTest):
     def setUp(self):
         self.stage = stage_dir('sdist')
         self.pkgbuilddir = os.path.join(self.stage, 'mopack', 'build')
