@@ -25,8 +25,9 @@ def mock_open_after_first():
 
 class TestDirectory(TestCase):
     pkgdir = '/path/to/builddir/mopack'
+    deploy_paths = {'prefix': '/usr/local'}
 
-    def test_path(self):
+    def test_resolve(self):
         path = os.path.join(test_data_dir, 'bfg_project')
         pkg = DirectoryPackage('foo', build='bfg9000', path=path,
                                config_file='/path/to/mopack.yml')
@@ -37,8 +38,21 @@ class TestDirectory(TestCase):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.check_call'):  # noqa
-            pkg.resolve(self.pkgdir)
+            pkg.resolve(self.pkgdir, self.deploy_paths)
             mopen.assert_called_with(os.path.join(self.pkgdir, 'foo.log'), 'w')
+
+    def test_deploy(self):
+        path = os.path.join(test_data_dir, 'bfg_project')
+        pkg = DirectoryPackage('foo', build='bfg9000', path=path,
+                               config_file='/path/to/mopack.yml')
+
+        with mock_open_log() as mopen, \
+             mock.patch('mopack.builders.bfg9000.pushd'), \
+             mock.patch('subprocess.check_call'):  # noqa
+            pkg.deploy(self.pkgdir)
+            mopen.assert_called_with(
+                os.path.join(self.pkgdir, 'foo-deploy.log'), 'w'
+            )
 
     def test_clean(self):
         path1 = os.path.join(test_data_dir, 'bfg_project')
@@ -119,6 +133,7 @@ class TestDirectory(TestCase):
 
 class TestTarball(TestCase):
     pkgdir = '/path/to/builddir/mopack'
+    deploy_paths = {'prefix': '/usr/local'}
 
     def test_url(self):
         pkg = TarballPackage('foo', build='bfg9000', url='http://example.com',
@@ -140,13 +155,25 @@ class TestTarball(TestCase):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.check_call'):  # noqa
-            pkg.resolve(self.pkgdir)
+            pkg.resolve(self.pkgdir, self.deploy_paths)
             mopen.assert_called_with(os.path.join(self.pkgdir, 'foo.log'), 'w')
 
     def test_missing_url_path(self):
         with self.assertRaises(TypeError):
             TarballPackage('foo', build='bfg9000',
                            config_file='/path/to/mopack.yml')
+
+    def test_deploy(self):
+        pkg = TarballPackage('foo', build='bfg9000', url='http://example.com',
+                             config_file='/path/to/mopack.yml')
+
+        with mock_open_log() as mopen, \
+             mock.patch('mopack.builders.bfg9000.pushd'), \
+             mock.patch('subprocess.check_call'):  # noqa
+            pkg.deploy(self.pkgdir)
+            mopen.assert_called_with(
+                os.path.join(self.pkgdir, 'foo-deploy.log'), 'w'
+            )
 
     def test_clean(self):
         path1 = os.path.join(test_data_dir, 'bfg_project.tar.gz')

@@ -28,6 +28,7 @@ def mock_open_write():
 
 class TestConan(TestCase):
     pkgdir = '/path/to/builddir/mopack'
+    deploy_paths = {'prefix': '/usr/local'}
 
     def test_basic(self):
         pkg = ConanPackage('foo', remote='foo/1.2.3@conan/stable',
@@ -37,7 +38,7 @@ class TestConan(TestCase):
 
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.check_call') as mcall:  # noqa
-            ConanPackage.resolve_all(self.pkgdir, [pkg])
+            ConanPackage.resolve_all(self.pkgdir, [pkg], self.deploy_paths)
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
                 [requires]
                 foo/1.2.3@conan/stable
@@ -58,7 +59,7 @@ class TestConan(TestCase):
 
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.check_call') as mcall:  # noqa
-            ConanPackage.resolve_all(self.pkgdir, [pkg])
+            ConanPackage.resolve_all(self.pkgdir, [pkg], self.deploy_paths)
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
                 [requires]
                 foo/1.2.3@conan/stable
@@ -80,7 +81,8 @@ class TestConan(TestCase):
 
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.check_call') as mcall:  # noqa
-            ConanPackage.resolve_all(self.pkgdir, [pkg1, pkg2])
+            ConanPackage.resolve_all(self.pkgdir, [pkg1, pkg2],
+                                     self.deploy_paths)
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
                 [requires]
                 foo/1.2.3@conan/stable
@@ -93,6 +95,13 @@ class TestConan(TestCase):
                 'conan', 'install', '-g', 'pkg_config', '-if',
                 os.path.join(self.pkgdir, 'conan'), self.pkgdir
             ], stdout=mopen(), stderr=mopen())
+
+    def test_deploy(self):
+        pkg = ConanPackage('foo', remote='foo/1.2.3@conan/stable',
+                           config_file='/path/to/mopack.yml')
+        with mock.patch('warnings.warn') as mwarn:
+            ConanPackage.deploy_all(self.pkgdir, [pkg])
+            mwarn.assert_called_once()
 
     def test_clean(self):
         oldpkg = ConanPackage('foo', remote='foo/1.2.3@conan/stable',

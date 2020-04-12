@@ -28,13 +28,17 @@ class SDistPackage(Package):
         self.builder.clean(pkgdir)
         return True
 
-    def _resolve(self, pkgdir, srcdir):
+    def _resolve(self, pkgdir, srcdir, deploy_paths):
         log.info('resolving {!r}'.format(self.name))
 
-        builddir = self.builder.build(pkgdir, srcdir)
+        builddir = self.builder.build(pkgdir, srcdir, deploy_paths)
         pkgconfig = os.path.join(builddir, 'pkgconfig')
         usage = {'type': 'pkgconfig', 'path': pkgconfig}
         return self._resolved_metadata(usage)
+
+    def deploy(self, pkgdir):
+        log.info('deploying {!r}'.format(self.name))
+        self.builder.deploy(pkgdir)
 
 
 class DirectoryPackage(SDistPackage):
@@ -48,8 +52,8 @@ class DirectoryPackage(SDistPackage):
         log.info('fetching {!r} from {}'.format(self.name, self.source))
         return self._find_mopack(self.path)
 
-    def resolve(self, pkgdir):
-        return self._resolve(pkgdir, self.path)
+    def resolve(self, pkgdir, deploy_paths):
+        return self._resolve(pkgdir, self.path, deploy_paths)
 
 
 class TarballPackage(SDistPackage):
@@ -96,5 +100,5 @@ class TarballPackage(SDistPackage):
 
         return self._find_mopack(self.srcdir or self.guessed_srcdir)
 
-    def resolve(self, pkgdir):
-        return self._resolve(pkgdir, self._srcdir(pkgdir))
+    def resolve(self, pkgdir, deploy_paths):
+        return self._resolve(pkgdir, self._srcdir(pkgdir), deploy_paths)

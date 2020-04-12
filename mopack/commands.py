@@ -12,10 +12,16 @@ def get_package_dir(builddir):
     return os.path.join(builddir, mopack_dirname)
 
 
+class MetadataVersionError(RuntimeError):
+    pass
+
+
 class Metadata:
     metadata_filename = 'mopack.json'
+    version = 1
 
-    def __init__(self):
+    def __init__(self, deploy_paths=None):
+        self.deploy_paths = deploy_paths or {}
         self.packages = {}
 
     def add_package(self, package):
@@ -31,13 +37,27 @@ class Metadata:
 
     def save(self, pkgdir):
         with open(os.path.join(pkgdir, self.metadata_filename), 'w') as f:
-            json.dump(self.packages, f)
+            json.dump({
+                'version': self.version,
+                'metadata': {
+                    'deploy_paths': self.deploy_paths,
+                    'packages': self.packages,
+                }
+            }, f)
 
     @classmethod
     def load(cls, pkgdir):
-        metadata = Metadata.__new__(Metadata)
         with open(os.path.join(pkgdir, cls.metadata_filename)) as f:
-            metadata.packages = json.load(f)
+            state = json.load(f)
+            version, data = state['version'], state['metadata']
+        if version > cls.version:
+            raise MetadataVersionError(
+                'saved version exceeds expected version'
+            )
+
+        metadata = Metadata.__new__(Metadata)
+        metadata.deploy_paths = data['deploy_paths']
+        metadata.packages = data['packages']
         return metadata
 
 
@@ -79,8 +99,10 @@ def _do_fetch(config, pkgdir, old_packages):
     config.add_children(child_configs)
 
 
-def resolve(config, pkgdir):
+def resolve(config, pkgdir, deploy_paths=None):
     fetch(config, pkgdir)
+
+    metadata = Metadata(deploy_paths)
 
     packages, batch_packages = [], {}
     for i in config.packages.values():
@@ -89,9 +111,8 @@ def resolve(config, pkgdir):
         else:
             packages.append(i)
 
-    metadata = Metadata()
     for k, v in batch_packages.items():
-        metadata.add_packages(k.resolve_all(pkgdir, v))
+        metadata.add_packages(k.resolve_all(pkgdir, v, metadata.deploy_paths))
 
     # Ensure metadata is up-to-date for each non-batch package so that they can
     # find any dependencies they need. XXX: Technically, we're looking to do
@@ -100,5 +121,21 @@ def resolve(config, pkgdir):
     # what the abstractions are.
     metadata.save(pkgdir)
     for i in packages:
-        metadata.add_package(i.resolve(pkgdir))
+        metadata.add_package(i.resolve(pkgdir,  metadata.deploy_paths))
         metadata.save(pkgdir)
+
+
+def deploy(pkgdir):
+    metadata = Metadata.load(pkgdir)
+
+    packages, batch_packages = [], {}
+    for i in metadata.rehydrate().values():
+        if hasattr(i, 'deploy_all'):
+            batch_packages.setdefault(type(i), []).append(i)
+        else:
+            packages.append(i)
+
+    for k, v in batch_packages.items():
+        k.deploy_all(pkgdir, v)
+    for i in packages:
+        i.deploy(pkgdir)

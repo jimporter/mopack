@@ -1,4 +1,5 @@
 import os
+import warnings
 
 from . import Package
 from .. import log
@@ -28,7 +29,7 @@ class ConanPackage(Package):
         return True
 
     @classmethod
-    def resolve_all(cls, pkgdir, packages):
+    def resolve_all(cls, pkgdir, packages, deploy_paths):
         log.info('resolving {} from {}'.format(
             ', '.join(repr(i.name) for i in packages), cls.source
         ))
@@ -54,3 +55,7 @@ class ConanPackage(Package):
         return cls._resolved_metadata_all(packages, {
             'type': 'pkgconfig', 'path': os.path.abspath(installdir)
         })
+
+    @staticmethod
+    def deploy_all(pkgdir, packages):
+        warnings.warn('deploying not supported for conan packages')

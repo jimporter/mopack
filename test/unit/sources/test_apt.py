@@ -10,6 +10,7 @@ from mopack.sources.conan import ConanPackage
 
 class TestApt(TestCase):
     pkgdir = '/path/to/builddir/mopack'
+    deploy_paths = {'prefix': '/usr/local'}
 
     def test_basic(self):
         pkg = AptPackage('foo', config_file='/path/to/mopack.yml')
@@ -17,7 +18,7 @@ class TestApt(TestCase):
 
         with mock_open_log() as mopen, \
              mock.patch('subprocess.check_call') as mcall:  # noqa
-            AptPackage.resolve_all(self.pkgdir, [pkg])
+            AptPackage.resolve_all(self.pkgdir, [pkg], self.deploy_paths)
             mopen.assert_called_with(os.path.join(self.pkgdir, 'apt.log'), 'w')
             mcall.assert_called_with([
                 'sudo', 'apt-get', 'install', '-y', 'libfoo-dev'
@@ -30,7 +31,7 @@ class TestApt(TestCase):
 
         with mock_open_log() as mopen, \
              mock.patch('subprocess.check_call') as mcall:  # noqa
-            AptPackage.resolve_all('/path/to/builddir/mopack', [pkg])
+            AptPackage.resolve_all(self.pkgdir, [pkg], self.deploy_paths)
             mopen.assert_called_with(os.path.join(self.pkgdir, 'apt.log'), 'w')
             mcall.assert_called_with([
                 'sudo', 'apt-get', 'install', '-y', 'foo-dev'
@@ -43,11 +44,17 @@ class TestApt(TestCase):
 
         with mock_open_log() as mopen, \
              mock.patch('subprocess.check_call') as mcall:  # noqa
-            AptPackage.resolve_all('/path/to/builddir/mopack', [pkg1, pkg2])
+            AptPackage.resolve_all(self.pkgdir, [pkg1, pkg2],
+                                   self.deploy_paths)
             mopen.assert_called_with(os.path.join(self.pkgdir, 'apt.log'), 'w')
             mcall.assert_called_with([
                 'sudo', 'apt-get', 'install', '-y', 'libfoo-dev', 'bar-dev'
             ], stdout=mopen(), stderr=mopen())
+
+    def test_deploy(self):
+        pkg = AptPackage('foo', config_file='/path/to/mopack.yml')
+        # This is a no-op; just make sure it executes ok.
+        AptPackage.deploy_all(self.pkgdir, [pkg])
 
     def test_clean(self):
         oldpkg = AptPackage('foo', config_file='/path/to/mopack.yml')

@@ -6,9 +6,10 @@ import unittest
 from .. import *
 
 
-def stage_dir(name):
+def stage_dir(name, chdir=True):
     stage = tempfile.mkdtemp(prefix=name + '-', dir=test_stage_dir)
-    os.chdir(stage)
+    if chdir:
+        os.chdir(stage)
     return stage
 
 
