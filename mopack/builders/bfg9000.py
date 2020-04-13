@@ -2,7 +2,7 @@ import os
 import shutil
 
 from . import Builder
-from ..log import check_call_log, open_log
+from ..log import LogFile
 from ..path import pushd
 
 _known_install_types = ('prefix', 'exec-prefix', 'bindir', 'libdir',
@@ -33,16 +33,16 @@ class Bfg9000Builder(Builder):
     def build(self, pkgdir, srcdir, deploy_paths={}):
         builddir = self._builddir(pkgdir)
 
-        with open_log(pkgdir, self.name) as log:
+        with LogFile.open(pkgdir, self.name) as logfile:
             with pushd(srcdir):
-                args = (['9k', builddir] + self._install_args(deploy_paths) +
-                        self.extra_args)
-                check_call_log(args, log=log)
+                logfile.check_call(['9k', builddir] +
+                                   self._install_args(deploy_paths) +
+                                   self.extra_args)
             with pushd(builddir):
-                check_call_log(['ninja'], log=log)
+                logfile.check_call(['ninja'])
         return os.path.abspath(builddir)
 
     def deploy(self, pkgdir):
-        with open_log(pkgdir, self.name + '-deploy') as log:
+        with LogFile.open(pkgdir, self.name + '-deploy') as logfile:
             with pushd(self._builddir(pkgdir)):
-                check_call_log(['ninja', 'install'], log=log)
+                logfile.check_call(['ninja', 'install'])

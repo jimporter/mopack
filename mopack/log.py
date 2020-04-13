@@ -54,11 +54,25 @@ def _showwarning(message, category, filename, lineno, file=None, line=None):
 warnings.showwarning = _showwarning
 
 
-def open_log(pkgdir, name):
-    logname = os.path.join(pkgdir, '{}.log'.format(name))
-    os.makedirs(pkgdir, exist_ok=True)
-    return open(logname, 'w')
+class LogFile:
+    def __init__(self, file):
+        self.file = file
 
+    @classmethod
+    def open(cls, pkgdir, name, mode='w'):
+        logname = os.path.join(pkgdir, '{}.log'.format(name))
+        return cls(open(logname, mode))
 
-def check_call_log(args, log):
-    subprocess.check_call(args, stdout=log, stderr=log)
+    def close(self):
+        self.file.close()
+
+    def check_call(self, *args, **kwargs):
+        return subprocess.check_call(*args, stdout=self.file, stderr=self.file,
+                                     **kwargs)
+
+    def __enter__(self):
+        self.file.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        return self.file.__exit__(exc_type, exc_value, traceback)

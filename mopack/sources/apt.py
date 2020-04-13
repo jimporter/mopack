@@ -17,9 +17,8 @@ class AptPackage(Package):
         ))
 
         remotes = [i.remote for i in packages]
-        with log.open_log(pkgdir, 'apt') as logfile:
-            log.check_call_log(['sudo', 'apt-get', 'install', '-y'] + remotes,
-                               log=logfile)
+        with log.LogFile.open(pkgdir, 'apt') as logfile:
+            logfile.check_call(['sudo', 'apt-get', 'install', '-y'] + remotes)
 
         return cls._resolved_metadata_all(packages, {'type': 'system'})
 

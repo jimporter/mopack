@@ -47,10 +47,9 @@ class ConanPackage(Package):
                     print('{}:{}={}'.format(i.remote_name, k, v), file=conan)
 
         installdir = os.path.join(pkgdir, 'conan')
-        with log.open_log(pkgdir, 'conan') as logfile:
-            log.check_call_log(['conan', 'install', '-g', 'pkg_config',
-                                '-if', installdir, pkgdir],
-                               log=logfile)
+        with log.LogFile.open(pkgdir, 'conan') as logfile:
+            logfile.check_call(['conan', 'install', '-g', 'pkg_config',
+                                '-if', installdir, pkgdir])
 
         return cls._resolved_metadata_all(packages, {
             'type': 'pkgconfig', 'path': os.path.abspath(installdir)
