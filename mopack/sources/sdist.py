@@ -89,8 +89,8 @@ class TarballPackage(SDistPackage):
         base_srcdir = os.path.join(pkgdir, 'src')
         with (BytesIO(urlopen(self.url).read()) if self.url else
               open(self.path, 'rb')) as f:
-            # XXX: Support more than just gzip.
-            with tarfile.open(mode='r:gz', fileobj=f) as tar:
+            # XXX: Support zip.
+            with tarfile.open(mode='r:*', fileobj=f) as tar:
                 self.guessed_srcdir = tar.next().name.split('/', 1)[0]
                 if self.files:
                     for i in self.files:

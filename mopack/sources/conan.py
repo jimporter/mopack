@@ -34,7 +34,6 @@ class ConanPackage(Package):
             ', '.join(repr(i.name) for i in packages), cls.source
         ))
 
-        os.makedirs(pkgdir, exist_ok=True)
         with open(os.path.join(pkgdir, 'conanfile.txt'), 'w') as conan:
             print('[requires]', file=conan)
             for i in packages:

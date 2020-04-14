@@ -28,10 +28,18 @@ Sources:
 * conan
 * apt
 * tarball
+* directory
+* system
+
+Builders:
+* bfg9000
+* autotools
+* custom
+* none
 
 Usage:
 * pkg-config
-* path search
+* system (path search)
 
 ## License
 
