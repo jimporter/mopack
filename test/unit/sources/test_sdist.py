@@ -23,14 +23,20 @@ def mock_open_after_first():
     return mock_open
 
 
-class TestDirectory(TestCase):
+class SDistTestCase(TestCase):
+    config_file = '/path/to/mopack.yml'
     pkgdir = '/path/to/builddir/mopack'
     deploy_paths = {'prefix': '/usr/local'}
 
+    def pkgconfdir(self, name):
+        return os.path.join(self.pkgdir, 'build', name, 'pkgconfig')
+
+
+class TestDirectory(SDistTestCase):
     def test_resolve(self):
         path = os.path.join(test_data_dir, 'bfg_project')
         pkg = DirectoryPackage('foo', build='bfg9000', path=path,
-                               config_file='/path/to/mopack.yml')
+                               config_file=self.config_file)
         self.assertEqual(pkg.path, path)
 
         pkg.fetch(self.pkgdir)
@@ -38,13 +44,25 @@ class TestDirectory(TestCase):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.check_call'):  # noqa
-            pkg.resolve(self.pkgdir, self.deploy_paths)
+            info = pkg.resolve(self.pkgdir, self.deploy_paths)
+            self.assertEqual(info, {
+                'config': {'source': 'directory', 'name': 'foo', 'path': path,
+                           'builder': {
+                               'type': 'bfg9000',
+                               'name': 'foo',
+                               'builddir': 'foo',
+                               'extra_args': [],
+                           },
+                           'config_file': self.config_file},
+                'usage': {'type': 'pkgconfig', 'path': self.pkgconfdir('foo')}
+            })
+
             mopen.assert_called_with(os.path.join(self.pkgdir, 'foo.log'), 'w')
 
     def test_deploy(self):
         path = os.path.join(test_data_dir, 'bfg_project')
         pkg = DirectoryPackage('foo', build='bfg9000', path=path,
-                               config_file='/path/to/mopack.yml')
+                               config_file=self.config_file)
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
@@ -59,10 +77,10 @@ class TestDirectory(TestCase):
         path2 = os.path.join(test_data_dir, 'other_project')
 
         oldpkg = DirectoryPackage('foo', build='bfg9000', path=path1,
-                                  config_file='/path/to/mopack.yml')
+                                  config_file=self.config_file)
         newpkg1 = DirectoryPackage('foo', build='bfg9000', path=path2,
-                                   config_file='/path/to/mopack.yml')
-        newpkg2 = AptPackage('foo', config_file='/path/to/mopack.yml')
+                                   config_file=self.config_file)
+        newpkg2 = AptPackage('foo', config_file=self.config_file)
 
         # Directory -> Directory (same)
         with mock.patch('mopack.log.info') as mlog, \
@@ -94,16 +112,15 @@ class TestDirectory(TestCase):
 
     def test_equality(self):
         path = os.path.join(test_data_dir, 'bfg_project')
-        config_file = '/path/to/mopack.yml'
         pkg = DirectoryPackage('foo', build='bfg9000', path=path,
-                               config_file=config_file)
+                               config_file=self.config_file)
 
         self.assertEqual(pkg, DirectoryPackage(
-            'foo', build='bfg9000', path=path, config_file=config_file
+            'foo', build='bfg9000', path=path, config_file=self.config_file
         ))
         self.assertEqual(pkg, DirectoryPackage(
             'foo', build={'type': 'bfg9000', 'builddir': 'foo'}, path=path,
-            config_file=config_file
+            config_file=self.config_file
         ))
         self.assertEqual(pkg, DirectoryPackage(
             'foo', build='bfg9000', path=path,
@@ -111,40 +128,70 @@ class TestDirectory(TestCase):
         ))
 
         self.assertNotEqual(pkg, DirectoryPackage(
-            'bar', build='bfg9000', path=path, config_file=config_file
+            'bar', build='bfg9000', path=path, config_file=self.config_file
         ))
         self.assertNotEqual(pkg, DirectoryPackage(
             'foo', build='bfg9000',
             path=os.path.join(test_data_dir, 'other_project'),
-            config_file=config_file
+            config_file=self.config_file
         ))
         self.assertNotEqual(pkg, DirectoryPackage(
             'foo', build={'type': 'bfg9000', 'builddir': 'bar'}, path=path,
-            config_file=config_file
+            config_file=self.config_file
         ))
 
     def test_rehydrate(self):
         path = os.path.join(test_data_dir, 'bfg_project')
         pkg = DirectoryPackage('foo', build='bfg9000', path=path,
-                               config_file='/path/to/mopack.yml')
+                               config_file=self.config_file)
         data = pkg.dehydrate()
         self.assertEqual(pkg, Package.rehydrate(data))
 
 
-class TestTarball(TestCase):
-    pkgdir = '/path/to/builddir/mopack'
-    deploy_paths = {'prefix': '/usr/local'}
+class TestTarball(SDistTestCase):
+    @staticmethod
+    def _mock_urlopen(url):
+        return open(os.path.join(test_data_dir, 'bfg_project.tar.gz'), 'rb')
+
+    def _check_resolve(self, pkg, url=None, path=None):
+        with mock_open_log() as mopen, \
+             mock.patch('mopack.builders.bfg9000.pushd'), \
+             mock.patch('subprocess.check_call'):  # noqa
+            info = pkg.resolve(self.pkgdir, self.deploy_paths)
+            self.assertEqual(info, {
+                'config': {'source': 'tarball', 'name': 'foo', 'path': path,
+                           'url': url, 'files': None, 'srcdir': None,
+                           'guessed_srcdir': 'bfg_project',
+                           'builder': {
+                               'type': 'bfg9000',
+                               'name': 'foo',
+                               'builddir': 'foo',
+                               'extra_args': [],
+                           },
+                           'config_file': self.config_file},
+                'usage': {'type': 'pkgconfig', 'path': self.pkgconfdir('foo')}
+            })
+
+            mopen.assert_called_with(os.path.join(self.pkgdir, 'foo.log'), 'w')
 
     def test_url(self):
-        pkg = TarballPackage('foo', build='bfg9000', url='http://example.com',
-                             config_file='/path/to/mopack.yml')
+        url = 'http://example.com'
+        pkg = TarballPackage('foo', build='bfg9000', url=url,
+                             config_file=self.config_file)
         self.assertEqual(pkg.url, 'http://example.com')
         self.assertEqual(pkg.path, None)
+
+        with mock.patch('mopack.sources.sdist.urlopen', self._mock_urlopen), \
+             mock.patch('tarfile.TarFile.extractall') as mtar:  # noqa
+            pkg.fetch(self.pkgdir)
+            mtar.assert_called_once_with(os.path.join(self.pkgdir, 'src'))
+
+        self._check_resolve(pkg, url=url)
 
     def test_path(self):
         path = os.path.join(test_data_dir, 'bfg_project.tar.gz')
         pkg = TarballPackage('foo', build='bfg9000', path=path,
-                             config_file='/path/to/mopack.yml')
+                             config_file=self.config_file)
         self.assertEqual(pkg.url, None)
         self.assertEqual(pkg.path, path)
 
@@ -152,20 +199,16 @@ class TestTarball(TestCase):
             pkg.fetch(self.pkgdir)
             mtar.assert_called_once_with(os.path.join(self.pkgdir, 'src'))
 
-        with mock_open_log() as mopen, \
-             mock.patch('mopack.builders.bfg9000.pushd'), \
-             mock.patch('subprocess.check_call'):  # noqa
-            pkg.resolve(self.pkgdir, self.deploy_paths)
-            mopen.assert_called_with(os.path.join(self.pkgdir, 'foo.log'), 'w')
+        self._check_resolve(pkg, path=path)
 
     def test_missing_url_path(self):
         with self.assertRaises(TypeError):
             TarballPackage('foo', build='bfg9000',
-                           config_file='/path/to/mopack.yml')
+                           config_file=self.config_file)
 
     def test_deploy(self):
         pkg = TarballPackage('foo', build='bfg9000', url='http://example.com',
-                             config_file='/path/to/mopack.yml')
+                             config_file=self.config_file)
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
@@ -181,10 +224,10 @@ class TestTarball(TestCase):
 
         oldpkg = TarballPackage('foo', build='bfg9000', path=path1,
                                 srcdir='bfg_project',
-                                config_file='/path/to/mopack.yml')
+                                config_file=self.config_file)
         newpkg1 = TarballPackage('foo', build='bfg9000', path=path2,
-                                 config_file='/path/to/mopack.yml')
-        newpkg2 = AptPackage('foo', config_file='/path/to/mopack.yml')
+                                 config_file=self.config_file)
+        newpkg2 = AptPackage('foo', config_file=self.config_file)
 
         srcdir = os.path.join(self.pkgdir, 'src', 'bfg_project')
 
@@ -226,16 +269,15 @@ class TestTarball(TestCase):
 
     def test_equality(self):
         path = os.path.join(test_data_dir, 'bfg_project.tar.gz')
-        config_file = '/path/to/mopack.yml'
         pkg = TarballPackage('foo', build='bfg9000', path=path,
-                             config_file=config_file)
+                             config_file=self.config_file)
 
         self.assertEqual(pkg, TarballPackage(
-            'foo', build='bfg9000', path=path, config_file=config_file
+            'foo', build='bfg9000', path=path, config_file=self.config_file
         ))
         self.assertEqual(pkg, TarballPackage(
             'foo', build={'type': 'bfg9000', 'builddir': 'foo'}, path=path,
-            config_file=config_file
+            config_file=self.config_file
         ))
         self.assertEqual(pkg, TarballPackage(
             'foo', build='bfg9000', path=path,
@@ -243,25 +285,25 @@ class TestTarball(TestCase):
         ))
 
         self.assertNotEqual(pkg, TarballPackage(
-            'bar', build='bfg9000', path=path, config_file=config_file
+            'bar', build='bfg9000', path=path, config_file=self.config_file
         ))
         self.assertNotEqual(pkg, TarballPackage(
             'foo', build='bfg9000', url='http://example.com/project.tar.gz',
-            config_file=config_file
+            config_file=self.config_file
         ))
         self.assertNotEqual(pkg, TarballPackage(
             'foo', build='bfg9000',
             path=os.path.join(test_data_dir, 'other_project.tar.gz'),
-            config_file=config_file
+            config_file=self.config_file
         ))
         self.assertNotEqual(pkg, TarballPackage(
             'foo', build={'type': 'bfg9000', 'builddir': 'bar'}, path=path,
-            config_file=config_file
+            config_file=self.config_file
         ))
 
     def test_rehydrate(self):
         path = os.path.join(test_data_dir, 'bfg_project.tar.gz')
         pkg = TarballPackage('foo', build='bfg9000', path=path,
-                             config_file='/path/to/mopack.yml')
+                             config_file=self.config_file)
         data = pkg.dehydrate()
         self.assertEqual(pkg, Package.rehydrate(data))

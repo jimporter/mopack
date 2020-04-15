@@ -9,16 +9,25 @@ from mopack.sources.conan import ConanPackage
 
 
 class TestApt(TestCase):
+    config_file = '/path/to/mopack.yml'
     pkgdir = '/path/to/builddir/mopack'
     deploy_paths = {'prefix': '/usr/local'}
 
     def test_basic(self):
-        pkg = AptPackage('foo', config_file='/path/to/mopack.yml')
+        pkg = AptPackage('foo', config_file=self.config_file)
         self.assertEqual(pkg.remote, 'libfoo-dev')
 
         with mock_open_log() as mopen, \
              mock.patch('subprocess.check_call') as mcall:  # noqa
-            AptPackage.resolve_all(self.pkgdir, [pkg], self.deploy_paths)
+            info = AptPackage.resolve_all(self.pkgdir, [pkg],
+                                          self.deploy_paths)
+            self.assertEqual(info, [
+                {'config': {'source': 'apt', 'name': 'foo',
+                            'remote': 'libfoo-dev',
+                            'config_file': self.config_file},
+                 'usage': {'type': 'system'}},
+            ])
+
             mopen.assert_called_with(os.path.join(self.pkgdir, 'apt.log'), 'w')
             mcall.assert_called_with([
                 'sudo', 'apt-get', 'install', '-y', 'libfoo-dev'
@@ -26,40 +35,59 @@ class TestApt(TestCase):
 
     def test_remote(self):
         pkg = AptPackage('foo', remote='foo-dev',
-                         config_file='/path/to/mopack.yml')
+                         config_file=self.config_file)
         self.assertEqual(pkg.remote, 'foo-dev')
 
         with mock_open_log() as mopen, \
              mock.patch('subprocess.check_call') as mcall:  # noqa
-            AptPackage.resolve_all(self.pkgdir, [pkg], self.deploy_paths)
+            info = AptPackage.resolve_all(self.pkgdir, [pkg],
+                                          self.deploy_paths)
+            self.assertEqual(info, [
+                {'config': {'source': 'apt', 'name': 'foo',
+                            'remote': 'foo-dev',
+                            'config_file': self.config_file},
+                 'usage': {'type': 'system'}},
+            ])
+
             mopen.assert_called_with(os.path.join(self.pkgdir, 'apt.log'), 'w')
             mcall.assert_called_with([
                 'sudo', 'apt-get', 'install', '-y', 'foo-dev'
             ], stdout=mopen(), stderr=mopen())
 
     def test_multiple(self):
-        pkg1 = AptPackage('foo', config_file='/path/to/mopack.yml')
+        pkg1 = AptPackage('foo', config_file=self.config_file)
         pkg2 = AptPackage('bar', remote='bar-dev',
-                          config_file='/path/to/mopack.yml')
+                          config_file=self.config_file)
 
         with mock_open_log() as mopen, \
              mock.patch('subprocess.check_call') as mcall:  # noqa
-            AptPackage.resolve_all(self.pkgdir, [pkg1, pkg2],
-                                   self.deploy_paths)
+            info = AptPackage.resolve_all(self.pkgdir, [pkg1, pkg2],
+                                          self.deploy_paths)
+            self.assertEqual(info, [
+                {'config': {'source': 'apt', 'name': 'foo',
+                            'remote': 'libfoo-dev',
+                            'config_file': self.config_file},
+                 'usage': {'type': 'system'}},
+                {'config': {'source': 'apt', 'name': 'bar',
+                            'remote': 'bar-dev',
+                            'config_file': self.config_file},
+                 'usage': {'type': 'system'}},
+            ])
+
             mopen.assert_called_with(os.path.join(self.pkgdir, 'apt.log'), 'w')
             mcall.assert_called_with([
                 'sudo', 'apt-get', 'install', '-y', 'libfoo-dev', 'bar-dev'
             ], stdout=mopen(), stderr=mopen())
 
     def test_deploy(self):
-        pkg = AptPackage('foo', config_file='/path/to/mopack.yml')
+        pkg = AptPackage('foo', config_file=self.config_file)
         # This is a no-op; just make sure it executes ok.
         AptPackage.deploy_all(self.pkgdir, [pkg])
 
     def test_clean(self):
-        oldpkg = AptPackage('foo', config_file='/path/to/mopack.yml')
+        oldpkg = AptPackage('foo', config_file=self.config_file)
         newpkg = ConanPackage('foo', remote='foo/1.2.4@conan/stable',
-                              config_file='/path/to/mopack.yml')
+                              config_file=self.config_file)
 
         # Apt -> Conan
         self.assertEqual(oldpkg.clean_needed(self.pkgdir, newpkg), False)
@@ -68,23 +96,28 @@ class TestApt(TestCase):
         self.assertEqual(oldpkg.clean_needed(self.pkgdir, None), False)
 
     def test_equality(self):
-        config_file = '/path/to/mopack.yml'
-        pkg = AptPackage('foo', config_file=config_file)
+        pkg = AptPackage('foo', config_file=self.config_file)
 
-        self.assertEqual(pkg, AptPackage('foo', config_file=config_file))
-        self.assertEqual(pkg, AptPackage('foo', remote='libfoo-dev',
-                                         config_file=config_file))
-        self.assertEqual(pkg, AptPackage('foo',
-                                         config_file='/path/to/mopack2.yml'))
+        self.assertEqual(pkg, AptPackage('foo', config_file=self.config_file))
+        self.assertEqual(pkg, AptPackage(
+            'foo', remote='libfoo-dev', config_file=self.config_file
+        ))
+        self.assertEqual(pkg, AptPackage(
+            'foo', config_file='/path/to/mopack2.yml'
+        ))
 
-        self.assertNotEqual(pkg, AptPackage('bar', config_file=config_file))
-        self.assertNotEqual(pkg, AptPackage('bar', remote='libfoo-dev',
-                                            config_file=config_file))
-        self.assertNotEqual(pkg, AptPackage('foo', remote='libbar-dev',
-                                            config_file=config_file))
+        self.assertNotEqual(pkg, AptPackage(
+            'bar', config_file=self.config_file
+        ))
+        self.assertNotEqual(pkg, AptPackage(
+            'bar', remote='libfoo-dev', config_file=self.config_file
+        ))
+        self.assertNotEqual(pkg, AptPackage(
+            'foo', remote='libbar-dev', config_file=self.config_file
+        ))
 
     def test_rehydrate(self):
         pkg = AptPackage('foo', remote='libbar-dev',
-                         config_file='/path/to/mopack.yml')
+                         config_file=self.config_file)
         data = pkg.dehydrate()
         self.assertEqual(pkg, Package.rehydrate(data))

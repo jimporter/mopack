@@ -27,18 +27,29 @@ def mock_open_write():
 
 
 class TestConan(TestCase):
+    config_file = '/path/to/mopack.yml'
     pkgdir = '/path/to/builddir/mopack'
+    pkgconfdir = os.path.join(pkgdir, 'conan')
     deploy_paths = {'prefix': '/usr/local'}
 
     def test_basic(self):
         pkg = ConanPackage('foo', remote='foo/1.2.3@conan/stable',
-                           config_file='/path/to/mopack.yml')
+                           config_file=self.config_file)
         self.assertEqual(pkg.remote, 'foo/1.2.3@conan/stable')
         self.assertEqual(pkg.options, {})
 
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.check_call') as mcall:  # noqa
-            ConanPackage.resolve_all(self.pkgdir, [pkg], self.deploy_paths)
+            info = ConanPackage.resolve_all(self.pkgdir, [pkg],
+                                            self.deploy_paths)
+            self.assertEqual(info, [
+                {'config': {'source': 'conan', 'name': 'foo',
+                            'remote': 'foo/1.2.3@conan/stable',
+                            'options': {},
+                            'config_file': self.config_file},
+                 'usage': {'type': 'pkgconfig', 'path': self.pkgconfdir}},
+            ])
+
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
                 [requires]
                 foo/1.2.3@conan/stable
@@ -53,13 +64,22 @@ class TestConan(TestCase):
     def test_options(self):
         pkg = ConanPackage('foo', remote='foo/1.2.3@conan/stable',
                            options={'shared': True},
-                           config_file='/path/to/mopack.yml')
+                           config_file=self.config_file)
         self.assertEqual(pkg.remote, 'foo/1.2.3@conan/stable')
         self.assertEqual(pkg.options, {'shared': True})
 
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.check_call') as mcall:  # noqa
-            ConanPackage.resolve_all(self.pkgdir, [pkg], self.deploy_paths)
+            info = ConanPackage.resolve_all(self.pkgdir, [pkg],
+                                            self.deploy_paths)
+            self.assertEqual(info, [
+                {'config': {'source': 'conan', 'name': 'foo',
+                            'remote': 'foo/1.2.3@conan/stable',
+                            'options': {'shared': True},
+                            'config_file': self.config_file},
+                 'usage': {'type': 'pkgconfig', 'path': self.pkgconfdir}},
+            ])
+
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
                 [requires]
                 foo/1.2.3@conan/stable
@@ -74,15 +94,28 @@ class TestConan(TestCase):
 
     def test_multiple(self):
         pkg1 = ConanPackage('foo', remote='foo/1.2.3@conan/stable',
-                            config_file='/path/to/mopack.yml')
+                            config_file=self.config_file)
         pkg2 = ConanPackage('bar', remote='bar/2.3.4@conan/stable',
                             options={'shared': True},
-                            config_file='/path/to/mopack.yml')
+                            config_file=self.config_file)
 
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.check_call') as mcall:  # noqa
-            ConanPackage.resolve_all(self.pkgdir, [pkg1, pkg2],
-                                     self.deploy_paths)
+            info = ConanPackage.resolve_all(self.pkgdir, [pkg1, pkg2],
+                                            self.deploy_paths)
+            self.assertEqual(info, [
+                {'config': {'source': 'conan', 'name': 'foo',
+                            'remote': 'foo/1.2.3@conan/stable',
+                            'options': {},
+                            'config_file': self.config_file},
+                 'usage': {'type': 'pkgconfig', 'path': self.pkgconfdir}},
+                {'config': {'source': 'conan', 'name': 'bar',
+                            'remote': 'bar/2.3.4@conan/stable',
+                            'options': {'shared': True},
+                            'config_file': self.config_file},
+                 'usage': {'type': 'pkgconfig', 'path': self.pkgconfdir}},
+            ])
+
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
                 [requires]
                 foo/1.2.3@conan/stable
@@ -98,17 +131,17 @@ class TestConan(TestCase):
 
     def test_deploy(self):
         pkg = ConanPackage('foo', remote='foo/1.2.3@conan/stable',
-                           config_file='/path/to/mopack.yml')
+                           config_file=self.config_file)
         with mock.patch('warnings.warn') as mwarn:
             ConanPackage.deploy_all(self.pkgdir, [pkg])
             mwarn.assert_called_once()
 
     def test_clean(self):
         oldpkg = ConanPackage('foo', remote='foo/1.2.3@conan/stable',
-                              config_file='/path/to/mopack.yml')
+                              config_file=self.config_file)
         newpkg1 = ConanPackage('foo', remote='foo/1.2.4@conan/stable',
-                               config_file='/path/to/mopack.yml')
-        newpkg2 = AptPackage('foo', config_file='/path/to/mopack.yml')
+                               config_file=self.config_file)
+        newpkg2 = AptPackage('foo', config_file=self.config_file)
 
         # Conan -> Conan
         with mock.patch('mopack.log.info') as mlog, \
@@ -148,12 +181,11 @@ class TestConan(TestCase):
     def test_equality(self):
         remote = 'foo/1.2.3@conan/stable'
         options = {'shared': True}
-        config_file = '/path/to/mopack.yml'
         pkg = ConanPackage('foo', remote=remote, options=options,
-                           config_file=config_file)
+                           config_file=self.config_file)
 
         self.assertEqual(pkg, ConanPackage(
-            'foo', remote=remote, options=options, config_file=config_file
+            'foo', remote=remote, options=options, config_file=self.config_file
         ))
         self.assertEqual(pkg, ConanPackage(
             'foo', remote=remote, options=options,
@@ -161,19 +193,19 @@ class TestConan(TestCase):
         ))
 
         self.assertNotEqual(pkg, ConanPackage(
-            'bar', remote=remote, options=options, config_file=config_file
+            'bar', remote=remote, options=options, config_file=self.config_file
         ))
         self.assertNotEqual(pkg, ConanPackage(
             'foo', remote='foo/1.2.4@conan/stable', options=options,
-            config_file=config_file
+            config_file=self.config_file
         ))
         self.assertNotEqual(pkg, ConanPackage(
-            'foo', remote=remote, config_file=config_file
+            'foo', remote=remote, config_file=self.config_file
         ))
 
     def test_rehydrate(self):
         pkg = ConanPackage('foo', remote='foo/1.2.3@conan/stable',
                            options={'shared': True},
-                           config_file='/path/to/mopack.yml')
+                           config_file=self.config_file)
         data = pkg.dehydrate()
         self.assertEqual(pkg, Package.rehydrate(data))
