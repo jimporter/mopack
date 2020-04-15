@@ -35,14 +35,27 @@ class TestLogger(TestCase):
 
     def test_exception(self):
         try:
-            lineno = current_lineno() + 1
             raise RuntimeError('runtime error')
         except RuntimeError as e:
             self.logger.exception(e)
         self.assertEqual(self.out.getvalue(), (
+            '{level}: runtime error\n'
+        ).format(level=self._level(log.ERROR)))
+
+    def test_exception_debug(self):
+        logger = logging.getLogger(__name__ + 'debug')
+        logger.propagate = False
+        log._init_logging(logger, True, self.out)
+
+        try:
+            lineno = current_lineno() + 1
+            raise RuntimeError('runtime error')
+        except RuntimeError as e:
+            logger.exception(e)
+        self.assertEqual(self.out.getvalue(), (
             '{level}: runtime error\n' +
             'Traceback (most recent call last):\n' +
-            '  File "{file}", line {line}, in test_exception\n' +
+            '  File "{file}", line {line}, in test_exception_debug\n' +
             "    raise RuntimeError('runtime error')\n" +
             'RuntimeError: runtime error\n'
         ).format(level=self._level(log.ERROR), file=this_file, line=lineno))

@@ -3,7 +3,8 @@ import logging
 import os
 import subprocess
 import warnings
-from logging import info, debug, CRITICAL, ERROR, WARNING, INFO, DEBUG  # noqa
+from logging import (getLogger, info, debug,  # noqa: F401
+                     CRITICAL, ERROR, WARNING, INFO, DEBUG)
 
 
 class ColoredStreamHandler(logging.StreamHandler):
@@ -15,6 +16,10 @@ class ColoredStreamHandler(logging.StreamHandler):
         CRITICAL: '1;41;37',
     }
 
+    def __init__(self, *args, debug=False, **kwargs):  # noqa: F811
+        self.debug = debug
+        super().__init__(*args, **kwargs)
+
     def format(self, record):
         record.coloredlevel = '\033[{format}m{name}\033[0m'.format(
             format=self._format_codes.get(record.levelno, '1'),
@@ -22,11 +27,16 @@ class ColoredStreamHandler(logging.StreamHandler):
         )
         return super().format(record)
 
+    def emit(self, record):
+        if not self.debug and record.exc_info:
+            record.exc_info = None
+        return super().emit(record)
+
 
 def _init_logging(logger, debug, stream=None):  # noqa: F811
     logger.setLevel(logging.DEBUG if debug else logging.INFO)
 
-    handler = ColoredStreamHandler(stream)
+    handler = ColoredStreamHandler(stream, debug=debug)
     fmt = '%(coloredlevel)s: %(message)s'
     handler.setFormatter(logging.Formatter(fmt))
     logger.addHandler(handler)

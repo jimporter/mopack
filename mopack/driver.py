@@ -5,6 +5,8 @@ import json
 from . import commands, config, log
 from .app_version import version
 
+logger = log.getLogger(__name__)
+
 # This environment variable is set to the top builddir when `mopack resolve` is
 # executed so that nested invocations of `mopack` consistently point to the
 # same mopack directory. XXX: There might be a smarter way to do this, but this
@@ -101,4 +103,8 @@ def main():
     args = parser.parse_args()
     log.init(args.color, debug=args.debug, warn_once=args.warn_once)
 
-    return args.func(parser, args.parser, args)
+    try:
+        return args.func(parser, args.parser, args)
+    except Exception as e:
+        logger.exception(e)
+        return 1

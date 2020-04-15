@@ -5,7 +5,7 @@ from io import BytesIO
 from urllib.request import urlopen
 
 from . import Package
-from .. import log
+from .. import log, types
 from ..builders import Builder, make_builder
 
 
@@ -71,7 +71,7 @@ class TarballPackage(SDistPackage):
         self.path = (os.path.normpath(os.path.join(self.config_dir, path))
                      if path is not None else None)
         self.files = files
-        self.srcdir = srcdir
+        self.srcdir = types.inner_path('srcdir', srcdir)
         self.guessed_srcdir = None  # Set in fetch().
 
     def _srcdir(self, pkgdir):

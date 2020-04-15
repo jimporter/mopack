@@ -1,6 +1,8 @@
 import os
 import yaml
+from yaml.error import MarkedYAMLError
 
+from .yaml_loader import make_yaml_error, SafeLineLoader
 from .sources import make_package
 
 
@@ -22,17 +24,22 @@ class Config:
     def _accumulate_config(self, filename):
         filename = os.path.abspath(filename)
         with open(filename) as f:
-            next_config = yaml.safe_load(f)
-            for k, v in next_config['packages'].items():
-                if k in self.packages:
-                    continue
-                v['config_file'] = filename
+            try:
+                next_config = yaml.load(f, Loader=SafeLineLoader)
+                for k, v in next_config['packages'].items():
+                    if k in self.packages:
+                        continue
+                    v['config_file'] = filename
 
-                # If a parent package has already defined this package, just
-                # store a placeholder to track it. Otherwise, make the real
-                # package object.
-                self.packages[k] = (PlaceholderPackage if self._in_parent(k)
-                                    else make_package(k, v))
+                    # If a parent package has already defined this package,
+                    # just store a placeholder to track it. Otherwise, make the
+                    # real package object.
+                    self.packages[k] = (
+                        PlaceholderPackage if self._in_parent(k)
+                        else make_package(k, v)
+                    )
+            except MarkedYAMLError as e:
+                raise make_yaml_error(e, f) from None
 
     def _in_parent(self, name):
         if not self.parent:

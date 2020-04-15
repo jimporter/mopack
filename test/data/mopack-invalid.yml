@@ -1,0 +1,6 @@
+packages:
+  foo:
+    source: tarball
+    path: blah
+    srcdir: ../foo
+    build: bfg9000

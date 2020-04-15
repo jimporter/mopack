@@ -1,7 +1,10 @@
 import os
 from pkg_resources import load_entry_point
+from yaml.error import MarkedYAMLError
 
 from ..freezedried import FreezeDried
+from ..yaml_loader import MarkedDict
+from ..types import FieldError
 
 
 def _get_source_type(source):
@@ -44,4 +47,14 @@ class Package(FreezeDried):
 def make_package(name, config):
     config = config.copy()
     source = config.pop('source')
-    return _get_source_type(source)(name, **config)
+
+    try:
+        return _get_source_type(source)(name, **config)
+    except TypeError as e:
+        if not isinstance(config, MarkedDict):
+            raise
+
+        context = 'while constructing package {!r}'.format(name)
+        mark = (config.marks[e.field] if isinstance(e, FieldError)
+                else config.mark)
+        raise MarkedYAMLError(context, config.mark, str(e), mark)

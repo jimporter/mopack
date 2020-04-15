@@ -1,6 +1,9 @@
 from pkg_resources import load_entry_point
+from yaml.error import MarkedYAMLError
 
 from ..freezedried import FreezeDried
+from ..yaml_loader import MarkedDict
+from ..types import FieldError
 
 
 def _get_builder_type(type):
@@ -29,4 +32,13 @@ def make_builder(name, config):
         config = config.copy()
         type = config.pop('type')
 
-    return _get_builder_type(type)(name, **config)
+    try:
+        return _get_builder_type(type)(name, **config)
+    except TypeError as e:
+        if not isinstance(config, MarkedDict):
+            raise
+
+        context = 'while constructing builder {!r}'.format(name)
+        mark = (config.marks[e.field] if isinstance(e, FieldError)
+                else config.mark)
+        raise MarkedYAMLError(context, config.mark, str(e), mark)
