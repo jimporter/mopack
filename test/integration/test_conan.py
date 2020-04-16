@@ -17,11 +17,12 @@ class TestConan(IntegrationTest):
         output = json.loads(self.assertPopen(['mopack', 'info', 'zlib']))
         self.assertEqual(output, {
             'config': {
-                'source': 'conan',
                 'name': 'zlib',
                 'config_file': config,
+                'source': 'conan',
                 'remote': 'zlib/1.2.11@conan/stable',
                 'options': {'shared': True},
+                'usage': {'type': 'pkgconfig', 'path': '.'}
             },
             'usage': {
                 'type': 'pkgconfig',

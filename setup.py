@@ -132,6 +132,10 @@ setup(
         'mopack.builders': [
             'bfg9000=mopack.builders.bfg9000:Bfg9000Builder',
         ],
+        'mopack.usage': [
+            'pkgconfig=mopack.usage.pkgconfig:PkgConfigUsage',
+            'system=mopack.usage.system:SystemUsage',
+        ],
     },
 
     test_suite='test',

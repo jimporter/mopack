@@ -24,6 +24,7 @@ class TestApt(IntegrationTest):
                 'config_file': config,
                 'source': 'apt',
                 'remote': 'libogg-dev',
+                'usage': {'type': 'system'}
             },
             'usage': {'type': 'system'}
         })
@@ -35,6 +36,7 @@ class TestApt(IntegrationTest):
                 'config_file': config,
                 'source': 'apt',
                 'remote': 'zlib1g-dev',
+                'usage': {'type': 'system'}
             },
             'usage': {'type': 'system'}
         })

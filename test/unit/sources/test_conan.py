@@ -43,10 +43,12 @@ class TestConan(TestCase):
             info = ConanPackage.resolve_all(self.pkgdir, [pkg],
                                             self.deploy_paths)
             self.assertEqual(info, [
-                {'config': {'source': 'conan', 'name': 'foo',
+                {'config': {'name': 'foo',
+                            'config_file': self.config_file,
+                            'source': 'conan',
                             'remote': 'foo/1.2.3@conan/stable',
                             'options': {},
-                            'config_file': self.config_file},
+                            'usage': {'type': 'pkgconfig', 'path': '.'}},
                  'usage': {'type': 'pkgconfig', 'path': self.pkgconfdir}},
             ])
 
@@ -73,10 +75,12 @@ class TestConan(TestCase):
             info = ConanPackage.resolve_all(self.pkgdir, [pkg],
                                             self.deploy_paths)
             self.assertEqual(info, [
-                {'config': {'source': 'conan', 'name': 'foo',
+                {'config': {'name': 'foo',
+                            'config_file': self.config_file,
+                            'source': 'conan',
                             'remote': 'foo/1.2.3@conan/stable',
                             'options': {'shared': True},
-                            'config_file': self.config_file},
+                            'usage': {'type': 'pkgconfig', 'path': '.'}},
                  'usage': {'type': 'pkgconfig', 'path': self.pkgconfdir}},
             ])
 
@@ -104,15 +108,19 @@ class TestConan(TestCase):
             info = ConanPackage.resolve_all(self.pkgdir, [pkg1, pkg2],
                                             self.deploy_paths)
             self.assertEqual(info, [
-                {'config': {'source': 'conan', 'name': 'foo',
+                {'config': {'name': 'foo',
+                            'config_file': self.config_file,
+                            'source': 'conan',
                             'remote': 'foo/1.2.3@conan/stable',
                             'options': {},
-                            'config_file': self.config_file},
+                            'usage': {'type': 'pkgconfig', 'path': '.'}},
                  'usage': {'type': 'pkgconfig', 'path': self.pkgconfdir}},
-                {'config': {'source': 'conan', 'name': 'bar',
+                {'config': {'name': 'bar',
+                            'config_file': self.config_file,
+                            'source': 'conan',
                             'remote': 'bar/2.3.4@conan/stable',
                             'options': {'shared': True},
-                            'config_file': self.config_file},
+                            'usage': {'type': 'pkgconfig', 'path': '.'}},
                  'usage': {'type': 'pkgconfig', 'path': self.pkgconfdir}},
             ])
 

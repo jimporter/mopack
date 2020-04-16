@@ -5,6 +5,7 @@ from . import Builder
 from .. import types
 from ..log import LogFile
 from ..path import pushd
+from ..usage import Usage, make_usage
 
 _known_install_types = ('prefix', 'exec-prefix', 'bindir', 'libdir',
                         'includedir')
@@ -12,10 +13,12 @@ _known_install_types = ('prefix', 'exec-prefix', 'bindir', 'libdir',
 
 class Bfg9000Builder(Builder):
     type = 'bfg9000'
+    _rehydrate_fields = {'usage': Usage}
 
-    def __init__(self, name, *, extra_args=None):
+    def __init__(self, name, *, extra_args=None, usage=None):
         super().__init__(name)
         self.extra_args = types.shell_args('extra_args', extra_args)
+        self.usage = make_usage(usage or 'pkgconfig')
 
     def _builddir(self, pkgdir):
         return os.path.abspath(os.path.join(pkgdir, 'build', self.name))
@@ -40,7 +43,7 @@ class Bfg9000Builder(Builder):
                                    self.extra_args)
             with pushd(builddir):
                 logfile.check_call(['ninja'])
-        return os.path.abspath(builddir)
+        return self.usage.usage(os.path.abspath(builddir))
 
     def deploy(self, pkgdir):
         with LogFile.open(pkgdir, self.name + '-deploy') as logfile:

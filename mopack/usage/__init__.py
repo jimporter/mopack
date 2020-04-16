@@ -6,25 +6,26 @@ from ..yaml_loader import MarkedDict
 from ..types import FieldError
 
 
-def _get_builder_type(type):
+def _get_usage_type(type):
     try:
-        return load_entry_point('mopack', 'mopack.builders', type)
+        return load_entry_point('mopack', 'mopack.usage', type)
     except ImportError:
-        raise ValueError('unknown builder {!r}'.format(type))
+        raise ValueError('unknown usage {!r}'.format(type))
 
 
-class Builder(FreezeDried):
+class Usage(FreezeDried):
     _type_field = 'type'
-    _get_type = _get_builder_type
+    _get_type = _get_usage_type
 
-    def __init__(self, name):
-        self.name = name
+    def _usage(self, **kwargs):
+        kwargs['type'] = self.type
+        return kwargs
 
     def __repr__(self):
-        return '<{}({!r})>'.format(type(self).__name__, self.name)
+        return '<{}>'.format(type(self).__name__)
 
 
-def make_builder(name, config, **kwargs):
+def make_usage(config):
     if isinstance(config, str):
         type = config
         config = {}
@@ -33,12 +34,12 @@ def make_builder(name, config, **kwargs):
         type = config.pop('type')
 
     try:
-        return _get_builder_type(type)(name, **config, **kwargs)
+        return _get_usage_type(type)(**config)
     except TypeError as e:
         if not isinstance(config, MarkedDict):
             raise
 
-        context = 'while constructing builder {!r}'.format(name)
+        context = 'while constructing usage {!r}'.format(type)
         mark = (config.marks[e.field] if isinstance(e, FieldError)
                 else config.mark)
         raise MarkedYAMLError(context, config.mark, str(e), mark)

@@ -1,5 +1,6 @@
 from . import Package
 from .. import log
+from ..usage.system import SystemUsage
 
 
 class SystemPackage(Package):
@@ -11,7 +12,8 @@ class SystemPackage(Package):
             ', '.join(repr(i.name) for i in packages), cls.source
         ))
 
-        return cls._resolved_metadata_all(packages, {'type': 'system'})
+        usages = [SystemUsage().usage(None)] * len(packages)
+        return cls._resolved_metadata_all(packages, usages)
 
     @staticmethod
     def deploy_all(pkgdir, packages):

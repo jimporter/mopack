@@ -39,7 +39,7 @@ class Config:
                         else make_package(k, v)
                     )
             except MarkedYAMLError as e:
-                raise make_yaml_error(e, f) from None
+                raise make_yaml_error(e, f)
 
     def _in_parent(self, name):
         if not self.parent:

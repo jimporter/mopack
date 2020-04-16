@@ -1,14 +1,17 @@
 from . import Package
 from .. import log
+from ..usage import Usage, make_usage
 
 
 class AptPackage(Package):
     source = 'apt'
+    _rehydrate_fields = {'usage': Usage}
 
-    def __init__(self, name, remote=None, **kwargs):
+    def __init__(self, name, remote=None, usage='system', **kwargs):
         super().__init__(name, **kwargs)
         # XXX: Add support for repositories.
         self.remote = remote or 'lib{}-dev'.format(name)
+        self.usage = make_usage(usage)
 
     @classmethod
     def resolve_all(cls, pkgdir, packages, deploy_paths):
@@ -20,7 +23,8 @@ class AptPackage(Package):
         with log.LogFile.open(pkgdir, 'apt') as logfile:
             logfile.check_call(['sudo', 'apt-get', 'install', '-y'] + remotes)
 
-        return cls._resolved_metadata_all(packages, {'type': 'system'})
+        usages = [i.usage.usage(None) for i in packages]
+        return cls._resolved_metadata_all(packages, usages)
 
     @staticmethod
     def deploy_all(pkgdir, packages):

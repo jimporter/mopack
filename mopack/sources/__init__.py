@@ -38,7 +38,7 @@ class Package(FreezeDried):
 
     @staticmethod
     def _resolved_metadata_all(packages, usage):
-        return [i._resolved_metadata(usage) for i in packages]
+        return [p._resolved_metadata(u) for p, u in zip(packages, usage)]
 
     def __repr__(self):
         return '<{}({!r})>'.format(type(self).__name__, self.name)

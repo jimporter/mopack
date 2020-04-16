@@ -4,6 +4,7 @@ from unittest import mock, TestCase
 from .. import mock_open_log
 from ... import *
 
+from mopack.builders.bfg9000 import Bfg9000Builder
 from mopack.sources import Package
 from mopack.sources.apt import AptPackage
 from mopack.sources.sdist import DirectoryPackage, TarballPackage
@@ -35,9 +36,10 @@ class SDistTestCase(TestCase):
 class TestDirectory(SDistTestCase):
     def test_resolve(self):
         path = os.path.join(test_data_dir, 'bfg_project')
-        pkg = DirectoryPackage('foo', build='bfg9000', path=path,
+        pkg = DirectoryPackage('foo', path=path, build='bfg9000',
                                config_file=self.config_file)
         self.assertEqual(pkg.path, path)
+        self.assertEqual(pkg.builder, Bfg9000Builder('foo'))
 
         pkg.fetch(self.pkgdir)
 
@@ -46,21 +48,50 @@ class TestDirectory(SDistTestCase):
              mock.patch('subprocess.check_call'):  # noqa
             info = pkg.resolve(self.pkgdir, self.deploy_paths)
             self.assertEqual(info, {
-                'config': {'source': 'directory', 'name': 'foo', 'path': path,
+                'config': {'name': 'foo',
+                           'config_file': self.config_file,
+                           'source': 'directory',
+                           'path': path,
                            'builder': {
                                'type': 'bfg9000',
                                'name': 'foo',
                                'extra_args': [],
-                           },
-                           'config_file': self.config_file},
+                               'usage': {
+                                   'type': 'pkgconfig',
+                                   'path': 'pkgconfig',
+                               },
+                           }},
                 'usage': {'type': 'pkgconfig', 'path': self.pkgconfdir('foo')}
             })
 
             mopen.assert_called_with(os.path.join(self.pkgdir, 'foo.log'), 'w')
 
+    def test_build(self):
+        path = os.path.join(test_data_dir, 'bfg_project')
+        build = {'type': 'bfg9000', 'extra_args': '--extra'}
+        pkg = DirectoryPackage('foo', path=path, build=build,
+                               usage='pkgconfig', config_file=self.config_file)
+        self.assertEqual(pkg.path, path)
+        self.assertEqual(pkg.builder, Bfg9000Builder(
+            'foo', extra_args='--extra'
+        ))
+
+    def test_usage(self):
+        path = os.path.join(test_data_dir, 'bfg_project')
+        pkg = DirectoryPackage('foo', path=path, build='bfg9000',
+                               usage='pkgconfig', config_file=self.config_file)
+        self.assertEqual(pkg.path, path)
+        self.assertEqual(pkg.builder, Bfg9000Builder('foo', usage='pkgconfig'))
+
+        usage = {'type': 'pkgconfig', 'path': 'pkgconf'}
+        pkg = DirectoryPackage('foo', path=path, build='bfg9000', usage=usage,
+                               config_file=self.config_file)
+        self.assertEqual(pkg.path, path)
+        self.assertEqual(pkg.builder, Bfg9000Builder('foo', usage=usage))
+
     def test_deploy(self):
         path = os.path.join(test_data_dir, 'bfg_project')
-        pkg = DirectoryPackage('foo', build='bfg9000', path=path,
+        pkg = DirectoryPackage('foo', path=path, build='bfg9000',
                                config_file=self.config_file)
 
         with mock_open_log() as mopen, \
@@ -150,15 +181,23 @@ class TestTarball(SDistTestCase):
              mock.patch('subprocess.check_call'):  # noqa
             info = pkg.resolve(self.pkgdir, self.deploy_paths)
             self.assertEqual(info, {
-                'config': {'source': 'tarball', 'name': 'foo', 'path': path,
-                           'url': url, 'files': None, 'srcdir': None,
+                'config': {'name': 'foo',
+                           'config_file': self.config_file,
+                           'source': 'tarball',
+                           'path': path,
+                           'url': url,
+                           'files': None,
+                           'srcdir': None,
                            'guessed_srcdir': 'bfg_project',
                            'builder': {
                                'type': 'bfg9000',
                                'name': 'foo',
                                'extra_args': [],
-                           },
-                           'config_file': self.config_file},
+                               'usage': {
+                                   'type': 'pkgconfig',
+                                   'path': 'pkgconfig',
+                               },
+                           }},
                 'usage': {'type': 'pkgconfig', 'path': self.pkgconfdir('foo')}
             })
 
@@ -197,6 +236,29 @@ class TestTarball(SDistTestCase):
         with self.assertRaises(TypeError):
             TarballPackage('foo', build='bfg9000',
                            config_file=self.config_file)
+
+    def test_build(self):
+        path = os.path.join(test_data_dir, 'bfg_project.tar.gz')
+        build = {'type': 'bfg9000', 'extra_args': '--extra'}
+        pkg = TarballPackage('foo', path=path, build=build, usage='pkgconfig',
+                             config_file=self.config_file)
+        self.assertEqual(pkg.path, path)
+        self.assertEqual(pkg.builder, Bfg9000Builder(
+            'foo', extra_args='--extra'
+        ))
+
+    def test_usage(self):
+        path = os.path.join(test_data_dir, 'bfg_project.tar.gz')
+        pkg = TarballPackage('foo', path=path, build='bfg9000',
+                             usage='pkgconfig', config_file=self.config_file)
+        self.assertEqual(pkg.path, path)
+        self.assertEqual(pkg.builder, Bfg9000Builder('foo', usage='pkgconfig'))
+
+        usage = {'type': 'pkgconfig', 'path': 'pkgconf'}
+        pkg = TarballPackage('foo', path=path, build='bfg9000', usage=usage,
+                             config_file=self.config_file)
+        self.assertEqual(pkg.path, path)
+        self.assertEqual(pkg.builder, Bfg9000Builder('foo', usage=usage))
 
     def test_deploy(self):
         pkg = TarballPackage('foo', build='bfg9000', url='http://example.com',

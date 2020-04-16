@@ -22,9 +22,11 @@ class TestApt(TestCase):
             info = AptPackage.resolve_all(self.pkgdir, [pkg],
                                           self.deploy_paths)
             self.assertEqual(info, [
-                {'config': {'source': 'apt', 'name': 'foo',
+                {'config': {'name': 'foo',
+                            'config_file': self.config_file,
+                            'source': 'apt',
                             'remote': 'libfoo-dev',
-                            'config_file': self.config_file},
+                            'usage': {'type': 'system'}},
                  'usage': {'type': 'system'}},
             ])
 
@@ -45,6 +47,7 @@ class TestApt(TestCase):
             self.assertEqual(info, [
                 {'config': {'source': 'apt', 'name': 'foo',
                             'remote': 'foo-dev',
+                            'usage': {'type': 'system'},
                             'config_file': self.config_file},
                  'usage': {'type': 'system'}},
             ])
@@ -64,13 +67,17 @@ class TestApt(TestCase):
             info = AptPackage.resolve_all(self.pkgdir, [pkg1, pkg2],
                                           self.deploy_paths)
             self.assertEqual(info, [
-                {'config': {'source': 'apt', 'name': 'foo',
+                {'config': {'name': 'foo',
+                            'config_file': self.config_file,
+                            'source': 'apt',
                             'remote': 'libfoo-dev',
-                            'config_file': self.config_file},
+                            'usage': {'type': 'system'}},
                  'usage': {'type': 'system'}},
-                {'config': {'source': 'apt', 'name': 'bar',
+                {'config': {'name': 'bar',
+                            'config_file': self.config_file,
+                            'source': 'apt',
                             'remote': 'bar-dev',
-                            'config_file': self.config_file},
+                            'usage': {'type': 'system'}},
                  'usage': {'type': 'system'}},
             ])
 

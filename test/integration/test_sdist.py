@@ -23,13 +23,17 @@ class TestSdist(IntegrationTest):
         output = json.loads(self.assertPopen(['mopack', 'info', 'foo']))
         self.assertEqual(output, {
             'config': {
-                'source': 'tarball',
                 'name': 'foo',
                 'config_file': config,
+                'source': 'tarball',
                 'builder': {
                     'type': 'bfg9000',
                     'name': 'foo',
                     'extra_args': [],
+                    'usage': {
+                        'type': 'pkgconfig',
+                        'path': 'pkgconfig',
+                    },
                 },
                 'url': None,
                 'path': os.path.join(test_data_dir, 'bfg_project.tar.gz'),

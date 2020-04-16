@@ -17,6 +17,10 @@ class TestNested(IntegrationTest):
             'type': 'bfg9000',
             'name': name,
             'extra_args': [],
+            'usage': {
+                'type': 'pkgconfig',
+                'path': 'pkgconfig',
+            },
         }
 
     def test_resolve(self):
@@ -33,9 +37,9 @@ class TestNested(IntegrationTest):
         output = json.loads(self.assertPopen(['mopack', 'info', 'greeter']))
         self.assertEqual(output, {
             'config': {
-                'source': 'directory',
                 'name': 'greeter',
                 'config_file': config,
+                'source': 'directory',
                 'builder': self._builder('greeter'),
                 'path': os.path.join(test_data_dir, 'nested'),
             },
@@ -48,10 +52,10 @@ class TestNested(IntegrationTest):
         output = json.loads(self.assertPopen(['mopack', 'info', 'hello']))
         self.assertEqual(output, {
             'config': {
-                'source': 'tarball',
                 'name': 'hello',
                 'config_file': os.path.join(test_data_dir, 'nested',
                                             'mopack.yml'),
+                'source': 'tarball',
                 'builder': self._builder('hello'),
                 'url': None,
                 'path': os.path.join(test_data_dir, 'bfg_project.tar.gz'),

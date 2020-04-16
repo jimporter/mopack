@@ -3,15 +3,18 @@ import warnings
 
 from . import Package
 from .. import log
+from ..usage import Usage, make_usage
 
 
 class ConanPackage(Package):
     source = 'conan'
+    _rehydrate_fields = {'usage': Usage}
 
-    def __init__(self, name, remote, options=None, **kwargs):
+    def __init__(self, name, remote, options=None, usage=None, **kwargs):
         super().__init__(name, **kwargs)
         self.remote = remote
         self.options = options or {}
+        self.usage = make_usage(usage or {'type': 'pkgconfig', 'path': ''})
 
     @property
     def remote_name(self):
@@ -50,9 +53,8 @@ class ConanPackage(Package):
             logfile.check_call(['conan', 'install', '-g', 'pkg_config',
                                 '-if', installdir, pkgdir])
 
-        return cls._resolved_metadata_all(packages, {
-            'type': 'pkgconfig', 'path': os.path.abspath(installdir)
-        })
+        usages = [i.usage.usage(os.path.abspath(installdir)) for i in packages]
+        return cls._resolved_metadata_all(packages, usages)
 
     @staticmethod
     def deploy_all(pkgdir, packages):

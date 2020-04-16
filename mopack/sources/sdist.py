@@ -12,9 +12,9 @@ from ..builders import Builder, make_builder
 class SDistPackage(Package):
     _rehydrate_fields = {'builder': Builder}
 
-    def __init__(self, name, *, build, **kwargs):
+    def __init__(self, name, *, build, usage=None, **kwargs):
         super().__init__(name, **kwargs)
-        self.builder = make_builder(name, build)
+        self.builder = make_builder(name, build, usage=usage)
 
     def _find_mopack(self, srcdir):
         mopack = os.path.join(srcdir, 'mopack.yml')
@@ -31,9 +31,7 @@ class SDistPackage(Package):
     def _resolve(self, pkgdir, srcdir, deploy_paths):
         log.info('resolving {!r}'.format(self.name))
 
-        builddir = self.builder.build(pkgdir, srcdir, deploy_paths)
-        pkgconfig = os.path.join(builddir, 'pkgconfig')
-        usage = {'type': 'pkgconfig', 'path': pkgconfig}
+        usage = self.builder.build(pkgdir, srcdir, deploy_paths)
         return self._resolved_metadata(usage)
 
     def deploy(self, pkgdir):
