@@ -74,8 +74,12 @@ class TarballPackage(SDistPackage):
         self.srcdir = types.inner_path('srcdir', srcdir)
         self.guessed_srcdir = None  # Set in fetch().
 
+    def _base_srcdir(self, pkgdir):
+        return os.path.join(pkgdir, 'src', self.name)
+
     def _srcdir(self, pkgdir):
-        return os.path.join(pkgdir, 'src', self.srcdir or self.guessed_srcdir)
+        return os.path.join(self._base_srcdir(pkgdir),
+                            self.srcdir or self.guessed_srcdir)
 
     def _urlopen(self, url):
         with urlopen(url) as f:
@@ -83,14 +87,14 @@ class TarballPackage(SDistPackage):
 
     def clean_needed(self, pkgdir, new_package):
         if super().clean_needed(pkgdir, new_package):
-            shutil.rmtree(self._srcdir(pkgdir), ignore_errors=True)
+            shutil.rmtree(self._base_srcdir(pkgdir), ignore_errors=True)
             return True
         return False
 
     def fetch(self, pkgdir):
         log.info('fetching {!r} from {}'.format(self.name, self.source))
 
-        base_srcdir = os.path.join(pkgdir, 'src')
+        base_srcdir = self._base_srcdir(pkgdir)
         with (self._urlopen(self.url) if self.url else
               open(self.path, 'rb')) as f:
             # XXX: Support zip.

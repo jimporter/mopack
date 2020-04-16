@@ -15,7 +15,7 @@ class TestSdist(IntegrationTest):
         config = os.path.join(test_data_dir, 'mopack-tarball.yml')
         self.assertPopen(['mopack', 'resolve', config,
                           '-Pprefix=' + self.prefix])
-        self.assertExists('mopack/src/bfg_project/build.bfg')
+        self.assertExists('mopack/src/foo/bfg_project/build.bfg')
         self.assertExists('mopack/build/foo/')
         self.assertExists('mopack/foo.log')
         self.assertExists('mopack/mopack.json')
@@ -29,7 +29,6 @@ class TestSdist(IntegrationTest):
                 'builder': {
                     'type': 'bfg9000',
                     'name': 'foo',
-                    'builddir': 'foo',
                     'extra_args': [],
                 },
                 'url': None,

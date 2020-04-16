@@ -10,11 +10,10 @@ from mopack.builders.bfg9000 import Bfg9000Builder
 class TestMakeBuilder(TestCase):
     def test_make(self):
         builder = make_builder('foo', {
-            'type': 'bfg9000', 'builddir': 'path'
+            'type': 'bfg9000'
         })
         self.assertIsInstance(builder, Bfg9000Builder)
         self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.builddir, 'path')
 
     def test_invalid(self):
         self.assertRaises(TypeError, make_builder, 'foo',

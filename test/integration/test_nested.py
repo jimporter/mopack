@@ -16,7 +16,6 @@ class TestNested(IntegrationTest):
         return {
             'type': 'bfg9000',
             'name': name,
-            'builddir': name,
             'extra_args': [],
         }
 
@@ -26,7 +25,7 @@ class TestNested(IntegrationTest):
                           '-Pprefix=' + self.prefix])
         self.assertExists('mopack/build/greeter/')
         self.assertExists('mopack/greeter.log')
-        self.assertExists('mopack/src/bfg_project/build.bfg')
+        self.assertExists('mopack/src/hello/bfg_project/')
         self.assertExists('mopack/build/hello/')
         self.assertExists('mopack/hello.log')
         self.assertExists('mopack/mopack.json')

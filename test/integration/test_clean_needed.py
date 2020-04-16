@@ -13,7 +13,6 @@ class TestCleanNeeded(IntegrationTest):
         return {
             'type': 'bfg9000',
             'name': name,
-            'builddir': name,
             'extra_args': extra_args,
         }
 
@@ -63,7 +62,7 @@ class TestCleanNeeded(IntegrationTest):
         self.assertPopen(['mopack', 'resolve', config])
         self.assertExists('mopack/build/greeter/')
         self.assertExists('mopack/greeter.log')
-        self.assertExists('mopack/src/bfg_project')
+        self.assertExists('mopack/src/hello/bfg_project/')
         self.assertExists('mopack/build/hello/')
         self.assertExists('mopack/hello.log')
         self.assertExists('mopack/mopack.json')

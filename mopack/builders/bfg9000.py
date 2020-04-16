@@ -13,14 +13,12 @@ _known_install_types = ('prefix', 'exec-prefix', 'bindir', 'libdir',
 class Bfg9000Builder(Builder):
     type = 'bfg9000'
 
-    def __init__(self, name, *, builddir=None, extra_args=None):
+    def __init__(self, name, *, extra_args=None):
         super().__init__(name)
-        self.builddir = types.inner_path('builddir', builddir or name,
-                                         none_ok=False)
         self.extra_args = types.shell_args('extra_args', extra_args)
 
     def _builddir(self, pkgdir):
-        return os.path.abspath(os.path.join(pkgdir, 'build', self.builddir))
+        return os.path.abspath(os.path.join(pkgdir, 'build', self.name))
 
     def _install_args(self, deploy_paths):
         args = []
