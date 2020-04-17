@@ -1,10 +1,13 @@
 import collections.abc
+import yaml
+from contextlib import contextmanager
+from yaml.error import MarkedYAMLError
 from yaml.loader import SafeLoader
 from yaml.nodes import MappingNode, SequenceNode
 from yaml.constructor import ConstructorError
 
-__all__ = ['make_yaml_error', 'MarkedDict', 'MarkedList', 'SafeLineLoader',
-           'YamlParseError']
+__all__ = ['load_file', 'make_yaml_error', 'MarkedDict', 'MarkedList',
+           'SafeLineLoader', 'YamlParseError']
 
 
 class YamlParseError(Exception):
@@ -24,6 +27,15 @@ def make_yaml_error(e, stream):
     stream.seek(e.problem_mark.index - e.problem_mark.column, 0)
     snippet = stream.readline().rstrip()
     return YamlParseError(e.problem, e.problem_mark, snippet)
+
+
+@contextmanager
+def load_file(filename, Loader=SafeLoader):
+    with open(filename) as f:
+        try:
+            yield yaml.load(f, Loader=Loader)
+        except MarkedYAMLError as e:
+            raise make_yaml_error(e, f)
 
 
 class MarkedCollection:

@@ -1,10 +1,10 @@
 import yaml
 from io import StringIO
 from textwrap import dedent
-from unittest import TestCase
+from unittest import mock, TestCase
 from yaml.error import MarkedYAMLError
 
-from mopack.yaml_loader import *
+from mopack.yaml_tools import *
 
 
 class TestMakeYamlError(TestCase):
@@ -18,6 +18,38 @@ class TestMakeYamlError(TestCase):
             self.assertEqual(err.mark.line, 0)
             self.assertEqual(err.mark.column, 1)
             self.assertRegex(str(err), '(?m)^  &\n   \\^$')
+
+
+class TestLoadFile(TestCase):
+    yaml_data = dedent("""
+    house:
+      cat: 1
+      dog: 2
+    zoo:
+      panda: 3
+      giraffe: 4
+    """).strip()
+
+    def test_success(self):
+        mopen = mock.mock_open(read_data=self.yaml_data)
+        with mock.patch('builtins.open', mopen):
+            with load_file('file.yml') as data:
+                self.assertEqual(data, {'house': {'cat': 1, 'dog': 2},
+                                        'zoo': {'panda': 3, 'giraffe': 4}})
+
+    def test_parse_error(self):
+        with mock.patch('builtins.open', mock.mock_open(read_data='&')), \
+             self.assertRaises(YamlParseError):  # noqa
+            with load_file('file.yml'):
+                pass
+
+    def test_user_error(self):
+        mopen = mock.mock_open(read_data=self.yaml_data)
+        with mock.patch('builtins.open', mopen), \
+             self.assertRaises(YamlParseError):  # noqa
+            with load_file('file.yml', Loader=SafeLineLoader) as data:
+                raise MarkedYAMLError('context', data.mark, 'problem',
+                                      data.marks['zoo'])
 
 
 class TestMarkedList(TestCase):

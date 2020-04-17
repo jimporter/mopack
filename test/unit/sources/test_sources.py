@@ -2,7 +2,7 @@ import yaml
 from unittest import TestCase
 from yaml.error import MarkedYAMLError
 
-from mopack.yaml_loader import SafeLineLoader
+from mopack.yaml_tools import SafeLineLoader
 from mopack.sources import make_package
 from mopack.sources.sdist import DirectoryPackage
 

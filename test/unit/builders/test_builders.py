@@ -2,7 +2,7 @@ import yaml
 from unittest import TestCase
 from yaml.error import MarkedYAMLError
 
-from mopack.yaml_loader import SafeLineLoader
+from mopack.yaml_tools import SafeLineLoader
 from mopack.builders import make_builder
 from mopack.builders.bfg9000 import Bfg9000Builder
 

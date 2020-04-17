@@ -3,7 +3,7 @@ from pkg_resources import load_entry_point
 from yaml.error import MarkedYAMLError
 
 from ..freezedried import FreezeDried
-from ..yaml_loader import MarkedDict
+from ..yaml_tools import MarkedDict
 from ..types import FieldError
 
 
