@@ -35,7 +35,7 @@ def resolve(parser, subparser, args):
 def usage(parser, subparser, args):
     args.directory = os.environ.get(nested_invoke, args.directory)
     usage = commands.usage(commands.get_package_dir(args.directory),
-                           args.package)
+                           args.package, args.strict)
 
     if args.json:
         print(json.dumps(usage))
@@ -87,10 +87,12 @@ def main():
         'usage', help='retrieve usage info for a package'
     )
     usage_p.set_defaults(func=usage, parser=usage_p)
-    usage_p.add_argument('--json', action='store_true',
-                         help='display results as JSON')
     usage_p.add_argument('--directory', default='.', metavar='PATH',
                          help='directory storing local package data')
+    usage_p.add_argument('--json', action='store_true',
+                         help='display results as JSON')
+    usage_p.add_argument('--strict', action='store_true',
+                         help='return an error if package is not defined')
     usage_p.add_argument('package', help='the name of the package to query')
 
     deploy_p = subparsers.add_parser(

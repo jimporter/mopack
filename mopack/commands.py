@@ -4,6 +4,7 @@ import shutil
 
 from .config import Config, PlaceholderPackage
 from .sources import Package
+from .usage import make_usage
 
 mopack_dirname = 'mopack'
 
@@ -142,5 +143,14 @@ def deploy(pkgdir):
 
 
 def usage(pkgdir, name, strict=False):
-    metadata = Metadata.load(pkgdir)
-    return dict(name=name, **metadata.packages[name]['usage'])
+    try:
+        metadata = Metadata.load(pkgdir)
+        if name in metadata.packages:
+            return dict(name=name, **metadata.packages[name]['usage'])
+        elif strict:
+            raise ValueError('no definition for package {!r}'.format(name))
+    except FileNotFoundError:
+        if strict:
+            raise
+
+    return dict(name=name, **make_usage('system').usage(None))
