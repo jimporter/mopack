@@ -139,3 +139,8 @@ def deploy(pkgdir):
         k.deploy_all(pkgdir, v)
     for i in packages:
         i.deploy(pkgdir)
+
+
+def usage(pkgdir, name, strict=False):
+    metadata = Metadata.load(pkgdir)
+    return dict(name=name, **metadata.packages[name]['usage'])

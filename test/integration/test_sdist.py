@@ -20,32 +20,44 @@ class TestSdist(IntegrationTest):
         self.assertExists('mopack/foo.log')
         self.assertExists('mopack/mopack.json')
 
-        output = json.loads(self.assertPopen(['mopack', 'info', 'foo']))
+        output = json.loads(self.assertPopen([
+            'mopack', 'usage', 'foo', '--json'
+        ]))
         self.assertEqual(output, {
-            'config': {
-                'name': 'foo',
-                'config_file': config,
-                'source': 'tarball',
-                'builder': {
-                    'type': 'bfg9000',
+            'name': 'foo',
+            'type': 'pkgconfig',
+            'path': os.path.join(self.stage, 'mopack', 'build', 'foo',
+                                 'pkgconfig'),
+        })
+
+        output = json.loads(slurp('mopack/mopack.json'))
+        self.assertEqual(output['metadata']['packages'], {
+            'foo': {
+                'config': {
                     'name': 'foo',
-                    'extra_args': [],
-                    'usage': {
-                        'type': 'pkgconfig',
-                        'path': 'pkgconfig',
+                    'config_file': config,
+                    'source': 'tarball',
+                    'builder': {
+                        'type': 'bfg9000',
+                        'name': 'foo',
+                        'extra_args': [],
+                        'usage': {
+                            'type': 'pkgconfig',
+                            'path': 'pkgconfig',
+                        },
                     },
+                    'url': None,
+                    'path': os.path.join(test_data_dir, 'bfg_project.tar.gz'),
+                    'files': None,
+                    'srcdir': None,
+                    'guessed_srcdir': 'bfg_project',
                 },
-                'url': None,
-                'path': os.path.join(test_data_dir, 'bfg_project.tar.gz'),
-                'files': None,
-                'srcdir': None,
-                'guessed_srcdir': 'bfg_project',
+                'usage': {
+                    'type': 'pkgconfig',
+                    'path': os.path.join(self.stage, 'mopack', 'build', 'foo',
+                                         'pkgconfig'),
+                },
             },
-            'usage': {
-                'type': 'pkgconfig',
-                'path': os.path.join(self.stage, 'mopack', 'build', 'foo',
-                                     'pkgconfig'),
-            }
         })
 
         self.assertPopen(['mopack', 'deploy'])

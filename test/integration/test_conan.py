@@ -14,18 +14,29 @@ class TestConan(IntegrationTest):
         self.assertExists('mopack/conan.log')
         self.assertExists('mopack/mopack.json')
 
-        output = json.loads(self.assertPopen(['mopack', 'info', 'zlib']))
+        output = json.loads(self.assertPopen([
+            'mopack', 'usage', 'zlib', '--json'
+        ]))
         self.assertEqual(output, {
-            'config': {
-                'name': 'zlib',
-                'config_file': config,
-                'source': 'conan',
-                'remote': 'zlib/1.2.11@conan/stable',
-                'options': {'shared': True},
-                'usage': {'type': 'pkgconfig', 'path': '.'}
+            'name': 'zlib',
+            'type': 'pkgconfig',
+            'path': os.path.join(self.stage, 'mopack', 'conan'),
+        })
+
+        output = json.loads(slurp('mopack/mopack.json'))
+        self.assertEqual(output['metadata']['packages'], {
+            'zlib': {
+                'config': {
+                    'name': 'zlib',
+                    'config_file': config,
+                    'source': 'conan',
+                    'remote': 'zlib/1.2.11@conan/stable',
+                    'options': {'shared': True},
+                    'usage': {'type': 'pkgconfig', 'path': '.'}
+                },
+                'usage': {
+                    'type': 'pkgconfig',
+                    'path': os.path.join(self.stage, 'mopack', 'conan')
+                },
             },
-            'usage': {
-                'type': 'pkgconfig',
-                'path': os.path.join(self.stage, 'mopack', 'conan')
-            }
         })

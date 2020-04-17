@@ -38,6 +38,15 @@ def load_file(filename, Loader=SafeLoader):
             raise make_yaml_error(e, f)
 
 
+def dump(data):
+    # `sort_keys` only works on newer versions of PyYAML, so don't worry too
+    # much if we can't use it.
+    try:
+        return yaml.dump(data, sort_keys=False)
+    except TypeError:
+        return yaml.dump(data)
+
+
 class MarkedCollection:
     pass
 

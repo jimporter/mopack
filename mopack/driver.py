@@ -2,7 +2,7 @@ import argparse
 import os
 import json
 
-from . import commands, config, log
+from . import commands, config, log, yaml_tools
 from .app_version import version
 
 logger = log.getLogger(__name__)
@@ -32,10 +32,15 @@ def resolve(parser, subparser, args):
                      args.deploy_paths)
 
 
-def info(parser, subparser, args):
+def usage(parser, subparser, args):
     args.directory = os.environ.get(nested_invoke, args.directory)
-    metadata = commands.Metadata.load(commands.get_package_dir(args.directory))
-    print(json.dumps(metadata.packages[args.package]))
+    usage = commands.usage(commands.get_package_dir(args.directory),
+                           args.package)
+
+    if args.json:
+        print(json.dumps(usage))
+    else:
+        print(yaml_tools.dump(usage))
 
 
 def deploy(parser, subparser, args):
@@ -78,13 +83,15 @@ def main():
     resolve_p.add_argument('file', nargs='+',
                            help='the mopack configuration files')
 
-    info_p = subparsers.add_parser(
-        'info', help='retrieve info about a package'
+    usage_p = subparsers.add_parser(
+        'usage', help='retrieve usage info for a package'
     )
-    info_p.set_defaults(func=info, parser=info_p)
-    info_p.add_argument('--directory', default='.', metavar='PATH',
-                        help='directory storing local package data')
-    info_p.add_argument('package', help='the name of the package to query')
+    usage_p.set_defaults(func=usage, parser=usage_p)
+    usage_p.add_argument('--json', action='store_true',
+                         help='display results as JSON')
+    usage_p.add_argument('--directory', default='.', metavar='PATH',
+                         help='directory storing local package data')
+    usage_p.add_argument('package', help='the name of the package to query')
 
     deploy_p = subparsers.add_parser(
         'deploy', help='deploy packages'

@@ -17,26 +17,36 @@ class TestApt(IntegrationTest):
         self.assertExists('mopack/apt.log')
         self.assertExists('mopack/mopack.json')
 
-        output = json.loads(self.assertPopen(['mopack', 'info', 'ogg']))
-        self.assertEqual(output, {
-            'config': {
-                'name': 'ogg',
-                'config_file': config,
-                'source': 'apt',
-                'remote': 'libogg-dev',
-                'usage': {'type': 'system'}
-            },
-            'usage': {'type': 'system'}
-        })
+        output = json.loads(self.assertPopen([
+            'mopack', 'usage', 'ogg', '--json'
+        ]))
+        self.assertEqual(output, {'name': 'ogg', 'type': 'system'})
 
-        output = json.loads(self.assertPopen(['mopack', 'info', 'zlib']))
-        self.assertEqual(output, {
-            'config': {
-                'name': 'zlib',
-                'config_file': config,
-                'source': 'apt',
-                'remote': 'zlib1g-dev',
-                'usage': {'type': 'system'}
+        output = json.loads(self.assertPopen([
+            'mopack', 'usage', 'zlib', '--json'
+        ]))
+        self.assertEqual(output, {'name': 'zlib', 'type': 'system'})
+
+        output = json.loads(slurp('mopack/mopack.json'))
+        self.assertEqual(output['metadata']['packages'], {
+            'ogg': {
+                'config': {
+                    'name': 'ogg',
+                    'config_file': config,
+                    'source': 'apt',
+                    'remote': 'libogg-dev',
+                    'usage': {'type': 'system'}
+                },
+                'usage': {'type': 'system'},
             },
-            'usage': {'type': 'system'}
+            'zlib': {
+                'config': {
+                    'name': 'zlib',
+                    'config_file': config,
+                    'source': 'apt',
+                    'remote': 'zlib1g-dev',
+                    'usage': {'type': 'system'}
+                },
+                'usage': {'type': 'system'},
+            },
         })

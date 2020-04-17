@@ -13,6 +13,11 @@ def stage_dir(name, chdir=True):
     return stage
 
 
+def slurp(filename):
+    with open(filename) as f:
+        return f.read()
+
+
 class SubprocessError(unittest.TestCase.failureException):
     def __init__(self, message):
         unittest.TestCase.failureException.__init__(

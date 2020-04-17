@@ -18,8 +18,7 @@ class Usage(FreezeDried):
     _get_type = _get_usage_type
 
     def _usage(self, **kwargs):
-        kwargs['type'] = self.type
-        return kwargs
+        return dict(type=self.type, **kwargs)
 
     def __repr__(self):
         return '<{}>'.format(type(self).__name__)

@@ -34,39 +34,59 @@ class TestNested(IntegrationTest):
         self.assertExists('mopack/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        output = json.loads(self.assertPopen(['mopack', 'info', 'greeter']))
+        output = json.loads(self.assertPopen([
+            'mopack', 'usage', 'greeter', '--json'
+        ]))
         self.assertEqual(output, {
-            'config': {
-                'name': 'greeter',
-                'config_file': config,
-                'source': 'directory',
-                'builder': self._builder('greeter'),
-                'path': os.path.join(test_data_dir, 'nested'),
-            },
-            'usage': {
-                'type': 'pkgconfig',
-                'path': os.path.join(self.pkgbuilddir, 'greeter', 'pkgconfig'),
-            }
+            'name': 'greeter',
+            'type': 'pkgconfig',
+            'path': os.path.join(self.pkgbuilddir, 'greeter', 'pkgconfig'),
         })
 
-        output = json.loads(self.assertPopen(['mopack', 'info', 'hello']))
+        output = json.loads(self.assertPopen([
+            'mopack', 'usage', 'hello', '--json'
+        ]))
         self.assertEqual(output, {
-            'config': {
-                'name': 'hello',
-                'config_file': os.path.join(test_data_dir, 'nested',
-                                            'mopack.yml'),
-                'source': 'tarball',
-                'builder': self._builder('hello'),
-                'url': None,
-                'path': os.path.join(test_data_dir, 'bfg_project.tar.gz'),
-                'files': None,
-                'srcdir': None,
-                'guessed_srcdir': 'bfg_project',
+            'name': 'hello',
+            'type': 'pkgconfig',
+            'path': os.path.join(self.pkgbuilddir, 'hello', 'pkgconfig'),
+        })
+
+        output = json.loads(slurp('mopack/mopack.json'))
+        self.assertEqual(output['metadata']['packages'], {
+            'greeter': {
+                'config': {
+                    'name': 'greeter',
+                    'config_file': config,
+                    'source': 'directory',
+                    'builder': self._builder('greeter'),
+                    'path': os.path.join(test_data_dir, 'nested'),
+                },
+                'usage': {
+                    'type': 'pkgconfig',
+                    'path': os.path.join(self.pkgbuilddir, 'greeter',
+                                         'pkgconfig'),
+                },
             },
-            'usage': {
-                'type': 'pkgconfig',
-                'path': os.path.join(self.pkgbuilddir, 'hello', 'pkgconfig'),
-            }
+            'hello': {
+                'config': {
+                    'name': 'hello',
+                    'config_file': os.path.join(test_data_dir, 'nested',
+                                                'mopack.yml'),
+                    'source': 'tarball',
+                    'builder': self._builder('hello'),
+                    'url': None,
+                    'path': os.path.join(test_data_dir, 'bfg_project.tar.gz'),
+                    'files': None,
+                    'srcdir': None,
+                    'guessed_srcdir': 'bfg_project',
+                },
+                'usage': {
+                    'type': 'pkgconfig',
+                    'path': os.path.join(self.pkgbuilddir, 'hello',
+                                         'pkgconfig'),
+                },
+            },
         })
 
         self.assertPopen(['mopack', 'deploy'])
