@@ -48,8 +48,8 @@ class TestConan(TestCase):
                             'source': 'conan',
                             'remote': 'foo/1.2.3@conan/stable',
                             'options': {},
-                            'usage': {'type': 'pkgconfig', 'path': '.'}},
-                 'usage': {'type': 'pkgconfig', 'path': self.pkgconfdir}},
+                            'usage': {'type': 'pkg-config', 'path': '.'}},
+                 'usage': {'type': 'pkg-config', 'path': self.pkgconfdir}},
             ])
 
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
@@ -80,8 +80,8 @@ class TestConan(TestCase):
                             'source': 'conan',
                             'remote': 'foo/1.2.3@conan/stable',
                             'options': {'shared': True},
-                            'usage': {'type': 'pkgconfig', 'path': '.'}},
-                 'usage': {'type': 'pkgconfig', 'path': self.pkgconfdir}},
+                            'usage': {'type': 'pkg-config', 'path': '.'}},
+                 'usage': {'type': 'pkg-config', 'path': self.pkgconfdir}},
             ])
 
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
@@ -113,15 +113,15 @@ class TestConan(TestCase):
                             'source': 'conan',
                             'remote': 'foo/1.2.3@conan/stable',
                             'options': {},
-                            'usage': {'type': 'pkgconfig', 'path': '.'}},
-                 'usage': {'type': 'pkgconfig', 'path': self.pkgconfdir}},
+                            'usage': {'type': 'pkg-config', 'path': '.'}},
+                 'usage': {'type': 'pkg-config', 'path': self.pkgconfdir}},
                 {'config': {'name': 'bar',
                             'config_file': self.config_file,
                             'source': 'conan',
                             'remote': 'bar/2.3.4@conan/stable',
                             'options': {'shared': True},
-                            'usage': {'type': 'pkgconfig', 'path': '.'}},
-                 'usage': {'type': 'pkgconfig', 'path': self.pkgconfdir}},
+                            'usage': {'type': 'pkg-config', 'path': '.'}},
+                 'usage': {'type': 'pkg-config', 'path': self.pkgconfdir}},
             ])
 
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\

@@ -19,7 +19,7 @@ class TestConan(IntegrationTest):
         ]))
         self.assertEqual(output, {
             'name': 'zlib',
-            'type': 'pkgconfig',
+            'type': 'pkg-config',
             'path': os.path.join(self.stage, 'mopack', 'conan'),
         })
 
@@ -32,10 +32,10 @@ class TestConan(IntegrationTest):
                     'source': 'conan',
                     'remote': 'zlib/1.2.11@conan/stable',
                     'options': {'shared': True},
-                    'usage': {'type': 'pkgconfig', 'path': '.'}
+                    'usage': {'type': 'pkg-config', 'path': '.'}
                 },
                 'usage': {
-                    'type': 'pkgconfig',
+                    'type': 'pkg-config',
                     'path': os.path.join(self.stage, 'mopack', 'conan')
                 },
             },

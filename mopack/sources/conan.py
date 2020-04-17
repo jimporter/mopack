@@ -14,7 +14,7 @@ class ConanPackage(Package):
         super().__init__(name, **kwargs)
         self.remote = remote
         self.options = options or {}
-        self.usage = make_usage(usage or {'type': 'pkgconfig', 'path': ''})
+        self.usage = make_usage(usage or {'type': 'pkg-config', 'path': ''})
 
     @property
     def remote_name(self):

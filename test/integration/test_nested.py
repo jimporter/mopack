@@ -18,7 +18,7 @@ class TestNested(IntegrationTest):
             'name': name,
             'extra_args': [],
             'usage': {
-                'type': 'pkgconfig',
+                'type': 'pkg-config',
                 'path': 'pkgconfig',
             },
         }
@@ -39,7 +39,7 @@ class TestNested(IntegrationTest):
         ]))
         self.assertEqual(output, {
             'name': 'greeter',
-            'type': 'pkgconfig',
+            'type': 'pkg-config',
             'path': os.path.join(self.pkgbuilddir, 'greeter', 'pkgconfig'),
         })
 
@@ -48,7 +48,7 @@ class TestNested(IntegrationTest):
         ]))
         self.assertEqual(output, {
             'name': 'hello',
-            'type': 'pkgconfig',
+            'type': 'pkg-config',
             'path': os.path.join(self.pkgbuilddir, 'hello', 'pkgconfig'),
         })
 
@@ -63,7 +63,7 @@ class TestNested(IntegrationTest):
                     'path': os.path.join(test_data_dir, 'nested'),
                 },
                 'usage': {
-                    'type': 'pkgconfig',
+                    'type': 'pkg-config',
                     'path': os.path.join(self.pkgbuilddir, 'greeter',
                                          'pkgconfig'),
                 },
@@ -82,7 +82,7 @@ class TestNested(IntegrationTest):
                     'guessed_srcdir': 'bfg_project',
                 },
                 'usage': {
-                    'type': 'pkgconfig',
+                    'type': 'pkg-config',
                     'path': os.path.join(self.pkgbuilddir, 'hello',
                                          'pkgconfig'),
                 },

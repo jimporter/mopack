@@ -25,7 +25,7 @@ class TestSdist(IntegrationTest):
         ]))
         self.assertEqual(output, {
             'name': 'foo',
-            'type': 'pkgconfig',
+            'type': 'pkg-config',
             'path': os.path.join(self.stage, 'mopack', 'build', 'foo',
                                  'pkgconfig'),
         })
@@ -42,7 +42,7 @@ class TestSdist(IntegrationTest):
                         'name': 'foo',
                         'extra_args': [],
                         'usage': {
-                            'type': 'pkgconfig',
+                            'type': 'pkg-config',
                             'path': 'pkgconfig',
                         },
                     },
@@ -53,7 +53,7 @@ class TestSdist(IntegrationTest):
                     'guessed_srcdir': 'bfg_project',
                 },
                 'usage': {
-                    'type': 'pkgconfig',
+                    'type': 'pkg-config',
                     'path': os.path.join(self.stage, 'mopack', 'build', 'foo',
                                          'pkgconfig'),
                 },

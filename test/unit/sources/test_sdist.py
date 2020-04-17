@@ -57,11 +57,11 @@ class TestDirectory(SDistTestCase):
                                'name': 'foo',
                                'extra_args': [],
                                'usage': {
-                                   'type': 'pkgconfig',
+                                   'type': 'pkg-config',
                                    'path': 'pkgconfig',
                                },
                            }},
-                'usage': {'type': 'pkgconfig', 'path': self.pkgconfdir('foo')}
+                'usage': {'type': 'pkg-config', 'path': self.pkgconfdir('foo')}
             })
 
             mopen.assert_called_with(os.path.join(self.pkgdir, 'foo.log'), 'w')
@@ -70,7 +70,7 @@ class TestDirectory(SDistTestCase):
         path = os.path.join(test_data_dir, 'bfg_project')
         build = {'type': 'bfg9000', 'extra_args': '--extra'}
         pkg = DirectoryPackage('foo', path=path, build=build,
-                               usage='pkgconfig', config_file=self.config_file)
+                               usage='pkg-config', config_file=self.config_file)
         self.assertEqual(pkg.path, path)
         self.assertEqual(pkg.builder, Bfg9000Builder(
             'foo', extra_args='--extra'
@@ -79,11 +79,11 @@ class TestDirectory(SDistTestCase):
     def test_usage(self):
         path = os.path.join(test_data_dir, 'bfg_project')
         pkg = DirectoryPackage('foo', path=path, build='bfg9000',
-                               usage='pkgconfig', config_file=self.config_file)
+                               usage='pkg-config', config_file=self.config_file)
         self.assertEqual(pkg.path, path)
-        self.assertEqual(pkg.builder, Bfg9000Builder('foo', usage='pkgconfig'))
+        self.assertEqual(pkg.builder, Bfg9000Builder('foo', usage='pkg-config'))
 
-        usage = {'type': 'pkgconfig', 'path': 'pkgconf'}
+        usage = {'type': 'pkg-config', 'path': 'pkgconf'}
         pkg = DirectoryPackage('foo', path=path, build='bfg9000', usage=usage,
                                config_file=self.config_file)
         self.assertEqual(pkg.path, path)
@@ -194,11 +194,11 @@ class TestTarball(SDistTestCase):
                                'name': 'foo',
                                'extra_args': [],
                                'usage': {
-                                   'type': 'pkgconfig',
+                                   'type': 'pkg-config',
                                    'path': 'pkgconfig',
                                },
                            }},
-                'usage': {'type': 'pkgconfig', 'path': self.pkgconfdir('foo')}
+                'usage': {'type': 'pkg-config', 'path': self.pkgconfdir('foo')}
             })
 
             mopen.assert_called_with(os.path.join(self.pkgdir, 'foo.log'), 'w')
@@ -240,7 +240,7 @@ class TestTarball(SDistTestCase):
     def test_build(self):
         path = os.path.join(test_data_dir, 'bfg_project.tar.gz')
         build = {'type': 'bfg9000', 'extra_args': '--extra'}
-        pkg = TarballPackage('foo', path=path, build=build, usage='pkgconfig',
+        pkg = TarballPackage('foo', path=path, build=build, usage='pkg-config',
                              config_file=self.config_file)
         self.assertEqual(pkg.path, path)
         self.assertEqual(pkg.builder, Bfg9000Builder(
@@ -250,11 +250,11 @@ class TestTarball(SDistTestCase):
     def test_usage(self):
         path = os.path.join(test_data_dir, 'bfg_project.tar.gz')
         pkg = TarballPackage('foo', path=path, build='bfg9000',
-                             usage='pkgconfig', config_file=self.config_file)
+                             usage='pkg-config', config_file=self.config_file)
         self.assertEqual(pkg.path, path)
-        self.assertEqual(pkg.builder, Bfg9000Builder('foo', usage='pkgconfig'))
+        self.assertEqual(pkg.builder, Bfg9000Builder('foo', usage='pkg-config'))
 
-        usage = {'type': 'pkgconfig', 'path': 'pkgconf'}
+        usage = {'type': 'pkg-config', 'path': 'pkgconf'}
         pkg = TarballPackage('foo', path=path, build='bfg9000', usage=usage,
                              config_file=self.config_file)
         self.assertEqual(pkg.path, path)

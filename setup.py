@@ -133,7 +133,7 @@ setup(
             'bfg9000=mopack.builders.bfg9000:Bfg9000Builder',
         ],
         'mopack.usage': [
-            'pkgconfig=mopack.usage.pkgconfig:PkgConfigUsage',
+            'pkg-config=mopack.usage.pkg_config:PkgConfigUsage',
             'system=mopack.usage.system:SystemUsage',
         ],
     },

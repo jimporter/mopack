@@ -15,7 +15,7 @@ class TestCleanNeeded(IntegrationTest):
             'name': name,
             'extra_args': extra_args,
             'usage': {
-                'type': 'pkgconfig',
+                'type': 'pkg-config',
                 'path': 'pkgconfig',
             },
         }
@@ -37,7 +37,7 @@ class TestCleanNeeded(IntegrationTest):
         ]))
         self.assertEqual(output, {
             'name': 'greeter',
-            'type': 'pkgconfig',
+            'type': 'pkg-config',
             'path': os.path.join(self.pkgbuilddir, 'greeter', 'pkgconfig'),
         })
 
@@ -46,7 +46,7 @@ class TestCleanNeeded(IntegrationTest):
         ]))
         self.assertEqual(output, {
             'name': 'hello',
-            'type': 'pkgconfig',
+            'type': 'pkg-config',
             'path': os.path.join(self.pkgbuilddir, 'hello', 'pkgconfig'),
         })
 
@@ -61,7 +61,7 @@ class TestCleanNeeded(IntegrationTest):
                     'path': os.path.join(test_data_dir, 'nested'),
                 },
                 'usage': {
-                    'type': 'pkgconfig',
+                    'type': 'pkg-config',
                     'path': os.path.join(self.pkgbuilddir, 'greeter',
                                          'pkgconfig'),
                 },
@@ -75,7 +75,7 @@ class TestCleanNeeded(IntegrationTest):
                     'path': os.path.join(test_data_dir, 'bfg_project'),
                 },
                 'usage': {
-                    'type': 'pkgconfig',
+                    'type': 'pkg-config',
                     'path': os.path.join(self.pkgbuilddir, 'hello',
                                          'pkgconfig'),
                 },
@@ -99,7 +99,7 @@ class TestCleanNeeded(IntegrationTest):
         ]))
         self.assertEqual(output, {
             'name': 'greeter',
-            'type': 'pkgconfig',
+            'type': 'pkg-config',
             'path': os.path.join(self.pkgbuilddir, 'greeter', 'pkgconfig'),
         })
 
@@ -108,7 +108,7 @@ class TestCleanNeeded(IntegrationTest):
         ]))
         self.assertEqual(output, {
             'name': 'hello',
-            'type': 'pkgconfig',
+            'type': 'pkg-config',
             'path': os.path.join(self.pkgbuilddir, 'hello', 'pkgconfig'),
         })
 
@@ -123,7 +123,7 @@ class TestCleanNeeded(IntegrationTest):
                     'path': os.path.join(test_data_dir, 'nested'),
                 },
                 'usage': {
-                    'type': 'pkgconfig',
+                    'type': 'pkg-config',
                     'path': os.path.join(self.pkgbuilddir, 'greeter',
                                          'pkgconfig'),
                 },
@@ -142,7 +142,7 @@ class TestCleanNeeded(IntegrationTest):
                     'guessed_srcdir': 'bfg_project',
                 },
                 'usage': {
-                    'type': 'pkgconfig',
+                    'type': 'pkg-config',
                     'path': os.path.join(self.pkgbuilddir, 'hello',
                                          'pkgconfig'),
                 },
