@@ -70,7 +70,8 @@ class TestDirectory(SDistTestCase):
         path = os.path.join(test_data_dir, 'bfg_project')
         build = {'type': 'bfg9000', 'extra_args': '--extra'}
         pkg = DirectoryPackage('foo', path=path, build=build,
-                               usage='pkg-config', config_file=self.config_file)
+                               usage='pkg-config',
+                               config_file=self.config_file)
         self.assertEqual(pkg.path, path)
         self.assertEqual(pkg.builder, Bfg9000Builder(
             'foo', extra_args='--extra'
@@ -79,9 +80,12 @@ class TestDirectory(SDistTestCase):
     def test_usage(self):
         path = os.path.join(test_data_dir, 'bfg_project')
         pkg = DirectoryPackage('foo', path=path, build='bfg9000',
-                               usage='pkg-config', config_file=self.config_file)
+                               usage='pkg-config',
+                               config_file=self.config_file)
         self.assertEqual(pkg.path, path)
-        self.assertEqual(pkg.builder, Bfg9000Builder('foo', usage='pkg-config'))
+        self.assertEqual(pkg.builder, Bfg9000Builder(
+            'foo', usage='pkg-config'
+        ))
 
         usage = {'type': 'pkg-config', 'path': 'pkgconf'}
         pkg = DirectoryPackage('foo', path=path, build='bfg9000', usage=usage,
@@ -240,8 +244,8 @@ class TestTarball(SDistTestCase):
     def test_build(self):
         path = os.path.join(test_data_dir, 'bfg_project.tar.gz')
         build = {'type': 'bfg9000', 'extra_args': '--extra'}
-        pkg = TarballPackage('foo', path=path, build=build, usage='pkg-config',
-                             config_file=self.config_file)
+        pkg = TarballPackage('foo', path=path, build=build,
+                             usage='pkg-config', config_file=self.config_file)
         self.assertEqual(pkg.path, path)
         self.assertEqual(pkg.builder, Bfg9000Builder(
             'foo', extra_args='--extra'
@@ -252,7 +256,9 @@ class TestTarball(SDistTestCase):
         pkg = TarballPackage('foo', path=path, build='bfg9000',
                              usage='pkg-config', config_file=self.config_file)
         self.assertEqual(pkg.path, path)
-        self.assertEqual(pkg.builder, Bfg9000Builder('foo', usage='pkg-config'))
+        self.assertEqual(pkg.builder, Bfg9000Builder(
+            'foo', usage='pkg-config'
+        ))
 
         usage = {'type': 'pkg-config', 'path': 'pkgconf'}
         pkg = TarballPackage('foo', path=path, build='bfg9000', usage=usage,

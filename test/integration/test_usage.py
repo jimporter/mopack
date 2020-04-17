@@ -2,8 +2,6 @@ import json
 import os
 import yaml
 
-from mopack.path import pushd
-
 from . import *
 
 
