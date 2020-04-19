@@ -76,8 +76,9 @@ class LogFile:
     def close(self):
         self.file.close()
 
-    def check_call(self, *args, **kwargs):
-        return subprocess.check_call(*args, stdout=self.file, stderr=self.file,
+    def check_call(self, args, **kwargs):
+        print('$ ' + ' '.join(args), file=self.file, flush=True)
+        return subprocess.check_call(args, stdout=self.file, stderr=self.file,
                                      **kwargs)
 
     def __enter__(self):
