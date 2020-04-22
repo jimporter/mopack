@@ -2,7 +2,7 @@ import json
 import os
 import shutil
 
-from .config import Config, PlaceholderPackage
+from .config import PlaceholderPackage
 from .sources import Package
 from .usage import make_usage
 
@@ -66,19 +66,6 @@ def clean(pkgdir):
     shutil.rmtree(pkgdir)
 
 
-def fetch(config, pkgdir):
-    os.makedirs(pkgdir, exist_ok=True)
-    try:
-        old_packages = Metadata.load(pkgdir).rehydrate()
-    except FileNotFoundError:
-        old_packages = {}
-
-    _do_fetch(config, pkgdir, old_packages)
-
-    for i in old_packages.values():
-        i.clean_needed(pkgdir, None)
-
-
 def _do_fetch(config, pkgdir, old_packages):
     child_configs = []
     for i in config.packages.values():
@@ -90,14 +77,31 @@ def _do_fetch(config, pkgdir, old_packages):
         # Clean out the old package if needed.
         old = old_packages.pop(i.name, None)
         if old:
-            old.clean_needed(pkgdir, i)
+            old.clean_pre(pkgdir, i)
 
         # Fetch the new package and check for child mopack configs.
-        mopack = i.fetch(pkgdir)
-        if mopack:
-            child_configs.append(Config([mopack], parent=config))
-            _do_fetch(child_configs[-1], pkgdir, old_packages)
+        child_config = i.fetch(pkgdir, parent_config=config)
+
+        if old:
+            old.clean_post(pkgdir, i)
+
+        if child_config:
+            child_configs.append(child_config)
+            _do_fetch(child_config, pkgdir, old_packages)
     config.add_children(child_configs)
+
+
+def fetch(config, pkgdir):
+    os.makedirs(pkgdir, exist_ok=True)
+    try:
+        old_packages = Metadata.load(pkgdir).rehydrate()
+    except FileNotFoundError:
+        old_packages = {}
+
+    _do_fetch(config, pkgdir, old_packages)
+
+    for i in old_packages.values():
+        i.clean_all(pkgdir, None)
 
 
 def resolve(config, pkgdir, deploy_paths=None):

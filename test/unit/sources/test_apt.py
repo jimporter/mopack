@@ -91,16 +91,38 @@ class TestApt(TestCase):
         # This is a no-op; just make sure it executes ok.
         AptPackage.deploy_all(self.pkgdir, [pkg])
 
-    def test_clean(self):
+    def test_clean_pre(self):
         oldpkg = AptPackage('foo', config_file=self.config_file)
         newpkg = ConanPackage('foo', remote='foo/1.2.4@conan/stable',
                               config_file=self.config_file)
 
         # Apt -> Conan
-        self.assertEqual(oldpkg.clean_needed(self.pkgdir, newpkg), False)
+        self.assertEqual(oldpkg.clean_pre(self.pkgdir, newpkg), False)
 
         # Apt -> nothing
-        self.assertEqual(oldpkg.clean_needed(self.pkgdir, None), False)
+        self.assertEqual(oldpkg.clean_pre(self.pkgdir, None), False)
+
+    def test_clean_post(self):
+        oldpkg = AptPackage('foo', config_file=self.config_file)
+        newpkg = ConanPackage('foo', remote='foo/1.2.4@conan/stable',
+                              config_file=self.config_file)
+
+        # Apt -> Conan
+        self.assertEqual(oldpkg.clean_post(self.pkgdir, newpkg), False)
+
+        # Apt -> nothing
+        self.assertEqual(oldpkg.clean_post(self.pkgdir, None), False)
+
+    def test_clean_all(self):
+        oldpkg = AptPackage('foo', config_file=self.config_file)
+        newpkg = ConanPackage('foo', remote='foo/1.2.4@conan/stable',
+                              config_file=self.config_file)
+
+        # Apt -> Conan
+        self.assertEqual(oldpkg.clean_all(self.pkgdir, newpkg), (False, False))
+
+        # Apt -> nothing
+        self.assertEqual(oldpkg.clean_all(self.pkgdir, None), (False, False))
 
     def test_equality(self):
         pkg = AptPackage('foo', config_file=self.config_file)

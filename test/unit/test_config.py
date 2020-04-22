@@ -49,11 +49,13 @@ class TestConfig(TestCase):
             ('bar', AptPackage('bar', config_file='mopack.yml')),
         ])
 
+
+class TestChildConfig(TestCase):
     def test_child_in_parent(self):
         with mock.patch('builtins.open', mock_open_files(foobar_cfg)):
             parent = Config(['mopack.yml'])
         with mock.patch('builtins.open', mock_open_files(foo_cfg)):
-            child = Config(['mopack-child.yml'], parent=parent)
+            child = ChildConfig(['mopack-child.yml'], parent=parent)
         self.assertEqual(list(child.packages.items()), [
             ('foo', PlaceholderPackage)
         ])
@@ -68,7 +70,7 @@ class TestConfig(TestCase):
         with mock.patch('builtins.open', mock_open_files(foo_cfg)):
             parent = Config(['mopack.yml'])
         with mock.patch('builtins.open', mock_open_files(bar_cfg)):
-            child = Config(['mopack-child.yml'], parent=parent)
+            child = ChildConfig(['mopack-child.yml'], parent=parent)
         self.assertEqual(list(child.packages.items()), [
             ('bar', AptPackage('bar', remote='libbar1-dev',
                                config_file='mopack-child.yml')),
@@ -86,7 +88,7 @@ class TestConfig(TestCase):
         with mock.patch('builtins.open', mock_open_files(foo_cfg)):
             parent = Config(['mopack.yml'])
         with mock.patch('builtins.open', mock_open_files(foobar_cfg)):
-            child = Config(['mopack-child.yml'], parent=parent)
+            child = ChildConfig(['mopack-child.yml'], parent=parent)
         self.assertEqual(list(child.packages.items()), [
             ('foo', PlaceholderPackage),
             ('bar', AptPackage('bar', config_file='mopack-child.yml')),
@@ -102,9 +104,9 @@ class TestConfig(TestCase):
     def test_child_duplicate(self):
         parent = Config([])
         with mock.patch('builtins.open', mock_open_files(foo_cfg)):
-            child1 = Config(['mopack-child1.yml'], parent=parent)
+            child1 = ChildConfig(['mopack-child1.yml'], parent=parent)
         with mock.patch('builtins.open', mock_open_files(foo_cfg)):
-            child2 = Config(['mopack-child2.yml'], parent=parent)
+            child2 = ChildConfig(['mopack-child2.yml'], parent=parent)
 
         parent.add_children([child1, child2])
         self.assertEqual(list(parent.packages.items()), [
@@ -115,9 +117,9 @@ class TestConfig(TestCase):
     def test_child_conflicts(self):
         parent = Config([])
         with mock.patch('builtins.open', mock_open_files(foobar_cfg)):
-            child1 = Config(['mopack-child1.yml'], parent=parent)
+            child1 = ChildConfig(['mopack-child1.yml'], parent=parent)
         with mock.patch('builtins.open', mock_open_files(foo_cfg)):
-            child2 = Config(['mopack-child2.yml'], parent=parent)
+            child2 = ChildConfig(['mopack-child2.yml'], parent=parent)
 
         with self.assertRaises(ValueError):
             parent.add_children([child1, child2])

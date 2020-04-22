@@ -13,32 +13,36 @@ PlaceholderPackage = _PlaceholderPackage()
 
 
 class Config:
-    def __init__(self, filenames, parent=None):
+    def __init__(self, filenames):
         self.packages = {}
-        self.parent = parent
         for f in reversed(filenames):
             self._accumulate_config(f)
 
     def _accumulate_config(self, filename):
         filename = os.path.abspath(filename)
         with load_file(filename, Loader=SafeLineLoader) as next_config:
-            for k, v in next_config['packages'].items():
-                if k in self.packages:
-                    continue
-                v['config_file'] = filename
+            for k, v in next_config.items():
+                fn = '_process_{}'.format(k)
+                if hasattr(self, fn):
+                    getattr(self, fn)(filename, v)
 
-                # If a parent package has already defined this package,
-                # just store a placeholder to track it. Otherwise, make the
-                # real package object.
-                self.packages[k] = (
-                    PlaceholderPackage if self._in_parent(k)
-                    else make_package(k, v)
-                )
+    def _process_packages(self, filename, package_cfg):
+        for k, v in package_cfg.items():
+            if k in self.packages:
+                continue
+            v['config_file'] = filename
+
+            # If a parent package has already defined this package,
+            # just store a placeholder to track it. Otherwise, make the
+            # real package object.
+            self.packages[k] = (
+                PlaceholderPackage if self._in_parent(k)
+                else make_package(k, v)
+            )
 
     def _in_parent(self, name):
-        if not self.parent:
-            return False
-        return name in self.parent.packages or self.parent._in_parent(name)
+        # We don't have a parent, so this is always false!
+        return False
 
     def _validate_children(self, children):
         # Ensure that there are no conflicting package definitions in any of
@@ -69,7 +73,15 @@ class Config:
         new_packages.update(self.packages)
         self.packages = new_packages
 
-    def __repr__(self):
-        return '<Config({})>'.format(', '.join(
-            repr(i) for i in self.packages.values()
-        ))
+
+class ChildConfig(Config):
+    def __init__(self, filenames, parent):
+        self.parent = parent
+        super().__init__(filenames)
+
+    def _in_parent(self, name):
+        return name in self.parent.packages or self.parent._in_parent(name)
+
+    def _process_self(self, filename, self_cfg):
+        self.build = self_cfg.get('build')
+        self.usage = self_cfg.get('usage')

@@ -1,0 +1,4 @@
+packages:
+  foo:
+    source: directory
+    path: bfg_project

@@ -27,10 +27,17 @@ class Package(FreezeDried):
     def config_dir(self):
         return os.path.dirname(self.config_file)
 
-    def clean_needed(self, pkgdir, new_package):
+    def clean_pre(self, pkgdir, new_package):
         return False
 
-    def fetch(self, pkgdir):
+    def clean_post(self, pkgdir, new_package):
+        return False
+
+    def clean_all(self, pkgdir, new_package):
+        return (self.clean_pre(pkgdir, new_package),
+                self.clean_post(pkgdir, new_package))
+
+    def fetch(self, pkgdir, parent_config):
         pass
 
     def _resolved_metadata(self, usage):

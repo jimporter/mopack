@@ -7,21 +7,42 @@ from urllib.request import urlopen
 from . import Package
 from .. import log, types
 from ..builders import Builder, make_builder
+from ..config import ChildConfig
 
 
 class SDistPackage(Package):
     _rehydrate_fields = {'builder': Builder}
+    _skip_compare_fields = (Package._skip_compare_fields +
+                            ('pending_usage',))
 
-    def __init__(self, name, *, build, usage=None, **kwargs):
+    def __init__(self, name, *, build=None, usage=None, **kwargs):
         super().__init__(name, **kwargs)
-        self.builder = make_builder(name, build, usage=usage)
+        if build is None:
+            self.builder = None
+            self.pending_usage = usage
+        else:
+            self.builder = make_builder(name, build, usage=usage)
 
-    def _find_mopack(self, srcdir):
+    def dehydrate(self):
+        if hasattr(self, 'pending_usage'):
+            raise TypeError('cannot dehydrate until `pending_usage` is ' +
+                            'finalized')
+        return super().dehydrate()
+
+    def _find_mopack(self, srcdir, parent_config):
         mopack = os.path.join(srcdir, 'mopack.yml')
-        return mopack if os.path.exists(mopack) else None
+        if os.path.exists(mopack):
+            config = ChildConfig([mopack], parent=parent_config)
+            if self.builder is None:
+                usage = self.pending_usage or config.usage
+                self.builder = make_builder(self.name, config.build,
+                                            usage=usage)
+                del self.pending_usage
+            return config
+        return None
 
-    def clean_needed(self, pkgdir, new_package):
-        if new_package == self:
+    def clean_post(self, pkgdir, new_package):
+        if self == new_package:
             return False
 
         log.info('cleaning {!r}'.format(self.name))
@@ -46,9 +67,9 @@ class DirectoryPackage(SDistPackage):
         super().__init__(name, **kwargs)
         self.path = os.path.normpath(os.path.join(self.config_dir, path))
 
-    def fetch(self, pkgdir):
+    def fetch(self, pkgdir, parent_config):
         log.info('fetching {!r} from {}'.format(self.name, self.source))
-        return self._find_mopack(self.path)
+        return self._find_mopack(self.path, parent_config)
 
     def resolve(self, pkgdir, deploy_paths):
         return self._resolve(pkgdir, self.path, deploy_paths)
@@ -83,13 +104,15 @@ class TarballPackage(SDistPackage):
         with urlopen(url) as f:
             return BytesIO(f.read())
 
-    def clean_needed(self, pkgdir, new_package):
-        if super().clean_needed(pkgdir, new_package):
-            shutil.rmtree(self._base_srcdir(pkgdir), ignore_errors=True)
-            return True
-        return False
+    def clean_pre(self, pkgdir, new_package):
+        if self.equal(new_package, skip_fields=['builder']):
+            return False
 
-    def fetch(self, pkgdir):
+        log.info('cleaning {!r} sources'.format(self.name))
+        shutil.rmtree(self._base_srcdir(pkgdir), ignore_errors=True)
+        return True
+
+    def fetch(self, pkgdir, parent_config):
         log.info('fetching {!r} from {}'.format(self.name, self.source))
 
         base_srcdir = self._base_srcdir(pkgdir)
@@ -104,7 +127,8 @@ class TarballPackage(SDistPackage):
                 else:
                     tar.extractall(base_srcdir)
 
-        return self._find_mopack(self.srcdir or self.guessed_srcdir)
+        return self._find_mopack(self.srcdir or self.guessed_srcdir,
+                                 parent_config)
 
     def resolve(self, pkgdir, deploy_paths):
         return self._resolve(pkgdir, self._srcdir(pkgdir), deploy_paths)

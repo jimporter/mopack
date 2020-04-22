@@ -9,7 +9,7 @@ class FreezeDried:
         for k, v in vars(self).items():
             if k in self._skip_fields:
                 continue
-            if k in self._rehydrate_fields:
+            if k in self._rehydrate_fields and v is not None:
                 v = v.dehydrate()
             result[k] = v
         return result
@@ -23,15 +23,19 @@ class FreezeDried:
         result = this_type.__new__(this_type)
 
         for k, v in config.items():
-            if k in this_type._rehydrate_fields:
+            if k in this_type._rehydrate_fields and v is not None:
                 v = this_type._rehydrate_fields[k].rehydrate(v)
             setattr(result, k, v)
 
         return result
 
-    def __eq__(self, rhs):
+    def equal(self, rhs, skip_fields=[]):
         def fields(obj):
-            return {k: v for k, v in vars(obj).items()
-                    if k not in self._skip_compare_fields}
+            return {k: v for k, v in vars(obj).items() if
+                    (k not in self._skip_compare_fields and
+                     k not in skip_fields)}
 
         return type(self) == type(rhs) and fields(self) == fields(rhs)
+
+    def __eq__(self, rhs):
+        return self.equal(rhs)

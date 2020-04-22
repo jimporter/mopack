@@ -20,7 +20,7 @@ class ConanPackage(Package):
     def remote_name(self):
         return self.remote.split('/')[0]
 
-    def clean_needed(self, pkgdir, new_package):
+    def clean_post(self, pkgdir, new_package):
         if new_package and new_package.source == self.source:
             return False
 
