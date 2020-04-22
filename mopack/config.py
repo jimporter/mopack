@@ -26,8 +26,8 @@ class Config:
                 if hasattr(self, fn):
                     getattr(self, fn)(filename, v)
 
-    def _process_packages(self, filename, package_cfg):
-        for k, v in package_cfg.items():
+    def _process_packages(self, filename, data):
+        for k, v in data.items():
             if k in self.packages:
                 continue
             v['config_file'] = filename
@@ -82,6 +82,6 @@ class ChildConfig(Config):
     def _in_parent(self, name):
         return name in self.parent.packages or self.parent._in_parent(name)
 
-    def _process_self(self, filename, self_cfg):
-        self.build = self_cfg.get('build')
-        self.usage = self_cfg.get('usage')
+    def _process_self(self, filename, data):
+        self.build = data.get('build')
+        self.usage = data.get('usage')
