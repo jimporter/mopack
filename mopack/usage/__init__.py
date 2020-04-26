@@ -1,9 +1,7 @@
 from pkg_resources import load_entry_point
-from yaml.error import MarkedYAMLError
 
 from ..freezedried import FreezeDried
-from ..yaml_tools import MarkedDict
-from ..types import FieldError
+from ..types import try_load_config
 
 
 def _get_usage_type(type):
@@ -32,13 +30,6 @@ def make_usage(config):
         config = config.copy()
         type = config.pop('type')
 
-    try:
+    context = 'while constructing usage {!r}'.format(type)
+    with try_load_config(config, context):
         return _get_usage_type(type)(**config)
-    except TypeError as e:
-        if not isinstance(config, MarkedDict):
-            raise
-
-        context = 'while constructing usage {!r}'.format(type)
-        mark = (config.marks[e.field] if isinstance(e, FieldError)
-                else config.mark)
-        raise MarkedYAMLError(context, config.mark, str(e), mark)

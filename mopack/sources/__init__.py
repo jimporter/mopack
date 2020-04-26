@@ -1,10 +1,8 @@
 import os
 from pkg_resources import load_entry_point
-from yaml.error import MarkedYAMLError
 
 from ..freezedried import FreezeDried
-from ..yaml_tools import MarkedDict
-from ..types import FieldError
+from ..types import try_load_config
 
 
 def _get_source_type(source):
@@ -55,13 +53,6 @@ def make_package(name, config):
     config = config.copy()
     source = config.pop('source')
 
-    try:
+    context = 'while constructing package {!r}'.format(name)
+    with try_load_config(config, context):
         return _get_source_type(source)(name, **config)
-    except TypeError as e:
-        if not isinstance(config, MarkedDict):
-            raise
-
-        context = 'while constructing package {!r}'.format(name)
-        mark = (config.marks[e.field] if isinstance(e, FieldError)
-                else config.mark)
-        raise MarkedYAMLError(context, config.mark, str(e), mark)

@@ -1,11 +1,28 @@
 import os
+from contextlib import contextmanager
 from shlex import shlex
+from yaml.error import MarkedYAMLError
+
+from .yaml_tools import MarkedDict
 
 
 class FieldError(TypeError):
     def __init__(self, message, field):
         super().__init__(message)
         self.field = field
+
+
+@contextmanager
+def try_load_config(config, context):
+    try:
+        yield
+    except TypeError as e:
+        if not isinstance(config, MarkedDict):
+            raise
+
+        mark = (config.marks[e.field] if isinstance(e, FieldError)
+                else config.mark)
+        raise MarkedYAMLError(context, config.mark, str(e), mark)
 
 
 def inner_path(field, p, none_ok=True):

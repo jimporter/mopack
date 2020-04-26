@@ -6,7 +6,7 @@ from yaml.loader import SafeLoader
 from yaml.nodes import MappingNode, SequenceNode
 from yaml.constructor import ConstructorError
 
-__all__ = ['load_file', 'make_yaml_error', 'MarkedDict', 'MarkedList',
+__all__ = ['load_file', 'make_parse_error', 'MarkedDict', 'MarkedList',
            'SafeLineLoader', 'YamlParseError']
 
 
@@ -23,7 +23,7 @@ class YamlParseError(Exception):
                 ' ' * (self.mark.column + 2) + '^')
 
 
-def make_yaml_error(e, stream):
+def make_parse_error(e, stream):
     stream.seek(e.problem_mark.index - e.problem_mark.column, 0)
     snippet = stream.readline().rstrip()
     return YamlParseError(e.problem, e.problem_mark, snippet)
@@ -35,7 +35,7 @@ def load_file(filename, Loader=SafeLoader):
         try:
             yield yaml.load(f, Loader=Loader)
         except MarkedYAMLError as e:
-            raise make_yaml_error(e, f)
+            raise make_parse_error(e, f)
 
 
 def dump(data):

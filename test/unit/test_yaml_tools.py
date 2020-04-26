@@ -7,13 +7,13 @@ from yaml.error import MarkedYAMLError
 from mopack.yaml_tools import *
 
 
-class TestMakeYamlError(TestCase):
+class TestMakeParseError(TestCase):
     def test_make(self):
         data = StringIO('&')
         try:
             yaml.safe_load(data)
         except MarkedYAMLError as e:
-            err = make_yaml_error(e, data)
+            err = make_parse_error(e, data)
             self.assertEqual(err.snippet, '&')
             self.assertEqual(err.mark.line, 0)
             self.assertEqual(err.mark.column, 1)
