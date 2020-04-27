@@ -28,8 +28,10 @@ class TestApt(IntegrationTest):
         self.assertEqual(output, {'name': 'zlib', 'type': 'system'})
 
         output = json.loads(slurp('mopack/mopack.json'))
-        self.assertEqual(output['metadata']['packages'], {
-            'ogg': {
+        self.assertEqual(output['metadata'], {
+            'deploy_paths': {},
+            'options': [],
+            'packages': [{
                 'config': {
                     'name': 'ogg',
                     'config_file': config,
@@ -38,8 +40,7 @@ class TestApt(IntegrationTest):
                     'usage': {'type': 'system'}
                 },
                 'usage': {'type': 'system'},
-            },
-            'zlib': {
+            }, {
                 'config': {
                     'name': 'zlib',
                     'config_file': config,
@@ -48,5 +49,5 @@ class TestApt(IntegrationTest):
                     'usage': {'type': 'system'}
                 },
                 'usage': {'type': 'system'},
-            },
+            }],
         })

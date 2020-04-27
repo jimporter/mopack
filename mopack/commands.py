@@ -3,7 +3,7 @@ import os
 import shutil
 
 from .config import PlaceholderPackage
-from .sources import Package
+from .sources import PackageOptions, ResolvedPackage
 from .usage import make_usage
 
 mopack_dirname = 'mopack'
@@ -23,18 +23,18 @@ class Metadata:
 
     def __init__(self, deploy_paths=None):
         self.deploy_paths = deploy_paths or {}
+        self.options = {}
         self.packages = {}
 
+    def add_options(self, options):
+        self.options[options.source] = options
+
     def add_package(self, package):
-        self.packages[package['config']['name']] = package
+        self.packages[package.config.name] = package
 
     def add_packages(self, packages):
         for i in packages:
             self.add_package(i)
-
-    def rehydrate(self):
-        return {k: Package.rehydrate(v['config'])
-                for k, v in self.packages.items()}
 
     def save(self, pkgdir):
         with open(os.path.join(pkgdir, self.metadata_filename), 'w') as f:
@@ -42,7 +42,9 @@ class Metadata:
                 'version': self.version,
                 'metadata': {
                     'deploy_paths': self.deploy_paths,
-                    'packages': self.packages,
+                    'options': [i.dehydrate() for i in self.options.values()],
+                    'packages': [i.dehydrate() for i in
+                                 self.packages.values()],
                 }
             }, f)
 
@@ -58,15 +60,30 @@ class Metadata:
 
         metadata = Metadata.__new__(Metadata)
         metadata.deploy_paths = data['deploy_paths']
-        metadata.packages = data['packages']
+
+        options = (PackageOptions.rehydrate(i) for i in data['options'])
+        metadata.options = {i.source: i for i in options}
+
+        packages = (ResolvedPackage.rehydrate(i) for i in data['packages'])
+        metadata.packages = {i.config.name: i for i in packages}
+        for i in metadata.packages.values():
+            i.config.set_options(metadata.options)
+
         return metadata
+
+    @classmethod
+    def try_load(cls, pkgdir):
+        try:
+            return Metadata.load(pkgdir)
+        except FileNotFoundError:
+            return Metadata()
 
 
 def clean(pkgdir):
     shutil.rmtree(pkgdir)
 
 
-def _do_fetch(config, pkgdir, old_packages):
+def _do_fetch(config, old_metadata, pkgdir):
     child_configs = []
     for i in config.packages.values():
         # If we have a placeholder package, a parent config has a definition
@@ -74,40 +91,43 @@ def _do_fetch(config, pkgdir, old_packages):
         if i is PlaceholderPackage:
             continue
 
-        # Clean out the old package if needed.
-        old = old_packages.pop(i.name, None)
-        if old:
-            old.clean_pre(pkgdir, i)
+        # Clean out the old package sources if needed.
+        if i.name in old_metadata.packages:
+            old_metadata.packages[i.name].config.clean_pre(pkgdir, i)
 
         # Fetch the new package and check for child mopack configs.
         child_config = i.fetch(pkgdir, parent_config=config)
 
-        if old:
-            old.clean_post(pkgdir, i)
-
         if child_config:
             child_configs.append(child_config)
-            _do_fetch(child_config, pkgdir, old_packages)
+            _do_fetch(child_config, old_metadata, pkgdir)
     config.add_children(child_configs)
 
 
 def fetch(config, pkgdir):
     os.makedirs(pkgdir, exist_ok=True)
-    try:
-        old_packages = Metadata.load(pkgdir).rehydrate()
-    except FileNotFoundError:
-        old_packages = {}
 
-    _do_fetch(config, pkgdir, old_packages)
+    old_metadata = Metadata.try_load(pkgdir)
+    _do_fetch(config, old_metadata, pkgdir)
+    config.finalize()
 
-    for i in old_packages.values():
-        i.clean_all(pkgdir, None)
+    # Clean out old package data if needed.
+    for i in config.packages.values():
+        old = old_metadata.packages.pop(i.name, None)
+        if old:
+            old.config.clean_post(pkgdir, i)
+
+    # Clean removed packages.
+    for i in old_metadata.packages.values():
+        i.config.clean_all(pkgdir, None)
 
 
 def resolve(config, pkgdir, deploy_paths=None):
     fetch(config, pkgdir)
 
     metadata = Metadata(deploy_paths)
+    for i in config.options.values():
+        metadata.add_options(i)
 
     packages, batch_packages = [], {}
     for i in config.packages.values():
@@ -126,7 +146,7 @@ def resolve(config, pkgdir, deploy_paths=None):
     # what the abstractions are.
     metadata.save(pkgdir)
     for i in packages:
-        metadata.add_package(i.resolve(pkgdir,  metadata.deploy_paths))
+        metadata.add_package(i.resolve(pkgdir, metadata.deploy_paths))
         metadata.save(pkgdir)
 
 
@@ -134,11 +154,12 @@ def deploy(pkgdir):
     metadata = Metadata.load(pkgdir)
 
     packages, batch_packages = [], {}
-    for i in metadata.rehydrate().values():
-        if hasattr(i, 'deploy_all'):
-            batch_packages.setdefault(type(i), []).append(i)
+    for i in metadata.packages.values():
+        pkg = i.config
+        if hasattr(pkg, 'deploy_all'):
+            batch_packages.setdefault(type(pkg), []).append(pkg)
         else:
-            packages.append(i)
+            packages.append(pkg)
 
     for k, v in batch_packages.items():
         k.deploy_all(pkgdir, v)
@@ -150,7 +171,7 @@ def usage(pkgdir, name, strict=False):
     try:
         metadata = Metadata.load(pkgdir)
         if name in metadata.packages:
-            return dict(name=name, **metadata.packages[name]['usage'])
+            return dict(name=name, **metadata.packages[name].usage)
         elif strict:
             raise ValueError('no definition for package {!r}'.format(name))
     except FileNotFoundError:

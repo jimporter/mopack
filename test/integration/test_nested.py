@@ -53,22 +53,10 @@ class TestNested(IntegrationTest):
         })
 
         output = json.loads(slurp('mopack/mopack.json'))
-        self.assertEqual(output['metadata']['packages'], {
-            'greeter': {
-                'config': {
-                    'name': 'greeter',
-                    'config_file': config,
-                    'source': 'directory',
-                    'builder': self._builder('greeter'),
-                    'path': os.path.join(test_data_dir, 'nested'),
-                },
-                'usage': {
-                    'type': 'pkg-config',
-                    'path': os.path.join(self.pkgbuilddir, 'greeter',
-                                         'pkgconfig'),
-                },
-            },
-            'hello': {
+        self.assertEqual(output['metadata'], {
+            'deploy_paths': {'prefix': self.prefix},
+            'options': [],
+            'packages': [{
                 'config': {
                     'name': 'hello',
                     'config_file': os.path.join(test_data_dir, 'nested',
@@ -86,7 +74,20 @@ class TestNested(IntegrationTest):
                     'path': os.path.join(self.pkgbuilddir, 'hello',
                                          'pkgconfig'),
                 },
-            },
+            }, {
+                'config': {
+                    'name': 'greeter',
+                    'config_file': config,
+                    'source': 'directory',
+                    'builder': self._builder('greeter'),
+                    'path': os.path.join(test_data_dir, 'nested'),
+                },
+                'usage': {
+                    'type': 'pkg-config',
+                    'path': os.path.join(self.pkgbuilddir, 'greeter',
+                                         'pkgconfig'),
+                },
+            }],
         })
 
         self.assertPopen(['mopack', 'deploy'])

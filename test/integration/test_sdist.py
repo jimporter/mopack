@@ -31,8 +31,10 @@ class TestTarball(IntegrationTest):
         })
 
         output = json.loads(slurp('mopack/mopack.json'))
-        self.assertEqual(output['metadata']['packages'], {
-            'foo': {
+        self.assertEqual(output['metadata'], {
+            'deploy_paths': {'prefix': self.prefix},
+            'options': [],
+            'packages': [{
                 'config': {
                     'name': 'foo',
                     'config_file': config,
@@ -57,7 +59,7 @@ class TestTarball(IntegrationTest):
                     'path': os.path.join(self.stage, 'mopack', 'build', 'foo',
                                          'pkgconfig'),
                 },
-            },
+            }],
         })
 
         self.assertPopen(['mopack', 'deploy'])
@@ -89,8 +91,10 @@ class TestDirectory(IntegrationTest):
         })
 
         output = json.loads(slurp('mopack/mopack.json'))
-        self.assertEqual(output['metadata']['packages'], {
-            'foo': {
+        self.assertEqual(output['metadata'], {
+            'deploy_paths': {},
+            'options': [],
+            'packages': [{
                 'config': {
                     'name': 'foo',
                     'config_file': config,
@@ -111,5 +115,5 @@ class TestDirectory(IntegrationTest):
                     'path': os.path.join(self.stage, 'mopack', 'build', 'foo',
                                          'pkgconfig'),
                 },
-            },
+            }],
         })

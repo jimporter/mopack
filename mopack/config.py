@@ -1,7 +1,7 @@
 import os
 
-from .yaml_tools import load_file, SafeLineLoader
-from .sources import make_package
+from .yaml_tools import load_file, MarkedDict, SafeLineLoader
+from .sources import make_package, make_package_options
 
 
 class _PlaceholderPackage:
@@ -12,8 +12,9 @@ class _PlaceholderPackage:
 PlaceholderPackage = _PlaceholderPackage()
 
 
-class Config:
+class BaseConfig:
     def __init__(self, filenames):
+        self._options = {}
         self.packages = {}
         for f in reversed(filenames):
             self._accumulate_config(f)
@@ -39,6 +40,13 @@ class Config:
                 PlaceholderPackage if self._in_parent(k)
                 else make_package(k, v)
             )
+
+    def _process_options(self, filename, data):
+        for k, v in data.items():
+            if v is None:
+                v = MarkedDict(data.marks[k])
+            v['config_file'] = filename
+            self._options.setdefault(k, []).append(v)
 
     def _in_parent(self, name):
         # We don't have a parent, so this is always false!
@@ -70,11 +78,35 @@ class Config:
                 # our list already, use that one; otherwise, use the child's
                 # definition.
                 new_packages[k] = self.packages.pop(k, v)
+
+            for k, v in i._options.items():
+                self._options.setdefault(k, []).extend(v)
         new_packages.update(self.packages)
         self.packages = new_packages
 
 
-class ChildConfig(Config):
+class Config(BaseConfig):
+    def finalize(self):
+        def make_options(sources):
+            for i in sources:
+                opts = make_package_options(i)
+                if opts:
+                    yield i, opts
+
+        sources = {i.source: True for i in self.packages.values()}
+        self.options = dict(make_options(sources))
+
+        for k, v in self._options.items():
+            if k in self.options:
+                for i in v:
+                    self.options[k].accumulate(i)
+        del self._options
+
+        for i in self.packages.values():
+            i.set_options(self.options)
+
+
+class ChildConfig(BaseConfig):
     def __init__(self, filenames, parent):
         self.parent = parent
         super().__init__(filenames)

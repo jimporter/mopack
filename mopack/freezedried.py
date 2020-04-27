@@ -5,7 +5,11 @@ class FreezeDried:
     _rehydrate_fields = {}
 
     def dehydrate(self):
-        result = {self._type_field: getattr(self, self._type_field)}
+        if self._type_field is None:
+            result = {}
+        else:
+            result = {self._type_field: getattr(self, self._type_field)}
+
         for k, v in vars(self).items():
             if k in self._skip_fields:
                 continue
@@ -18,8 +22,11 @@ class FreezeDried:
     def rehydrate(cls, config):
         assert cls != FreezeDried
 
-        typename = config.pop(cls._type_field)
-        this_type = cls._get_type(typename)
+        if cls._type_field is None:
+            this_type = cls
+        else:
+            typename = config.pop(cls._type_field)
+            this_type = cls._get_type(typename)
         result = this_type.__new__(this_type)
 
         for k, v in config.items():

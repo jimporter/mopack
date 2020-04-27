@@ -1,3 +1,6 @@
+options:
+  conan:
+    generator: cmake
 packages:
   zlib:
     source: conan

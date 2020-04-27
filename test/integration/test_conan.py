@@ -24,8 +24,13 @@ class TestConan(IntegrationTest):
         })
 
         output = json.loads(slurp('mopack/mopack.json'))
-        self.assertEqual(output['metadata']['packages'], {
-            'zlib': {
+        self.assertEqual(output['metadata'], {
+            'deploy_paths': {},
+            'options': [{
+                'source': 'conan',
+                'generator': ['pkg_config', 'cmake'],
+            }],
+            'packages': [{
                 'config': {
                     'name': 'zlib',
                     'config_file': config,
@@ -38,5 +43,5 @@ class TestConan(IntegrationTest):
                     'type': 'pkg-config',
                     'path': os.path.join(self.stage, 'mopack', 'conan')
                 },
-            },
+            }],
         })

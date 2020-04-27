@@ -15,7 +15,10 @@ def _get_source_type(source):
 class Package(FreezeDried):
     _type_field = 'source'
     _get_type = _get_source_type
+    _skip_fields = ('global_options',)
     _skip_compare_fields = ('config_file',)
+
+    Options = None
 
     def __init__(self, name, *, config_file):
         self.name = name
@@ -24,6 +27,9 @@ class Package(FreezeDried):
     @property
     def config_dir(self):
         return os.path.dirname(self.config_file)
+
+    def set_options(self, options):
+        self.global_options = options.get(self.source)
 
     def clean_pre(self, pkgdir, new_package):
         return False
@@ -39,7 +45,7 @@ class Package(FreezeDried):
         pass
 
     def _resolved_metadata(self, usage):
-        return {'config': self.dehydrate(), 'usage': usage}
+        return ResolvedPackage(self, usage)
 
     @staticmethod
     def _resolved_metadata_all(packages, usage):
@@ -49,6 +55,30 @@ class Package(FreezeDried):
         return '<{}({!r})>'.format(type(self).__name__, self.name)
 
 
+class PackageOptions(FreezeDried):
+    _type_field = 'source'
+
+    @staticmethod
+    def _get_type(source):
+        return _get_source_type(source).Options
+
+    def accumulate(self, config):
+        context = 'while adding options for {!r} source'.format(self.source)
+        with try_load_config(config, context):
+            return self(**config)
+
+
+class ResolvedPackage(FreezeDried):
+    _rehydrate_fields = {'config': Package}
+
+    def __init__(self, config, usage):
+        self.config = config
+        self.usage = usage
+
+    def __repr__(self):
+        return '<{}({!r})>'.format(type(self).__name__, self.config.name)
+
+
 def make_package(name, config):
     config = config.copy()
     source = config.pop('source')
@@ -56,3 +86,8 @@ def make_package(name, config):
     context = 'while constructing package {!r}'.format(name)
     with try_load_config(config, context):
         return _get_source_type(source)(name, **config)
+
+
+def make_package_options(source):
+    opts = _get_source_type(source).Options
+    return opts() if opts else None

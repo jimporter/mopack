@@ -105,7 +105,7 @@ class TarballPackage(SDistPackage):
             return BytesIO(f.read())
 
     def clean_pre(self, pkgdir, new_package):
-        if self.equal(new_package, skip_fields=['builder']):
+        if self.equal(new_package, skip_fields=('builder', 'global_options')):
             return False
 
         log.info('cleaning {!r} sources'.format(self.name))
