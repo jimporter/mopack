@@ -14,7 +14,7 @@ class FreezeDried:
             if k in self._skip_fields:
                 continue
             if k in self._rehydrate_fields and v is not None:
-                v = v.dehydrate()
+                v = self._rehydrate_fields[k].dehydrate(v)
             result[k] = v
         return result
 
@@ -46,3 +46,16 @@ class FreezeDried:
 
     def __eq__(self, rhs):
         return self.equal(rhs)
+
+
+class DictToListFreezeDryer:
+    def __init__(self, type, key):
+        self.type = type
+        self.key = key
+
+    def dehydrate(self, value):
+        return [i.dehydrate() for i in value.values()]
+
+    def rehydrate(self, value):
+        rehydrated = (self.type.rehydrate(i) for i in value)
+        return {self.key(i): i for i in rehydrated}

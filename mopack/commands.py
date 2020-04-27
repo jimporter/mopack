@@ -3,6 +3,7 @@ import os
 import shutil
 
 from .config import PlaceholderPackage
+from .freezedried import DictToListFreezeDryer
 from .sources import PackageOptions, ResolvedPackage
 from .usage import make_usage
 
@@ -11,6 +12,12 @@ mopack_dirname = 'mopack'
 
 def get_package_dir(builddir):
     return os.path.join(builddir, mopack_dirname)
+
+
+PackageOptsFD = DictToListFreezeDryer(PackageOptions, lambda x: x.source)
+ResolvedPkgsFD = DictToListFreezeDryer(
+    ResolvedPackage, lambda x: x.config.name
+)
 
 
 class MetadataVersionError(RuntimeError):
@@ -42,9 +49,8 @@ class Metadata:
                 'version': self.version,
                 'metadata': {
                     'deploy_paths': self.deploy_paths,
-                    'options': [i.dehydrate() for i in self.options.values()],
-                    'packages': [i.dehydrate() for i in
-                                 self.packages.values()],
+                    'options': PackageOptsFD.dehydrate(self.options),
+                    'packages': ResolvedPkgsFD.dehydrate(self.packages),
                 }
             }, f)
 
@@ -61,11 +67,8 @@ class Metadata:
         metadata = Metadata.__new__(Metadata)
         metadata.deploy_paths = data['deploy_paths']
 
-        options = (PackageOptions.rehydrate(i) for i in data['options'])
-        metadata.options = {i.source: i for i in options}
-
-        packages = (ResolvedPackage.rehydrate(i) for i in data['packages'])
-        metadata.packages = {i.config.name: i for i in packages}
+        metadata.options = PackageOptsFD.rehydrate(data['options'])
+        metadata.packages = ResolvedPkgsFD.rehydrate(data['packages'])
         for i in metadata.packages.values():
             i.config.set_options(metadata.options)
 
