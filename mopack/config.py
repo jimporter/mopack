@@ -118,7 +118,10 @@ class Config(BaseConfig):
             for name, cfgs in self._options[kind].items():
                 if name in self.options[kind]:
                     for cfg in cfgs:
+                        final = cfg.pop('final', False)
                         self.options[kind][name].accumulate(cfg)
+                        if final:
+                            break
         del self._options
 
         for i in self.packages.values():

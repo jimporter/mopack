@@ -87,8 +87,7 @@ class TestConfig(TestCase):
 
     def test_multi_builder_options(self):
         data1 = ('options:\n  builders:\n' +
-                 '    bfg9000:\n      toolchain: toolchain.bfg\n' +
-                 '    goat:\n      sound: baah\n\n' +
+                 '    bfg9000:\n      toolchain: toolchain.bfg\n\n' +
                  'packages:\n  foo:\n    source: apt\n')
         data2 = ('options:\n  builders:\n' +
                  '    bfg9000:\n      toolchain: bad.bfg\n\n' +
@@ -116,13 +115,38 @@ class TestConfig(TestCase):
         data = ('options:\n  sources:\n    conan:\n      generator: cmake\n' +
                 '    goat:\n      sound: baah\n\n' +
                 'packages:\n  foo:\n    source: apt\n' +
-                '  bar:\n    source: conan\n    remote: bar/1.2.3')
+                '  bar:\n    source: conan\n    remote: bar/1.2.3\n')
         with mock.patch('builtins.open', mock_open_files(data)):
             cfg = Config(['mopack.yml'])
         cfg.finalize()
 
         conan_opts = ConanPackage.Options()
         conan_opts.generator.append('cmake')
+        opts = {'builders': {}, 'sources': {'conan': conan_opts}}
+        self.assertEqual(cfg.options, opts)
+
+        pkg1 = AptPackage('foo', config_file='mopack.yml')
+        pkg1.set_options(opts)
+        pkg2 = ConanPackage('bar', remote='bar/1.2.3',
+                            config_file='mopack.yml')
+        pkg2.set_options(opts)
+        self.assertEqual(list(cfg.packages.items()), [
+            ('foo', pkg1), ('bar', pkg2)
+        ])
+
+    def test_multiple_source_options(self):
+        data1 = ('options:\n  sources:\n    conan:\n      generator: cmake\n')
+        data2 = ('options:\n  sources:\n    conan:\n      generator: make\n' +
+                 '      final: true\n\n' +
+                 'packages:\n  foo:\n    source: apt\n')
+        data3 = ('options:\n  sources:\n    conan:\n      generator: bad\n\n' +
+                 'packages:\n  bar:\n    source: conan\n    remote: bar/1.2.3')
+        with mock.patch('builtins.open', mock_open_files(data1, data2, data3)):
+            cfg = Config(['mopack.yml', 'mopack2.yml', 'mopack3.yml'])
+        cfg.finalize()
+
+        conan_opts = ConanPackage.Options()
+        conan_opts.generator.extend(['cmake', 'make'])
         opts = {'builders': {}, 'sources': {'conan': conan_opts}}
         self.assertEqual(cfg.options, opts)
 
@@ -269,7 +293,7 @@ class TestChildConfig(TestCase):
         data = ('options:\n  sources:\n    conan:\n      generator: cmake\n' +
                 '    goat:\n      sound: baah\n\n' +
                 'packages:\n  foo:\n    source: apt\n' +
-                '  bar:\n    source: conan\n    remote: bar/1.2.3')
+                '  bar:\n    source: conan\n    remote: bar/1.2.3\n')
         with mock.patch('builtins.open', mock_open_files(data)):
             child = ChildConfig(['mopack-child.yml'], parent=parent)
 
