@@ -28,8 +28,12 @@ class Package(FreezeDried):
     def config_dir(self):
         return os.path.dirname(self.config_file)
 
+    @property
+    def builder_types(self):
+        return []
+
     def set_options(self, options):
-        self.global_options = options.get(self.source)
+        self.global_options = options['sources'].get(self.source)
 
     def clean_pre(self, pkgdir, new_package):
         return False

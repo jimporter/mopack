@@ -95,12 +95,12 @@ class MarkedDict(dict, MarkedCollection):
         self[key] = value
         self.marks[key] = mark
 
-    def update(self, rhs):
-        super().update(rhs)
-        if isinstance(rhs, MarkedCollection):
+    def update(self, *args, **kwargs):
+        super().update(*args, **kwargs)
+        if len(args) and isinstance(args[0], MarkedCollection):
             if self.mark is None:
-                self.mark = rhs.mark
-                self.marks.update(rhs.marks)
+                self.mark = args[0].mark
+                self.marks.update(args[0].marks)
 
     def copy(self):
         result = MarkedDict()

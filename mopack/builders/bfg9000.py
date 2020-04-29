@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from . import Builder
+from . import Builder, BuilderOptions
 from .. import types
 from ..log import LogFile
 from ..path import pushd
@@ -15,6 +15,17 @@ class Bfg9000Builder(Builder):
     type = 'bfg9000'
     _rehydrate_fields = {'usage': Usage}
 
+    class Options(BuilderOptions):
+        type = 'bfg9000'
+
+        def __init__(self):
+            self.toolchain = types.Unset
+
+        def __call__(self, *, toolchain=types.Unset, config_file=None,
+                     child_config=False):
+            if not child_config and self.toolchain is types.Unset:
+                self.toolchain = toolchain
+
     def __init__(self, name, *, extra_args=None, usage=None):
         super().__init__(name)
         self.extra_args = types.shell_args('extra_args', extra_args)
@@ -22,6 +33,9 @@ class Bfg9000Builder(Builder):
 
     def _builddir(self, pkgdir):
         return os.path.abspath(os.path.join(pkgdir, 'build', self.name))
+
+    def _toolchain_args(self, toolchain):
+        return ['--toolchain', toolchain] if toolchain else []
 
     def _install_args(self, deploy_paths):
         args = []
@@ -38,9 +52,12 @@ class Bfg9000Builder(Builder):
 
         with LogFile.open(pkgdir, self.name) as logfile:
             with pushd(srcdir):
-                logfile.check_call(['9k', builddir] +
-                                   self._install_args(deploy_paths) +
-                                   self.extra_args)
+                logfile.check_call(
+                    ['9k', builddir] +
+                    self._toolchain_args(self.global_options.toolchain) +
+                    self._install_args(deploy_paths) +
+                    self.extra_args
+                )
             with pushd(builddir):
                 logfile.check_call(['ninja'])
         return self.usage.usage(os.path.abspath(builddir))

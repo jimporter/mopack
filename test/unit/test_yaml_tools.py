@@ -146,6 +146,13 @@ class TestMarkedDict(TestCase):
         self.assertEqual(m.mark, 'mark')
         self.assertEqual(m.marks, {'key3': 'mark3'})
 
+    def test_update_kwargs(self):
+        m = MarkedDict()
+        m.update(key1=1, key2=2)
+        self.assertEqual(m, {'key1': 1, 'key2': 2})
+        self.assertEqual(m.mark, None)
+        self.assertEqual(m.marks, {})
+
     def test_copy(self):
         m = MarkedDict('mark')
         m.add('key1', 1, 'mark1')

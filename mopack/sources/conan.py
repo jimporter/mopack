@@ -18,7 +18,8 @@ class ConanPackage(Package):
             # usage types.
             self.generator = ['pkg_config']
 
-        def __call__(self, generator=None, config_file=None):
+        def __call__(self, *, generator=None, config_file=None,
+                     child_config=False):
             if generator and generator not in self.generator:
                 self.generator.append(generator)
 

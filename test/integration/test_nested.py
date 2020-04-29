@@ -55,7 +55,13 @@ class TestNested(IntegrationTest):
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
             'deploy_paths': {'prefix': self.prefix},
-            'options': [],
+            'options': {
+                'builders': [{
+                    'type': 'bfg9000',
+                    'toolchain': None,
+                }],
+                'sources': [],
+            },
             'packages': [{
                 'config': {
                     'name': 'hello',

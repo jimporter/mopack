@@ -46,6 +46,11 @@ class SDistTestCase(SourceTest):
 
             mopen.assert_called_with(os.path.join(self.pkgdir, 'foo.log'), 'w')
 
+    def make_builder(self, builder_type, name, **kwargs):
+        builder = builder_type(name, **kwargs)
+        builder.set_options(self.make_options())
+        return builder
+
 
 class TestDirectory(SDistTestCase):
     pkg_type = DirectoryPackage
@@ -54,7 +59,7 @@ class TestDirectory(SDistTestCase):
     def test_resolve(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000')
         self.assertEqual(pkg.path, self.srcpath)
-        self.assertEqual(pkg.builder, Bfg9000Builder('foo'))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
 
         pkg.fetch(self.pkgdir, None)
         self.check_resolve(pkg)
@@ -64,38 +69,45 @@ class TestDirectory(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build=build,
                                 usage='pkg-config')
         self.assertEqual(pkg.path, self.srcpath)
-        self.assertEqual(pkg.builder, Bfg9000Builder(
-            'foo', extra_args='--extra'
+        self.assertEqual(pkg.builder, self.make_builder(
+            Bfg9000Builder, 'foo', extra_args='--extra'
         ))
 
         pkg.fetch(self.pkgdir, None)
         self.check_resolve(pkg)
 
     def test_infer_build(self):
-        pkg = self.make_package('foo', path=self.srcpath)
+        pkg = self.make_package('foo', path=self.srcpath, set_options=False)
         self.assertEqual(pkg.builder, None)
 
         with mock.patch('os.path.exists', return_value=True):
             config = pkg.fetch(self.pkgdir, Config([]))
+            self.set_options(pkg)
             self.assertEqual(config.build, 'bfg9000')
-            self.assertEqual(pkg.builder, Bfg9000Builder('foo'))
+            self.assertEqual(pkg.builder, self.make_builder(
+                Bfg9000Builder, 'foo'
+            ))
         self.check_resolve(pkg)
 
         usage = {'type': 'system'}
-        pkg = self.make_package('foo', path=self.srcpath, usage=usage)
+        pkg = self.make_package('foo', path=self.srcpath, usage=usage,
+                                set_options=False)
 
         with mock.patch('os.path.exists', return_value=True):
             config = pkg.fetch(self.pkgdir, Config([]))
+            self.set_options(pkg)
             self.assertEqual(config.build, 'bfg9000')
-            self.assertEqual(pkg.builder, Bfg9000Builder('foo', usage=usage))
+            self.assertEqual(pkg.builder, self.make_builder(
+                Bfg9000Builder, 'foo', usage=usage
+            ))
         self.check_resolve(pkg, usage)
 
     def test_usage(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 usage='pkg-config')
         self.assertEqual(pkg.path, self.srcpath)
-        self.assertEqual(pkg.builder, Bfg9000Builder(
-            'foo', usage='pkg-config'
+        self.assertEqual(pkg.builder, self.make_builder(
+            Bfg9000Builder, 'foo', usage='pkg-config'
         ))
 
         pkg.fetch(self.pkgdir, None)
@@ -105,7 +117,9 @@ class TestDirectory(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 usage=usage)
         self.assertEqual(pkg.path, self.srcpath)
-        self.assertEqual(pkg.builder, Bfg9000Builder('foo', usage=usage))
+        self.assertEqual(pkg.builder, self.make_builder(
+            Bfg9000Builder, 'foo', usage=usage
+        ))
 
         pkg.fetch(self.pkgdir, None)
         self.check_resolve(pkg, {'type': 'pkg-config',
@@ -255,6 +269,7 @@ class TestTarball(SDistTestCase):
         pkg = self.make_package('foo', build='bfg9000', url=self.srcurl)
         self.assertEqual(pkg.url, self.srcurl)
         self.assertEqual(pkg.path, None)
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
@@ -263,6 +278,7 @@ class TestTarball(SDistTestCase):
         pkg = self.make_package('foo', build='bfg9000', path=self.srcpath)
         self.assertEqual(pkg.url, None)
         self.assertEqual(pkg.path, self.srcpath)
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
@@ -276,15 +292,15 @@ class TestTarball(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build=build,
                                 usage='pkg-config')
         self.assertEqual(pkg.path, self.srcpath)
-        self.assertEqual(pkg.builder, Bfg9000Builder(
-            'foo', extra_args='--extra'
+        self.assertEqual(pkg.builder, self.make_builder(
+            Bfg9000Builder, 'foo', extra_args='--extra'
         ))
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
 
     def test_infer_build(self):
-        pkg = self.make_package('foo', path=self.srcpath)
+        pkg = self.make_package('foo', path=self.srcpath, set_options=False)
         self.assertEqual(pkg.builder, None)
 
         with mock.patch('os.path.exists', return_value=True), \
@@ -293,12 +309,16 @@ class TestTarball(SDistTestCase):
              )), \
              mock.patch('tarfile.TarFile.extractall') as mtar:  # noqa
             config = pkg.fetch(self.pkgdir, Config([]))
+            self.set_options(pkg)
             self.assertEqual(config.build, 'bfg9000')
-            self.assertEqual(pkg.builder, Bfg9000Builder('foo'))
+            self.assertEqual(pkg.builder, self.make_builder(
+                Bfg9000Builder, 'foo'
+            ))
         self.check_resolve(pkg)
 
         usage = {'type': 'system'}
-        pkg = self.make_package('foo', path=self.srcpath, usage=usage)
+        pkg = self.make_package('foo', path=self.srcpath, usage=usage,
+                                set_options=False)
 
         with mock.patch('os.path.exists', return_value=True), \
              mock.patch('builtins.open', mock_open_after_first(
@@ -306,16 +326,19 @@ class TestTarball(SDistTestCase):
              )), \
              mock.patch('tarfile.TarFile.extractall') as mtar:  # noqa
             config = pkg.fetch(self.pkgdir, Config([]))
+            self.set_options(pkg)
             self.assertEqual(config.build, 'bfg9000')
-            self.assertEqual(pkg.builder, Bfg9000Builder('foo', usage=usage))
+            self.assertEqual(pkg.builder, self.make_builder(
+                Bfg9000Builder, 'foo', usage=usage
+            ))
         self.check_resolve(pkg, usage)
 
     def test_usage(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 usage='pkg-config')
         self.assertEqual(pkg.path, self.srcpath)
-        self.assertEqual(pkg.builder, Bfg9000Builder(
-            'foo', usage='pkg-config'
+        self.assertEqual(pkg.builder, self.make_builder(
+            Bfg9000Builder, 'foo', usage='pkg-config'
         ))
 
         self.check_fetch(pkg)
@@ -325,7 +348,9 @@ class TestTarball(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 usage=usage)
         self.assertEqual(pkg.path, self.srcpath)
-        self.assertEqual(pkg.builder, Bfg9000Builder('foo', usage=usage))
+        self.assertEqual(pkg.builder, self.make_builder(
+            Bfg9000Builder, 'foo', usage=usage
+        ))
 
         self.check_fetch(pkg)
         self.check_resolve(pkg, {'type': 'pkg-config',

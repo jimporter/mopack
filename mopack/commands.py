@@ -2,8 +2,9 @@ import json
 import os
 import shutil
 
+from .builders import BuilderOptions
 from .config import PlaceholderPackage
-from .freezedried import DictToListFreezeDryer
+from .freezedried import DictKeysFreezeDryer, DictToListFreezeDryer
 from .sources import PackageOptions, ResolvedPackage
 from .usage import make_usage
 
@@ -14,7 +15,10 @@ def get_package_dir(builddir):
     return os.path.join(builddir, mopack_dirname)
 
 
+BuilderOptsFD = DictToListFreezeDryer(BuilderOptions, lambda x: x.type)
 PackageOptsFD = DictToListFreezeDryer(PackageOptions, lambda x: x.source)
+OptionsFD = DictKeysFreezeDryer(builders=BuilderOptsFD, sources=PackageOptsFD)
+
 ResolvedPkgsFD = DictToListFreezeDryer(
     ResolvedPackage, lambda x: x.config.name
 )
@@ -28,13 +32,10 @@ class Metadata:
     metadata_filename = 'mopack.json'
     version = 1
 
-    def __init__(self, deploy_paths=None):
+    def __init__(self, deploy_paths=None, options=None):
         self.deploy_paths = deploy_paths or {}
-        self.options = {}
+        self.options = options or {}
         self.packages = {}
-
-    def add_options(self, options):
-        self.options[options.source] = options
 
     def add_package(self, package):
         self.packages[package.config.name] = package
@@ -49,7 +50,7 @@ class Metadata:
                 'version': self.version,
                 'metadata': {
                     'deploy_paths': self.deploy_paths,
-                    'options': PackageOptsFD.dehydrate(self.options),
+                    'options': OptionsFD.dehydrate(self.options),
                     'packages': ResolvedPkgsFD.dehydrate(self.packages),
                 }
             }, f)
@@ -67,7 +68,7 @@ class Metadata:
         metadata = Metadata.__new__(Metadata)
         metadata.deploy_paths = data['deploy_paths']
 
-        metadata.options = PackageOptsFD.rehydrate(data['options'])
+        metadata.options = OptionsFD.rehydrate(data['options'])
         metadata.packages = ResolvedPkgsFD.rehydrate(data['packages'])
         for i in metadata.packages.values():
             i.config.set_options(metadata.options)
@@ -128,9 +129,7 @@ def fetch(config, pkgdir):
 def resolve(config, pkgdir, deploy_paths=None):
     fetch(config, pkgdir)
 
-    metadata = Metadata(deploy_paths)
-    for i in config.options.values():
-        metadata.add_options(i)
+    metadata = Metadata(deploy_paths, config.options)
 
     packages, batch_packages = [], {}
     for i in config.packages.values():

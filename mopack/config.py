@@ -1,7 +1,9 @@
 import os
+from itertools import chain
 
-from .yaml_tools import load_file, MarkedDict, SafeLineLoader
+from .builders import make_builder_options
 from .sources import make_package, make_package_options
+from .yaml_tools import load_file, MarkedDict, SafeLineLoader
 
 
 class _PlaceholderPackage:
@@ -13,8 +15,10 @@ PlaceholderPackage = _PlaceholderPackage()
 
 
 class BaseConfig:
+    _option_kinds = ('builders', 'sources')
+
     def __init__(self, filenames):
-        self._options = {}
+        self._options = {i: {} for i in self._option_kinds}
         self.packages = {}
         for f in reversed(filenames):
             self._accumulate_config(f)
@@ -22,10 +26,11 @@ class BaseConfig:
     def _accumulate_config(self, filename):
         filename = os.path.abspath(filename)
         with load_file(filename, Loader=SafeLineLoader) as next_config:
-            for k, v in next_config.items():
-                fn = '_process_{}'.format(k)
-                if hasattr(self, fn):
-                    getattr(self, fn)(filename, v)
+            if next_config:
+                for k, v in next_config.items():
+                    fn = '_process_{}'.format(k)
+                    if hasattr(self, fn):
+                        getattr(self, fn)(filename, v)
 
     def _process_packages(self, filename, data):
         for k, v in data.items():
@@ -42,11 +47,13 @@ class BaseConfig:
             )
 
     def _process_options(self, filename, data):
-        for k, v in data.items():
-            if v is None:
-                v = MarkedDict(data.marks[k])
-            v['config_file'] = filename
-            self._options.setdefault(k, []).append(v)
+        for kind in self._option_kinds:
+            if kind in data:
+                for k, v in data[kind].items():
+                    if v is None:
+                        v = MarkedDict(data.marks[k])
+                    v.update(config_file=filename, child_config=self.child)
+                    self._options[kind].setdefault(k, []).append(v)
 
     def _in_parent(self, name):
         # We don't have a parent, so this is always false!
@@ -79,27 +86,39 @@ class BaseConfig:
                 # definition.
                 new_packages[k] = self.packages.pop(k, v)
 
-            for k, v in i._options.items():
-                self._options.setdefault(k, []).extend(v)
+            for kind in self._option_kinds:
+                if kind in i._options:
+                    for k, v in i._options[kind].items():
+                        self._options[kind].setdefault(k, []).extend(v)
         new_packages.update(self.packages)
         self.packages = new_packages
 
 
 class Config(BaseConfig):
+    child = False
+
     def finalize(self):
-        def make_options(sources):
-            for i in sources:
-                opts = make_package_options(i)
+        def make_options(kinds, make):
+            for i in kinds:
+                opts = make(i)
                 if opts:
                     yield i, opts
 
         sources = {i.source: True for i in self.packages.values()}
-        self.options = dict(make_options(sources))
+        builders = {i: True for i in chain.from_iterable(
+            i.builder_types for i in self.packages.values()
+        )}
 
-        for k, v in self._options.items():
-            if k in self.options:
-                for i in v:
-                    self.options[k].accumulate(i)
+        self.options = {
+            'sources': dict(make_options(sources, make_package_options)),
+            'builders': dict(make_options(builders, make_builder_options)),
+        }
+
+        for kind in self._option_kinds:
+            for name, cfgs in self._options[kind].items():
+                if name in self.options[kind]:
+                    for cfg in cfgs:
+                        self.options[kind][name].accumulate(cfg)
         del self._options
 
         for i in self.packages.values():
@@ -107,6 +126,8 @@ class Config(BaseConfig):
 
 
 class ChildConfig(BaseConfig):
+    child = True
+
     def __init__(self, filenames, parent):
         self.parent = parent
         super().__init__(filenames)

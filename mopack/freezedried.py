@@ -1,3 +1,17 @@
+def auto_dehydrate(value, freezedryer=None):
+    # If freezedryer is not set, try to dehydrate the value or just return the
+    # original value. Otherwise, check if the value is an instance of the
+    # freezedryer. If so, dehydrate using the value's `dehydrate()` method; if
+    # not, use the freezerdryer's `dehydrate()` method. This lets the value's
+    # subtype extend `dehydrate()` if needed.
+
+    if freezedryer is None:
+        return value.dehydrate() if hasattr(value, 'dehydrate') else value
+    if isinstance(freezedryer, type) and isinstance(value, freezedryer):
+        return value.dehydrate()
+    return freezedryer.dehydrate(value)
+
+
 class FreezeDried:
     _type_field = None
     _skip_fields = ()
@@ -13,9 +27,7 @@ class FreezeDried:
         for k, v in vars(self).items():
             if k in self._skip_fields:
                 continue
-            if k in self._rehydrate_fields and v is not None:
-                v = self._rehydrate_fields[k].dehydrate(v)
-            result[k] = v
+            result[k] = auto_dehydrate(v, self._rehydrate_fields.get(k))
         return result
 
     @classmethod
@@ -48,13 +60,25 @@ class FreezeDried:
         return self.equal(rhs)
 
 
+class DictKeysFreezeDryer:
+    def __init__(self, **kwargs):
+        self.keys = kwargs
+
+    def dehydrate(self, value):
+        return {k: auto_dehydrate(value[k], type) for k, type in
+                self.keys.items()}
+
+    def rehydrate(self, value):
+        return {k: type.rehydrate(value[k]) for k, type in self.keys.items()}
+
+
 class DictToListFreezeDryer:
     def __init__(self, type, key):
         self.type = type
         self.key = key
 
     def dehydrate(self, value):
-        return [i.dehydrate() for i in value.values()]
+        return [auto_dehydrate(i, self.type) for i in value.values()]
 
     def rehydrate(self, value):
         rehydrated = (self.type.rehydrate(i) for i in value)

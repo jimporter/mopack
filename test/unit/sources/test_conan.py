@@ -1,12 +1,12 @@
 import os
 from io import StringIO
 from textwrap import dedent
-from unittest import mock
+from unittest import mock, TestCase
 
 from . import SourceTest
 from .. import mock_open_log
 
-from mopack.sources import Package, ResolvedPackage
+from mopack.sources import Package, PackageOptions, ResolvedPackage
 from mopack.sources.apt import AptPackage
 from mopack.sources.conan import ConanPackage
 
@@ -281,3 +281,23 @@ class TestConan(SourceTest):
                            config_file=self.config_file)
         data = pkg.dehydrate()
         self.assertEqual(pkg, Package.rehydrate(data))
+
+
+class TestConanOptions(TestCase):
+    def test_default(self):
+        opts = ConanPackage.Options()
+        self.assertEqual(opts.generator, ['pkg_config'])
+
+    def test_generator(self):
+        opts = ConanPackage.Options()
+        opts(generator='cmake')
+        self.assertEqual(opts.generator, ['pkg_config', 'cmake'])
+
+        opts(generator='pkg_config')
+        self.assertEqual(opts.generator, ['pkg_config', 'cmake'])
+
+    def test_rehydrate(self):
+        opts = ConanPackage.Options()
+        opts(generator='cmake')
+        data = opts.dehydrate()
+        self.assertEqual(opts, PackageOptions.rehydrate(data))

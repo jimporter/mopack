@@ -53,7 +53,13 @@ class TestCleanNeeded(IntegrationTest):
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
             'deploy_paths': {},
-            'options': [],
+            'options': {
+                'builders': [{
+                    'type': 'bfg9000',
+                    'toolchain': None,
+                }],
+                'sources': [],
+            },
             'packages': [{
                 'config': {
                     'name': 'hello',
@@ -116,7 +122,13 @@ class TestCleanNeeded(IntegrationTest):
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
             'deploy_paths': {},
-            'options': [],
+            'options': {
+                'builders': [{
+                    'type': 'bfg9000',
+                    'toolchain': None,
+                }],
+                'sources': [],
+            },
             'packages': [{
                 'config': {
                     'name': 'hello',

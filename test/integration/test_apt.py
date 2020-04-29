@@ -30,7 +30,10 @@ class TestApt(IntegrationTest):
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
             'deploy_paths': {},
-            'options': [],
+            'options': {
+                'builders': [],
+                'sources': [],
+            },
             'packages': [{
                 'config': {
                     'name': 'ogg',

@@ -12,6 +12,23 @@ class FieldError(TypeError):
         self.field = field
 
 
+class _UnsetType:
+    def __bool__(self):
+        return False
+
+    def dehydrate(self):
+        return None
+
+    @classmethod
+    def rehydrate(self, config):
+        if config is not None:
+            raise ValueError('expected None')
+        return Unset
+
+
+Unset = _UnsetType()
+
+
 @contextmanager
 def try_load_config(config, context):
     try:

@@ -1,7 +1,10 @@
 from unittest import mock, TestCase
 
 from mopack.config import *
+from mopack.builders.bfg9000 import Bfg9000Builder
 from mopack.sources.apt import AptPackage
+from mopack.sources.conan import ConanPackage
+from mopack.sources.sdist import DirectoryPackage
 
 foobar_cfg = 'packages:\n  foo:\n    source: apt\n\n  bar:\n    source: apt\n'
 foo_cfg = 'packages:\n  foo:\n    source: apt\n    remote: libfoo1-dev\n'
@@ -18,6 +21,14 @@ def mock_open_files(*files):
 
 
 class TestConfig(TestCase):
+    def test_empty_file(self):
+        with mock.patch('builtins.open', mock_open_files('')):
+            cfg = Config(['mopack.yml'])
+        cfg.finalize()
+
+        self.assertEqual(cfg.options, {'builders': {}, 'sources': {}})
+        self.assertEqual(list(cfg.packages.items()), [])
+
     def test_single_file(self):
         with mock.patch('builtins.open', mock_open_files(foobar_cfg)):
             cfg = Config(['mopack.yml'])
@@ -49,8 +60,105 @@ class TestConfig(TestCase):
             ('bar', AptPackage('bar', config_file='mopack.yml')),
         ])
 
+    def test_builder_options(self):
+        data = ('options:\n  builders:\n' +
+                '    bfg9000:\n      toolchain: toolchain.bfg\n' +
+                '    goat:\n      sound: baah\n\n' +
+                'packages:\n  foo:\n    source: apt\n' +
+                '  bar:\n    source: directory\n    path: /path/to/src\n' +
+                '    build: bfg9000\n')
+        with mock.patch('builtins.open', mock_open_files(data)):
+            cfg = Config(['mopack.yml'])
+        cfg.finalize()
+
+        bfg_opts = Bfg9000Builder.Options()
+        bfg_opts.toolchain = 'toolchain.bfg'
+        opts = {'builders': {'bfg9000': bfg_opts}, 'sources': {}}
+        self.assertEqual(cfg.options, opts)
+
+        pkg1 = AptPackage('foo', config_file='mopack.yml')
+        pkg1.set_options(opts)
+        pkg2 = DirectoryPackage('bar', path='/path/to/src', build='bfg9000',
+                                config_file='mopack.yml')
+        pkg2.set_options(opts)
+        self.assertEqual(list(cfg.packages.items()), [
+            ('foo', pkg1), ('bar', pkg2)
+        ])
+
+    def test_multi_builder_options(self):
+        data1 = ('options:\n  builders:\n' +
+                 '    bfg9000:\n      toolchain: toolchain.bfg\n' +
+                 '    goat:\n      sound: baah\n\n' +
+                 'packages:\n  foo:\n    source: apt\n')
+        data2 = ('options:\n  builders:\n' +
+                 '    bfg9000:\n      toolchain: bad.bfg\n\n' +
+                 'packages:\n  bar:\n    source: directory\n' +
+                 '    path: /path/to/src\n    build: bfg9000\n')
+        with mock.patch('builtins.open', mock_open_files(data1, data2)):
+            cfg = Config(['mopack.yml', 'mopack2.yml'])
+        cfg.finalize()
+
+        bfg_opts = Bfg9000Builder.Options()
+        bfg_opts.toolchain = 'toolchain.bfg'
+        opts = {'builders': {'bfg9000': bfg_opts}, 'sources': {}}
+        self.assertEqual(cfg.options, opts)
+
+        pkg1 = AptPackage('foo', config_file='mopack.yml')
+        pkg1.set_options(opts)
+        pkg2 = DirectoryPackage('bar', path='/path/to/src', build='bfg9000',
+                                config_file='mopack.yml')
+        pkg2.set_options(opts)
+        self.assertEqual(list(cfg.packages.items()), [
+            ('foo', pkg1), ('bar', pkg2)
+        ])
+
+    def test_source_options(self):
+        data = ('options:\n  sources:\n    conan:\n      generator: cmake\n' +
+                '    goat:\n      sound: baah\n\n' +
+                'packages:\n  foo:\n    source: apt\n' +
+                '  bar:\n    source: conan\n    remote: bar/1.2.3')
+        with mock.patch('builtins.open', mock_open_files(data)):
+            cfg = Config(['mopack.yml'])
+        cfg.finalize()
+
+        conan_opts = ConanPackage.Options()
+        conan_opts.generator.append('cmake')
+        opts = {'builders': {}, 'sources': {'conan': conan_opts}}
+        self.assertEqual(cfg.options, opts)
+
+        pkg1 = AptPackage('foo', config_file='mopack.yml')
+        pkg1.set_options(opts)
+        pkg2 = ConanPackage('bar', remote='bar/1.2.3',
+                            config_file='mopack.yml')
+        pkg2.set_options(opts)
+        self.assertEqual(list(cfg.packages.items()), [
+            ('foo', pkg1), ('bar', pkg2)
+        ])
+
 
 class TestChildConfig(TestCase):
+    def test_empty_file(self):
+        with mock.patch('builtins.open', mock_open_files('')):
+            parent = Config(['mopack.yml'])
+
+        with mock.patch('builtins.open', mock_open_files('')):
+            child = ChildConfig(['mopack-child.yml'], parent=parent)
+        self.assertEqual(list(child.packages.items()), [])
+
+        parent.finalize()
+        self.assertEqual(parent.options, {'builders': {}, 'sources': {}})
+        self.assertEqual(list(parent.packages.items()), [])
+
+    def test_self_config(self):
+        with mock.patch('builtins.open', mock_open_files('')):
+            parent = Config(['mopack.yml'])
+
+        cfg = 'self:\n  build: bfg9000\n  usage: pkg-config\n' + bar_cfg
+        with mock.patch('builtins.open', mock_open_files(cfg)):
+            child = ChildConfig(['mopack-child.yml'], parent=parent)
+        self.assertEqual(child.build, 'bfg9000')
+        self.assertEqual(child.usage, 'pkg-config')
+
     def test_child_in_parent(self):
         with mock.patch('builtins.open', mock_open_files(foobar_cfg)):
             parent = Config(['mopack.yml'])
@@ -123,3 +231,61 @@ class TestChildConfig(TestCase):
 
         with self.assertRaises(ValueError):
             parent.add_children([child1, child2])
+
+    def test_builder_options(self):
+        with mock.patch('builtins.open', mock_open_files('')):
+            parent = Config(['mopack.yml'])
+
+        data = ('options:\n  builders:\n' +
+                '    bfg9000:\n      toolchain: toolchain.bfg\n' +
+                '    goat:\n      sound: baah\n\n' +
+                'packages:\n  foo:\n    source: apt\n' +
+                '  bar:\n    source: directory\n    path: /path/to/src\n' +
+                '    build: bfg9000\n')
+        with mock.patch('builtins.open', mock_open_files(data)):
+            child = ChildConfig(['mopack-child.yml'], parent=parent)
+
+        parent.add_children([child])
+        parent.finalize()
+
+        bfg_opts = Bfg9000Builder.Options()
+        opts = {'builders': {'bfg9000': bfg_opts}, 'sources': {}}
+        self.assertEqual(parent.options, opts)
+
+        pkg1 = AptPackage('foo', config_file='mopack.yml')
+        pkg1.set_options(opts)
+        pkg2 = DirectoryPackage('bar', path='/path/to/src', build='bfg9000',
+                                config_file='mopack.yml')
+        pkg2.set_options(opts)
+        self.assertEqual(list(parent.packages.items()), [
+            ('foo', pkg1), ('bar', pkg2)
+        ])
+
+    def test_source_options(self):
+        data = ('options:\n  sources:\n    conan:\n      generator: make\n')
+        with mock.patch('builtins.open', mock_open_files(data)):
+            parent = Config(['mopack.yml'])
+
+        data = ('options:\n  sources:\n    conan:\n      generator: cmake\n' +
+                '    goat:\n      sound: baah\n\n' +
+                'packages:\n  foo:\n    source: apt\n' +
+                '  bar:\n    source: conan\n    remote: bar/1.2.3')
+        with mock.patch('builtins.open', mock_open_files(data)):
+            child = ChildConfig(['mopack-child.yml'], parent=parent)
+
+        parent.add_children([child])
+        parent.finalize()
+
+        conan_opts = ConanPackage.Options()
+        conan_opts.generator.extend(['make', 'cmake'])
+        opts = {'builders': {}, 'sources': {'conan': conan_opts}}
+        self.assertEqual(parent.options, opts)
+
+        pkg1 = AptPackage('foo', config_file='mopack.yml')
+        pkg1.set_options(opts)
+        pkg2 = ConanPackage('bar', remote='bar/1.2.3',
+                            config_file='mopack.yml')
+        pkg2.set_options(opts)
+        self.assertEqual(list(parent.packages.items()), [
+            ('foo', pkg1), ('bar', pkg2)
+        ])

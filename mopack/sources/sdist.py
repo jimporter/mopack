@@ -23,6 +23,17 @@ class SDistPackage(Package):
         else:
             self.builder = make_builder(name, build, usage=usage)
 
+    @property
+    def builder_types(self):
+        if self.builder is None:
+            raise TypeError('cannot get builder types until builder is ' +
+                            'finalized')
+        return [self.builder.type]
+
+    def set_options(self, options):
+        super().set_options(options)
+        self.builder.set_options(options)
+
     def dehydrate(self):
         if hasattr(self, 'pending_usage'):
             raise TypeError('cannot dehydrate until `pending_usage` is ' +
