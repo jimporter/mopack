@@ -54,7 +54,7 @@ class SDistTestCase(SourceTest):
 
 class TestDirectory(SDistTestCase):
     pkg_type = DirectoryPackage
-    srcpath = os.path.join(test_data_dir, 'bfg_project')
+    srcpath = os.path.join(test_data_dir, 'hello-bfg')
 
     def test_resolve(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000')
@@ -251,12 +251,11 @@ class TestDirectory(SDistTestCase):
 
 class TestTarball(SDistTestCase):
     pkg_type = TarballPackage
-    srcurl = 'http://example.invalid/bfg_project.tar.gz'
-    srcpath = os.path.join(test_data_dir, 'bfg_project.tar.gz')
+    srcurl = 'http://example.invalid/hello-bfg.tar.gz'
+    srcpath = os.path.join(test_data_dir, 'hello-bfg.tar.gz')
 
-    @staticmethod
-    def mock_urlopen(url):
-        return open(os.path.join(test_data_dir, 'bfg_project.tar.gz'), 'rb')
+    def mock_urlopen(self, url):
+        return open(self.srcpath, 'rb')
 
     def check_fetch(self, pkg):
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')

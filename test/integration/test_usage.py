@@ -23,21 +23,21 @@ class TestUsage(IntegrationTest):
         config = os.path.join(test_data_dir, 'mopack-tarball.yml')
         self.assertPopen(['mopack', 'resolve', config])
 
-        # Usage for `foo`.
-        expected_output_foo = {
-            'name': 'foo',
+        # Usage for `hello`.
+        expected_output_hello = {
+            'name': 'hello',
             'type': 'pkg-config',
-            'path': os.path.join(self.stage, 'mopack', 'build', 'foo',
+            'path': os.path.join(self.stage, 'mopack', 'build', 'hello',
                                  'pkgconfig'),
         }
-        self.assertUsageOutput('foo', expected_output_foo)
-        self.assertUsageOutput('foo', expected_output_foo, ['--strict'])
+        self.assertUsageOutput('hello', expected_output_hello)
+        self.assertUsageOutput('hello', expected_output_hello, ['--strict'])
 
         # Usage for `undef`.
         self.assertUsageOutput('undef', {'name': 'undef', 'type': 'system'})
         self.assertUsage('undef', '--strict', returncode=1)
 
         # Usage from wrong directory.
-        self.assertUsageOutput('foo', {'name': 'foo', 'type': 'system'},
+        self.assertUsageOutput('hello', {'name': 'hello', 'type': 'system'},
                                ['--directory=..'])
-        self.assertUsage('foo', '--strict', '--directory=..', returncode=1)
+        self.assertUsage('hello', '--strict', '--directory=..', returncode=1)

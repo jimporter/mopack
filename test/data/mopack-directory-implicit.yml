@@ -1,4 +1,4 @@
 packages:
-  foo:
+  hello:
     source: directory
-    path: bfg_project
+    path: hello-bfg

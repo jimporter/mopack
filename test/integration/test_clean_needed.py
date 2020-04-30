@@ -66,7 +66,7 @@ class TestCleanNeeded(IntegrationTest):
                     'config_file': config,
                     'source': 'directory',
                     'builder': self._builder('hello', ['--extra']),
-                    'path': os.path.join(test_data_dir, 'bfg_project'),
+                    'path': os.path.join(test_data_dir, 'hello-bfg'),
                 },
                 'usage': {
                     'type': 'pkg-config',
@@ -79,7 +79,7 @@ class TestCleanNeeded(IntegrationTest):
                     'config_file': config,
                     'source': 'directory',
                     'builder': self._builder('greeter', ['--extra']),
-                    'path': os.path.join(test_data_dir, 'nested'),
+                    'path': os.path.join(test_data_dir, 'greeter-bfg'),
                 },
                 'usage': {
                     'type': 'pkg-config',
@@ -94,7 +94,7 @@ class TestCleanNeeded(IntegrationTest):
         self.assertPopen(['mopack', 'resolve', config])
         self.assertExists('mopack/build/greeter/')
         self.assertExists('mopack/greeter.log')
-        self.assertExists('mopack/src/hello/bfg_project/')
+        self.assertExists('mopack/src/hello/hello-bfg/')
         self.assertExists('mopack/build/hello/')
         self.assertExists('mopack/hello.log')
         self.assertExists('mopack/mopack.json')
@@ -132,15 +132,15 @@ class TestCleanNeeded(IntegrationTest):
             'packages': [{
                 'config': {
                     'name': 'hello',
-                    'config_file': os.path.join(test_data_dir, 'nested',
+                    'config_file': os.path.join(test_data_dir, 'greeter-bfg',
                                                 'mopack.yml'),
                     'source': 'tarball',
                     'builder': self._builder('hello'),
                     'url': None,
-                    'path': os.path.join(test_data_dir, 'bfg_project.tar.gz'),
+                    'path': os.path.join(test_data_dir, 'hello-bfg.tar.gz'),
                     'files': None,
                     'srcdir': None,
-                    'guessed_srcdir': 'bfg_project',
+                    'guessed_srcdir': 'hello-bfg',
                 },
                 'usage': {
                     'type': 'pkg-config',
@@ -153,7 +153,7 @@ class TestCleanNeeded(IntegrationTest):
                     'config_file': config,
                     'source': 'directory',
                     'builder': self._builder('greeter'),
-                    'path': os.path.join(test_data_dir, 'nested'),
+                    'path': os.path.join(test_data_dir, 'greeter-bfg'),
                 },
                 'usage': {
                     'type': 'pkg-config',

@@ -15,18 +15,18 @@ class TestTarball(IntegrationTest):
         config = os.path.join(test_data_dir, 'mopack-tarball.yml')
         self.assertPopen(['mopack', 'resolve', config,
                           '-Pprefix=' + self.prefix])
-        self.assertExists('mopack/src/foo/bfg_project/build.bfg')
-        self.assertExists('mopack/build/foo/')
-        self.assertExists('mopack/foo.log')
+        self.assertExists('mopack/src/hello/hello-bfg/build.bfg')
+        self.assertExists('mopack/build/hello/')
+        self.assertExists('mopack/hello.log')
         self.assertExists('mopack/mopack.json')
 
         output = json.loads(self.assertPopen([
-            'mopack', 'usage', 'foo', '--json'
+            'mopack', 'usage', 'hello', '--json'
         ]))
         self.assertEqual(output, {
-            'name': 'foo',
+            'name': 'hello',
             'type': 'pkg-config',
-            'path': os.path.join(self.stage, 'mopack', 'build', 'foo',
+            'path': os.path.join(self.stage, 'mopack', 'build', 'hello',
                                  'pkgconfig'),
         })
 
@@ -42,12 +42,12 @@ class TestTarball(IntegrationTest):
             },
             'packages': [{
                 'config': {
-                    'name': 'foo',
+                    'name': 'hello',
                     'config_file': config,
                     'source': 'tarball',
                     'builder': {
                         'type': 'bfg9000',
-                        'name': 'foo',
+                        'name': 'hello',
                         'extra_args': [],
                         'usage': {
                             'type': 'pkg-config',
@@ -55,15 +55,15 @@ class TestTarball(IntegrationTest):
                         },
                     },
                     'url': None,
-                    'path': os.path.join(test_data_dir, 'bfg_project.tar.gz'),
+                    'path': os.path.join(test_data_dir, 'hello-bfg.tar.gz'),
                     'files': None,
                     'srcdir': None,
-                    'guessed_srcdir': 'bfg_project',
+                    'guessed_srcdir': 'hello-bfg',
                 },
                 'usage': {
                     'type': 'pkg-config',
-                    'path': os.path.join(self.stage, 'mopack', 'build', 'foo',
-                                         'pkgconfig'),
+                    'path': os.path.join(self.stage, 'mopack', 'build',
+                                         'hello', 'pkgconfig'),
                 },
             }],
         })
@@ -81,18 +81,18 @@ class TestDirectory(IntegrationTest):
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-directory-implicit.yml')
         self.assertPopen(['mopack', 'resolve', config])
-        self.assertNotExists('mopack/src/foo/bfg_project/build.bfg')
-        self.assertExists('mopack/build/foo/')
-        self.assertExists('mopack/foo.log')
+        self.assertNotExists('mopack/src/hello/hello-bfg/build.bfg')
+        self.assertExists('mopack/build/hello/')
+        self.assertExists('mopack/hello.log')
         self.assertExists('mopack/mopack.json')
 
         output = json.loads(self.assertPopen([
-            'mopack', 'usage', 'foo', '--json'
+            'mopack', 'usage', 'hello', '--json'
         ]))
         self.assertEqual(output, {
-            'name': 'foo',
+            'name': 'hello',
             'type': 'pkg-config',
-            'path': os.path.join(self.stage, 'mopack', 'build', 'foo',
+            'path': os.path.join(self.stage, 'mopack', 'build', 'hello',
                                  'pkgconfig'),
         })
 
@@ -108,24 +108,24 @@ class TestDirectory(IntegrationTest):
             },
             'packages': [{
                 'config': {
-                    'name': 'foo',
+                    'name': 'hello',
                     'config_file': config,
                     'source': 'directory',
                     'builder': {
                         'type': 'bfg9000',
-                        'name': 'foo',
+                        'name': 'hello',
                         'extra_args': [],
                         'usage': {
                             'type': 'pkg-config',
                             'path': 'pkgconfig',
                         },
                     },
-                    'path': os.path.join(test_data_dir, 'bfg_project'),
+                    'path': os.path.join(test_data_dir, 'hello-bfg'),
                 },
                 'usage': {
                     'type': 'pkg-config',
-                    'path': os.path.join(self.stage, 'mopack', 'build', 'foo',
-                                         'pkgconfig'),
+                    'path': os.path.join(self.stage, 'mopack', 'build',
+                                         'hello', 'pkgconfig'),
                 },
             }],
         })
