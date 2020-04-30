@@ -12,7 +12,7 @@ class SystemPackage(Package):
             ', '.join(repr(i.name) for i in packages), cls.source
         ))
 
-        usages = [SystemUsage().usage(None)] * len(packages)
+        usages = [SystemUsage().usage(None, None)] * len(packages)
         return cls._resolved_metadata_all(packages, usages)
 
     @staticmethod

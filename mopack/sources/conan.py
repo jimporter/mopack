@@ -74,7 +74,8 @@ class ConanPackage(Package):
         with log.LogFile.open(pkgdir, 'conan') as logfile:
             logfile.check_call(['conan', 'install', '-if', installdir, pkgdir])
 
-        usages = [i.usage.usage(os.path.abspath(installdir)) for i in packages]
+        usages = [i.usage.usage(None, os.path.abspath(installdir))
+                  for i in packages]
         return cls._resolved_metadata_all(packages, usages)
 
     @staticmethod

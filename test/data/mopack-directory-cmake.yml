@@ -1,0 +1,5 @@
+packages:
+  hello:
+    source: directory
+    path: hello-cmake
+    build: cmake

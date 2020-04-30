@@ -10,7 +10,7 @@ class PkgConfigUsage(Usage):
     def __init__(self, *, path='pkgconfig'):
         self.path = types.inner_path('path', path, none_ok=False)
 
-    def usage(self, builddir):
+    def usage(self, srcdir, builddir):
         if builddir is None:
             # XXX: It would probably be better to do this during construction.
             raise ValueError('unable to use `pkg-config` usage with ' +

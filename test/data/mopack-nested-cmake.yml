@@ -1,0 +1,15 @@
+packages:
+  greeter:
+    source: directory
+    path: greeter-bfg
+    build: bfg9000
+
+  hello:
+    source: directory
+    path: hello-cmake
+    build: cmake
+    usage:
+      type: path
+      include_path: include
+      library_path: .
+

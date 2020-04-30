@@ -180,4 +180,4 @@ def usage(pkgdir, name, strict=False):
         if strict:
             raise
 
-    return dict(name=name, **make_usage('system').usage(None))
+    return dict(name=name, **make_usage('system').usage(None, None))
