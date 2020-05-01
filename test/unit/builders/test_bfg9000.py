@@ -150,5 +150,5 @@ class TestBfg9000Options(TestCase):
         opts_default = Bfg9000Builder.Options()
         data = opts_default.dehydrate()
         rehydrated = BuilderOptions.rehydrate(data)
-        self.assertNotEqual(opts_default, rehydrated)
+        self.assertEqual(opts_default, rehydrated)
         self.assertEqual(opts_none, rehydrated)

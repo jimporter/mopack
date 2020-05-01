@@ -16,6 +16,9 @@ class _UnsetType:
     def __bool__(self):
         return False
 
+    def __eq__(self, rhs):
+        return isinstance(rhs, _UnsetType) or rhs is None
+
     def dehydrate(self):
         return None
 
@@ -24,6 +27,9 @@ class _UnsetType:
         if config is not None:
             raise ValueError('expected None')
         return Unset
+
+    def __repr__(self):
+        return '<Unset>'
 
 
 Unset = _UnsetType()
