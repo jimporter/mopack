@@ -114,8 +114,8 @@ setup(
 
     install_requires=['colorama', 'pyyaml', 'setuptools'],
     extras_require={
-        'dev': ['bfg9000', 'coverage', 'flake8 >= 3.6', 'pypandoc'],
-        'test': ['bfg9000', 'coverage', 'flake8 >= 3.6'],
+        'dev': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6', 'pypandoc'],
+        'test': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6'],
     },
 
     entry_points={
