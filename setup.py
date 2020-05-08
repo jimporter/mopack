@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 from setuptools import setup, find_packages, Command
 
@@ -74,8 +75,8 @@ except ImportError:
     pass
 
 with open(os.path.join(root_dir, 'README.md'), 'r') as f:
-    # XXX: When we add badges, be sure to strip them out here.
-    long_desc = f.read()
+    # Read from the file and strip out the badges.
+    long_desc = re.sub(r'(^# mopack)\n\n(.+\n)*', r'\1', f.read())
 
 try:
     import pypandoc
