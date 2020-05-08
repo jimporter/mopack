@@ -24,7 +24,7 @@ class KeyValueAction(argparse.Action):
 
 def resolve(parser, subparser, args):
     if os.environ.get(nested_invoke):
-        return
+        return 3
 
     os.environ[nested_invoke] = os.path.abspath(args.directory)
     config_data = config.Config(args.file)
