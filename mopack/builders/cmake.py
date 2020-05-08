@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from . import Builder, BuilderOptions
+from . import Builder
 from .. import types
 from ..log import LogFile
 from ..path import pushd

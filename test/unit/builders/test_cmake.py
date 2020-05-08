@@ -1,13 +1,12 @@
 import os
-from unittest import mock, TestCase
+from unittest import mock
 
 from . import BuilderTest
 from .. import mock_open_log
 
-from mopack.builders import Builder, BuilderOptions
+from mopack.builders import Builder
 from mopack.builders.cmake import CMakeBuilder
 from mopack.usage.pkg_config import PkgConfigUsage
-from mopack.types import Unset
 
 
 class TestCMakeBuilder(BuilderTest):
