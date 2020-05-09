@@ -70,6 +70,7 @@ def main():
                         help='only emit a given warning once')
 
     subparsers = parser.add_subparsers(metavar='COMMAND')
+    subparsers.required = True
 
     resolve_p = subparsers.add_parser(
         'resolve', help='fetch and build package dependencies'
