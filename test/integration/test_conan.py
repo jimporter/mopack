@@ -10,7 +10,8 @@ class TestConan(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-conan.yml')
-        self.assertPopen(['mopack', 'resolve', config])
+        self.assertPopen(['mopack', 'resolve', '-Sconan:generator=txt',
+                          config])
         self.assertExists('mopack/conan.log')
         self.assertExists('mopack/mopack.json')
 
@@ -30,7 +31,7 @@ class TestConan(IntegrationTest):
                 'builders': [],
                 'sources': [{
                     'source': 'conan',
-                    'generator': ['pkg_config', 'cmake'],
+                    'generator': ['pkg_config', 'txt', 'cmake'],
                 }],
             },
             'packages': [{

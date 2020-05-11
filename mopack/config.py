@@ -17,11 +17,9 @@ PlaceholderPackage = _PlaceholderPackage()
 class BaseConfig:
     _option_kinds = ('builders', 'sources')
 
-    def __init__(self, filenames):
+    def __init__(self):
         self._options = {i: {} for i in self._option_kinds}
         self.packages = {}
-        for f in reversed(filenames):
-            self._accumulate_config(f)
 
     def _accumulate_config(self, filename):
         filename = os.path.abspath(filename)
@@ -51,7 +49,7 @@ class BaseConfig:
             if kind in data:
                 for k, v in data[kind].items():
                     if v is None:
-                        v = MarkedDict(data.marks[k])
+                        v = MarkedDict(data[kind].marks[k])
                     v.update(config_file=filename, child_config=self.child)
                     self._options[kind].setdefault(k, []).append(v)
 
@@ -97,6 +95,12 @@ class BaseConfig:
 class Config(BaseConfig):
     child = False
 
+    def __init__(self, filenames, options=None):
+        super().__init__()
+        self._process_options('<command-line>', options or {})
+        for f in reversed(filenames):
+            self._accumulate_config(f)
+
     def finalize(self):
         def make_options(kinds, make):
             for i in kinds:
@@ -132,8 +136,10 @@ class ChildConfig(BaseConfig):
     child = True
 
     def __init__(self, filenames, parent):
+        super().__init__()
         self.parent = parent
-        super().__init__(filenames)
+        for f in reversed(filenames):
+            self._accumulate_config(f)
 
     def _in_parent(self, name):
         return name in self.parent.packages or self.parent._in_parent(name)

@@ -1,9 +1,11 @@
 import argparse
 import os
 import json
+import yaml
 
 from . import commands, config, log, yaml_tools
 from .app_version import version
+from .iterutils import merge_into_dict
 
 logger = log.getLogger(__name__)
 
@@ -16,10 +18,40 @@ nested_invoke = 'MOPACK_NESTED_INVOCATION'
 
 class KeyValueAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        key, value = values.split('=', 1)
+        try:
+            key, value = values.split('=', 1)
+        except ValueError:
+            raise argparse.ArgumentError(self, 'expected TYPE=PATH')
         if getattr(namespace, self.dest) is None:
             setattr(namespace, self.dest, {})
         getattr(namespace, self.dest)[key] = value
+
+
+class ConfigOptionAction(argparse.Action):
+    def __init__(self, *args, key=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.key = key or []
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        try:
+            key, value = values.split('=', 1)
+        except ValueError:
+            raise argparse.ArgumentError(self, 'expected OPTION=VALUE')
+
+        key = self.key + key.split(':')
+
+        try:
+            value = yaml.safe_load(value)
+        except yaml.parser.ParserError:
+            raise argparse.ArgumentError(
+                self, 'invalid yaml: {!r}'.format(value)
+            )
+        for i in reversed(key):
+            value = {i: value}
+
+        if getattr(namespace, self.dest) is None:
+            setattr(namespace, self.dest, {})
+        merge_into_dict(getattr(namespace, self.dest), value)
 
 
 def resolve(parser, subparser, args):
@@ -27,7 +59,7 @@ def resolve(parser, subparser, args):
         return 3
 
     os.environ[nested_invoke] = os.path.abspath(args.directory)
-    config_data = config.Config(args.file)
+    config_data = config.Config(args.file, args.options)
     commands.resolve(config_data, commands.get_package_dir(args.directory),
                      args.deploy_paths)
 
@@ -81,6 +113,12 @@ def main():
     resolve_p.add_argument('-P', '--deploy-path', action=KeyValueAction,
                            dest='deploy_paths', metavar='TYPE=PATH',
                            help='directories to deploy packages to')
+    resolve_p.add_argument('-o', '--option', action=ConfigOptionAction,
+                           dest='options')
+    resolve_p.add_argument('-S', '--source-option', action=ConfigOptionAction,
+                           key=['sources'], dest='options')
+    resolve_p.add_argument('-B', '--builder-option', action=ConfigOptionAction,
+                           key=['builders'], dest='options')
     resolve_p.add_argument('file', nargs='+',
                            help='the mopack configuration files')
 

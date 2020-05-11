@@ -85,7 +85,7 @@ class TestConfig(TestCase):
             ('foo', pkg1), ('bar', pkg2)
         ])
 
-    def test_multi_builder_options(self):
+    def test_multiple_builder_options(self):
         data1 = ('options:\n  builders:\n' +
                  '    bfg9000:\n      toolchain: toolchain.bfg\n\n' +
                  'packages:\n  foo:\n    source: apt\n')
@@ -142,11 +142,12 @@ class TestConfig(TestCase):
         data3 = ('options:\n  sources:\n    conan:\n      generator: bad\n\n' +
                  'packages:\n  bar:\n    source: conan\n    remote: bar/1.2.3')
         with mock.patch('builtins.open', mock_open_files(data1, data2, data3)):
-            cfg = Config(['mopack.yml', 'mopack2.yml', 'mopack3.yml'])
+            cfg = Config(['mopack.yml', 'mopack2.yml', 'mopack3.yml'],
+                         {'sources': {'conan': {'generator': 'txt'}}})
         cfg.finalize()
 
         conan_opts = ConanPackage.Options()
-        conan_opts.generator.extend(['cmake', 'make'])
+        conan_opts.generator.extend(['txt', 'cmake', 'make'])
         opts = {'builders': {}, 'sources': {'conan': conan_opts}}
         self.assertEqual(cfg.options, opts)
 
