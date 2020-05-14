@@ -8,7 +8,7 @@ class PkgConfigUsage(Usage):
     type = 'pkg-config'
 
     def __init__(self, *, path='pkgconfig'):
-        self.path = types.inner_path('path', path, none_ok=False)
+        self.path = types.inner_path('path', path)
 
     def usage(self, srcdir, builddir):
         if builddir is None:

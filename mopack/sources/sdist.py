@@ -76,7 +76,7 @@ class DirectoryPackage(SDistPackage):
 
     def __init__(self, name, *, path, **kwargs):
         super().__init__(name, **kwargs)
-        self.path = os.path.normpath(os.path.join(self.config_dir, path))
+        self.path = types.any_path(self.config_dir)('path', path)
 
     def fetch(self, pkgdir, parent_config):
         log.info('fetching {!r} from {}'.format(self.name, self.source))
@@ -98,10 +98,9 @@ class TarballPackage(SDistPackage):
         if (url is None) == (path is None):
             raise TypeError('exactly one of `url` or `path` must be specified')
         self.url = url
-        self.path = (os.path.normpath(os.path.join(self.config_dir, path))
-                     if path is not None else None)
+        self.path = types.maybe(types.any_path(self.config_dir))('path', path)
         self.files = files
-        self.srcdir = types.inner_path('srcdir', srcdir)
+        self.srcdir = types.maybe(types.inner_path)('srcdir', srcdir)
         self.guessed_srcdir = None  # Set in fetch().
 
     def _base_srcdir(self, pkgdir):

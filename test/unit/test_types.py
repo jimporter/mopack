@@ -26,36 +26,28 @@ class TestInnerPath(TestCase):
             self.assertRaises(FieldError, inner_path, 'field', 'C:\\path')
             self.assertRaises(FieldError, inner_path, 'field', 'C:')
 
-    def test_none(self):
-        self.assertEqual(inner_path('field', None), None)
-        self.assertRaises(FieldError, inner_path, 'field', None, none_ok=False)
-
 
 class TestShellArgs(TestCase):
     def test_single(self):
-        self.assertEqual(shell_args('field', 'foo'), ['foo'])
+        self.assertEqual(shell_args()('field', 'foo'), ['foo'])
 
     def test_multiple(self):
-        self.assertEqual(shell_args('field', 'foo bar baz'),
+        self.assertEqual(shell_args()('field', 'foo bar baz'),
                          ['foo', 'bar', 'baz'])
 
     def test_quote(self):
-        self.assertEqual(shell_args('field', 'foo "bar baz"'),
+        self.assertEqual(shell_args()('field', 'foo "bar baz"'),
                          ['foo', 'bar baz'])
-        self.assertEqual(shell_args('field', 'foo"bar baz"'), ['foobar baz'])
+        self.assertEqual(shell_args()('field', 'foo"bar baz"'), ['foobar baz'])
 
     def test_type(self):
-        self.assertEqual(shell_args('field', 'foo bar baz', type=tuple),
+        self.assertEqual(shell_args(type=tuple)('field', 'foo bar baz'),
                          ('foo', 'bar', 'baz'))
 
     def test_escapes(self):
-        self.assertEqual(shell_args('field', 'foo\\ bar'), ['foo\\', 'bar'])
-        self.assertEqual(shell_args('field', 'foo\\ bar', escapes=True),
+        self.assertEqual(shell_args()('field', 'foo\\ bar'), ['foo\\', 'bar'])
+        self.assertEqual(shell_args(escapes=True)('field', 'foo\\ bar'),
                          ['foo bar'])
 
-    def test_none(self):
-        self.assertEqual(shell_args('field', None), [])
-        self.assertRaises(FieldError, shell_args, 'field', None, none_ok=False)
-
     def test_invalid(self):
-        self.assertRaises(FieldError, shell_args, 'field', 1)
+        self.assertRaises(FieldError, shell_args(), 'field', 1)

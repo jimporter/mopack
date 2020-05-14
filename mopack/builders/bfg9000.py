@@ -28,7 +28,9 @@ class Bfg9000Builder(Builder):
 
     def __init__(self, name, *, extra_args=None, usage=None):
         super().__init__(name)
-        self.extra_args = types.shell_args('extra_args', extra_args)
+        self.extra_args = types.maybe(types.shell_args(), [])(
+            'extra_args', extra_args
+        )
         self.usage = make_usage(usage or 'pkg-config')
 
     def _builddir(self, pkgdir):

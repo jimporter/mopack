@@ -17,7 +17,9 @@ class CMakeBuilder(Builder):
 
     def __init__(self, name, *, extra_args=None, usage):
         super().__init__(name)
-        self.extra_args = types.shell_args('extra_args', extra_args)
+        self.extra_args = types.maybe(types.shell_args(), [])(
+            'extra_args', extra_args
+        )
         self.usage = make_usage(usage)
 
     def _builddir(self, pkgdir):

@@ -8,10 +8,12 @@ class PathUsage(Usage):
     type = 'path'
 
     def __init__(self, *, include_path=None, library_path=None):
-        self.include_path = types.inner_path('include_path', include_path,
-                                             none_ok=True)
-        self.library_path = types.inner_path('library_path', library_path,
-                                             none_ok=True)
+        self.include_path = types.maybe(types.inner_path)(
+            'include_path', include_path
+        )
+        self.library_path = types.maybe(types.inner_path)(
+            'library_path', library_path
+        )
 
     def usage(self, srcdir, builddir):
         if srcdir is None or builddir is None:
