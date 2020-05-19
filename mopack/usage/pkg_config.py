@@ -7,7 +7,7 @@ from .. import types
 class PkgConfigUsage(Usage):
     type = 'pkg-config'
 
-    def __init__(self, *, path='pkgconfig'):
+    def __init__(self, name, *, path='pkgconfig'):
         self.path = types.inner_path('path', path)
 
     def usage(self, srcdir, builddir):

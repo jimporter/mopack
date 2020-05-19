@@ -1,14 +1,12 @@
 import os
 import warnings
 
-from . import Package, PackageOptions
+from . import BinaryPackage, PackageOptions
 from .. import log
-from ..usage import Usage, make_usage
 
 
-class ConanPackage(Package):
+class ConanPackage(BinaryPackage):
     source = 'conan'
-    _rehydrate_fields = {'usage': Usage}
 
     class Options(PackageOptions):
         source = 'conan'
@@ -24,10 +22,10 @@ class ConanPackage(Package):
                 self.generator.append(generator)
 
     def __init__(self, name, remote, options=None, usage=None, **kwargs):
-        super().__init__(name, **kwargs)
+        usage = usage or usage or {'type': 'pkg-config', 'path': ''}
+        super().__init__(name, usage=usage, **kwargs)
         self.remote = remote
         self.options = options or {}
-        self.usage = make_usage(usage or {'type': 'pkg-config', 'path': ''})
 
     @property
     def remote_name(self):

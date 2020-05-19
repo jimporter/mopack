@@ -2,7 +2,9 @@ import os
 from pkg_resources import load_entry_point
 
 from ..freezedried import FreezeDried
+from ..options import BaseOptions
 from ..types import try_load_config
+from ..usage import Usage, make_usage
 
 
 def _get_source_type(source):
@@ -59,17 +61,29 @@ class Package(FreezeDried):
         return '<{}({!r})>'.format(type(self).__name__, self.name)
 
 
-class PackageOptions(FreezeDried):
+class BinaryPackage(Package):
+    _rehydrate_fields = {'usage': Usage}
+
+    def __init__(self, name, *, usage, **kwargs):
+        super().__init__(name, **kwargs)
+        self.usage = (usage if isinstance(usage, Usage) else
+                      make_usage(name, usage))
+
+    def set_options(self, options):
+        super().set_options(options)
+        self.usage.set_options(options)
+
+
+class PackageOptions(FreezeDried, BaseOptions):
     _type_field = 'source'
+
+    @property
+    def _context(self):
+        return 'while adding options for {!r} source'.format(self.source)
 
     @staticmethod
     def _get_type(source):
         return _get_source_type(source).Options
-
-    def accumulate(self, config):
-        context = 'while adding options for {!r} source'.format(self.source)
-        with try_load_config(config, context):
-            return self(**config)
 
 
 class ResolvedPackage(FreezeDried):
@@ -80,7 +94,8 @@ class ResolvedPackage(FreezeDried):
         self.usage = usage
 
     def __repr__(self):
-        return '<{}({!r})>'.format(type(self).__name__, self.config.name)
+        return '<{}({!r}, {!r})>'.format(type(self).__name__, self.config.name,
+                                         self.usage)
 
 
 def make_package(name, config):

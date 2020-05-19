@@ -3,6 +3,7 @@ from contextlib import contextmanager
 from shlex import shlex
 from yaml.error import MarkedYAMLError
 
+from . import iterutils
 from .yaml_tools import MarkedDict
 
 
@@ -53,6 +54,48 @@ def maybe(other, default=None):
         if value is None:
             return default
         return other(field, value)
+
+    return check
+
+
+def one_of(*args, desc):
+    def check(field, value):
+        for i in args:
+            try:
+                return i(field, value)
+            except FieldError:
+                pass
+        else:
+            raise FieldError('expected {}'.format(desc), field)
+
+    return check
+
+
+def constant(*args):
+    def check(field, value):
+        if value in args:
+            return value
+        raise FieldError('expected one of {}'.format(
+            ', '.join(repr(i) for i in args)
+        ), field)
+
+    return check
+
+
+def list_of(other, listify=False):
+    def check(field, value):
+        value = iterutils.listify(value)
+        return [other(field, i) for i in value]
+
+    return check
+
+
+def dict_shape(shape):
+    def check(field, value):
+        if ( not isinstance(value, dict) or
+             set(value.keys()) != set(shape.keys()) ):
+            raise FieldError('FIXME', field)
+        return {k: shape[k](field, v) for k, v in value.items()}
 
     return check
 

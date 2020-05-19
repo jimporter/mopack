@@ -20,8 +20,9 @@ class TestApt(SourceTest):
              mock.patch('subprocess.check_call') as mcall:  # noqa
             info = AptPackage.resolve_all(self.pkgdir, packages,
                                           self.deploy_paths)
-            self.assertEqual(info, [ResolvedPackage(i, {'type': 'system'})
-                                    for i in packages])
+            self.assertEqual(info, [ResolvedPackage(
+                i, {'type': 'system', 'headers': [], 'libraries': [i.name]}
+            ) for i in packages])
 
             mopen.assert_called_with(os.path.join(self.pkgdir, 'apt.log'), 'w')
             mcall.assert_called_with(

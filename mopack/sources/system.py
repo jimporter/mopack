@@ -1,20 +1,24 @@
-from . import Package
-from .. import log
+from . import BinaryPackage
+from .. import log, types
 from ..usage.system import SystemUsage
 
 
-class SystemPackage(Package):
+class SystemPackage(BinaryPackage):
     source = 'system'
 
-    @classmethod
-    def resolve_all(cls, pkgdir, packages, deploy_paths):
-        log.info('resolving {} from {}'.format(
-            ', '.join(repr(i.name) for i in packages), cls.source
-        ))
+    def __init__(self, name, headers=None, libraries=types.Unset, **kwargs):
+        usage = SystemUsage(name, headers=headers, libraries=libraries)
+        super().__init__(name, usage=usage, **kwargs)
 
-        usages = [SystemUsage().usage(None, None)] * len(packages)
-        return cls._resolved_metadata_all(packages, usages)
+    def resolve(self, pkgdir, deploy_paths):
+        log.info('resolving {} from {}'.format(self.name, self.source))
+        return self._resolved_metadata(self.usage.usage(None, None))
 
-    @staticmethod
-    def deploy_all(pkgdir, packages):
+    def deploy(self, pkgdir):
         pass
+
+
+def fallback_system_package(name, options):
+    pkg = SystemPackage(name, config_file=None)
+    pkg.set_options(options)
+    return pkg

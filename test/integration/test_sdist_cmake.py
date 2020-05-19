@@ -37,15 +37,17 @@ class TestNestedCMake(IntegrationTest):
         self.assertEqual(output, {
             'name': 'hello',
             'type': 'path',
-            'include_path': os.path.join(test_data_dir, 'hello-cmake',
-                                         'include'),
-            'library_path': os.path.join(self.pkgbuilddir, 'hello'),
+            'include_path': [os.path.join(test_data_dir, 'hello-cmake',
+                                          'include')],
+            'library_path': [os.path.join(self.pkgbuilddir, 'hello')],
+            'libraries': ['hello'],
         })
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
             'deploy_paths': {'prefix': self.prefix},
             'options': {
+                'general': {'target_platform': None},
                 'builders': [{
                     'type': 'bfg9000',
                     'toolchain': None,
@@ -63,17 +65,19 @@ class TestNestedCMake(IntegrationTest):
                         'extra_args': [],
                         'usage': {
                             'type': 'path',
-                            'include_path': 'include',
-                            'library_path': '.',
+                            'include_path': ['include'],
+                            'library_path': ['.'],
+                            'libraries': [{'type': 'guess', 'name': 'hello'}],
                         },
                     },
                     'path': os.path.join(test_data_dir, 'hello-cmake'),
                 },
                 'usage': {
                     'type': 'path',
-                    'include_path': os.path.join(test_data_dir, 'hello-cmake',
-                                                 'include'),
-                    'library_path': os.path.join(self.pkgbuilddir, 'hello'),
+                    'include_path': [os.path.join(test_data_dir, 'hello-cmake',
+                                                  'include')],
+                    'library_path': [os.path.join(self.pkgbuilddir, 'hello')],
+                    'libraries': ['hello'],
                 },
             }, {
                 'config': {

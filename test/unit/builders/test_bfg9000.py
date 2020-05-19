@@ -39,7 +39,7 @@ class TestBfg9000Builder(BuilderTest):
         builder = self.make_builder('foo')
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, [])
-        self.assertEqual(builder.usage, PkgConfigUsage())
+        self.assertEqual(builder.usage, PkgConfigUsage('foo'))
 
         self.check_build(builder)
 
@@ -57,7 +57,7 @@ class TestBfg9000Builder(BuilderTest):
         builder = self.make_builder('foo', extra_args='--extra args')
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, ['--extra', 'args'])
-        self.assertEqual(builder.usage, PkgConfigUsage())
+        self.assertEqual(builder.usage, PkgConfigUsage('foo'))
 
         self.check_build(builder, extra_args=['--extra', 'args'])
 
@@ -65,7 +65,7 @@ class TestBfg9000Builder(BuilderTest):
         builder = self.make_builder('foo', usage='pkg-config')
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, [])
-        self.assertEqual(builder.usage, PkgConfigUsage())
+        self.assertEqual(builder.usage, PkgConfigUsage('foo'))
 
         self.check_build(builder)
 
@@ -74,7 +74,7 @@ class TestBfg9000Builder(BuilderTest):
         builder = self.make_builder('foo', usage=usage)
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, [])
-        self.assertEqual(builder.usage, PkgConfigUsage(path='pkgconf'))
+        self.assertEqual(builder.usage, PkgConfigUsage('foo', path='pkgconf'))
 
         self.check_build(builder, usage={
             'type': 'pkg-config', 'path': self.pkgconfdir('foo', 'pkgconf')
@@ -86,7 +86,7 @@ class TestBfg9000Builder(BuilderTest):
         })
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, [])
-        self.assertEqual(builder.usage, PkgConfigUsage())
+        self.assertEqual(builder.usage, PkgConfigUsage('foo'))
 
         self.check_build(builder, extra_args=['--toolchain', 'toolchain.bfg'])
 
@@ -95,7 +95,7 @@ class TestBfg9000Builder(BuilderTest):
         builder = self.make_builder('foo')
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, [])
-        self.assertEqual(builder.usage, PkgConfigUsage())
+        self.assertEqual(builder.usage, PkgConfigUsage('foo'))
 
         self.check_build(builder, deploy_paths, extra_args=[
             '--prefix', '/usr/local'

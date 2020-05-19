@@ -56,6 +56,7 @@ class TestNested(IntegrationTest):
         self.assertEqual(output['metadata'], {
             'deploy_paths': {'prefix': self.prefix},
             'options': {
+                'general': {'target_platform': None},
                 'builders': [{
                     'type': 'bfg9000',
                     'toolchain': None,

@@ -54,6 +54,7 @@ class TestCleanNeeded(IntegrationTest):
         self.assertEqual(output['metadata'], {
             'deploy_paths': {},
             'options': {
+                'general': {'target_platform': None},
                 'builders': [{
                     'type': 'bfg9000',
                     'toolchain': None,
@@ -123,6 +124,7 @@ class TestCleanNeeded(IntegrationTest):
         self.assertEqual(output['metadata'], {
             'deploy_paths': {},
             'options': {
+                'general': {'target_platform': None},
                 'builders': [{
                     'type': 'bfg9000',
                     'toolchain': None,

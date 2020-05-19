@@ -26,7 +26,8 @@ class TestConfig(TestCase):
             cfg = Config(['mopack.yml'])
         cfg.finalize()
 
-        self.assertEqual(cfg.options, {'builders': {}, 'sources': {}})
+        self.assertEqual(cfg.options, {'general': GeneralOptions(),
+                                       'builders': {}, 'sources': {}})
         self.assertEqual(list(cfg.packages.items()), [])
 
     def test_single_file(self):
@@ -60,6 +61,64 @@ class TestConfig(TestCase):
             ('bar', AptPackage('bar', config_file='mopack.yml')),
         ])
 
+    def test_empty_packages(self):
+        data = 'packages:'
+        with mock.patch('builtins.open', mock_open_files(data)):
+            cfg = Config(['mopack.yml'])
+        cfg.finalize()
+
+        opts = {'general': GeneralOptions(), 'builders': {}, 'sources': {}}
+        self.assertEqual(cfg.options, opts)
+        self.assertEqual(list(cfg.packages.items()), [])
+
+    def test_empty_options(self):
+        data = 'options:'
+        with mock.patch('builtins.open', mock_open_files(data)):
+            cfg = Config(['mopack.yml'])
+        cfg.finalize()
+
+        opts = {'general': GeneralOptions(), 'builders': {}, 'sources': {}}
+        self.assertEqual(cfg.options, opts)
+        self.assertEqual(list(cfg.packages.items()), [])
+
+    def test_general_options(self):
+        data = ('options:\n  target_platform: linux\n\n' +
+                'packages:\n  foo:\n    source: apt\n')
+        with mock.patch('builtins.open', mock_open_files(data)):
+            cfg = Config(['mopack.yml'])
+        cfg.finalize()
+
+        general_opts = GeneralOptions()
+        general_opts.target_platform = 'linux'
+        opts = {'general': general_opts, 'builders': {}, 'sources': {}}
+        self.assertEqual(cfg.options, opts)
+
+        pkg = AptPackage('foo', config_file='mopack.yml')
+        pkg.set_options(opts)
+        self.assertEqual(list(cfg.packages.items()), [('foo', pkg)])
+
+    def test_multiple_general_options(self):
+        data1 = ('options:\n  target_platform: linux\n\n' +
+                 'packages:\n  foo:\n    source: apt\n')
+        data2 = ('options:\n  target_platform: windows\n\n' +
+                 'packages:\n  bar:\n    source: apt\n')
+        with mock.patch('builtins.open', mock_open_files(data1, data2)):
+            cfg = Config(['mopack.yml', 'mopack2.yml'])
+        cfg.finalize()
+
+        general_opts = GeneralOptions()
+        general_opts.target_platform = 'linux'
+        opts = {'general': general_opts, 'builders': {}, 'sources': {}}
+        self.assertEqual(cfg.options, opts)
+
+        pkg1 = AptPackage('foo', config_file='mopack.yml')
+        pkg1.set_options(opts)
+        pkg2 = AptPackage('bar', config_file='mopack.yml')
+        pkg2.set_options(opts)
+        self.assertEqual(list(cfg.packages.items()), [
+            ('foo', pkg1), ('bar', pkg2)
+        ])
+
     def test_builder_options(self):
         data = ('options:\n  builders:\n' +
                 '    bfg9000:\n      toolchain: toolchain.bfg\n' +
@@ -73,7 +132,8 @@ class TestConfig(TestCase):
 
         bfg_opts = Bfg9000Builder.Options()
         bfg_opts.toolchain = 'toolchain.bfg'
-        opts = {'builders': {'bfg9000': bfg_opts}, 'sources': {}}
+        opts = {'general': GeneralOptions(), 'builders': {'bfg9000': bfg_opts},
+                'sources': {}}
         self.assertEqual(cfg.options, opts)
 
         pkg1 = AptPackage('foo', config_file='mopack.yml')
@@ -99,7 +159,8 @@ class TestConfig(TestCase):
 
         bfg_opts = Bfg9000Builder.Options()
         bfg_opts.toolchain = 'toolchain.bfg'
-        opts = {'builders': {'bfg9000': bfg_opts}, 'sources': {}}
+        opts = {'general': GeneralOptions(), 'builders': {'bfg9000': bfg_opts},
+                'sources': {}}
         self.assertEqual(cfg.options, opts)
 
         pkg1 = AptPackage('foo', config_file='mopack.yml')
@@ -122,7 +183,8 @@ class TestConfig(TestCase):
 
         conan_opts = ConanPackage.Options()
         conan_opts.generator.append('cmake')
-        opts = {'builders': {}, 'sources': {'conan': conan_opts}}
+        opts = {'general': GeneralOptions(), 'builders': {},
+                'sources': {'conan': conan_opts}}
         self.assertEqual(cfg.options, opts)
 
         pkg1 = AptPackage('foo', config_file='mopack.yml')
@@ -148,7 +210,8 @@ class TestConfig(TestCase):
 
         conan_opts = ConanPackage.Options()
         conan_opts.generator.extend(['txt', 'cmake', 'make'])
-        opts = {'builders': {}, 'sources': {'conan': conan_opts}}
+        opts = {'general': GeneralOptions(), 'builders': {},
+                'sources': {'conan': conan_opts}}
         self.assertEqual(cfg.options, opts)
 
         pkg1 = AptPackage('foo', config_file='mopack.yml')
@@ -171,7 +234,8 @@ class TestChildConfig(TestCase):
         self.assertEqual(list(child.packages.items()), [])
 
         parent.finalize()
-        self.assertEqual(parent.options, {'builders': {}, 'sources': {}})
+        self.assertEqual(parent.options, {'general': GeneralOptions(),
+                                          'builders': {}, 'sources': {}})
         self.assertEqual(list(parent.packages.items()), [])
 
     def test_self_config(self):
@@ -274,7 +338,8 @@ class TestChildConfig(TestCase):
         parent.finalize()
 
         bfg_opts = Bfg9000Builder.Options()
-        opts = {'builders': {'bfg9000': bfg_opts}, 'sources': {}}
+        opts = {'general': GeneralOptions(), 'builders': {'bfg9000': bfg_opts},
+                'sources': {}}
         self.assertEqual(parent.options, opts)
 
         pkg1 = AptPackage('foo', config_file='mopack.yml')
@@ -303,7 +368,8 @@ class TestChildConfig(TestCase):
 
         conan_opts = ConanPackage.Options()
         conan_opts.generator.extend(['make', 'cmake'])
-        opts = {'builders': {}, 'sources': {'conan': conan_opts}}
+        opts = {'general': GeneralOptions(), 'builders': {},
+                'sources': {'conan': conan_opts}}
         self.assertEqual(parent.options, opts)
 
         pkg1 = AptPackage('foo', config_file='mopack.yml')

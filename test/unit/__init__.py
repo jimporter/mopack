@@ -2,6 +2,8 @@ import pkg_resources
 from contextlib import contextmanager
 from unittest import mock, TestCase
 
+from mopack.config import GeneralOptions
+
 # Make sure the entry points are loaded so unit tests can reference them as
 # needed.
 pkg_resources.get_entry_map('mopack')
@@ -17,7 +19,7 @@ def mock_open_log(new=None, *args, **kwargs):
 
 class OptionsTest(TestCase):
     def make_options(self):
-        options = {'sources': {}, 'builders': {}}
+        options = {'general': GeneralOptions(), 'sources': {}, 'builders': {}}
 
         for i in pkg_resources.iter_entry_points('mopack.sources'):
             opts_type = i.load().Options

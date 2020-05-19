@@ -3,10 +3,10 @@ import os
 import shutil
 
 from .builders import BuilderOptions
-from .config import PlaceholderPackage
+from .config import Config, GeneralOptions, PlaceholderPackage
 from .freezedried import DictKeysFreezeDryer, DictToListFreezeDryer
 from .sources import PackageOptions, ResolvedPackage
-from .usage import make_usage
+from .sources.system import fallback_system_package
 
 mopack_dirname = 'mopack'
 
@@ -17,7 +17,8 @@ def get_package_dir(builddir):
 
 BuilderOptsFD = DictToListFreezeDryer(BuilderOptions, lambda x: x.type)
 PackageOptsFD = DictToListFreezeDryer(PackageOptions, lambda x: x.source)
-OptionsFD = DictKeysFreezeDryer(builders=BuilderOptsFD, sources=PackageOptsFD)
+OptionsFD = DictKeysFreezeDryer(general=GeneralOptions, builders=BuilderOptsFD,
+                                sources=PackageOptsFD)
 
 ResolvedPkgsFD = DictToListFreezeDryer(
     ResolvedPackage, lambda x: x.config.name
@@ -34,7 +35,7 @@ class Metadata:
 
     def __init__(self, deploy_paths=None, options=None):
         self.deploy_paths = deploy_paths or {}
-        self.options = options or {}
+        self.options = options or Config.default_options()
         self.packages = {}
 
     def add_package(self, package):
@@ -179,5 +180,7 @@ def usage(pkgdir, name, strict=False):
     except FileNotFoundError:
         if strict:
             raise
+        metadata = Metadata()
 
-    return dict(name=name, **make_usage('system').usage(None, None))
+    pkg = fallback_system_package(name, metadata.options)
+    return dict(name=name, **pkg.usage.usage(None, None))

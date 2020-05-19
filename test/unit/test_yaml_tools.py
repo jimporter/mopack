@@ -126,6 +126,18 @@ class TestMarkedDict(TestCase):
         self.assertEqual(m, {'key1': 1})
         self.assertEqual(m.marks, {'key1': 'mark1'})
 
+    def test_pop(self):
+        m = MarkedDict()
+        m.add('key1', 1, 'mark1')
+
+        self.assertEqual(m.pop('key1'), 1)
+        self.assertEqual(m, {})
+        self.assertEqual(m.marks, {})
+
+        self.assertEqual(m.pop('key2', 2), 2)
+        with self.assertRaises(KeyError):
+            m.pop('key2')
+
     def test_update(self):
         m = MarkedDict()
         m.update({'key1': 1, 'key2': 2})

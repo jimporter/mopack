@@ -11,6 +11,13 @@ class TestApt(IntegrationTest):
     def setUp(self):
         self.stage = stage_dir('apt')
 
+    def _usage(self, headers=[], libraries=[]):
+        return {
+            'type': 'system',
+            'headers': headers,
+            'libraries': libraries,
+        }
+
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-apt.yml')
         self.assertPopen(['mopack', 'resolve', config])
@@ -20,17 +27,20 @@ class TestApt(IntegrationTest):
         output = json.loads(self.assertPopen([
             'mopack', 'usage', 'ogg', '--json'
         ]))
-        self.assertEqual(output, {'name': 'ogg', 'type': 'system'})
+        self.assertEqual(output, {'name': 'ogg', 'type': 'system',
+                                  'headers': [], 'libraries': ['ogg']})
 
         output = json.loads(self.assertPopen([
             'mopack', 'usage', 'zlib', '--json'
         ]))
-        self.assertEqual(output, {'name': 'zlib', 'type': 'system'})
+        self.assertEqual(output, {'name': 'zlib', 'type': 'system',
+                                  'headers': [], 'libraries': ['z']})
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
             'deploy_paths': {},
             'options': {
+                'general': {'target_platform': None},
                 'builders': [],
                 'sources': [],
             },
@@ -40,17 +50,21 @@ class TestApt(IntegrationTest):
                     'config_file': config,
                     'source': 'apt',
                     'remote': 'libogg-dev',
-                    'usage': {'type': 'system'}
+                    'usage': self._usage(libraries=[
+                        {'name': 'ogg', 'type': 'guess'},
+                    ]),
                 },
-                'usage': {'type': 'system'},
+                'usage': self._usage(libraries=['ogg']),
             }, {
                 'config': {
                     'name': 'zlib',
                     'config_file': config,
                     'source': 'apt',
                     'remote': 'zlib1g-dev',
-                    'usage': {'type': 'system'}
+                    'usage': self._usage(libraries=[
+                        {'name': 'zlib', 'type': 'guess'},
+                    ]),
                 },
-                'usage': {'type': 'system'},
+                'usage': self._usage(libraries=['z']),
             }],
         })

@@ -1,17 +1,19 @@
 import os
 
-from . import Usage
+from .library import LibraryUsage
 from .. import types
 
 
-class PathUsage(Usage):
+class PathUsage(LibraryUsage):
     type = 'path'
 
-    def __init__(self, *, include_path=None, library_path=None):
-        self.include_path = types.maybe(types.inner_path)(
+    def __init__(self, name, *, include_path=None, library_path=None,
+                 **kwargs):
+        super().__init__(name, **kwargs)
+        self.include_path = types.list_of(types.inner_path, listify=True)(
             'include_path', include_path
         )
-        self.library_path = types.maybe(types.inner_path)(
+        self.library_path = types.list_of(types.inner_path, listify=True)(
             'library_path', library_path
         )
 
@@ -24,11 +26,10 @@ class PathUsage(Usage):
         # XXX: Provide a way of specifying what these paths are relative to
         # instead of just assuming that includes are in the srcdir and libs are
         # in the builddir.
-        include_path = os.path.normpath(os.path.join(
-            srcdir, self.include_path
-        ))
-        library_path = os.path.normpath(os.path.join(
-            builddir, self.library_path
-        ))
-        return self._usage(include_path=include_path,
-                           library_path=library_path)
+        return self._usage(
+            include_path=[os.path.normpath(os.path.join(srcdir, i))
+                          for i in self.include_path],
+            library_path=[os.path.normpath(os.path.join(builddir, i))
+                          for i in self.library_path],
+            libraries=[self._make_library(i) for i in self.libraries],
+        )

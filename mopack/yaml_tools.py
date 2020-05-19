@@ -95,6 +95,11 @@ class MarkedDict(dict, MarkedCollection):
         self[key] = value
         self.marks[key] = mark
 
+    def pop(self, key, *args):
+        result = super().pop(key, *args)
+        self.marks.pop(key, None)
+        return result
+
     def update(self, *args, **kwargs):
         super().update(*args, **kwargs)
         if len(args) and isinstance(args[0], MarkedCollection):

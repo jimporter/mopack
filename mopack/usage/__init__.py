@@ -15,6 +15,9 @@ class Usage(FreezeDried):
     _type_field = 'type'
     _get_type = _get_usage_type
 
+    def set_options(self, options):
+        pass
+
     def _usage(self, **kwargs):
         return dict(type=self.type, **kwargs)
 
@@ -22,7 +25,7 @@ class Usage(FreezeDried):
         return '<{}>'.format(type(self).__name__)
 
 
-def make_usage(config):
+def make_usage(name, config):
     if isinstance(config, str):
         type = config
         config = {}
@@ -32,4 +35,4 @@ def make_usage(config):
 
     context = 'while constructing usage {!r}'.format(type)
     with try_load_config(config, context):
-        return _get_usage_type(type)(**config)
+        return _get_usage_type(type)(name, **config)

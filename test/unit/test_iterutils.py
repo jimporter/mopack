@@ -8,7 +8,7 @@ class TestIsIterable(TestCase):
         self.assertTrue(iterutils.isiterable([]))
 
     def test_dict(self):
-        self.assertTrue(iterutils.isiterable([]))
+        self.assertFalse(iterutils.isiterable({}))
 
     def test_generator(self):
         gen = (i for i in range(10))
@@ -19,6 +19,68 @@ class TestIsIterable(TestCase):
 
     def test_none(self):
         self.assertFalse(iterutils.isiterable(None))
+
+
+class TestIsMapping(TestCase):
+    def test_list(self):
+        self.assertFalse(iterutils.ismapping([]))
+
+    def test_dict(self):
+        self.assertTrue(iterutils.ismapping({}))
+
+    def test_string(self):
+        self.assertFalse(iterutils.ismapping('foo'))
+
+    def test_none(self):
+        self.assertFalse(iterutils.ismapping(None))
+
+
+class TestIterate(TestCase):
+    def test_none(self):
+        self.assertEqual(list(iterutils.iterate(None)), [])
+
+    def test_one(self):
+        self.assertEqual(list(iterutils.iterate('foo')), ['foo'])
+
+    def test_many(self):
+        self.assertEqual(list(iterutils.iterate(['foo', 'bar'])),
+                         ['foo', 'bar'])
+
+
+class TestListify(TestCase):
+    def test_none(self):
+        self.assertEqual(iterutils.listify(None), [])
+
+    def test_one(self):
+        self.assertEqual(iterutils.listify('foo'), ['foo'])
+
+    def test_many(self):
+        x = ['foo', 'bar']
+        res = iterutils.listify(x)
+        self.assertEqual(res, x)
+        self.assertTrue(x is res)
+
+    def test_always_copy(self):
+        x = ['foo', 'bar']
+        res = iterutils.listify(x, always_copy=True)
+        self.assertEqual(res, x)
+        self.assertTrue(x is not res)
+
+    def test_no_scalar(self):
+        self.assertEqual(iterutils.listify(['foo'], scalar_ok=False), ['foo'])
+        self.assertEqual(iterutils.listify(['foo'], always_copy=True,
+                                           scalar_ok=False), ['foo'])
+        self.assertRaises(TypeError, iterutils.listify, 1, scalar_ok=False)
+        self.assertRaises(TypeError, iterutils.listify, 'foo', scalar_ok=False)
+
+    def test_type(self):
+        x = 'foo'
+        res = iterutils.listify(x, type=tuple)
+        self.assertEqual(res, ('foo',))
+
+        y = ['foo', 'bar']
+        res = iterutils.listify(y, type=tuple)
+        self.assertEqual(res, ('foo', 'bar'))
 
 
 class TestMergeIntoDict(TestCase):

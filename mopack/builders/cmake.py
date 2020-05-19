@@ -5,7 +5,6 @@ from . import Builder
 from .. import types
 from ..log import LogFile
 from ..path import pushd
-from ..usage import Usage, make_usage
 
 # XXX: Handle exec-prefix, which CMake doesn't work with directly.
 _known_install_types = ('prefix', 'bindir', 'libdir', 'includedir')
@@ -13,14 +12,12 @@ _known_install_types = ('prefix', 'bindir', 'libdir', 'includedir')
 
 class CMakeBuilder(Builder):
     type = 'cmake'
-    _rehydrate_fields = {'usage': Usage}
 
     def __init__(self, name, *, extra_args=None, usage):
-        super().__init__(name)
+        super().__init__(name, usage=usage)
         self.extra_args = types.maybe(types.shell_args(), [])(
             'extra_args', extra_args
         )
-        self.usage = make_usage(usage)
 
     def _builddir(self, pkgdir):
         return os.path.abspath(os.path.join(pkgdir, 'build', self.name))

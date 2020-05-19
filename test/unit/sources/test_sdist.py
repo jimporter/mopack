@@ -89,18 +89,18 @@ class TestDirectory(SDistTestCase):
             ))
         self.check_resolve(pkg)
 
-        usage = {'type': 'system'}
-        pkg = self.make_package('foo', path=self.srcpath, usage=usage,
-                                set_options=False)
+        pkg = self.make_package('foo', path=self.srcpath,
+                                usage={'type': 'system'}, set_options=False)
 
         with mock.patch('os.path.exists', return_value=True):
             config = pkg.fetch(self.pkgdir, Config([]))
             self.set_options(pkg)
             self.assertEqual(config.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(
-                Bfg9000Builder, 'foo', usage=usage
+                Bfg9000Builder, 'foo', usage={'type': 'system'}
             ))
-        self.check_resolve(pkg, usage)
+        self.check_resolve(pkg, {'type': 'system', 'headers': [],
+                                 'libraries': ['foo']})
 
     def test_usage(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
@@ -315,9 +315,8 @@ class TestTarball(SDistTestCase):
             ))
         self.check_resolve(pkg)
 
-        usage = {'type': 'system'}
-        pkg = self.make_package('foo', path=self.srcpath, usage=usage,
-                                set_options=False)
+        pkg = self.make_package('foo', path=self.srcpath,
+                                usage={'type': 'system'}, set_options=False)
 
         with mock.patch('os.path.exists', return_value=True), \
              mock.patch('builtins.open', mock_open_after_first(
@@ -328,9 +327,10 @@ class TestTarball(SDistTestCase):
             self.set_options(pkg)
             self.assertEqual(config.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(
-                Bfg9000Builder, 'foo', usage=usage
+                Bfg9000Builder, 'foo', usage={'type': 'system'}
             ))
-        self.check_resolve(pkg, usage)
+        self.check_resolve(pkg, {'type': 'system', 'headers': [],
+                                 'libraries': ['foo']})
 
     def test_usage(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',

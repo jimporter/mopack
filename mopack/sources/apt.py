@@ -1,17 +1,14 @@
-from . import Package
+from . import BinaryPackage
 from .. import log
-from ..usage import Usage, make_usage
 
 
-class AptPackage(Package):
+class AptPackage(BinaryPackage):
     source = 'apt'
-    _rehydrate_fields = {'usage': Usage}
 
     def __init__(self, name, remote=None, usage='system', **kwargs):
-        super().__init__(name, **kwargs)
+        super().__init__(name, usage=usage, **kwargs)
         # XXX: Add support for repositories.
         self.remote = remote or 'lib{}-dev'.format(name)
-        self.usage = make_usage(usage)
 
     @classmethod
     def resolve_all(cls, pkgdir, packages, deploy_paths):
