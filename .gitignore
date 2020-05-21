@@ -2,6 +2,7 @@
 /.coverage
 /.coveragerc-subproc
 /.coverage.*
+/dist/
 /htmlcov/
 /mopack.egg-info/
 /test/stage/
