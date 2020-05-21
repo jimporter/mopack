@@ -43,9 +43,11 @@ class CMakeBuilder(Builder):
                     self.extra_args
                 )
                 logfile.check_call(['make'])
-        return self.usage.usage(srcdir, builddir)
 
     def deploy(self, pkgdir):
         with LogFile.open(pkgdir, self.name + '-deploy') as logfile:
             with pushd(self._builddir(pkgdir)):
                 logfile.check_call(['make', 'install'])
+
+    def get_usage(self, pkgdir, srcdir):
+        return self.usage.get_usage(srcdir, self._builddir(pkgdir))

@@ -62,9 +62,7 @@ class SDistPackage(Package):
 
     def _resolve(self, pkgdir, srcdir, deploy_paths):
         log.info('resolving {!r}'.format(self.name))
-
-        usage = self.builder.build(pkgdir, srcdir, deploy_paths)
-        return self._resolved_metadata(usage)
+        self.builder.build(pkgdir, srcdir, deploy_paths)
 
     def deploy(self, pkgdir):
         log.info('deploying {!r}'.format(self.name))
@@ -84,6 +82,9 @@ class DirectoryPackage(SDistPackage):
 
     def resolve(self, pkgdir, deploy_paths):
         return self._resolve(pkgdir, self.path, deploy_paths)
+
+    def get_usage(self, pkgdir):
+        return self.builder.get_usage(pkgdir, self.path)
 
 
 class TarballPackage(SDistPackage):
@@ -142,3 +143,6 @@ class TarballPackage(SDistPackage):
 
     def resolve(self, pkgdir, deploy_paths):
         return self._resolve(pkgdir, self._srcdir(pkgdir), deploy_paths)
+
+    def get_usage(self, pkgdir):
+        return self.builder.get_usage(pkgdir, self._srcdir(pkgdir))

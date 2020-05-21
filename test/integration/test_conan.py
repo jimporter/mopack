@@ -36,17 +36,11 @@ class TestConan(IntegrationTest):
                 }],
             },
             'packages': [{
-                'config': {
-                    'name': 'zlib',
-                    'config_file': config,
-                    'source': 'conan',
-                    'remote': 'zlib/1.2.11@conan/stable',
-                    'options': {'shared': True},
-                    'usage': {'type': 'pkg-config', 'path': '.'}
-                },
-                'usage': {
-                    'type': 'pkg-config',
-                    'path': os.path.join(self.stage, 'mopack', 'conan')
-                },
+                'name': 'zlib',
+                'config_file': config,
+                'source': 'conan',
+                'remote': 'zlib/1.2.11@conan/stable',
+                'options': {'shared': True},
+                'usage': {'type': 'pkg-config', 'path': '.'}
             }],
         })

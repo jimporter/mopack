@@ -27,6 +27,10 @@ class ConanPackage(BinaryPackage):
         self.remote = remote
         self.options = options or {}
 
+    @staticmethod
+    def _installdir(pkgdir):
+        return os.path.join(pkgdir, 'conan')
+
     @property
     def remote_name(self):
         return self.remote.split('/')[0]
@@ -68,13 +72,12 @@ class ConanPackage(BinaryPackage):
             for i in global_options.generator:
                 print(i, file=conan)
 
-        installdir = os.path.join(pkgdir, 'conan')
         with log.LogFile.open(pkgdir, 'conan') as logfile:
-            logfile.check_call(['conan', 'install', '-if', installdir, pkgdir])
+            logfile.check_call(['conan', 'install', '-if',
+                                cls._installdir(pkgdir), pkgdir])
 
-        usages = [i.usage.usage(None, os.path.abspath(installdir))
-                  for i in packages]
-        return cls._resolved_metadata_all(packages, usages)
+    def get_usage(self, pkgdir):
+        return self.usage.get_usage(None, self._installdir(pkgdir))
 
     @staticmethod
     def deploy_all(pkgdir, packages):

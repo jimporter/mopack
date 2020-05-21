@@ -12,7 +12,6 @@ class SystemPackage(BinaryPackage):
 
     def resolve(self, pkgdir, deploy_paths):
         log.info('resolving {} from {}'.format(self.name, self.source))
-        return self._resolved_metadata(self.usage.usage(None, None))
 
     def deploy(self, pkgdir):
         pass

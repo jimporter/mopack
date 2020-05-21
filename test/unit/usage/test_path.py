@@ -11,7 +11,7 @@ class TestPath(UsageTest):
         self.assertEqual(usage.include_path, [])
         self.assertEqual(usage.library_path, [])
         self.assertEqual(usage.libraries, [{'type': 'guess', 'name': 'foo'}])
-        self.assertEqual(usage.usage('/srcdir', '/builddir'), {
+        self.assertEqual(usage.get_usage('/srcdir', '/builddir'), {
             'type': 'path', 'include_path': [], 'library_path': [],
             'libraries': ['foo'],
         })
@@ -21,7 +21,7 @@ class TestPath(UsageTest):
         self.assertEqual(usage.include_path, ['include'])
         self.assertEqual(usage.library_path, [])
         self.assertEqual(usage.libraries, [{'type': 'guess', 'name': 'foo'}])
-        self.assertEqual(usage.usage('/srcdir', '/builddir'), {
+        self.assertEqual(usage.get_usage('/srcdir', '/builddir'), {
             'type': 'path', 'include_path': ['/srcdir/include'],
             'library_path': [], 'libraries': ['foo'],
         })
@@ -30,7 +30,7 @@ class TestPath(UsageTest):
         self.assertEqual(usage.include_path, ['include'])
         self.assertEqual(usage.library_path, [])
         self.assertEqual(usage.libraries, [{'type': 'guess', 'name': 'foo'}])
-        self.assertEqual(usage.usage('/srcdir', '/builddir'), {
+        self.assertEqual(usage.get_usage('/srcdir', '/builddir'), {
             'type': 'path', 'include_path': ['/srcdir/include'],
             'library_path': [], 'libraries': ['foo'],
         })
@@ -40,7 +40,7 @@ class TestPath(UsageTest):
         self.assertEqual(usage.include_path, [])
         self.assertEqual(usage.library_path, ['lib'])
         self.assertEqual(usage.libraries, [{'type': 'guess', 'name': 'foo'}])
-        self.assertEqual(usage.usage('/srcdir', '/builddir'), {
+        self.assertEqual(usage.get_usage('/srcdir', '/builddir'), {
             'type': 'path', 'include_path': [],
             'library_path': ['/builddir/lib'], 'libraries': ['foo'],
         })
@@ -49,7 +49,7 @@ class TestPath(UsageTest):
         self.assertEqual(usage.include_path, [])
         self.assertEqual(usage.library_path, ['lib'])
         self.assertEqual(usage.libraries, [{'type': 'guess', 'name': 'foo'}])
-        self.assertEqual(usage.usage('/srcdir', '/builddir'), {
+        self.assertEqual(usage.get_usage('/srcdir', '/builddir'), {
             'type': 'path', 'include_path': [],
             'library_path': ['/builddir/lib'], 'libraries': ['foo'],
         })
@@ -59,7 +59,7 @@ class TestPath(UsageTest):
         self.assertEqual(usage.include_path, [])
         self.assertEqual(usage.library_path, [])
         self.assertEqual(usage.libraries, ['bar'])
-        self.assertEqual(usage.usage('/srcdir', '/builddir'), {
+        self.assertEqual(usage.get_usage('/srcdir', '/builddir'), {
             'type': 'path', 'include_path': [], 'library_path': [],
             'libraries': ['bar'],
         })
@@ -68,7 +68,7 @@ class TestPath(UsageTest):
         self.assertEqual(usage.include_path, [])
         self.assertEqual(usage.library_path, [])
         self.assertEqual(usage.libraries, ['bar'])
-        self.assertEqual(usage.usage('/srcdir', '/builddir'), {
+        self.assertEqual(usage.get_usage('/srcdir', '/builddir'), {
             'type': 'path', 'include_path': [], 'library_path': [],
             'libraries': ['bar'],
         })
@@ -77,7 +77,7 @@ class TestPath(UsageTest):
         self.assertEqual(usage.include_path, [])
         self.assertEqual(usage.library_path, [])
         self.assertEqual(usage.libraries, [])
-        self.assertEqual(usage.usage('/srcdir', '/builddir'), {
+        self.assertEqual(usage.get_usage('/srcdir', '/builddir'), {
             'type': 'path', 'include_path': [], 'library_path': [],
             'libraries': [],
         })
@@ -88,7 +88,7 @@ class TestPath(UsageTest):
         self.assertEqual(usage.include_path, [])
         self.assertEqual(usage.library_path, [])
         self.assertEqual(usage.libraries, ['bar'])
-        self.assertEqual(usage.usage('/srcdir', '/builddir'), {
+        self.assertEqual(usage.get_usage('/srcdir', '/builddir'), {
             'type': 'path', 'include_path': [], 'library_path': [],
             'libraries': ['bar'],
         })
@@ -99,7 +99,7 @@ class TestPath(UsageTest):
         self.assertEqual(usage.include_path, [])
         self.assertEqual(usage.library_path, [])
         self.assertEqual(usage.libraries, [{'type': 'guess', 'name': 'bar'}])
-        self.assertEqual(usage.usage('/srcdir', '/builddir'), {
+        self.assertEqual(usage.get_usage('/srcdir', '/builddir'), {
             'type': 'path', 'include_path': [], 'library_path': [],
             'libraries': ['bar'],
         })
@@ -112,7 +112,7 @@ class TestPath(UsageTest):
         self.assertEqual(usage.libraries, [
             {'type': 'framework', 'name': 'bar'},
         ])
-        self.assertEqual(usage.usage('/srcdir', '/builddir'), {
+        self.assertEqual(usage.get_usage('/srcdir', '/builddir'), {
             'type': 'path', 'include_path': [], 'library_path': [],
             'libraries': [{'type': 'framework', 'name': 'bar'}],
         })
@@ -124,7 +124,7 @@ class TestPath(UsageTest):
         self.assertEqual(usage.include_path, [])
         self.assertEqual(usage.library_path, [])
         self.assertEqual(usage.libraries, [{'type': 'guess', 'name': 'gl'}])
-        self.assertEqual(usage.usage('/srcdir', '/builddir'), {
+        self.assertEqual(usage.get_usage('/srcdir', '/builddir'), {
             'type': 'path', 'include_path': [], 'library_path': [],
             'libraries': ['GL'],
         })
@@ -135,7 +135,7 @@ class TestPath(UsageTest):
         self.assertEqual(usage.include_path, [])
         self.assertEqual(usage.library_path, [])
         self.assertEqual(usage.libraries, [{'type': 'guess', 'name': 'gl'}])
-        self.assertEqual(usage.usage('/srcdir', '/builddir'), {
+        self.assertEqual(usage.get_usage('/srcdir', '/builddir'), {
             'type': 'path', 'include_path': [], 'library_path': [],
             'libraries': [{'type': 'framework', 'name': 'OpenGL'}],
         })
@@ -146,7 +146,7 @@ class TestPath(UsageTest):
         self.assertEqual(usage.include_path, [])
         self.assertEqual(usage.library_path, [])
         self.assertEqual(usage.libraries, ['gl'])
-        self.assertEqual(usage.usage('/srcdir', '/builddir'), {
+        self.assertEqual(usage.get_usage('/srcdir', '/builddir'), {
             'type': 'path', 'include_path': [], 'library_path': [],
             'libraries': ['gl'],
         })
@@ -158,7 +158,7 @@ class TestPath(UsageTest):
         self.assertEqual(usage.include_path, [])
         self.assertEqual(usage.library_path, [])
         self.assertEqual(usage.libraries, [{'type': 'guess', 'name': 'gl'}])
-        self.assertEqual(usage.usage('/srcdir', '/builddir'), {
+        self.assertEqual(usage.get_usage('/srcdir', '/builddir'), {
             'type': 'path', 'include_path': [], 'library_path': [],
             'libraries': ['GL'],
         })
@@ -166,4 +166,4 @@ class TestPath(UsageTest):
     def test_invalid(self):
         usage = self.make_usage('foo')
         with self.assertRaises(ValueError):
-            usage.usage(None, None)
+            usage.get_usage(None, None)

@@ -20,9 +20,6 @@ class AptPackage(BinaryPackage):
         with log.LogFile.open(pkgdir, 'apt') as logfile:
             logfile.check_call(['sudo', 'apt-get', 'install', '-y'] + remotes)
 
-        usages = [i.usage.usage(None, None) for i in packages]
-        return cls._resolved_metadata_all(packages, usages)
-
     @staticmethod
     def deploy_all(pkgdir, packages):
         pass

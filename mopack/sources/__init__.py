@@ -50,13 +50,6 @@ class Package(FreezeDried):
     def fetch(self, pkgdir, parent_config):
         pass
 
-    def _resolved_metadata(self, usage):
-        return ResolvedPackage(self, usage)
-
-    @staticmethod
-    def _resolved_metadata_all(packages, usage):
-        return [p._resolved_metadata(u) for p, u in zip(packages, usage)]
-
     def __repr__(self):
         return '<{}({!r})>'.format(type(self).__name__, self.name)
 
@@ -73,6 +66,9 @@ class BinaryPackage(Package):
         super().set_options(options)
         self.usage.set_options(options)
 
+    def get_usage(self, pkgdir):
+        return self.usage.get_usage(None, None)
+
 
 class PackageOptions(FreezeDried, BaseOptions):
     _type_field = 'source'
@@ -84,18 +80,6 @@ class PackageOptions(FreezeDried, BaseOptions):
     @staticmethod
     def _get_type(source):
         return _get_source_type(source).Options
-
-
-class ResolvedPackage(FreezeDried):
-    _rehydrate_fields = {'config': Package}
-
-    def __init__(self, config, usage):
-        self.config = config
-        self.usage = usage
-
-    def __repr__(self):
-        return '<{}({!r}, {!r})>'.format(type(self).__name__, self.config.name,
-                                         self.usage)
 
 
 def make_package(name, config):

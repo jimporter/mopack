@@ -55,51 +55,35 @@ class TestNestedCMake(IntegrationTest):
                 'sources': [],
             },
             'packages': [{
-                'config': {
+                'name': 'hello',
+                'config_file': config,
+                'source': 'directory',
+                'builder': {
+                    'type': 'cmake',
                     'name': 'hello',
-                    'config_file': config,
-                    'source': 'directory',
-                    'builder': {
-                        'type': 'cmake',
-                        'name': 'hello',
-                        'extra_args': [],
-                        'usage': {
-                            'type': 'path',
-                            'include_path': ['include'],
-                            'library_path': ['.'],
-                            'libraries': [{'type': 'guess', 'name': 'hello'}],
-                        },
+                    'extra_args': [],
+                    'usage': {
+                        'type': 'path',
+                        'include_path': ['include'],
+                        'library_path': ['.'],
+                        'libraries': [{'type': 'guess', 'name': 'hello'}],
                     },
-                    'path': os.path.join(test_data_dir, 'hello-cmake'),
                 },
-                'usage': {
-                    'type': 'path',
-                    'include_path': [os.path.join(test_data_dir, 'hello-cmake',
-                                                  'include')],
-                    'library_path': [os.path.join(self.pkgbuilddir, 'hello')],
-                    'libraries': ['hello'],
-                },
+                'path': os.path.join(test_data_dir, 'hello-cmake'),
             }, {
-                'config': {
+                'name': 'greeter',
+                'config_file': config,
+                'source': 'directory',
+                'builder': {
+                    'type': 'bfg9000',
                     'name': 'greeter',
-                    'config_file': config,
-                    'source': 'directory',
-                    'builder': {
-                        'type': 'bfg9000',
-                        'name': 'greeter',
-                        'extra_args': [],
-                        'usage': {
-                            'type': 'pkg-config',
-                            'path': 'pkgconfig',
-                        },
+                    'extra_args': [],
+                    'usage': {
+                        'type': 'pkg-config',
+                        'path': 'pkgconfig',
                     },
-                    'path': os.path.join(test_data_dir, 'greeter-bfg'),
                 },
-                'usage': {
-                    'type': 'pkg-config',
-                    'path': os.path.join(self.pkgbuilddir, 'greeter',
-                                         'pkgconfig'),
-                },
+                'path': os.path.join(test_data_dir, 'greeter-bfg'),
             }],
         })
 

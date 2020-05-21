@@ -11,7 +11,7 @@ class SystemUsage(LibraryUsage):
             'headers', headers
         )
 
-    def usage(self, srcdir, builddir):
+    def get_usage(self, srcdir, builddir):
         return self._usage(
             headers=self.headers,
             libraries=[self._make_library(i) for i in self.libraries],

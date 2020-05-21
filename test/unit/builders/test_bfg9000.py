@@ -26,14 +26,14 @@ class TestBfg9000Builder(BuilderTest):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.check_call') as mcall:  # noqa
-            self.assertEqual(builder.build(self.pkgdir, srcdir, deploy_paths),
-                             usage)
+            builder.build(self.pkgdir, srcdir, deploy_paths)
             mopen.assert_called_with(os.path.join(self.pkgdir, 'foo.log'), 'w')
             mcall.assert_any_call(
                 ['9k', os.path.join(self.pkgdir, 'build', 'foo')] + extra_args,
                 stdout=mopen(), stderr=mopen()
             )
             mcall.assert_called_with(['ninja'], stdout=mopen(), stderr=mopen())
+        self.assertEqual(builder.get_usage(self.pkgdir, srcdir), usage)
 
     def test_basic(self):
         builder = self.make_builder('foo')

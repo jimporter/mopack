@@ -45,26 +45,20 @@ class TestApt(IntegrationTest):
                 'sources': [],
             },
             'packages': [{
-                'config': {
-                    'name': 'ogg',
-                    'config_file': config,
-                    'source': 'apt',
-                    'remote': 'libogg-dev',
-                    'usage': self._usage(libraries=[
-                        {'name': 'ogg', 'type': 'guess'},
-                    ]),
-                },
-                'usage': self._usage(libraries=['ogg']),
+                'name': 'ogg',
+                'config_file': config,
+                'source': 'apt',
+                'remote': 'libogg-dev',
+                'usage': self._usage(libraries=[
+                    {'name': 'ogg', 'type': 'guess'},
+                ]),
             }, {
-                'config': {
-                    'name': 'zlib',
-                    'config_file': config,
-                    'source': 'apt',
-                    'remote': 'zlib1g-dev',
-                    'usage': self._usage(libraries=[
-                        {'name': 'zlib', 'type': 'guess'},
-                    ]),
-                },
-                'usage': self._usage(libraries=['z']),
+                'name': 'zlib',
+                'config_file': config,
+                'source': 'apt',
+                'remote': 'zlib1g-dev',
+                'usage': self._usage(libraries=[
+                    {'name': 'zlib', 'type': 'guess'},
+                ]),
             }],
         })

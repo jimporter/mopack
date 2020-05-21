@@ -6,7 +6,20 @@ from mopack.path import pushd
 from . import *
 
 
-class TestTarball(IntegrationTest):
+class SDistTest(IntegrationTest):
+    def _builder(self, name):
+        return {
+            'type': 'bfg9000',
+            'name': name,
+            'extra_args': [],
+            'usage': {
+                'type': 'pkg-config',
+                'path': 'pkgconfig',
+            },
+        }
+
+
+class TestTarball(SDistTest):
     def setUp(self):
         self.stage = stage_dir('tarball')
         self.prefix = stage_dir('tarball-install', chdir=False)
@@ -42,30 +55,15 @@ class TestTarball(IntegrationTest):
                 'sources': [],
             },
             'packages': [{
-                'config': {
-                    'name': 'hello',
-                    'config_file': config,
-                    'source': 'tarball',
-                    'builder': {
-                        'type': 'bfg9000',
-                        'name': 'hello',
-                        'extra_args': [],
-                        'usage': {
-                            'type': 'pkg-config',
-                            'path': 'pkgconfig',
-                        },
-                    },
-                    'url': None,
-                    'path': os.path.join(test_data_dir, 'hello-bfg.tar.gz'),
-                    'files': None,
-                    'srcdir': None,
-                    'guessed_srcdir': 'hello-bfg',
-                },
-                'usage': {
-                    'type': 'pkg-config',
-                    'path': os.path.join(self.stage, 'mopack', 'build',
-                                         'hello', 'pkgconfig'),
-                },
+                'name': 'hello',
+                'config_file': config,
+                'source': 'tarball',
+                'builder': self._builder('hello'),
+                'url': None,
+                'path': os.path.join(test_data_dir, 'hello-bfg.tar.gz'),
+                'files': None,
+                'srcdir': None,
+                'guessed_srcdir': 'hello-bfg',
             }],
         })
 
@@ -75,7 +73,7 @@ class TestTarball(IntegrationTest):
             self.assertExists('lib/pkgconfig/hello.pc')
 
 
-class TestDirectory(IntegrationTest):
+class TestDirectory(SDistTest):
     def setUp(self):
         self.stage = stage_dir('directory')
 
@@ -109,25 +107,10 @@ class TestDirectory(IntegrationTest):
                 'sources': [],
             },
             'packages': [{
-                'config': {
-                    'name': 'hello',
-                    'config_file': config,
-                    'source': 'directory',
-                    'builder': {
-                        'type': 'bfg9000',
-                        'name': 'hello',
-                        'extra_args': [],
-                        'usage': {
-                            'type': 'pkg-config',
-                            'path': 'pkgconfig',
-                        },
-                    },
-                    'path': os.path.join(test_data_dir, 'hello-bfg'),
-                },
-                'usage': {
-                    'type': 'pkg-config',
-                    'path': os.path.join(self.stage, 'mopack', 'build',
-                                         'hello', 'pkgconfig'),
-                },
+                'name': 'hello',
+                'config_file': config,
+                'source': 'directory',
+                'builder': self._builder('hello'),
+                'path': os.path.join(test_data_dir, 'hello-bfg'),
             }],
         })

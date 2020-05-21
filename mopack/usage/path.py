@@ -17,7 +17,7 @@ class PathUsage(LibraryUsage):
             'library_path', library_path
         )
 
-    def usage(self, srcdir, builddir):
+    def get_usage(self, srcdir, builddir):
         if srcdir is None or builddir is None:
             # XXX: It would probably be better to do this during construction.
             raise ValueError('unable to use `path` usage with this package ' +
@@ -27,9 +27,9 @@ class PathUsage(LibraryUsage):
         # instead of just assuming that includes are in the srcdir and libs are
         # in the builddir.
         return self._usage(
-            include_path=[os.path.normpath(os.path.join(srcdir, i))
+            include_path=[os.path.abspath(os.path.join(srcdir, i))
                           for i in self.include_path],
-            library_path=[os.path.normpath(os.path.join(builddir, i))
+            library_path=[os.path.abspath(os.path.join(builddir, i))
                           for i in self.library_path],
             libraries=[self._make_library(i) for i in self.libraries],
         )

@@ -4,7 +4,7 @@ from unittest import mock
 from . import SourceTest
 from .. import mock_open_log
 
-from mopack.sources import Package, ResolvedPackage
+from mopack.sources import Package
 from mopack.sources.apt import AptPackage
 from mopack.sources.conan import ConanPackage
 
@@ -18,17 +18,18 @@ class TestApt(SourceTest):
     def check_resolve_all(self, packages, remotes):
         with mock_open_log() as mopen, \
              mock.patch('subprocess.check_call') as mcall:  # noqa
-            info = AptPackage.resolve_all(self.pkgdir, packages,
-                                          self.deploy_paths)
-            self.assertEqual(info, [ResolvedPackage(
-                i, {'type': 'system', 'headers': [], 'libraries': [i.name]}
-            ) for i in packages])
+            AptPackage.resolve_all(self.pkgdir, packages, self.deploy_paths)
 
             mopen.assert_called_with(os.path.join(self.pkgdir, 'apt.log'), 'w')
             mcall.assert_called_with(
                 ['sudo', 'apt-get', 'install', '-y'] + remotes,
                 stdout=mopen(), stderr=mopen()
             )
+
+        for pkg in packages:
+            self.assertEqual(pkg.get_usage(self.pkgdir), {
+                'type': 'system', 'headers': [], 'libraries': [pkg.name]
+            })
 
     def test_basic(self):
         pkg = self.make_package('foo')

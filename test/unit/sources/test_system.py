@@ -1,6 +1,6 @@
 from . import SourceTest
 
-from mopack.sources import Package, ResolvedPackage
+from mopack.sources import Package
 from mopack.sources.apt import AptPackage
 from mopack.sources.system import SystemPackage
 
@@ -13,43 +13,43 @@ class TestSystemPackage(SourceTest):
 
     def test_resolve(self):
         pkg = self.make_package('foo')
-        info = pkg.resolve(self.pkgdir, self.deploy_paths)
-        self.assertEqual(info, ResolvedPackage(pkg, {
+        pkg.resolve(self.pkgdir, self.deploy_paths)
+        self.assertEqual(pkg.get_usage(self.pkgdir), {
             'type': 'system', 'headers': [], 'libraries': ['foo']
-        }))
+        })
 
     def test_headers(self):
         pkg = self.make_package('foo', headers='foo.hpp')
-        info = pkg.resolve(self.pkgdir, self.deploy_paths)
-        self.assertEqual(info, ResolvedPackage(pkg, {
+        pkg.resolve(self.pkgdir, self.deploy_paths)
+        self.assertEqual(pkg.get_usage(self.pkgdir), {
             'type': 'system', 'headers': ['foo.hpp'], 'libraries': ['foo']
-        }))
+        })
 
         pkg = self.make_package('foo', headers=['foo.hpp', 'bar.hpp'])
-        info = pkg.resolve(self.pkgdir, self.deploy_paths)
-        self.assertEqual(info, ResolvedPackage(pkg, {
+        pkg.resolve(self.pkgdir, self.deploy_paths)
+        self.assertEqual(pkg.get_usage(self.pkgdir), {
             'type': 'system', 'headers': ['foo.hpp', 'bar.hpp'],
             'libraries': ['foo'],
-        }))
+        })
 
     def test_libraries(self):
         pkg = self.make_package('foo', libraries='bar')
-        info = pkg.resolve(self.pkgdir, self.deploy_paths)
-        self.assertEqual(info, ResolvedPackage(pkg, {
+        pkg.resolve(self.pkgdir, self.deploy_paths)
+        self.assertEqual(pkg.get_usage(self.pkgdir), {
             'type': 'system', 'headers': [], 'libraries': ['bar'],
-        }))
+        })
 
         pkg = self.make_package('foo', libraries=['foo', 'bar'])
-        info = pkg.resolve(self.pkgdir, self.deploy_paths)
-        self.assertEqual(info, ResolvedPackage(pkg, {
+        pkg.resolve(self.pkgdir, self.deploy_paths)
+        self.assertEqual(pkg.get_usage(self.pkgdir), {
             'type': 'system', 'headers': [], 'libraries': ['foo', 'bar'],
-        }))
+        })
 
         pkg = self.make_package('foo', libraries=None)
-        info = pkg.resolve(self.pkgdir, self.deploy_paths)
-        self.assertEqual(info, ResolvedPackage(pkg, {
+        pkg.resolve(self.pkgdir, self.deploy_paths)
+        self.assertEqual(pkg.get_usage(self.pkgdir), {
             'type': 'system', 'headers': [], 'libraries': []
-        }))
+        })
 
     def test_deploy(self):
         pkg = self.make_package('foo')

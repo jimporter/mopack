@@ -7,7 +7,7 @@ from ... import *
 
 from mopack.builders.bfg9000 import Bfg9000Builder
 from mopack.config import Config
-from mopack.sources import Package, ResolvedPackage
+from mopack.sources import Package
 from mopack.sources.apt import AptPackage
 from mopack.sources.sdist import DirectoryPackage, TarballPackage
 
@@ -41,10 +41,9 @@ class SDistTestCase(SourceTest):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.check_call'):  # noqa
-            info = pkg.resolve(self.pkgdir, self.deploy_paths)
-            self.assertEqual(info, ResolvedPackage(pkg, usage))
-
+            pkg.resolve(self.pkgdir, self.deploy_paths)
             mopen.assert_called_with(os.path.join(self.pkgdir, 'foo.log'), 'w')
+        self.assertEqual(pkg.get_usage(self.pkgdir), usage)
 
     def make_builder(self, builder_type, name, **kwargs):
         builder = builder_type(name, **kwargs)

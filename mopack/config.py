@@ -151,9 +151,9 @@ class Config(BaseConfig):
                 if opts:
                     yield i, opts
 
-        sources = {i.source: True for i in self.packages.values()}
+        sources = {pkg.source: True for pkg in self.packages.values()}
         builders = {i: True for i in chain.from_iterable(
-            i.builder_types for i in self.packages.values()
+            pkg.builder_types for pkg in self.packages.values()
         )}
 
         self.options = {
@@ -172,8 +172,8 @@ class Config(BaseConfig):
                             break
         del self._options
 
-        for i in self.packages.values():
-            i.set_options(self.options)
+        for pkg in self.packages.values():
+            pkg.set_options(self.options)
 
 
 class ChildConfig(BaseConfig):
