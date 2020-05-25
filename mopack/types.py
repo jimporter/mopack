@@ -84,17 +84,20 @@ def constant(*args):
 
 def list_of(other, listify=False):
     def check(field, value):
-        value = iterutils.listify(value)
+        if listify:
+            value = iterutils.listify(value)
+        elif not iterutils.isiterable(value):
+            raise FieldError('expected list', field)
         return [other(field, i) for i in value]
 
     return check
 
 
-def dict_shape(shape):
+def dict_shape(shape, desc):
     def check(field, value):
         if ( not isinstance(value, dict) or
              set(value.keys()) != set(shape.keys()) ):
-            raise FieldError('FIXME', field)
+            raise FieldError('expected {}'.format(desc), field)
         return {k: shape[k](field, v) for k, v in value.items()}
 
     return check

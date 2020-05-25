@@ -9,7 +9,7 @@ def _library(field, value):
     value = types.dict_shape({
         'type': types.constant('library', 'guess', 'framework'),
         'name': types.string
-    })(field, value)
+    }, desc='library')(field, value)
     if value['type'] == 'library':
         return value['name']
     return value
@@ -17,7 +17,7 @@ def _library(field, value):
 
 library_type = types.list_of(types.one_of(
     types.string, _library, desc='library'
-))
+), listify=True)
 
 
 def library_list(package_name):

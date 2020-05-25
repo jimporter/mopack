@@ -24,8 +24,8 @@ class Bfg9000Builder(Builder):
             if not child_config and self.toolchain is types.Unset:
                 self.toolchain = toolchain
 
-    def __init__(self, name, *, extra_args=None, usage=None):
-        super().__init__(name, usage=usage or 'pkg-config')
+    def __init__(self, name, *, extra_args=None, usage=None, **kwargs):
+        super().__init__(name, usage=usage or 'pkg-config', **kwargs)
         self.extra_args = types.maybe(types.shell_args(), [])(
             'extra_args', extra_args
         )

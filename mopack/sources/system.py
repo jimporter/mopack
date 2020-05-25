@@ -11,7 +11,7 @@ class SystemPackage(BinaryPackage):
         super().__init__(name, usage=usage, **kwargs)
 
     def resolve(self, pkgdir, deploy_paths):
-        log.info('resolving {} from {}'.format(self.name, self.source))
+        log.info('resolving {!r} from {}'.format(self.name, self.source))
 
     def deploy(self, pkgdir):
         pass
