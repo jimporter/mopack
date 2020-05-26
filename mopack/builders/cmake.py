@@ -1,4 +1,3 @@
-import os
 import shutil
 
 from . import Builder
@@ -18,9 +17,6 @@ class CMakeBuilder(Builder):
         self.extra_args = types.maybe(types.shell_args(), [])(
             'extra_args', extra_args
         )
-
-    def _builddir(self, pkgdir):
-        return os.path.abspath(os.path.join(pkgdir, 'build', self.name))
 
     def _install_args(self, deploy_paths):
         args = []
@@ -48,6 +44,3 @@ class CMakeBuilder(Builder):
         with LogFile.open(pkgdir, self.name + '-deploy') as logfile:
             with pushd(self._builddir(pkgdir)):
                 logfile.check_call(['make', 'install'])
-
-    def get_usage(self, pkgdir, srcdir):
-        return self.usage.get_usage(srcdir, self._builddir(pkgdir))

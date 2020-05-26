@@ -14,20 +14,20 @@ class TestSystemPackage(SourceTest):
     def test_resolve(self):
         pkg = self.make_package('foo')
         pkg.resolve(self.pkgdir, self.deploy_paths)
-        self.assertEqual(pkg.get_usage(self.pkgdir), {
+        self.assertEqual(pkg.get_usage(self.pkgdir, None), {
             'type': 'system', 'headers': [], 'libraries': ['foo']
         })
 
     def test_headers(self):
         pkg = self.make_package('foo', headers='foo.hpp')
         pkg.resolve(self.pkgdir, self.deploy_paths)
-        self.assertEqual(pkg.get_usage(self.pkgdir), {
+        self.assertEqual(pkg.get_usage(self.pkgdir, None), {
             'type': 'system', 'headers': ['foo.hpp'], 'libraries': ['foo']
         })
 
         pkg = self.make_package('foo', headers=['foo.hpp', 'bar.hpp'])
         pkg.resolve(self.pkgdir, self.deploy_paths)
-        self.assertEqual(pkg.get_usage(self.pkgdir), {
+        self.assertEqual(pkg.get_usage(self.pkgdir, None), {
             'type': 'system', 'headers': ['foo.hpp', 'bar.hpp'],
             'libraries': ['foo'],
         })
@@ -35,21 +35,54 @@ class TestSystemPackage(SourceTest):
     def test_libraries(self):
         pkg = self.make_package('foo', libraries='bar')
         pkg.resolve(self.pkgdir, self.deploy_paths)
-        self.assertEqual(pkg.get_usage(self.pkgdir), {
+        self.assertEqual(pkg.get_usage(self.pkgdir, None), {
             'type': 'system', 'headers': [], 'libraries': ['bar'],
         })
 
         pkg = self.make_package('foo', libraries=['foo', 'bar'])
         pkg.resolve(self.pkgdir, self.deploy_paths)
-        self.assertEqual(pkg.get_usage(self.pkgdir), {
+        self.assertEqual(pkg.get_usage(self.pkgdir, None), {
             'type': 'system', 'headers': [], 'libraries': ['foo', 'bar'],
         })
 
         pkg = self.make_package('foo', libraries=None)
         pkg.resolve(self.pkgdir, self.deploy_paths)
-        self.assertEqual(pkg.get_usage(self.pkgdir), {
+        self.assertEqual(pkg.get_usage(self.pkgdir, None), {
             'type': 'system', 'headers': [], 'libraries': []
         })
+
+    def test_submodules(self):
+        submodules_required = {'names': '*', 'required': True}
+        submodules_optional = {'names': '*', 'required': False}
+
+        pkg = self.make_package('foo', submodules=submodules_required)
+        self.assertEqual(pkg.get_usage(self.pkgdir, 'sub'), {
+            'type': 'system', 'headers': [], 'libraries': ['foo_sub'],
+        })
+
+        pkg = self.make_package('foo', libraries='bar',
+                                submodules=submodules_required)
+        self.assertEqual(pkg.get_usage(self.pkgdir, 'sub'), {
+            'type': 'system', 'headers': [], 'libraries': ['bar', 'foo_sub'],
+        })
+
+        pkg = self.make_package('foo', submodules=submodules_optional)
+        self.assertEqual(pkg.get_usage(self.pkgdir, 'sub'), {
+            'type': 'system', 'headers': [], 'libraries': ['foo', 'foo_sub'],
+        })
+
+        pkg = self.make_package('foo', libraries='bar',
+                                submodules=submodules_optional)
+        self.assertEqual(pkg.get_usage(self.pkgdir, 'sub'), {
+            'type': 'system', 'headers': [], 'libraries': ['bar', 'foo_sub'],
+        })
+
+    def test_invalid_submodule(self):
+        pkg = self.make_package('foo', submodules={
+            'names': ['sub'], 'required': True
+        })
+        with self.assertRaises(ValueError):
+            pkg.get_usage(self.pkgdir, ['invalid'])
 
     def test_deploy(self):
         pkg = self.make_package('foo')
@@ -97,6 +130,7 @@ class TestSystemPackage(SourceTest):
         self.assertNotEqual(pkg, self.make_package('bar'))
 
     def test_rehydrate(self):
-        pkg = SystemPackage('foo', config_file=self.config_file)
+        pkg = SystemPackage('foo', config_file=self.config_file,
+                            submodules=None)
         data = pkg.dehydrate()
         self.assertEqual(pkg, Package.rehydrate(data))

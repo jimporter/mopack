@@ -9,14 +9,14 @@ class BuilderTest(OptionsTest):
         builder.set_options(options)
 
     def make_builder(self, *args, set_options=True, global_options=None,
-                     **kwargs):
+                     submodules=None, **kwargs):
         if len(args) == 1:
             builder_type = self.builder_type
             name = args[0]
         else:
             builder_type, name = args
 
-        builder = builder_type(name, **kwargs)
+        builder = builder_type(name, submodules=submodules, **kwargs)
 
         if set_options:
             self.set_options(builder, global_options)

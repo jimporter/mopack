@@ -9,14 +9,14 @@ class UsageTest(OptionsTest):
         usage.set_options(options)
 
     def make_usage(self, *args, set_options=True, general_options=None,
-                   **kwargs):
+                   submodules=None, **kwargs):
         if len(args) == 1:
             usage_type = self.usage_type
             name = args[0]
         else:
             usage_type, name = args
 
-        usage = usage_type(name, **kwargs)
+        usage = usage_type(name, submodules=submodules, **kwargs)
 
         if set_options:
             self.set_options(usage, general_options)

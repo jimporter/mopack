@@ -20,6 +20,7 @@ class TestNested(IntegrationTest):
             'usage': {
                 'type': 'pkg-config',
                 'path': 'pkgconfig',
+                'pcfile': name,
             },
         }
 
@@ -41,6 +42,7 @@ class TestNested(IntegrationTest):
             'name': 'greeter',
             'type': 'pkg-config',
             'path': os.path.join(self.pkgbuilddir, 'greeter', 'pkgconfig'),
+            'pcfiles': ['greeter'],
         })
 
         output = json.loads(self.assertPopen([
@@ -50,6 +52,7 @@ class TestNested(IntegrationTest):
             'name': 'hello',
             'type': 'pkg-config',
             'path': os.path.join(self.pkgbuilddir, 'hello', 'pkgconfig'),
+            'pcfiles': ['hello'],
         })
 
         output = json.loads(slurp('mopack/mopack.json'))
@@ -68,6 +71,7 @@ class TestNested(IntegrationTest):
                 'config_file': os.path.join(test_data_dir, 'greeter-bfg',
                                             'mopack.yml'),
                 'source': 'tarball',
+                'submodules': None,
                 'builder': self._builder('hello'),
                 'url': None,
                 'path': os.path.join(test_data_dir, 'hello-bfg.tar.gz'),
@@ -78,6 +82,7 @@ class TestNested(IntegrationTest):
                 'name': 'greeter',
                 'config_file': config,
                 'source': 'directory',
+                'submodules': None,
                 'builder': self._builder('greeter'),
                 'path': os.path.join(test_data_dir, 'greeter-bfg'),
             }],

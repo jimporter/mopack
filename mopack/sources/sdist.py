@@ -4,10 +4,11 @@ import tarfile
 from io import BytesIO
 from urllib.request import urlopen
 
-from . import Package
+from . import Package, submodules_type
 from .. import log, types
 from ..builders import Builder, make_builder
 from ..config import ChildConfig
+from ..package_defaults import package_default
 
 
 class SDistPackage(Package):
@@ -15,13 +16,20 @@ class SDistPackage(Package):
     _skip_compare_fields = (Package._skip_compare_fields +
                             ('pending_usage',))
 
-    def __init__(self, name, *, build=None, usage=None, **kwargs):
+    def __init__(self, name, *, build=None, usage=None, submodules=types.Unset,
+                 **kwargs):
         super().__init__(name, **kwargs)
         if build is None:
             self.builder = None
             self.pending_usage = usage
+            if submodules is not types.Unset:
+                self.submodules = submodules_type('submodules', submodules)
         else:
-            self.builder = make_builder(name, build, usage=usage)
+            self.submodules = package_default(submodules_type, name)(
+                'submodules', submodules
+            )
+            self.builder = make_builder(name, build, usage=usage,
+                                        submodules=self.submodules)
 
     @property
     def builder_types(self):
@@ -35,7 +43,7 @@ class SDistPackage(Package):
         self.builder.set_options(options)
 
     def dehydrate(self):
-        if hasattr(self, 'pending_usage'):
+        if hasattr(self, 'pending_usage'):  # pragma: no cover
             raise TypeError('cannot dehydrate until `pending_usage` is ' +
                             'finalized')
         return super().dehydrate()
@@ -45,9 +53,14 @@ class SDistPackage(Package):
         if os.path.exists(mopack):
             config = ChildConfig([mopack], parent=parent_config)
             if self.builder is None:
+                if not hasattr(self, 'submodules'):
+                    self.submodules = submodules_type('submodules',
+                                                      config.submodules)
                 usage = self.pending_usage or config.usage
-                self.builder = make_builder(self.name, config.build,
-                                            usage=usage)
+                self.builder = make_builder(
+                    self.name, config.build, usage=usage,
+                    submodules=self.submodules
+                )
                 del self.pending_usage
             return config
         return None
@@ -83,8 +96,8 @@ class DirectoryPackage(SDistPackage):
     def resolve(self, pkgdir, deploy_paths):
         return self._resolve(pkgdir, self.path, deploy_paths)
 
-    def get_usage(self, pkgdir):
-        return self.builder.get_usage(pkgdir, self.path)
+    def _get_usage(self, pkgdir, submodules):
+        return self.builder.get_usage(pkgdir, submodules, self.path)
 
 
 class TarballPackage(SDistPackage):
@@ -144,5 +157,5 @@ class TarballPackage(SDistPackage):
     def resolve(self, pkgdir, deploy_paths):
         return self._resolve(pkgdir, self._srcdir(pkgdir), deploy_paths)
 
-    def get_usage(self, pkgdir):
-        return self.builder.get_usage(pkgdir, self._srcdir(pkgdir))
+    def _get_usage(self, pkgdir, submodules):
+        return self.builder.get_usage(pkgdir, submodules, self._srcdir(pkgdir))

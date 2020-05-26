@@ -10,7 +10,7 @@ class TestSystem(UsageTest):
         usage = self.make_usage('foo')
         self.assertEqual(usage.headers, [])
         self.assertEqual(usage.libraries, [{'type': 'guess', 'name': 'foo'}])
-        self.assertEqual(usage.get_usage(None, None), {
+        self.assertEqual(usage.get_usage(None, None, None), {
             'type': 'system', 'headers': [], 'libraries': ['foo'],
         })
 
@@ -18,14 +18,14 @@ class TestSystem(UsageTest):
         usage = self.make_usage('foo', headers='foo.hpp')
         self.assertEqual(usage.headers, ['foo.hpp'])
         self.assertEqual(usage.libraries, [{'type': 'guess', 'name': 'foo'}])
-        self.assertEqual(usage.get_usage(None, None), {
+        self.assertEqual(usage.get_usage(None, None, None), {
             'type': 'system', 'headers': ['foo.hpp'], 'libraries': ['foo'],
         })
 
         usage = self.make_usage('foo', headers=['foo.hpp'])
         self.assertEqual(usage.headers, ['foo.hpp'])
         self.assertEqual(usage.libraries, [{'type': 'guess', 'name': 'foo'}])
-        self.assertEqual(usage.get_usage(None, None), {
+        self.assertEqual(usage.get_usage(None, None, None), {
             'type': 'system', 'headers': ['foo.hpp'], 'libraries': ['foo'],
         })
 
@@ -33,21 +33,21 @@ class TestSystem(UsageTest):
         usage = self.make_usage('foo', libraries='bar')
         self.assertEqual(usage.headers, [])
         self.assertEqual(usage.libraries, ['bar'])
-        self.assertEqual(usage.get_usage(None, None), {
+        self.assertEqual(usage.get_usage(None, None, None), {
             'type': 'system', 'headers': [], 'libraries': ['bar'],
         })
 
         usage = self.make_usage('foo', libraries=['bar'])
         self.assertEqual(usage.headers, [])
         self.assertEqual(usage.libraries, ['bar'])
-        self.assertEqual(usage.get_usage(None, None), {
+        self.assertEqual(usage.get_usage(None, None, None), {
             'type': 'system', 'headers': [], 'libraries': ['bar'],
         })
 
         usage = self.make_usage('foo', libraries=None)
         self.assertEqual(usage.headers, [])
         self.assertEqual(usage.libraries, [])
-        self.assertEqual(usage.get_usage(None, None), {
+        self.assertEqual(usage.get_usage(None, None, None), {
             'type': 'system', 'headers': [], 'libraries': [],
         })
 
@@ -56,7 +56,7 @@ class TestSystem(UsageTest):
         ])
         self.assertEqual(usage.headers, [])
         self.assertEqual(usage.libraries, ['bar'])
-        self.assertEqual(usage.get_usage(None, None), {
+        self.assertEqual(usage.get_usage(None, None, None), {
             'type': 'system', 'headers': [], 'libraries': ['bar'],
         })
 
@@ -65,7 +65,7 @@ class TestSystem(UsageTest):
         ])
         self.assertEqual(usage.headers, [])
         self.assertEqual(usage.libraries, [{'type': 'guess', 'name': 'bar'}])
-        self.assertEqual(usage.get_usage(None, None), {
+        self.assertEqual(usage.get_usage(None, None, None), {
             'type': 'system', 'headers': [], 'libraries': ['bar'],
         })
 
@@ -76,10 +76,71 @@ class TestSystem(UsageTest):
         self.assertEqual(usage.libraries, [
             {'type': 'framework', 'name': 'bar'},
         ])
-        self.assertEqual(usage.get_usage(None, None), {
+        self.assertEqual(usage.get_usage(None, None, None), {
             'type': 'system', 'headers': [], 'libraries': [
                 {'type': 'framework', 'name': 'bar'},
             ],
+        })
+
+    def test_submodules(self):
+        submodules_required = {'names': '*', 'required': True}
+        submodules_optional = {'names': '*', 'required': False}
+
+        usage = self.make_usage('foo', submodules=submodules_required)
+        self.assertEqual(usage.headers, [])
+        self.assertEqual(usage.libraries, [])
+        self.assertEqual(usage.get_usage(['sub'], None, None), {
+            'type': 'system', 'headers': [], 'libraries': ['foo_sub'],
+        })
+
+        usage = self.make_usage('foo', libraries=['bar'],
+                                submodules=submodules_required)
+        self.assertEqual(usage.headers, [])
+        self.assertEqual(usage.libraries, ['bar'])
+        self.assertEqual(usage.get_usage(['sub'], None, None), {
+            'type': 'system', 'headers': [], 'libraries': ['bar', 'foo_sub'],
+        })
+
+        usage = self.make_usage('foo', submodules=submodules_optional)
+        self.assertEqual(usage.headers, [])
+        self.assertEqual(usage.libraries, [{'type': 'guess', 'name': 'foo'}])
+        self.assertEqual(usage.get_usage(['sub'], None, None), {
+            'type': 'system', 'headers': [], 'libraries': ['foo', 'foo_sub'],
+        })
+
+        usage = self.make_usage('foo', libraries=['bar'],
+                                submodules=submodules_optional)
+        self.assertEqual(usage.headers, [])
+        self.assertEqual(usage.libraries, ['bar'])
+        self.assertEqual(usage.get_usage(['sub'], None, None), {
+            'type': 'system', 'headers': [], 'libraries': ['bar', 'foo_sub'],
+        })
+
+    def test_boost(self):
+        submodules = {'names': '*', 'required': False}
+
+        usage = self.make_usage('boost', submodules=submodules)
+        self.assertEqual(usage.headers, ['boost/version.hpp'])
+        self.assertEqual(usage.libraries, [])
+        self.assertEqual(usage.get_usage(None, None, None), {
+            'type': 'system', 'headers': ['boost/version.hpp'],
+            'libraries': [],
+        })
+        self.assertEqual(usage.get_usage(['thread'], None, None), {
+            'type': 'system', 'headers': ['boost/version.hpp'],
+            'libraries': ['boost_thread'],
+        })
+
+        usage = self.make_usage('boost', headers=None, libraries=['boost'],
+                                submodules=submodules)
+        self.assertEqual(usage.headers, [])
+        self.assertEqual(usage.libraries, ['boost'])
+        self.assertEqual(usage.get_usage(None, None, None), {
+            'type': 'system', 'headers': [], 'libraries': ['boost'],
+        })
+        self.assertEqual(usage.get_usage(['thread'], None, None), {
+            'type': 'system', 'headers': [],
+            'libraries': ['boost', 'boost_thread'],
         })
 
     def test_target_platform(self):
@@ -88,7 +149,7 @@ class TestSystem(UsageTest):
         })
         self.assertEqual(usage.headers, [])
         self.assertEqual(usage.libraries, [{'type': 'guess', 'name': 'gl'}])
-        self.assertEqual(usage.get_usage(None, None), {
+        self.assertEqual(usage.get_usage(None, None, None), {
             'type': 'system', 'headers': [], 'libraries': ['GL'],
         })
 
@@ -97,7 +158,7 @@ class TestSystem(UsageTest):
         })
         self.assertEqual(usage.headers, [])
         self.assertEqual(usage.libraries, [{'type': 'guess', 'name': 'gl'}])
-        self.assertEqual(usage.get_usage(None, None), {
+        self.assertEqual(usage.get_usage(None, None, None), {
             'type': 'system', 'headers': [], 'libraries': [
                 {'type': 'framework', 'name': 'OpenGL'},
             ],
@@ -108,7 +169,7 @@ class TestSystem(UsageTest):
         })
         self.assertEqual(usage.headers, [])
         self.assertEqual(usage.libraries, ['gl'])
-        self.assertEqual(usage.get_usage(None, None), {
+        self.assertEqual(usage.get_usage(None, None, None), {
             'type': 'system', 'headers': [], 'libraries': ['gl'],
         })
 
@@ -118,6 +179,6 @@ class TestSystem(UsageTest):
         )
         self.assertEqual(usage.headers, [])
         self.assertEqual(usage.libraries, [{'type': 'guess', 'name': 'gl'}])
-        self.assertEqual(usage.get_usage(None, None), {
+        self.assertEqual(usage.get_usage(None, None, None), {
             'type': 'system', 'headers': [], 'libraries': ['GL'],
         })

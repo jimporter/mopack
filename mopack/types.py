@@ -58,6 +58,15 @@ def maybe(other, default=None):
     return check
 
 
+def default(other, default=None):
+    def check(field, value):
+        if value is Unset:
+            return default
+        return other(field, value)
+
+    return check
+
+
 def one_of(*args, desc):
     def check(field, value):
         for i in args:
@@ -106,6 +115,12 @@ def dict_shape(shape, desc):
 def string(field, value):
     if not isinstance(value, str):
         raise FieldError('expected a string', field)
+    return value
+
+
+def boolean(field, value):
+    if not isinstance(value, bool):
+        raise FieldError('expected a boolean', field)
     return value
 
 

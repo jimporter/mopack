@@ -15,6 +15,7 @@ class SDistTest(IntegrationTest):
             'usage': {
                 'type': 'pkg-config',
                 'path': 'pkgconfig',
+                'pcfile': name,
             },
         }
 
@@ -41,6 +42,7 @@ class TestTarball(SDistTest):
             'type': 'pkg-config',
             'path': os.path.join(self.stage, 'mopack', 'build', 'hello',
                                  'pkgconfig'),
+            'pcfiles': ['hello'],
         })
 
         output = json.loads(slurp('mopack/mopack.json'))
@@ -58,6 +60,7 @@ class TestTarball(SDistTest):
                 'name': 'hello',
                 'config_file': config,
                 'source': 'tarball',
+                'submodules': None,
                 'builder': self._builder('hello'),
                 'url': None,
                 'path': os.path.join(test_data_dir, 'hello-bfg.tar.gz'),
@@ -93,6 +96,7 @@ class TestDirectory(SDistTest):
             'type': 'pkg-config',
             'path': os.path.join(self.stage, 'mopack', 'build', 'hello',
                                  'pkgconfig'),
+            'pcfiles': ['hello'],
         })
 
         output = json.loads(slurp('mopack/mopack.json'))
@@ -110,6 +114,7 @@ class TestDirectory(SDistTest):
                 'name': 'hello',
                 'config_file': config,
                 'source': 'directory',
+                'submodules': None,
                 'builder': self._builder('hello'),
                 'path': os.path.join(test_data_dir, 'hello-bfg'),
             }],

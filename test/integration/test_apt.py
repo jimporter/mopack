@@ -11,7 +11,7 @@ class TestApt(IntegrationTest):
     def setUp(self):
         self.stage = stage_dir('apt')
 
-    def _usage(self, headers=[], libraries=[]):
+    def _usage(self, name, headers=[], libraries=[]):
         return {
             'type': 'system',
             'headers': headers,
@@ -48,16 +48,18 @@ class TestApt(IntegrationTest):
                 'name': 'ogg',
                 'config_file': config,
                 'source': 'apt',
+                'submodules': None,
                 'remote': 'libogg-dev',
-                'usage': self._usage(libraries=[
+                'usage': self._usage('ogg', libraries=[
                     {'name': 'ogg', 'type': 'guess'},
                 ]),
             }, {
                 'name': 'zlib',
                 'config_file': config,
                 'source': 'apt',
+                'submodules': None,
                 'remote': 'zlib1g-dev',
-                'usage': self._usage(libraries=[
+                'usage': self._usage('zlib', libraries=[
                     {'name': 'zlib', 'type': 'guess'},
                 ]),
             }],

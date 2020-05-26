@@ -3,6 +3,8 @@ import os
 from .library import LibraryUsage
 from .. import types
 
+_list_of_paths = types.list_of(types.inner_path, listify=True)
+
 
 class PathUsage(LibraryUsage):
     type = 'path'
@@ -10,14 +12,10 @@ class PathUsage(LibraryUsage):
     def __init__(self, name, *, include_path=None, library_path=None,
                  **kwargs):
         super().__init__(name, **kwargs)
-        self.include_path = types.list_of(types.inner_path, listify=True)(
-            'include_path', include_path
-        )
-        self.library_path = types.list_of(types.inner_path, listify=True)(
-            'library_path', library_path
-        )
+        self.include_path = _list_of_paths('include_path', include_path)
+        self.library_path = _list_of_paths('library_path', library_path)
 
-    def get_usage(self, srcdir, builddir):
+    def get_usage(self, submodules, srcdir, builddir):
         if srcdir is None or builddir is None:
             # XXX: It would probably be better to do this during construction.
             raise ValueError('unable to use `path` usage with this package ' +
@@ -31,5 +29,5 @@ class PathUsage(LibraryUsage):
                           for i in self.include_path],
             library_path=[os.path.abspath(os.path.join(builddir, i))
                           for i in self.library_path],
-            libraries=[self._make_library(i) for i in self.libraries],
+            libraries=self._get_libraries(submodules),
         )

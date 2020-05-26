@@ -189,5 +189,6 @@ class ChildConfig(BaseConfig):
         return name in self.parent.packages or self.parent._in_parent(name)
 
     def _process_self(self, filename, data):
+        self.submodules = data.get('submodules')
         self.build = data.get('build')
         self.usage = data.get('usage')

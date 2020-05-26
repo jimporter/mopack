@@ -5,12 +5,6 @@ from unittest import mock, TestCase
 from mopack.types import *
 
 
-def integer(field, value):
-    if not isinstance(value, int):
-        raise FieldError('expected an integer', field)
-    return value
-
-
 class TestMaybe(TestCase):
     def test_basic(self):
         self.assertEqual(maybe(string)('field', None), None)
@@ -24,16 +18,29 @@ class TestMaybe(TestCase):
         self.assertRaises(FieldError, maybe(string), 'field', 1)
 
 
+class TestDefault(TestCase):
+    def test_basic(self):
+        self.assertEqual(default(string)('field', Unset), None)
+        self.assertEqual(default(string)('field', 'foo'), 'foo')
+
+    def test_default(self):
+        self.assertEqual(default(string, 'default')('field', Unset), 'default')
+        self.assertEqual(default(string, 'default')('field', 'foo'), 'foo')
+
+    def test_invalid(self):
+        self.assertRaises(FieldError, default(string), 'field', 1)
+
+
 class TestOneOf(TestCase):
     def setUp(self):
-        self.one_of = one_of(string, integer, desc='str or int')
+        self.one_of = one_of(string, boolean, desc='str or bool')
 
     def test_valid(self):
         self.assertEqual(self.one_of('field', 'foo'), 'foo')
-        self.assertEqual(self.one_of('field', 1), 1)
+        self.assertEqual(self.one_of('field', True), True)
 
     def test_invalid(self):
-        self.assertRaises(FieldError, self.one_of, 'field', None)
+        self.assertRaises(FieldError, self.one_of, 'field', 1)
 
 
 class TestConstant(TestCase):
@@ -86,6 +93,26 @@ class TestDictShape(TestCase):
 
     def test_invalid_values(self):
         self.assertRaises(FieldError, self.dict_shape, 'field', {'foo': 1})
+
+
+class TestString(TestCase):
+    def test_valid(self):
+        self.assertEqual(string('field', 'foo'), 'foo')
+        self.assertEqual(string('field', 'bar'), 'bar')
+
+    def test_invalid(self):
+        self.assertRaises(FieldError, string, 'field', 1)
+        self.assertRaises(FieldError, string, 'field', None)
+
+
+class TestBoolean(TestCase):
+    def test_valid(self):
+        self.assertEqual(boolean('field', True), True)
+        self.assertEqual(boolean('field', False), False)
+
+    def test_invalid(self):
+        self.assertRaises(FieldError, boolean, 'field', 1)
+        self.assertRaises(FieldError, boolean, 'field', None)
 
 
 class TestInnerPath(TestCase):

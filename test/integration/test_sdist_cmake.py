@@ -29,6 +29,7 @@ class TestNestedCMake(IntegrationTest):
             'name': 'greeter',
             'type': 'pkg-config',
             'path': os.path.join(self.pkgbuilddir, 'greeter', 'pkgconfig'),
+            'pcfiles': ['greeter'],
         })
 
         output = json.loads(self.assertPopen([
@@ -58,6 +59,7 @@ class TestNestedCMake(IntegrationTest):
                 'name': 'hello',
                 'config_file': config,
                 'source': 'directory',
+                'submodules': None,
                 'builder': {
                     'type': 'cmake',
                     'name': 'hello',
@@ -74,6 +76,7 @@ class TestNestedCMake(IntegrationTest):
                 'name': 'greeter',
                 'config_file': config,
                 'source': 'directory',
+                'submodules': None,
                 'builder': {
                     'type': 'bfg9000',
                     'name': 'greeter',
@@ -81,6 +84,7 @@ class TestNestedCMake(IntegrationTest):
                     'usage': {
                         'type': 'pkg-config',
                         'path': 'pkgconfig',
+                        'pcfile': 'greeter',
                     },
                 },
                 'path': os.path.join(test_data_dir, 'greeter-bfg'),

@@ -1,14 +1,20 @@
-from . import BinaryPackage
+from . import BinaryPackage, Package, submodules_type
 from .. import log, types
+from ..package_defaults import package_default
 from ..usage.system import SystemUsage
 
 
 class SystemPackage(BinaryPackage):
     source = 'system'
 
-    def __init__(self, name, headers=None, libraries=types.Unset, **kwargs):
-        usage = SystemUsage(name, headers=headers, libraries=libraries)
-        super().__init__(name, usage=usage, **kwargs)
+    def __init__(self, name, headers=types.Unset, libraries=types.Unset,
+                 submodules=types.Unset, **kwargs):
+        Package.__init__(self, name, **kwargs)
+        self.submodules = package_default(submodules_type, name)(
+            'submodules', submodules
+        )
+        self.usage = SystemUsage(name, headers=headers, libraries=libraries,
+                                 submodules=self.submodules)
 
     def resolve(self, pkgdir, deploy_paths):
         log.info('resolving {!r} from {}'.format(self.name, self.source))

@@ -76,8 +76,8 @@ class ConanPackage(BinaryPackage):
             logfile.check_call(['conan', 'install', '-if',
                                 cls._installdir(pkgdir), pkgdir])
 
-    def get_usage(self, pkgdir):
-        return self.usage.get_usage(None, self._installdir(pkgdir))
+    def _get_usage(self, pkgdir, submodules):
+        return self.usage.get_usage(submodules, None, self._installdir(pkgdir))
 
     @staticmethod
     def deploy_all(pkgdir, packages):

@@ -6,6 +6,7 @@ from unittest import mock, TestCase
 from . import SourceTest
 from .. import mock_open_log
 
+from mopack.iterutils import iterate
 from mopack.sources import Package, PackageOptions
 from mopack.sources.apt import AptPackage
 from mopack.sources.conan import ConanPackage
@@ -34,6 +35,16 @@ class TestConan(SourceTest):
     pkgconfdir = os.path.join(pkgdir, 'conan')
     deploy_paths = {'prefix': '/usr/local'}
 
+    def check_usage(self, pkg, *, submodules=None, usage=None):
+        if usage is None:
+            pcfiles = ([] if pkg.submodules and pkg.submodules['required'] else
+                       [pkg.name])
+            pcfiles.extend('{}_{}'.format(pkg.name, i)
+                           for i in iterate(submodules))
+            usage = {'type': 'pkg-config', 'path': self.pkgconfdir,
+                     'pcfiles': pcfiles}
+        self.assertEqual(pkg.get_usage(self.pkgdir, submodules), usage)
+
     def test_basic(self):
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable')
         self.assertEqual(pkg.remote, 'foo/1.2.3@conan/stable')
@@ -57,9 +68,7 @@ class TestConan(SourceTest):
                 self.pkgdir
             ], stdout=mopen(), stderr=mopen())
 
-        self.assertEqual(pkg.get_usage(self.pkgdir), {
-            'type': 'pkg-config', 'path': self.pkgconfdir
-        })
+        self.check_usage(pkg)
 
     def test_options(self):
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
@@ -86,9 +95,7 @@ class TestConan(SourceTest):
                 self.pkgdir
             ], stdout=mopen(), stderr=mopen())
 
-        self.assertEqual(pkg.get_usage(self.pkgdir), {
-            'type': 'pkg-config', 'path': self.pkgconfdir
-        })
+        self.check_usage(pkg)
 
     def test_global_options(self):
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
@@ -115,9 +122,7 @@ class TestConan(SourceTest):
                 self.pkgdir
             ], stdout=mopen(), stderr=mopen())
 
-        self.assertEqual(pkg.get_usage(self.pkgdir), {
-            'type': 'pkg-config', 'path': self.pkgconfdir
-        })
+        self.check_usage(pkg)
 
     def test_multiple(self):
         pkgs = [
@@ -147,9 +152,45 @@ class TestConan(SourceTest):
             ], stdout=mopen(), stderr=mopen())
 
         for pkg in pkgs:
-            self.assertEqual(pkg.get_usage(self.pkgdir), {
-                'type': 'pkg-config', 'path': self.pkgconfdir
-            })
+            self.check_usage(pkg)
+
+    def test_submodules(self):
+        submodules_required = {'names': '*', 'required': True}
+        submodules_optional = {'names': '*', 'required': False}
+
+        pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
+                                submodules=submodules_required)
+        self.check_usage(pkg, submodules=['sub'])
+
+        pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
+                                usage={'type': 'pkg-config', 'path': '.',
+                                       'pcfile': 'bar'},
+                                submodules=submodules_required)
+        self.check_usage(pkg, submodules=['sub'], usage={
+            'type': 'pkg-config', 'path': self.pkgconfdir,
+            'pcfiles': ['bar', 'foo_sub']
+        })
+
+        pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
+                                submodules=submodules_optional)
+        self.check_usage(pkg, submodules=['sub'])
+
+        pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
+                                usage={'type': 'pkg-config', 'path': '.',
+                                       'pcfile': 'bar'},
+                                submodules=submodules_optional)
+        self.check_usage(pkg, submodules=['sub'], usage={
+            'type': 'pkg-config', 'path': self.pkgconfdir,
+            'pcfiles': ['bar', 'foo_sub']
+        })
+
+    def test_invalid_submodule(self):
+        pkg = self.make_package(
+            'foo', remote='foo/1.2.3@conan/stable',
+            submodules={'names': ['sub'], 'required': True}
+        )
+        with self.assertRaises(ValueError):
+            pkg.get_usage(self.pkgdir, ['invalid'])
 
     def test_deploy(self):
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable')

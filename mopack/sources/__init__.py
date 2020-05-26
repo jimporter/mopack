@@ -1,8 +1,11 @@
 import os
 from pkg_resources import load_entry_point
 
+from .. import types
 from ..freezedried import FreezeDried
+from ..iterutils import listify
 from ..options import BaseOptions
+from ..package_defaults import package_default
 from ..types import try_load_config
 from ..usage import Usage, make_usage
 
@@ -12,6 +15,24 @@ def _get_source_type(source):
         return load_entry_point('mopack', 'mopack.sources', source)
     except ImportError:
         raise ValueError('unknown source {!r}'.format(source))
+
+
+_submodule_dict = types.dict_shape({
+    'names': types.one_of(types.list_of(types.string), types.constant('*'),
+                          desc='a list of submodules'),
+    'required': types.boolean,
+}, desc='a list of submodules')
+
+
+def submodules_type(field, value):
+    if value is None:
+        return None
+    elif not isinstance(value, dict):
+        value = {
+            'names': value,
+            'required': True,
+        }
+    return _submodule_dict(field, value)
 
 
 class Package(FreezeDried):
@@ -29,6 +50,26 @@ class Package(FreezeDried):
     @property
     def config_dir(self):
         return os.path.dirname(self.config_file)
+
+    def _check_submodules(self, wanted_submodules):
+        if self.submodules:
+            if self.submodules['required'] and not wanted_submodules:
+                raise ValueError('package {!r} requires submodules'
+                                 .format(self.name))
+
+            wanted_submodules = listify(wanted_submodules)
+            if self.submodules['names'] != '*':
+                for i in wanted_submodules:
+                    if i not in self.submodules['names']:
+                        raise ValueError(
+                            'unrecognized submodule {!r} for package {!r}'
+                            .format(i, self.name)
+                        )
+            return wanted_submodules
+        elif wanted_submodules:
+            raise ValueError('package {!r} has no submodules'
+                             .format(self.name))
+        return None
 
     @property
     def builder_types(self):
@@ -50,6 +91,9 @@ class Package(FreezeDried):
     def fetch(self, pkgdir, parent_config):
         pass
 
+    def get_usage(self, pkgdir, submodules):
+        return self._get_usage(pkgdir, self._check_submodules(submodules))
+
     def __repr__(self):
         return '<{}({!r})>'.format(type(self).__name__, self.name)
 
@@ -57,17 +101,19 @@ class Package(FreezeDried):
 class BinaryPackage(Package):
     _rehydrate_fields = {'usage': Usage}
 
-    def __init__(self, name, *, usage, **kwargs):
+    def __init__(self, name, *, usage, submodules=types.Unset, **kwargs):
         super().__init__(name, **kwargs)
-        self.usage = (usage if isinstance(usage, Usage) else
-                      make_usage(name, usage))
+        self.submodules = package_default(submodules_type, name)(
+            'submodules', submodules
+        )
+        self.usage = make_usage(name, usage, submodules=self.submodules)
 
     def set_options(self, options):
         super().set_options(options)
         self.usage.set_options(options)
 
-    def get_usage(self, pkgdir):
-        return self.usage.get_usage(None, None)
+    def _get_usage(self, pkgdir, submodules):
+        return self.usage.get_usage(submodules, None, None)
 
 
 class PackageOptions(FreezeDried, BaseOptions):

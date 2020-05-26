@@ -4,6 +4,7 @@ from unittest import mock
 from . import SourceTest
 from .. import mock_open_log
 
+from mopack.iterutils import iterate
 from mopack.sources import Package
 from mopack.sources.apt import AptPackage
 from mopack.sources.conan import ConanPackage
@@ -15,7 +16,8 @@ class TestApt(SourceTest):
     pkgdir = '/path/to/builddir/mopack'
     deploy_paths = {'prefix': '/usr/local'}
 
-    def check_resolve_all(self, packages, remotes):
+    def check_resolve_all(self, packages, remotes, *, submodules=None,
+                          usages=None):
         with mock_open_log() as mopen, \
              mock.patch('subprocess.check_call') as mcall:  # noqa
             AptPackage.resolve_all(self.pkgdir, packages, self.deploy_paths)
@@ -26,10 +28,18 @@ class TestApt(SourceTest):
                 stdout=mopen(), stderr=mopen()
             )
 
-        for pkg in packages:
-            self.assertEqual(pkg.get_usage(self.pkgdir), {
-                'type': 'system', 'headers': [], 'libraries': [pkg.name]
-            })
+        if usages is None:
+            usages = []
+            for pkg in packages:
+                libs = ([] if pkg.submodules and pkg.submodules['required']
+                        else [pkg.name])
+                libs.extend('{}_{}'.format(pkg.name, i)
+                            for i in iterate(submodules))
+                usages.append({'type': 'system', 'headers': [],
+                               'libraries': libs})
+
+        for pkg, usage in zip(packages, usages):
+            self.assertEqual(pkg.get_usage(self.pkgdir, submodules), usage)
 
     def test_basic(self):
         pkg = self.make_package('foo')
@@ -45,6 +55,45 @@ class TestApt(SourceTest):
         pkg1 = self.make_package('foo')
         pkg2 = self.make_package('bar', remote='bar-dev')
         self.check_resolve_all([pkg1, pkg2], ['libfoo-dev', 'bar-dev'])
+
+    def test_submodules(self):
+        submodules_required = {'names': '*', 'required': True}
+        submodules_optional = {'names': '*', 'required': False}
+
+        pkg = self.make_package('foo', submodules=submodules_required)
+        self.check_resolve_all([pkg], ['libfoo-dev'], submodules=['sub'])
+
+        pkg = self.make_package(
+            'foo', usage={'type': 'system', 'libraries': 'bar'},
+            submodules=submodules_required
+        )
+        self.check_resolve_all(
+            [pkg], ['libfoo-dev'], submodules=['sub'], usages=[{
+                'type': 'system', 'headers': [],
+                'libraries': ['bar', 'foo_sub']
+            }]
+        )
+
+        pkg = self.make_package('foo', submodules=submodules_optional)
+        self.check_resolve_all([pkg], ['libfoo-dev'], submodules=['sub'])
+
+        pkg = self.make_package(
+            'foo', usage={'type': 'system', 'libraries': 'bar'},
+            submodules=submodules_optional
+        )
+        self.check_resolve_all(
+            [pkg], ['libfoo-dev'], submodules=['sub'], usages=[{
+                'type': 'system', 'headers': [],
+                'libraries': ['bar', 'foo_sub']
+            }]
+        )
+
+    def test_invalid_submodule(self):
+        pkg = self.make_package('foo', submodules={
+            'names': ['sub'], 'required': True
+        })
+        with self.assertRaises(ValueError):
+            pkg.get_usage(self.pkgdir, ['invalid'])
 
     def test_deploy(self):
         pkg = self.make_package('foo')

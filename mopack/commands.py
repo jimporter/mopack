@@ -170,10 +170,11 @@ def deploy(pkgdir):
 
 
 def usage(pkgdir, name, submodules=None, strict=False):
+    package = None
     try:
         metadata = Metadata.load(pkgdir)
         if name in metadata.packages:
-            return dict(name=name, **metadata.packages[name].get_usage(pkgdir))
+            package = metadata.packages[name]
         elif strict:
             raise ValueError('no definition for package {!r}'.format(name))
     except FileNotFoundError:
@@ -181,5 +182,6 @@ def usage(pkgdir, name, submodules=None, strict=False):
             raise
         metadata = Metadata()
 
-    pkg = fallback_system_package(name, metadata.options)
-    return dict(name=name, **pkg.get_usage(pkgdir))
+    if package is None:
+        package = fallback_system_package(name, metadata.options)
+    return dict(name=name, **package.get_usage(pkgdir, submodules))

@@ -1,18 +1,21 @@
 from .library import LibraryUsage
 from .. import types
+from ..package_defaults import package_default
+
+list_of_headers = types.list_of(types.string, listify=True)
 
 
 class SystemUsage(LibraryUsage):
     type = 'system'
 
-    def __init__(self, name, *, headers=None, **kwargs):
+    def __init__(self, name, *, headers=types.Unset, **kwargs):
         super().__init__(name, **kwargs)
-        self.headers = types.list_of(types.string, listify=True)(
+        self.headers = package_default(list_of_headers, name)(
             'headers', headers
         )
 
-    def get_usage(self, srcdir, builddir):
+    def get_usage(self, submodules, srcdir, builddir):
         return self._usage(
             headers=self.headers,
-            libraries=[self._make_library(i) for i in self.libraries],
+            libraries=self._get_libraries(submodules),
         )

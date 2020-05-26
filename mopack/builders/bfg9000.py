@@ -1,4 +1,3 @@
-import os
 import shutil
 
 from . import Builder, BuilderOptions
@@ -29,9 +28,6 @@ class Bfg9000Builder(Builder):
         self.extra_args = types.maybe(types.shell_args(), [])(
             'extra_args', extra_args
         )
-
-    def _builddir(self, pkgdir):
-        return os.path.abspath(os.path.join(pkgdir, 'build', self.name))
 
     def _toolchain_args(self, toolchain):
         return ['--toolchain', toolchain] if toolchain else []
@@ -64,6 +60,3 @@ class Bfg9000Builder(Builder):
         with LogFile.open(pkgdir, self.name + '-deploy') as logfile:
             with pushd(self._builddir(pkgdir)):
                 logfile.check_call(['ninja', 'install'])
-
-    def get_usage(self, pkgdir, srcdir):
-        return self.usage.get_usage(srcdir, self._builddir(pkgdir))

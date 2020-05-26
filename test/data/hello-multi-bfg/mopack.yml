@@ -1,0 +1,3 @@
+self:
+  submodules: ['french', 'english']
+  build: bfg9000

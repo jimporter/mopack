@@ -1,3 +1,4 @@
+import os
 from pkg_resources import load_entry_point
 
 from ..freezedried import FreezeDried
@@ -21,14 +22,19 @@ class Builder(FreezeDried):
 
     Options = None
 
-    def __init__(self, name, *, usage):
+    def __init__(self, name, *, usage, submodules):
         self.name = name
-        self.usage = (usage if isinstance(usage, Usage) else
-                      make_usage(name, usage))
+        self.usage = make_usage(name, usage, submodules=submodules)
+
+    def _builddir(self, pkgdir):
+        return os.path.abspath(os.path.join(pkgdir, 'build', self.name))
 
     def set_options(self, options):
         self.global_options = options['builders'].get(self.type)
         self.usage.set_options(options)
+
+    def get_usage(self, pkgdir, submodules, srcdir):
+        return self.usage.get_usage(submodules, srcdir, self._builddir(pkgdir))
 
     def __repr__(self):
         return '<{}({!r})>'.format(type(self).__name__, self.name)

@@ -1,0 +1,16 @@
+# -*- python -*-
+
+project('hello', '1.0')
+
+include = header_directory('include', include='*.hpp')
+english = library('hello_english', files=['src/hello_english.cpp'],
+                  includes=[include])
+french = library('hello_french', files=['src/hello_french.cpp'],
+                  includes=[include])
+
+install(include, english, french)
+
+pkg_config('hello_english',
+           libs=english)
+pkg_config('hello_french',
+           libs=french)

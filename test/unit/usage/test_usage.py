@@ -9,23 +9,27 @@ from mopack.usage.pkg_config import PkgConfigUsage
 
 class TestMakeUsage(TestCase):
     def test_make(self):
-        usage = make_usage('pkg', {'type': 'pkg-config', 'path': 'path'})
+        usage = make_usage('pkg', {'type': 'pkg-config', 'path': 'path'},
+                           submodules=None)
         self.assertIsInstance(usage, PkgConfigUsage)
         self.assertEqual(usage.path, 'path')
 
     def test_make_string(self):
-        usage = make_usage('pkg', 'pkg-config')
+        usage = make_usage('pkg', 'pkg-config', submodules=None)
         self.assertIsInstance(usage, PkgConfigUsage)
         self.assertEqual(usage.path, 'pkgconfig')
 
     def test_invalid(self):
         self.assertRaises(TypeError, make_usage, 'pkg',
-                          {'type': 'pkg-config', 'path': '..'})
+                          {'type': 'pkg-config', 'path': '..'},
+                          submodules=None)
 
     def test_invalid_marked(self):
         data = yaml.load('type: pkg-config\npath: ..',
                          Loader=SafeLineLoader)
-        self.assertRaises(MarkedYAMLError, make_usage, 'pkg', data)
+        self.assertRaises(MarkedYAMLError, make_usage, 'pkg', data,
+                          submodules=None)
 
     def test_unknown(self):
-        self.assertRaises(ValueError, make_usage, 'pkg', {'type': 'goofy'})
+        self.assertRaises(ValueError, make_usage, 'pkg', {'type': 'goofy'},
+                          submodules=None)

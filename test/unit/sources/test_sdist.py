@@ -7,6 +7,7 @@ from ... import *
 
 from mopack.builders.bfg9000 import Bfg9000Builder
 from mopack.config import Config
+from mopack.iterutils import iterate
 from mopack.sources import Package
 from mopack.sources.apt import AptPackage
 from mopack.sources.sdist import DirectoryPackage, TarballPackage
@@ -34,19 +35,23 @@ class SDistTestCase(SourceTest):
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         return os.path.join(self.pkgdir, 'build', name, pkgconfig)
 
-    def check_resolve(self, pkg, usage=None):
+    def check_resolve(self, pkg, *, submodules=None, usage=None):
         if usage is None:
-            usage = {'type': 'pkg-config', 'path': self.pkgconfdir('foo')}
+            pcfiles = ([] if pkg.submodules and pkg.submodules['required'] else
+                       ['foo'])
+            pcfiles.extend('foo_{}'.format(i) for i in iterate(submodules))
+            usage = {'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
+                     'pcfiles': pcfiles}
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.check_call'):  # noqa
             pkg.resolve(self.pkgdir, self.deploy_paths)
             mopen.assert_called_with(os.path.join(self.pkgdir, 'foo.log'), 'w')
-        self.assertEqual(pkg.get_usage(self.pkgdir), usage)
+        self.assertEqual(pkg.get_usage(self.pkgdir, submodules), usage)
 
-    def make_builder(self, builder_type, name, **kwargs):
-        builder = builder_type(name, **kwargs)
+    def make_builder(self, builder_type, name, *, submodules=None, **kwargs):
+        builder = builder_type(name, submodules=submodules, **kwargs)
         builder.set_options(self.make_options())
         return builder
 
@@ -98,8 +103,41 @@ class TestDirectory(SDistTestCase):
             self.assertEqual(pkg.builder, self.make_builder(
                 Bfg9000Builder, 'foo', usage={'type': 'system'}
             ))
-        self.check_resolve(pkg, {'type': 'system', 'headers': [],
-                                 'libraries': ['foo']})
+        self.check_resolve(pkg, usage={'type': 'system', 'headers': [],
+                                       'libraries': ['foo']})
+
+    def test_infer_submodules(self):
+        srcpath = os.path.join(test_data_dir, 'hello-multi-bfg')
+        pkg = self.make_package('foo', path=srcpath, set_options=False)
+        self.assertEqual(pkg.builder, None)
+
+        with mock.patch('os.path.exists', return_value=True):
+            config = pkg.fetch(self.pkgdir, Config([]))
+            self.set_options(pkg)
+            self.assertEqual(config.build, 'bfg9000')
+            self.assertEqual(config.submodules, ['french', 'english'])
+            self.assertEqual(pkg.builder, self.make_builder(
+                Bfg9000Builder, 'foo', submodules={
+                    'names': ['french', 'english'], 'required': True
+                }
+            ))
+        self.check_resolve(pkg, submodules=['french'])
+
+        pkg = self.make_package('foo', path=srcpath, submodules=['sub'],
+                                set_options=False)
+        self.assertEqual(pkg.builder, None)
+
+        with mock.patch('os.path.exists', return_value=True):
+            config = pkg.fetch(self.pkgdir, Config([]))
+            self.set_options(pkg)
+            self.assertEqual(config.build, 'bfg9000')
+            self.assertEqual(config.submodules, ['french', 'english'])
+            self.assertEqual(pkg.builder, self.make_builder(
+                Bfg9000Builder, 'foo', submodules={
+                    'names': ['sub'], 'required': True
+                }
+            ))
+        self.check_resolve(pkg, submodules=['sub'])
 
     def test_usage(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
@@ -121,8 +159,46 @@ class TestDirectory(SDistTestCase):
         ))
 
         pkg.fetch(self.pkgdir, None)
-        self.check_resolve(pkg, {'type': 'pkg-config',
-                                 'path': self.pkgconfdir('foo', 'pkgconf')})
+        self.check_resolve(pkg, usage={
+            'type': 'pkg-config', 'path': self.pkgconfdir('foo', 'pkgconf'),
+            'pcfiles': ['foo']
+        })
+
+    def test_submodules(self):
+        submodules_required = {'names': '*', 'required': True}
+        submodules_optional = {'names': '*', 'required': False}
+
+        pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
+                                submodules=submodules_required)
+        self.check_resolve(pkg, submodules=['sub'])
+
+        pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
+                                usage={'type': 'pkg-config', 'pcfile': 'bar'},
+                                submodules=submodules_required)
+        self.check_resolve(pkg, submodules=['sub'], usage={
+            'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
+            'pcfiles': ['bar', 'foo_sub']
+        })
+
+        pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
+                                submodules=submodules_optional)
+        self.check_resolve(pkg, submodules=['sub'])
+
+        pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
+                                usage={'type': 'pkg-config', 'pcfile': 'bar'},
+                                submodules=submodules_optional)
+        self.check_resolve(pkg, submodules=['sub'], usage={
+            'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
+            'pcfiles': ['bar', 'foo_sub']
+        })
+
+    def test_invalid_submodule(self):
+        pkg = self.make_package(
+            'foo', path=self.srcpath, build='bfg9000',
+            submodules={'names': ['sub'], 'required': True}
+        )
+        with self.assertRaises(ValueError):
+            pkg.get_usage(self.pkgdir, ['invalid'])
 
     def test_deploy(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000')
@@ -328,8 +404,8 @@ class TestTarball(SDistTestCase):
             self.assertEqual(pkg.builder, self.make_builder(
                 Bfg9000Builder, 'foo', usage={'type': 'system'}
             ))
-        self.check_resolve(pkg, {'type': 'system', 'headers': [],
-                                 'libraries': ['foo']})
+        self.check_resolve(pkg, usage={'type': 'system', 'headers': [],
+                                       'libraries': ['foo']})
 
     def test_usage(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
@@ -351,8 +427,50 @@ class TestTarball(SDistTestCase):
         ))
 
         self.check_fetch(pkg)
-        self.check_resolve(pkg, {'type': 'pkg-config',
-                                 'path': self.pkgconfdir('foo', 'pkgconf')})
+        self.check_resolve(pkg, usage={
+            'type': 'pkg-config', 'path': self.pkgconfdir('foo', 'pkgconf'),
+            'pcfiles': ['foo']
+        })
+
+    def test_submodules(self):
+        submodules_required = {'names': '*', 'required': True}
+        submodules_optional = {'names': '*', 'required': False}
+
+        pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
+                                submodules=submodules_required)
+        self.check_fetch(pkg)
+        self.check_resolve(pkg, submodules=['sub'])
+
+        pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
+                                usage={'type': 'pkg-config', 'pcfile': 'bar'},
+                                submodules=submodules_required)
+        self.check_fetch(pkg)
+        self.check_resolve(pkg, submodules=['sub'], usage={
+            'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
+            'pcfiles': ['bar', 'foo_sub']
+        })
+
+        pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
+                                submodules=submodules_optional)
+        self.check_fetch(pkg)
+        self.check_resolve(pkg, submodules=['sub'])
+
+        pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
+                                usage={'type': 'pkg-config', 'pcfile': 'bar'},
+                                submodules=submodules_optional)
+        self.check_fetch(pkg)
+        self.check_resolve(pkg, submodules=['sub'], usage={
+            'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
+            'pcfiles': ['bar', 'foo_sub']
+        })
+
+    def test_invalid_submodule(self):
+        pkg = self.make_package(
+            'foo', path=self.srcpath, build='bfg9000',
+            submodules={'names': ['sub'], 'required': True}
+        )
+        with self.assertRaises(ValueError):
+            pkg.get_usage(self.pkgdir, ['invalid'])
 
     def test_deploy(self):
         pkg = self.make_package('foo', build='bfg9000',

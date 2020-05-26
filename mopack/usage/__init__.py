@@ -25,7 +25,7 @@ class Usage(FreezeDried):
         return '<{}>'.format(type(self).__name__)
 
 
-def make_usage(name, config):
+def make_usage(name, config, **kwargs):
     if isinstance(config, str):
         type = config
         config = {}
@@ -35,4 +35,4 @@ def make_usage(name, config):
 
     context = 'while constructing usage {!r}'.format(type)
     with try_load_config(config, context):
-        return _get_usage_type(type)(name, **config)
+        return _get_usage_type(type)(name, **config, **kwargs)
