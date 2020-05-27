@@ -103,8 +103,10 @@ class TestDirectory(SDistTestCase):
             self.assertEqual(pkg.builder, self.make_builder(
                 Bfg9000Builder, 'foo', usage={'type': 'system'}
             ))
-        self.check_resolve(pkg, usage={'type': 'system', 'headers': [],
-                                       'libraries': ['foo']})
+        self.check_resolve(pkg, usage={
+            'type': 'system', 'include_path': [], 'library_path': [],
+            'headers': [], 'libraries': ['foo']
+        })
 
     def test_infer_submodules(self):
         srcpath = os.path.join(test_data_dir, 'hello-multi-bfg')
@@ -404,8 +406,10 @@ class TestTarball(SDistTestCase):
             self.assertEqual(pkg.builder, self.make_builder(
                 Bfg9000Builder, 'foo', usage={'type': 'system'}
             ))
-        self.check_resolve(pkg, usage={'type': 'system', 'headers': [],
-                                       'libraries': ['foo']})
+        self.check_resolve(pkg, usage={
+            'type': 'system', 'include_path': [], 'library_path': [],
+            'headers': [], 'libraries': ['foo'],
+        })
 
     def test_usage(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',

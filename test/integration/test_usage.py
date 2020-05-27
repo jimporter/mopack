@@ -36,14 +36,14 @@ class TestUsage(IntegrationTest):
 
         # Usage for `undef`.
         self.assertUsageOutput('undef', {
-            'name': 'undef', 'type': 'system', 'headers': [],
-            'libraries': ['undef']
+            'name': 'undef', 'type': 'system', 'include_path': [],
+            'library_path': [], 'headers': [], 'libraries': ['undef'],
         })
         self.assertUsage('undef', '--strict', returncode=1)
 
         # Usage from wrong directory.
         self.assertUsageOutput('hello', {
-            'name': 'hello', 'type': 'system', 'headers': [],
-            'libraries': ['hello']
+            'name': 'hello', 'type': 'system', 'include_path': [],
+            'library_path': [], 'headers': [], 'libraries': ['hello'],
         }, ['--directory=..'])
         self.assertUsage('hello', '--strict', '--directory=..', returncode=1)

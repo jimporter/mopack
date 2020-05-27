@@ -135,6 +135,16 @@ def inner_path(field, value):
     return value
 
 
+def abs_or_inner_path(field, value):
+    value = os.path.normpath(string(field, value))
+    if os.path.isabs(value):
+        return value
+
+    if value.split(os.path.sep)[0] == os.path.pardir:
+        raise FieldError('expected an absolute or inner path', field)
+    return value
+
+
 def any_path(base=None):
     def check(field, value):
         value = string(field, value)

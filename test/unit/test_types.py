@@ -137,6 +137,41 @@ class TestInnerPath(TestCase):
             self.assertRaises(FieldError, inner_path, 'field', 'C:')
 
 
+class TestAbsOrInnerPath(TestCase):
+    def test_inner(self):
+        self.assertEqual(abs_or_inner_path('field', 'path'), 'path')
+        self.assertEqual(abs_or_inner_path('field', 'path/..'), '.')
+        self.assertEqual(abs_or_inner_path('field', 'foo/../bar'), 'bar')
+
+    def test_outer(self):
+        self.assertRaises(FieldError, abs_or_inner_path, 'field', '../path')
+        self.assertRaises(FieldError, abs_or_inner_path, 'field', 'path/../..')
+
+    def test_absolute_posix(self):
+        with mock.patch('os.path', posixpath):
+            self.assertEqual(abs_or_inner_path('field', '/path'), '/path')
+
+    def test_absolute_nt(self):
+        with mock.patch('os.path', ntpath):
+            self.assertEqual(abs_or_inner_path('field', '/path'), '\\path')
+            self.assertEqual(abs_or_inner_path('field', 'C:\\path'),
+                             'C:\\path')
+            self.assertEqual(abs_or_inner_path('field', 'C:'), 'C:')
+            self.assertRaises(FieldError, inner_path, 'field', 'C:path')
+
+
+class TestAnyPath(TestCase):
+    def test_relative(self):
+        self.assertEqual(any_path()('field', 'path'), 'path')
+        self.assertEqual(any_path()('field', '../path'), '../path')
+        self.assertEqual(any_path()('field', 'foo/../bar'), 'bar')
+        self.assertEqual(any_path('/base')('field', 'path'), '/base/path')
+
+    def test_absolute(self):
+        self.assertEqual(any_path()('field', '/path'), '/path')
+        self.assertEqual(any_path('/base')('field', '/path'), '/path')
+
+
 class TestShellArgs(TestCase):
     def test_single(self):
         self.assertEqual(shell_args()('field', 'foo'), ['foo'])

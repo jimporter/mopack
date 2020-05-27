@@ -136,8 +136,8 @@ setup(
         ],
         'mopack.usage': [
             'pkg-config=mopack.usage.pkg_config:PkgConfigUsage',
-            'path=mopack.usage.path:PathUsage',
-            'system=mopack.usage.system:SystemUsage',
+            'path=mopack.usage.path_system:PathUsage',
+            'system=mopack.usage.path_system:SystemUsage',
         ],
     },
 

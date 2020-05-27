@@ -41,6 +41,7 @@ class TestNestedCMake(IntegrationTest):
             'include_path': [os.path.join(test_data_dir, 'hello-cmake',
                                           'include')],
             'library_path': [os.path.join(self.pkgbuilddir, 'hello')],
+            'headers': [],
             'libraries': ['hello'],
         })
 
@@ -68,6 +69,7 @@ class TestNestedCMake(IntegrationTest):
                         'type': 'path',
                         'include_path': ['include'],
                         'library_path': ['.'],
+                        'headers': [],
                         'libraries': [{'type': 'guess', 'name': 'hello'}],
                     },
                 },

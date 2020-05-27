@@ -35,8 +35,10 @@ class TestApt(SourceTest):
                         else [pkg.name])
                 libs.extend('{}_{}'.format(pkg.name, i)
                             for i in iterate(submodules))
-                usages.append({'type': 'system', 'headers': [],
-                               'libraries': libs})
+                usages.append({
+                    'type': 'system', 'include_path': [], 'library_path': [],
+                    'headers': [], 'libraries': libs,
+                })
 
         for pkg, usage in zip(packages, usages):
             self.assertEqual(pkg.get_usage(self.pkgdir, submodules), usage)
@@ -69,8 +71,8 @@ class TestApt(SourceTest):
         )
         self.check_resolve_all(
             [pkg], ['libfoo-dev'], submodules=['sub'], usages=[{
-                'type': 'system', 'headers': [],
-                'libraries': ['bar', 'foo_sub']
+                'type': 'system', 'include_path': [], 'library_path': [],
+                'headers': [], 'libraries': ['bar', 'foo_sub'],
             }]
         )
 
@@ -83,8 +85,8 @@ class TestApt(SourceTest):
         )
         self.check_resolve_all(
             [pkg], ['libfoo-dev'], submodules=['sub'], usages=[{
-                'type': 'system', 'headers': [],
-                'libraries': ['bar', 'foo_sub']
+                'type': 'system', 'include_path': [], 'library_path': [],
+                'headers': [], 'libraries': ['bar', 'foo_sub'],
             }]
         )
 

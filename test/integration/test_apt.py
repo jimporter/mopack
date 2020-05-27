@@ -14,6 +14,8 @@ class TestApt(IntegrationTest):
     def _usage(self, name, headers=[], libraries=[]):
         return {
             'type': 'system',
+            'include_path': [],
+            'library_path': [],
             'headers': headers,
             'libraries': libraries,
         }
@@ -27,14 +29,18 @@ class TestApt(IntegrationTest):
         output = json.loads(self.assertPopen([
             'mopack', 'usage', 'ogg', '--json'
         ]))
-        self.assertEqual(output, {'name': 'ogg', 'type': 'system',
-                                  'headers': [], 'libraries': ['ogg']})
+        self.assertEqual(output, {
+            'name': 'ogg', 'type': 'system', 'include_path': [],
+            'library_path': [], 'headers': [], 'libraries': ['ogg'],
+        })
 
         output = json.loads(self.assertPopen([
             'mopack', 'usage', 'zlib', '--json'
         ]))
-        self.assertEqual(output, {'name': 'zlib', 'type': 'system',
-                                  'headers': [], 'libraries': ['z']})
+        self.assertEqual(output, {
+            'name': 'zlib', 'type': 'system', 'include_path': [],
+            'library_path': [], 'headers': [], 'libraries': ['z'],
+        })
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
