@@ -1,11 +1,23 @@
 import ntpath
 import posixpath
+from contextlib import contextmanager
 from unittest import mock, TestCase
 
 from mopack.types import *
+from mopack.yaml_tools import load_file, SafeLineLoader
 
 
-class TestMaybe(TestCase):
+class TypeTestCase(TestCase):
+    @contextmanager
+    def assertFieldError(self, field, regex=None):
+        ctx = (self.assertRaises(FieldError) if regex is None else
+               self.assertRaisesRegex(FieldError, regex))
+        with ctx as raised:
+            yield raised
+        self.assertEqual(raised.exception.field, field)
+
+
+class TestMaybe(TypeTestCase):
     def test_basic(self):
         self.assertEqual(maybe(string)('field', None), None)
         self.assertEqual(maybe(string)('field', 'foo'), 'foo')
@@ -15,10 +27,11 @@ class TestMaybe(TestCase):
         self.assertEqual(maybe(string, 'default')('field', 'foo'), 'foo')
 
     def test_invalid(self):
-        self.assertRaises(FieldError, maybe(string), 'field', 1)
+        with self.assertFieldError(('field',)):
+            maybe(string)('field', 1)
 
 
-class TestDefault(TestCase):
+class TestDefault(TypeTestCase):
     def test_basic(self):
         self.assertEqual(default(string)('field', Unset), None)
         self.assertEqual(default(string)('field', 'foo'), 'foo')
@@ -28,10 +41,11 @@ class TestDefault(TestCase):
         self.assertEqual(default(string, 'default')('field', 'foo'), 'foo')
 
     def test_invalid(self):
-        self.assertRaises(FieldError, default(string), 'field', 1)
+        with self.assertFieldError(('field',)):
+            default(string)('field', 1)
 
 
-class TestOneOf(TestCase):
+class TestOneOf(TypeTestCase):
     def setUp(self):
         self.one_of = one_of(string, boolean, desc='str or bool')
 
@@ -40,10 +54,11 @@ class TestOneOf(TestCase):
         self.assertEqual(self.one_of('field', True), True)
 
     def test_invalid(self):
-        self.assertRaises(FieldError, self.one_of, 'field', 1)
+        with self.assertFieldError(('field',)):
+            self.one_of('field', 1)
 
 
-class TestConstant(TestCase):
+class TestConstant(TypeTestCase):
     def setUp(self):
         self.constant = constant('foo', 'bar')
 
@@ -52,11 +67,13 @@ class TestConstant(TestCase):
         self.assertEqual(self.constant('field', 'bar'), 'bar')
 
     def test_invalid(self):
-        self.assertRaises(FieldError, self.constant, 'field', 'baz')
-        self.assertRaises(FieldError, self.constant, 'field', None)
+        with self.assertFieldError(('field',)):
+            self.constant('field', 'baz')
+        with self.assertFieldError(('field',)):
+            self.constant('field', None)
 
 
-class TestListOf(TestCase):
+class TestListOf(TypeTestCase):
     def test_list(self):
         checker = list_of(string)
         self.assertEqual(checker('field', []), [])
@@ -72,80 +89,109 @@ class TestListOf(TestCase):
         self.assertEqual(checker('field', 'foo'), ['foo'])
 
     def test_invalid(self):
-        self.assertRaises(FieldError, list_of(string), 'field', None)
-        self.assertRaises(FieldError, list_of(string), 'field', 'foo')
-        self.assertRaises(FieldError, list_of(string), 'field', {})
+        with self.assertFieldError(('field',), 'expected a list'):
+            list_of(string)('field', None)
+        with self.assertFieldError(('field',), 'expected a list'):
+            list_of(string)('field', 'foo')
+        with self.assertFieldError(('field',), 'expected a list'):
+            list_of(string)('field', {})
+        with self.assertFieldError(('field', 0), 'expected a string'):
+            list_of(string)('field', [1])
 
 
-class TestDictShape(TestCase):
+class TestDictShape(TypeTestCase):
     def setUp(self):
-        self.dict_shape = dict_shape({'foo': string}, 'foo dict')
+        self.dict_shape = dict_shape({'foo': string}, 'a foo dict')
 
     def test_valid(self):
         self.assertEqual(self.dict_shape('field', {'foo': 'bar'}),
                          {'foo': 'bar'})
 
+    def test_invalid_type(self):
+        with self.assertFieldError(('field',), 'expected a foo dict'):
+            self.dict_shape('field', None)
+        with self.assertFieldError(('field',), 'expected a foo dict'):
+            self.dict_shape('field', 'foo')
+        with self.assertFieldError(('field',), 'expected a foo dict'):
+            self.dict_shape('field', [])
+
     def test_invalid_keys(self):
-        self.assertRaises(FieldError, self.dict_shape, 'field', {})
-        self.assertRaises(FieldError, self.dict_shape, 'field', {'bar': 'b'})
-        self.assertRaises(FieldError, self.dict_shape, 'field',
-                          {'foo': 'f', 'bar': 'b'})
+        with self.assertFieldError(('field',), 'expected a foo dict'):
+            self.dict_shape('field', {})
+        with self.assertFieldError(('field',), 'expected a foo dict'):
+            self.dict_shape('field', {'bar': 'b'})
+        with self.assertFieldError(('field',), 'expected a foo dict'):
+            self.dict_shape('field', {'foo': 'f', 'bar': 'b'})
 
     def test_invalid_values(self):
-        self.assertRaises(FieldError, self.dict_shape, 'field', {'foo': 1})
+        with self.assertFieldError(('field', 'foo'), 'expected a string'):
+            self.dict_shape('field', {'foo': 1})
 
 
-class TestString(TestCase):
+class TestString(TypeTestCase):
     def test_valid(self):
         self.assertEqual(string('field', 'foo'), 'foo')
         self.assertEqual(string('field', 'bar'), 'bar')
 
     def test_invalid(self):
-        self.assertRaises(FieldError, string, 'field', 1)
-        self.assertRaises(FieldError, string, 'field', None)
+        with self.assertFieldError(('field',)):
+            string('field', 1)
+        with self.assertFieldError(('field',)):
+            string('field', None)
 
 
-class TestBoolean(TestCase):
+class TestBoolean(TypeTestCase):
     def test_valid(self):
         self.assertEqual(boolean('field', True), True)
         self.assertEqual(boolean('field', False), False)
 
     def test_invalid(self):
-        self.assertRaises(FieldError, boolean, 'field', 1)
-        self.assertRaises(FieldError, boolean, 'field', None)
+        with self.assertFieldError(('field',)):
+            boolean('field', 1)
+        with self.assertFieldError(('field',)):
+            boolean('field', None)
 
 
-class TestInnerPath(TestCase):
+class TestInnerPath(TypeTestCase):
     def test_valid(self):
         self.assertEqual(inner_path('field', 'path'), 'path')
         self.assertEqual(inner_path('field', 'path/..'), '.')
         self.assertEqual(inner_path('field', 'foo/../bar'), 'bar')
 
     def test_outer(self):
-        self.assertRaises(FieldError, inner_path, 'field', '../path')
-        self.assertRaises(FieldError, inner_path, 'field', 'path/../..')
+        with self.assertFieldError(('field',)):
+            inner_path('field', '../path')
+        with self.assertFieldError(('field',)):
+            inner_path('field', 'path/../..')
 
     def test_absolute_posix(self):
         with mock.patch('os.path', posixpath):
-            self.assertRaises(FieldError, inner_path, 'field', '/path')
+            with self.assertFieldError(('field',)):
+                inner_path('field', '/path')
 
     def test_absolute_nt(self):
         with mock.patch('os.path', ntpath):
-            self.assertRaises(FieldError, inner_path, 'field', '/path')
-            self.assertRaises(FieldError, inner_path, 'field', 'C:path')
-            self.assertRaises(FieldError, inner_path, 'field', 'C:\\path')
-            self.assertRaises(FieldError, inner_path, 'field', 'C:')
+            with self.assertFieldError(('field',)):
+                inner_path('field', '/path')
+            with self.assertFieldError(('field',)):
+                inner_path('field', 'C:path')
+            with self.assertFieldError(('field',)):
+                inner_path('field', 'C:\\path')
+            with self.assertFieldError(('field',)):
+                inner_path('field', 'C:')
 
 
-class TestAbsOrInnerPath(TestCase):
+class TestAbsOrInnerPath(TypeTestCase):
     def test_inner(self):
         self.assertEqual(abs_or_inner_path('field', 'path'), 'path')
         self.assertEqual(abs_or_inner_path('field', 'path/..'), '.')
         self.assertEqual(abs_or_inner_path('field', 'foo/../bar'), 'bar')
 
     def test_outer(self):
-        self.assertRaises(FieldError, abs_or_inner_path, 'field', '../path')
-        self.assertRaises(FieldError, abs_or_inner_path, 'field', 'path/../..')
+        with self.assertFieldError(('field',)):
+            abs_or_inner_path('field', '../path')
+        with self.assertFieldError(('field',)):
+            abs_or_inner_path('field', 'path/../..')
 
     def test_absolute_posix(self):
         with mock.patch('os.path', posixpath):
@@ -157,10 +203,10 @@ class TestAbsOrInnerPath(TestCase):
             self.assertEqual(abs_or_inner_path('field', 'C:\\path'),
                              'C:\\path')
             self.assertEqual(abs_or_inner_path('field', 'C:'), 'C:')
-            self.assertRaises(FieldError, inner_path, 'field', 'C:path')
+            self.assertEqual(abs_or_inner_path('field', 'C:path'), 'C:path')
 
 
-class TestAnyPath(TestCase):
+class TestAnyPath(TypeTestCase):
     def test_relative(self):
         self.assertEqual(any_path()('field', 'path'), 'path')
         self.assertEqual(any_path()('field', '../path'), '../path')
@@ -172,7 +218,7 @@ class TestAnyPath(TestCase):
         self.assertEqual(any_path('/base')('field', '/path'), '/path')
 
 
-class TestShellArgs(TestCase):
+class TestShellArgs(TypeTestCase):
     def test_single(self):
         self.assertEqual(shell_args()('field', 'foo'), ['foo'])
 
@@ -195,4 +241,31 @@ class TestShellArgs(TestCase):
                          ['foo bar'])
 
     def test_invalid(self):
-        self.assertRaises(FieldError, shell_args(), 'field', 1)
+        with self.assertFieldError(('field',)):
+            shell_args()('field', 1)
+
+
+class TestTryLoadConfig(TestCase):
+    def load_data(self, data, Loader=SafeLineLoader):
+        with mock.patch('builtins.open', mock.mock_open(read_data=data)):
+            with load_file('file.yml', Loader=Loader) as f:
+                return f
+
+    def test_single_field(self):
+        cfg = self.load_data('foo: Foo\nbar: Bar\n')
+        with self.assertRaisesRegex(MarkedYAMLError,
+                                    '^context\n' +
+                                    'expected a boolean\n' +
+                                    '  in ".*", line 1, column 1$'):
+            with try_load_config(cfg, 'context'):
+                boolean('foo', cfg['foo'])
+
+    def test_multiple_fields(self):
+        cfg = self.load_data('foo:\n  bar: Bar\n')
+        with self.assertRaisesRegex(MarkedYAMLError,
+                                    '^context\n' +
+                                    '  in ".*", line 1, column 1\n' +
+                                    'expected a boolean\n' +
+                                    '  in ".*", line 2, column 3$'):
+            with try_load_config(cfg, 'context'):
+                dict_shape({'bar': boolean}, 'a bar dict')('foo', cfg['foo'])

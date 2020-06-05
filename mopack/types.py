@@ -13,6 +13,14 @@ class FieldError(TypeError):
         self.field = field
 
 
+@contextmanager
+def wrap_field_error(field):
+    try:
+        yield
+    except FieldError as e:
+        raise FieldError(str(e), (field,) + e.field)
+
+
 class _UnsetType:
     def __bool__(self):
         return False
@@ -44,8 +52,13 @@ def try_load_config(config, context):
         if not isinstance(config, MarkedDict):
             raise
 
-        mark = (config.marks[e.field] if isinstance(e, FieldError)
-                else config.mark)
+        if isinstance(e, FieldError):
+            x = config
+            for f in e.field[:-1]:
+                x = x[f]
+            mark = x.marks[e.field[-1]]
+        else:
+            mark = config.mark
         raise MarkedYAMLError(context, config.mark, str(e), mark)
 
 
@@ -75,7 +88,7 @@ def one_of(*args, desc):
             except FieldError:
                 pass
         else:
-            raise FieldError('expected {}'.format(desc), field)
+            raise FieldError('expected {}'.format(desc), (field,))
 
     return check
 
@@ -86,7 +99,7 @@ def constant(*args):
             return value
         raise FieldError('expected one of {}'.format(
             ', '.join(repr(i) for i in args)
-        ), field)
+        ), (field,))
 
     return check
 
@@ -96,8 +109,9 @@ def list_of(other, listify=False):
         if listify:
             value = iterutils.listify(value)
         elif not iterutils.isiterable(value):
-            raise FieldError('expected list', field)
-        return [other(field, i) for i in value]
+            raise FieldError('expected a list', (field,))
+        with wrap_field_error(field):
+            return [other(i, v) for i, v in enumerate(value)]
 
     return check
 
@@ -106,32 +120,33 @@ def dict_shape(shape, desc):
     def check(field, value):
         if ( not isinstance(value, dict) or
              set(value.keys()) != set(shape.keys()) ):
-            raise FieldError('expected {}'.format(desc), field)
-        return {k: shape[k](field, v) for k, v in value.items()}
+            raise FieldError('expected {}'.format(desc), (field,))
+        with wrap_field_error(field):
+            return {k: shape[k](k, v) for k, v in value.items()}
 
     return check
 
 
 def string(field, value):
     if not isinstance(value, str):
-        raise FieldError('expected a string', field)
+        raise FieldError('expected a string', (field,))
     return value
 
 
 def boolean(field, value):
     if not isinstance(value, bool):
-        raise FieldError('expected a boolean', field)
+        raise FieldError('expected a boolean', (field,))
     return value
 
 
 def inner_path(field, value):
     value = string(field, value)
     if os.path.isabs(value) or os.path.splitdrive(value)[0]:
-        raise FieldError('expected a relative path', field)
+        raise FieldError('expected a relative path', (field,))
 
     value = os.path.normpath(value)
     if value.split(os.path.sep)[0] == os.path.pardir:
-        raise FieldError('expected an inner path', field)
+        raise FieldError('expected an inner path', (field,))
     return value
 
 
@@ -141,7 +156,7 @@ def abs_or_inner_path(field, value):
         return value
 
     if value.split(os.path.sep)[0] == os.path.pardir:
-        raise FieldError('expected an absolute or inner path', field)
+        raise FieldError('expected an absolute or inner path', (field,))
     return value
 
 
