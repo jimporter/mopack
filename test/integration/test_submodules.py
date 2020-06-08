@@ -1,6 +1,8 @@
 import json
 import os
 
+from mopack.platforms import platform_name
+
 from . import *
 
 
@@ -40,7 +42,7 @@ class TestSubmodules(IntegrationTest):
         self.assertEqual(output['metadata'], {
             'deploy_paths': {},
             'options': {
-                'general': {'target_platform': None},
+                'common': {'target_platform': platform_name()},
                 'builders': [{
                     'type': 'bfg9000',
                     'toolchain': None,

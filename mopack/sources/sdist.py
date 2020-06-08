@@ -39,8 +39,8 @@ class SDistPackage(Package):
         return [self.builder.type]
 
     def set_options(self, options):
-        super().set_options(options)
         self.builder.set_options(options)
+        super().set_options(options)
 
     def dehydrate(self):
         if hasattr(self, 'pending_usage'):  # pragma: no cover
@@ -129,7 +129,7 @@ class TarballPackage(SDistPackage):
             return BytesIO(f.read())
 
     def clean_pre(self, pkgdir, new_package):
-        if self.equal(new_package, skip_fields=('builder', 'global_options')):
+        if self.equal(new_package, skip_fields=('builder',)):
             return False
 
         log.info('cleaning {!r} sources'.format(self.name))

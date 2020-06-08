@@ -1,4 +1,8 @@
+from collections import namedtuple
+
 from .types import try_load_config
+
+OptionsSet = namedtuple('OptionsSet', ['common', 'this'])
 
 
 class BaseOptions:

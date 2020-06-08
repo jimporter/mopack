@@ -4,6 +4,7 @@ from itertools import chain
 from .builders import make_builder_options
 from .freezedried import FreezeDried
 from .options import BaseOptions
+from .platforms import platform_name
 from .sources import make_package, make_package_options
 from .types import Unset
 from .yaml_tools import load_file, MarkedDict, SafeLineLoader
@@ -17,29 +18,38 @@ class _PlaceholderPackage:
 PlaceholderPackage = _PlaceholderPackage()
 
 
-class GeneralOptions(FreezeDried, BaseOptions):
-    _context = 'while adding general options'
+class CommonOptions(FreezeDried, BaseOptions):
+    _context = 'while adding common options'
+    _skip_fields = ('env',)
 
     def __init__(self):
         self.target_platform = Unset
+        self.env = {}
 
-    def __call__(self, *, target_platform=Unset, **kwargs):
+    def __call__(self, *, target_platform=Unset, env=None, **kwargs):
         if self.target_platform is Unset:
             self.target_platform = target_platform
+        if env:
+            for k, v in env.items():
+                if k not in self.env:
+                    self.env[k] = v
+
+    def finalize(self):
+        self(target_platform=platform_name(), env=os.environ)
 
 
 class BaseConfig:
     _option_kinds = ('builders', 'sources')
 
     @classmethod
-    def default_options(cls):
-        # This function just happens to work for both "pending" options as we
+    def default_options(cls, pending=False):
+        # This function returns the same data for both "pending" options as we
         # parse each config file, as well as being the default state for
         # finalized options.
         return {i: {} for i in cls._option_kinds}
 
     def __init__(self):
-        self._options = self.default_options()
+        self._options = self.default_options(pending=True)
         self.packages = {}
 
     def _accumulate_config(self, filename):
@@ -121,11 +131,11 @@ class Config(BaseConfig):
     child = False
 
     @classmethod
-    def default_options(cls):
-        # As above, this function works for both "pending" options and
-        # finalized options.
-        result = super().default_options()
-        result['general'] = GeneralOptions()
+    def default_options(cls, pending=False):
+        result = super().default_options(pending)
+        result['common'] = CommonOptions()
+        if not pending:
+            result['common'].finalize()
         return result
 
     def __init__(self, filenames, options=None):
@@ -138,11 +148,11 @@ class Config(BaseConfig):
         super()._process_options(filename, data)
 
         if data:
-            general = data.copy()
+            common = data.copy()
             for i in self._option_kinds:
-                general.pop(i, None)
-            if general:
-                self._options['general'].accumulate(general)
+                common.pop(i, None)
+            if common:
+                self._options['common'].accumulate(common)
 
     def finalize(self):
         def make_options(kinds, make):
@@ -157,10 +167,11 @@ class Config(BaseConfig):
         )}
 
         self.options = {
-            'general': self._options['general'],
+            'common': self._options['common'],
             'sources': dict(make_options(sources, make_package_options)),
             'builders': dict(make_options(builders, make_builder_options)),
         }
+        self.options['common'].finalize()
 
         for kind in self._option_kinds:
             for name, cfgs in self._options[kind].items():

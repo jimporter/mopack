@@ -26,7 +26,6 @@ _list_of_libraries = types.list_of(types.one_of(
 
 class PathUsage(Usage):
     type = 'path'
-    _skip_fields = Usage._skip_fields + ('general_options',)
 
     def __init__(self, name, *, include_path=types.Unset,
                  library_path=types.Unset, headers=types.Unset,
@@ -62,7 +61,7 @@ class PathUsage(Usage):
         def make_library(lib):
             if isinstance(lib, dict) and lib.get('type') == 'guess':
                 return package_library_name(
-                    self.general_options.target_platform or None, lib['name']
+                    self._options.common.target_platform, lib['name']
                 )
             return lib
 
@@ -73,9 +72,6 @@ class PathUsage(Usage):
         else:
             libraries = self.libraries
         return [make_library(i) for i in libraries]
-
-    def set_options(self, options):
-        self.general_options = options['general']
 
     def get_usage(self, submodules, srcdir, builddir):
         try:

@@ -223,7 +223,7 @@ class TestPath(UsageTest):
         })
 
     def test_target_platform(self):
-        usage = self.make_usage('gl', general_options={
+        usage = self.make_usage('gl', common_options={
             'target_platform': 'linux',
         })
         self.check_usage(usage, libraries=[{'type': 'guess', 'name': 'gl'}])
@@ -232,7 +232,7 @@ class TestPath(UsageTest):
             'headers': [], 'libraries': ['GL'],
         })
 
-        usage = self.make_usage('gl', general_options={
+        usage = self.make_usage('gl', common_options={
             'target_platform': 'darwin',
         })
         self.check_usage(usage, libraries=[{'type': 'guess', 'name': 'gl'}])
@@ -242,7 +242,7 @@ class TestPath(UsageTest):
             'libraries': [{'type': 'framework', 'name': 'OpenGL'}],
         })
 
-        usage = self.make_usage('gl', libraries=['gl'], general_options={
+        usage = self.make_usage('gl', libraries=['gl'], common_options={
             'target_platform': 'linux',
         })
         self.check_usage(usage, libraries=['gl'])
@@ -253,7 +253,7 @@ class TestPath(UsageTest):
 
         usage = self.make_usage(
             'foo', libraries=[{'type': 'guess', 'name': 'gl'}],
-            general_options={'target_platform': 'linux'}
+            common_options={'target_platform': 'linux'}
         )
         self.check_usage(usage, libraries=[{'type': 'guess', 'name': 'gl'}])
         self.assertEqual(usage.get_usage(None, None, None), {

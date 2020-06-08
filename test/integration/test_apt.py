@@ -2,6 +2,8 @@ import json
 import os
 from unittest import skipIf
 
+from mopack.platforms import platform_name
+
 from . import *
 
 
@@ -46,7 +48,7 @@ class TestApt(IntegrationTest):
         self.assertEqual(output['metadata'], {
             'deploy_paths': {},
             'options': {
-                'general': {'target_platform': None},
+                'common': {'target_platform': platform_name()},
                 'builders': [],
                 'sources': [],
             },

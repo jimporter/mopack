@@ -3,7 +3,7 @@ import os
 import shutil
 
 from .builders import BuilderOptions
-from .config import Config, GeneralOptions, PlaceholderPackage
+from .config import CommonOptions, Config, PlaceholderPackage
 from .freezedried import DictKeysFreezeDryer, DictToListFreezeDryer
 from .sources import Package, PackageOptions
 from .sources.system import fallback_system_package
@@ -17,7 +17,7 @@ def get_package_dir(builddir):
 
 BuilderOptsFD = DictToListFreezeDryer(BuilderOptions, lambda x: x.type)
 PackageOptsFD = DictToListFreezeDryer(PackageOptions, lambda x: x.source)
-OptionsFD = DictKeysFreezeDryer(general=GeneralOptions, builders=BuilderOptsFD,
+OptionsFD = DictKeysFreezeDryer(common=CommonOptions, builders=BuilderOptsFD,
                                 sources=PackageOptsFD)
 
 PackagesFD = DictToListFreezeDryer(Package, lambda x: x.name)

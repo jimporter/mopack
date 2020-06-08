@@ -119,7 +119,7 @@ class TestBfg9000Builder(BuilderTest):
         })
 
     def test_toolchain(self):
-        builder = self.make_builder('foo', global_options={
+        builder = self.make_builder('foo', this_options={
             'toolchain': 'toolchain.bfg'
         })
         self.assertEqual(builder.name, 'foo')

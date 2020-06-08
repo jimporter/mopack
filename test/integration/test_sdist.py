@@ -2,6 +2,7 @@ import json
 import os
 
 from mopack.path import pushd
+from mopack.platforms import platform_name
 
 from . import *
 
@@ -49,7 +50,7 @@ class TestTarball(SDistTest):
         self.assertEqual(output['metadata'], {
             'deploy_paths': {'prefix': self.prefix},
             'options': {
-                'general': {'target_platform': None},
+                'common': {'target_platform': platform_name()},
                 'builders': [{
                     'type': 'bfg9000',
                     'toolchain': None,
@@ -103,7 +104,7 @@ class TestDirectory(SDistTest):
         self.assertEqual(output['metadata'], {
             'deploy_paths': {},
             'options': {
-                'general': {'target_platform': None},
+                'common': {'target_platform': platform_name()},
                 'builders': [{
                     'type': 'bfg9000',
                     'toolchain': None,

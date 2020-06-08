@@ -1,17 +1,19 @@
 import os
+from types import FunctionType
 
 from . import types
-from .iterutils import listify
 
 
-def _boost_getdir(name, root, default):
-    p = os.getenv(name, os.path.join(root, default) if root else None)
-    return os.path.abspath(p) if p is not None else p
+def _boost_getdir(name, default):
+    def wrapper(options):
+        root = options.common.env.get('BOOST_ROOT')
+        p = options.common.env.get(
+            name, os.path.join(root, default) if root else None
+        )
+        return [os.path.abspath(p)] if p is not None else []
 
+    return wrapper
 
-_boost_root = os.getenv('BOOST_ROOT')
-_boost_incdir = _boost_getdir('BOOST_INCLUDEDIR', _boost_root, 'include')
-_boost_libdir = _boost_getdir('BOOST_LIBRARYDIR', _boost_root, 'lib')
 
 _defaults = {
     'boost': {
@@ -19,8 +21,8 @@ _defaults = {
             'names': '*',
             'required': False,
         },
-        'include_path': listify(_boost_incdir),
-        'library_path': listify(_boost_libdir),
+        'include_path': _boost_getdir('BOOST_INCLUDEDIR', 'include'),
+        'library_path': _boost_getdir('BOOST_LIBRARYDIR', 'lib'),
         'headers': ['boost/version.hpp'],
         'libraries': None,
         'pkg_config_submodule_map': None,
@@ -38,6 +40,16 @@ def package_default(other, package_name, field=None, default=None):
     def check(field, value):
         if value is types.Unset:
             value = get_default(package_name, forced_field or field, default)
+            if isinstance(value, FunctionType):
+                return value
         return other(field, value)
 
     return check
+
+
+def finalize_defaults(options, obj, attrs=None):
+    if attrs is None:
+        attrs = obj.__dict__
+    for k, v in attrs.items():
+        if isinstance(v, FunctionType):
+            setattr(obj, k, v(options))

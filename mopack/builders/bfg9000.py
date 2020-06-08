@@ -49,7 +49,7 @@ class Bfg9000Builder(Builder):
             with pushd(srcdir):
                 logfile.check_call(
                     ['9k', builddir] +
-                    self._toolchain_args(self.global_options.toolchain) +
+                    self._toolchain_args(self._options.this.toolchain) +
                     self._install_args(deploy_paths) +
                     self.extra_args
                 )

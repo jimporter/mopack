@@ -97,9 +97,9 @@ class TestConan(SourceTest):
 
         self.check_usage(pkg)
 
-    def test_global_options(self):
+    def test_this_options(self):
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
-                                global_options={'generator': 'cmake'})
+                                this_options={'generator': 'cmake'})
         self.assertEqual(pkg.remote, 'foo/1.2.3@conan/stable')
         self.assertEqual(pkg.options, {})
 

@@ -43,9 +43,6 @@ def platform_name():
 
 
 def package_library_name(platform, package):
-    if platform is None:
-        platform = platform_name()
-
     try:
         mapping = _package_library_names[platform]
     except KeyError:

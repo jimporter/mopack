@@ -37,12 +37,12 @@ class ConanPackage(BinaryPackage):
 
     def clean_post(self, pkgdir, new_package):
         if ( new_package and self.source == new_package.source and
-             self.global_options.generator ==
-             new_package.global_options.generator ):
+             self._options.this.generator ==
+             new_package._options.this.generator ):
             return False
 
         log.info('cleaning {!r}'.format(self.name))
-        if 'pkg_config' in self.global_options.generator:
+        if 'pkg_config' in self._options.this.generator:
             try:
                 os.remove(os.path.join(pkgdir, 'conan', self.name + '.pc'))
             except FileNotFoundError:
@@ -55,7 +55,7 @@ class ConanPackage(BinaryPackage):
             ', '.join(repr(i.name) for i in packages), cls.source
         ))
 
-        global_options = packages[0].global_options
+        options = packages[0]._options.this
         with open(os.path.join(pkgdir, 'conanfile.txt'), 'w') as conan:
             print('[requires]', file=conan)
             for i in packages:
@@ -69,7 +69,7 @@ class ConanPackage(BinaryPackage):
             print('', file=conan)
 
             print('[generators]', file=conan)
-            for i in global_options.generator:
+            for i in options.generator:
                 print(i, file=conan)
 
         with log.LogFile.open(pkgdir, 'conan') as logfile:

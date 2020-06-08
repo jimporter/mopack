@@ -4,8 +4,8 @@ from pkg_resources import load_entry_point
 from .. import types
 from ..freezedried import FreezeDried
 from ..iterutils import listify
-from ..options import BaseOptions
-from ..package_defaults import package_default
+from ..options import BaseOptions, OptionsSet
+from ..package_defaults import package_default, finalize_defaults
 from ..types import try_load_config
 from ..usage import Usage, make_usage
 
@@ -38,8 +38,8 @@ def submodules_type(field, value):
 class Package(FreezeDried):
     _type_field = 'source'
     _get_type = _get_source_type
-    _skip_fields = ('global_options',)
-    _skip_compare_fields = ('config_file',)
+    _skip_fields = ('_options',)
+    _skip_compare_fields = ('config_file', '_options')
 
     Options = None
 
@@ -76,7 +76,9 @@ class Package(FreezeDried):
         return []
 
     def set_options(self, options):
-        self.global_options = options['sources'].get(self.source)
+        self._options = OptionsSet(options['common'],
+                                   options['sources'].get(self.source))
+        finalize_defaults(self._options, self)
 
     def clean_pre(self, pkgdir, new_package):
         return False
@@ -109,8 +111,8 @@ class BinaryPackage(Package):
         self.usage = make_usage(name, usage, submodules=self.submodules)
 
     def set_options(self, options):
-        super().set_options(options)
         self.usage.set_options(options)
+        super().set_options(options)
 
     def _get_usage(self, pkgdir, submodules):
         return self.usage.get_usage(submodules, None, None)

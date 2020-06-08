@@ -2,7 +2,8 @@ import os
 from pkg_resources import load_entry_point
 
 from ..freezedried import FreezeDried
-from ..options import BaseOptions
+from ..options import BaseOptions, OptionsSet
+from ..package_defaults import finalize_defaults
 from ..types import try_load_config
 from ..usage import Usage, make_usage
 
@@ -17,7 +18,7 @@ def _get_builder_type(type):
 class Builder(FreezeDried):
     _type_field = 'type'
     _get_type = _get_builder_type
-    _skip_fields = ('global_options',)
+    _skip_fields = _skip_compare_fields = ('_options',)
     _rehydrate_fields = {'usage': Usage}
 
     Options = None
@@ -30,8 +31,10 @@ class Builder(FreezeDried):
         return os.path.abspath(os.path.join(pkgdir, 'build', self.name))
 
     def set_options(self, options):
-        self.global_options = options['builders'].get(self.type)
         self.usage.set_options(options)
+        self._options = OptionsSet(options['common'],
+                                   options['builders'].get(self.type))
+        finalize_defaults(self._options, self)
 
     def get_usage(self, pkgdir, submodules, srcdir):
         return self.usage.get_usage(submodules, srcdir, self._builddir(pkgdir))
