@@ -1,5 +1,6 @@
 from . import UsageTest
 
+from mopack.platforms import platform_name
 from mopack.types import FieldError
 from mopack.usage.path_system import PathUsage, SystemUsage
 
@@ -292,6 +293,7 @@ class TestPath(UsageTest):
         })
 
     def test_boost(self):
+        platform = platform_name()
         submodules = {'names': '*', 'required': False}
 
         usage = self.make_usage('boost', submodules=submodules)
@@ -304,7 +306,8 @@ class TestPath(UsageTest):
         self.assertEqual(usage.get_usage(['thread'], None, None), {
             'type': self.type, 'include_path': [], 'library_path': [],
             'headers': ['boost/version.hpp'], 'libraries': ['boost_thread'],
-            'compile_flags': ['-pthread'], 'link_flags': ['-pthread'],
+            'compile_flags': ['-pthread'],
+            'link_flags': ['-pthread'] if platform == 'linux' else [],
         })
 
         usage = self.make_usage('boost', libraries=['boost'],

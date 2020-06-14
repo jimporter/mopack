@@ -8,7 +8,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
         python-version: [3.7]
       fail-fast: false
 
@@ -24,13 +24,18 @@ jobs:
         repository: jimporter/bfg9000
         ref: mopack
         path: bfg9000
-    - name: Install dependencies
+    - name: Install Python dependencies
+      run: |
+        pip install ./bfg9000
+        pip install codecov '.[test]'
+    - name: Install apt dependencies
+      if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get install ninja-build
-        pushd bfg9000
-        pip install .
-        popd
-        pip install codecov '.[test]'
+    - name: Install  dependencies
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install ninja pkg-config
     - name: Run tests
       run: |
         python setup.py test -q
