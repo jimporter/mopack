@@ -2,8 +2,21 @@ import os
 
 from . import Usage
 from .. import types
-from ..iterutils import iterate, listify
-from ..package_defaults import package_default
+from ..iterutils import listify
+
+
+def _submodule_map(field, value):
+    try:
+        value = {'*': {'pcfile': types.string(field, value)}}
+    except types.FieldError:
+        pass
+
+    return types.dict_of(
+        types.string,
+        types.dict_shape({
+            'pcfile': types.string,
+        }, 'a submodule map')
+    )(field, value)
 
 
 class PkgConfigUsage(Usage):
@@ -24,15 +37,19 @@ class PkgConfigUsage(Usage):
         )
 
         if submodules:
-            self.submodule_map = package_default(
-                types.maybe(types.string), name,
-                field='pkg_config_submodule_map',
-                default='{package}_{submodule}'
+            self.submodule_map = self._package_default(
+                types.maybe(_submodule_map), name,
+                default=name + '_{submodule}'
             )('submodule_map', submodule_map)
-            if self.submodule_map is not None:
-                self.submodule_map = self.submodule_map.format(
-                    package=name, submodule='{submodule}'
-                )
+
+    def _get_submodule_mapping(self, submodule):
+        if self.submodule_map is None:
+            return {}
+        try:
+            return self.submodule_map[submodule]
+        except KeyError:
+            return {k: v.format(submodule=submodule)
+                    for k, v in self.submodule_map['*'].items()}
 
     def get_usage(self, submodules, srcdir, builddir):
         if builddir is None:
@@ -43,7 +60,9 @@ class PkgConfigUsage(Usage):
         path = os.path.abspath(os.path.join(builddir, self.path))
 
         pcfiles = listify(self.pcfile)
-        if submodules and self.submodule_map:
-            pcfiles.extend(self.submodule_map.format(submodule=i)
-                           for i in iterate(submodules))
+        for i in submodules or []:
+            f = self._get_submodule_mapping(i).get('pcfile')
+            if f:
+                pcfiles.append(f)
+
         return self._usage(path=path, pcfiles=pcfiles)

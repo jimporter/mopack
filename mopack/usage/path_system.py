@@ -2,9 +2,10 @@ from itertools import chain
 
 from . import Usage
 from .. import path, types
-from ..iterutils import iterate
+from ..iterutils import merge_dicts
 from ..package_defaults import package_default
 from ..platforms import package_library_name
+from ..types import Unset
 
 
 def _library(field, value):
@@ -24,16 +25,36 @@ _list_of_libraries = types.list_of(types.one_of(
 ), listify=True)
 
 
+def _submodule_map(field, value):
+    try:
+        value = {'*': {'libraries': types.string(field, value)}}
+    except types.FieldError:
+        pass
+
+    return types.dict_of(
+        types.string,
+        types.dict_shape({
+            'include_path': _list_of_paths,
+            'library_path': _list_of_paths,
+            'headers': _list_of_headers,
+            'libraries': _list_of_libraries,
+            'compile_flags': types.shell_args(),
+            'link_flags': types.shell_args(),
+        }, 'a submodule map')
+    )(field, value)
+
+
 class PathUsage(Usage):
     type = 'path'
 
-    def __init__(self, name, *, include_path=types.Unset,
-                 library_path=types.Unset, headers=types.Unset,
-                 libraries=types.Unset, submodule_map=types.Unset, submodules):
-        defaulted_paths = package_default(_list_of_paths, name)
+    def __init__(self, name, *, include_path=Unset, library_path=Unset,
+                 headers=Unset, libraries=Unset, compile_flags=Unset,
+                 link_flags=Unset, submodule_map=Unset, submodules):
+        defaulted_paths = self._package_default(_list_of_paths, name)
         self.include_path = defaulted_paths('include_path', include_path)
         self.library_path = defaulted_paths('library_path', library_path)
-        self.headers = package_default(_list_of_headers, name)(
+
+        self.headers = self._package_default(_list_of_headers, name)(
             'headers', headers
         )
 
@@ -43,21 +64,36 @@ class PathUsage(Usage):
             # always needs linking to.
             libs_checker = types.default(_list_of_libraries, [])
         else:
-            libs_checker = package_default(_list_of_libraries, name, default={
-                'type': 'guess', 'name': name
-            })
+            libs_checker = self._package_default(
+                _list_of_libraries, name,
+                default={'type': 'guess', 'name': name}
+            )
         self.libraries = libs_checker('libraries', libraries)
 
-        if submodules:
-            self.submodule_map = types.default(
-                types.maybe(types.string), '{package}_{submodule}'
-            )('submodule_map', submodule_map)
-            if self.submodule_map is not None:
-                self.submodule_map = self.submodule_map.format(
-                    package=name, submodule='{submodule}'
-                )
+        defaulted_flags = types.default(types.shell_args(), [])
+        self.compile_flags = defaulted_flags('compile_flags', compile_flags)
+        self.link_flags = defaulted_flags('link_flags', link_flags)
 
-    def _get_libraries(self, submodules):
+        if submodules:
+            self.submodule_map = self._package_default(
+                types.maybe(_submodule_map), name,
+                default=name + '_{submodule}'
+            )('submodule_map', submodule_map)
+
+    def _package_default(self, other, name, field=None, default=None):
+        return package_default(other, name, 'usage', 'path/system', field,
+                               default)
+
+    def _get_submodule_mapping(self, submodule):
+        if self.submodule_map is None:
+            return {}
+        try:
+            return self.submodule_map[submodule]
+        except KeyError:
+            return {k: [i.format(submodule=submodule) for i in v]
+                    for k, v in self.submodule_map['*'].items()}
+
+    def _get_libraries(self, libraries):
         def make_library(lib):
             if isinstance(lib, dict) and lib.get('type') == 'guess':
                 return package_library_name(
@@ -65,26 +101,28 @@ class PathUsage(Usage):
                 )
             return lib
 
-        if submodules and self.submodule_map:
-            libraries = chain( self.libraries,
-                               (self.submodule_map.format(submodule=i)
-                                for i in iterate(submodules)) )
-        else:
-            libraries = self.libraries
         return [make_library(i) for i in libraries]
 
     def get_usage(self, submodules, srcdir, builddir):
+        def chain_mapping(key):
+            return chain(getattr(self, key), mappings.get(key, []))
+
+        mappings = merge_dicts(*(self._get_submodule_mapping(i)
+                                 for i in submodules or []))
+
         try:
             # XXX: Provide a way of specifying what these paths are relative to
             # instead of just assuming that includes are in the srcdir and libs
             # are in the builddir.
             return self._usage(
-                include_path=[path.try_join(srcdir, i)
-                              for i in self.include_path],
-                library_path=[path.try_join(builddir, i)
-                              for i in self.library_path],
-                headers=self.headers,
-                libraries=self._get_libraries(submodules),
+                include_path=[path.try_join(srcdir, i) for i in
+                              chain_mapping('include_path')],
+                library_path=[path.try_join(builddir, i) for i in
+                              chain_mapping('library_path')],
+                headers=list(chain_mapping('headers')),
+                libraries=self._get_libraries(chain_mapping('libraries')),
+                compile_flags=list(chain_mapping('compile_flags')),
+                link_flags=list(chain_mapping('link_flags')),
             )
         except TypeError:
             raise ValueError('unable to use `path` usage with this package ' +

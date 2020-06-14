@@ -47,6 +47,10 @@ class Package(FreezeDried):
         self.name = name
         self.config_file = config_file
 
+    def _package_default(self, other, name, field=None, default=None):
+        return package_default(other, name, 'source', self.source, field,
+                               default)
+
     @property
     def config_dir(self):
         return os.path.dirname(self.config_file)
@@ -105,7 +109,7 @@ class BinaryPackage(Package):
 
     def __init__(self, name, *, usage, submodules=types.Unset, **kwargs):
         super().__init__(name, **kwargs)
-        self.submodules = package_default(submodules_type, name)(
+        self.submodules = self._package_default(submodules_type, name)(
             'submodules', submodules
         )
         self.usage = make_usage(name, usage, submodules=self.submodules)

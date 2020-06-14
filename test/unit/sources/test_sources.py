@@ -47,7 +47,8 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         self.assertEqual(pkg.get_usage(self.pkgdir, ['sub']), {
             'type': 'system', 'include_path': [], 'library_path': [],
-            'headers': [], 'libraries': ['foo_sub'],
+            'headers': [], 'libraries': ['foo_sub'], 'compile_flags': [],
+            'link_flags': [],
         })
         with self.assertRaises(ValueError):
             pkg.get_usage(self.pkgdir, None)
@@ -63,7 +64,8 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         self.assertEqual(pkg.get_usage(self.pkgdir, ['sub']), {
             'type': 'system', 'include_path': [], 'library_path': [],
-            'headers': [], 'libraries': ['foo_sub'],
+            'headers': [], 'libraries': ['foo_sub'], 'compile_flags': [],
+            'link_flags': [],
         })
         with self.assertRaises(ValueError):
             pkg.get_usage(self.pkgdir, ['bar'])
@@ -83,10 +85,12 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.get_usage(self.pkgdir, ['sub']), {
             'type': 'system', 'include_path': [], 'library_path': [],
             'headers': [], 'libraries': ['foo', 'foo_sub'],
+            'compile_flags': [], 'link_flags': [],
         })
         self.assertEqual(pkg.get_usage(self.pkgdir, None), {
             'type': 'system', 'include_path': [], 'library_path': [],
-            'headers': [], 'libraries': ['foo'],
+            'headers': [], 'libraries': ['foo'], 'compile_flags': [],
+            'link_flags': [],
         })
         with self.assertRaises(ValueError):
             pkg.get_usage(self.pkgdir, ['bar'])

@@ -105,7 +105,8 @@ class TestDirectory(SDistTestCase):
             ))
         self.check_resolve(pkg, usage={
             'type': 'system', 'include_path': [], 'library_path': [],
-            'headers': [], 'libraries': ['foo']
+            'headers': [], 'libraries': ['foo'], 'compile_flags': [],
+            'link_flags': [],
         })
 
     def test_infer_submodules(self):
@@ -408,7 +409,8 @@ class TestTarball(SDistTestCase):
             ))
         self.check_resolve(pkg, usage={
             'type': 'system', 'include_path': [], 'library_path': [],
-            'headers': [], 'libraries': ['foo'],
+            'headers': [], 'libraries': ['foo'], 'compile_flags': [],
+            'link_flags': [],
         })
 
     def test_usage(self):

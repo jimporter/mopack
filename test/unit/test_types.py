@@ -99,6 +99,33 @@ class TestListOf(TypeTestCase):
             list_of(string)('field', [1])
 
 
+class TestDictOf(TypeTestCase):
+    def test_dict(self):
+        checker = dict_of(string, string)
+        self.assertEqual(checker('field', {}), {})
+        self.assertEqual(checker('field', {'f': 'foo'}), {'f': 'foo'})
+        self.assertEqual(checker('field', {'f': 'foo', 'b': 'bar'}),
+                         {'f': 'foo', 'b': 'bar'})
+
+    def test_invalid_type(self):
+        with self.assertFieldError(('field',), 'expected a dict'):
+            dict_of(string, string)('field', None)
+        with self.assertFieldError(('field',), 'expected a dict'):
+            dict_of(string, string)('field', 'foo')
+        with self.assertFieldError(('field',), 'expected a dict'):
+            dict_of(string, string)('field', [])
+
+    def test_invalid_key(self):
+        with self.assertFieldError(('field', 1), 'expected a string'):
+            dict_of(string, boolean)('field', {1: True})
+        with self.assertFieldError(('field', 1), 'expected a string'):
+            dict_of(string, boolean)('field', {1: 'foo'})
+
+    def test_invalid_value(self):
+        with self.assertFieldError(('field', 'f'), 'expected a boolean'):
+            print(dict_of(string, boolean)('field', {'f': 'foo'}))
+
+
 class TestDictShape(TypeTestCase):
     def setUp(self):
         self.dict_shape = dict_shape({'foo': string}, 'a foo dict')
@@ -118,9 +145,9 @@ class TestDictShape(TypeTestCase):
     def test_invalid_keys(self):
         with self.assertFieldError(('field',), 'expected a foo dict'):
             self.dict_shape('field', {})
-        with self.assertFieldError(('field',), 'expected a foo dict'):
+        with self.assertFieldError(('field', 'bar'), 'unexpected key'):
             self.dict_shape('field', {'bar': 'b'})
-        with self.assertFieldError(('field',), 'expected a foo dict'):
+        with self.assertFieldError(('field', 'bar'), 'unexpected key'):
             self.dict_shape('field', {'foo': 'f', 'bar': 'b'})
 
     def test_invalid_values(self):
@@ -230,6 +257,15 @@ class TestShellArgs(TypeTestCase):
         self.assertEqual(shell_args()('field', 'foo "bar baz"'),
                          ['foo', 'bar baz'])
         self.assertEqual(shell_args()('field', 'foo"bar baz"'), ['foobar baz'])
+
+    def test_list(self):
+        self.assertEqual(shell_args()('field', ['foo', 'bar baz']),
+                         ['foo', 'bar baz'])
+
+    def test_empty(self):
+        self.assertEqual(shell_args()('field', ''), [])
+        self.assertEqual(shell_args()('field', []), [])
+        self.assertEqual(shell_args()('field', None), [])
 
     def test_type(self):
         self.assertEqual(shell_args(type=tuple)('field', 'foo bar baz'),

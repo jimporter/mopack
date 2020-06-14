@@ -65,7 +65,9 @@ class TestSubmodules(IntegrationTest):
                         'type': 'pkg-config',
                         'path': 'pkgconfig',
                         'pcfile': None,
-                        'submodule_map': 'hello_{submodule}',
+                        'submodule_map': {
+                            '*': {'pcfile': 'hello_{submodule}'},
+                        },
                     },
                 },
                 'path': os.path.join(test_data_dir, 'hello-multi-bfg'),

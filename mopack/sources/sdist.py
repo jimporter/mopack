@@ -8,7 +8,6 @@ from . import Package, submodules_type
 from .. import log, types
 from ..builders import Builder, make_builder
 from ..config import ChildConfig
-from ..package_defaults import package_default
 
 
 class SDistPackage(Package):
@@ -25,7 +24,7 @@ class SDistPackage(Package):
             if submodules is not types.Unset:
                 self.submodules = submodules_type('submodules', submodules)
         else:
-            self.submodules = package_default(submodules_type, name)(
+            self.submodules = self._package_default(submodules_type, name)(
                 'submodules', submodules
             )
             self.builder = make_builder(name, build, usage=usage,

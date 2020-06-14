@@ -14,9 +14,7 @@ class CMakeBuilder(Builder):
 
     def __init__(self, name, *, extra_args=None, usage, **kwargs):
         super().__init__(name, usage=usage, **kwargs)
-        self.extra_args = types.maybe(types.shell_args(), [])(
-            'extra_args', extra_args
-        )
+        self.extra_args = types.shell_args()('extra_args', extra_args)
 
     def _install_args(self, deploy_paths):
         args = []

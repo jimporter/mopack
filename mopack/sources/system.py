@@ -1,22 +1,23 @@
 from . import BinaryPackage, Package, submodules_type
-from .. import log, types
-from ..package_defaults import package_default
+from .. import log
+from ..types import Unset
 from ..usage.path_system import SystemUsage
 
 
 class SystemPackage(BinaryPackage):
     source = 'system'
 
-    def __init__(self, name, include_path=types.Unset,
-                 library_path=types.Unset, headers=types.Unset,
-                 libraries=types.Unset, submodules=types.Unset, **kwargs):
+    def __init__(self, name, include_path=Unset, library_path=Unset,
+                 headers=Unset, libraries=Unset, compile_flags=Unset,
+                 link_flags=Unset, submodules=Unset, **kwargs):
         Package.__init__(self, name, **kwargs)
-        self.submodules = package_default(submodules_type, name)(
+        self.submodules = self._package_default(submodules_type, name)(
             'submodules', submodules
         )
         self.usage = SystemUsage(
             name, include_path=include_path, library_path=library_path,
-            headers=headers, libraries=libraries, submodules=self.submodules
+            headers=headers, libraries=libraries, compile_flags=compile_flags,
+            link_flags=link_flags, submodules=self.submodules
         )
 
     def resolve(self, pkgdir, deploy_paths):

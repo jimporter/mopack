@@ -38,6 +38,7 @@ class TestUsage(IntegrationTest):
         self.assertUsageOutput('undef', {
             'name': 'undef', 'type': 'system', 'include_path': [],
             'library_path': [], 'headers': [], 'libraries': ['undef'],
+            'compile_flags': [], 'link_flags': [],
         })
         self.assertUsage('undef', '--strict', returncode=1)
 
@@ -45,5 +46,6 @@ class TestUsage(IntegrationTest):
         self.assertUsageOutput('hello', {
             'name': 'hello', 'type': 'system', 'include_path': [],
             'library_path': [], 'headers': [], 'libraries': ['hello'],
+            'compile_flags': [], 'link_flags': [],
         }, ['--directory=..'])
         self.assertUsage('hello', '--strict', '--directory=..', returncode=1)

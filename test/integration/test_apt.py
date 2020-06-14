@@ -20,6 +20,8 @@ class TestApt(IntegrationTest):
             'library_path': [],
             'headers': headers,
             'libraries': libraries,
+            'compile_flags': [],
+            'link_flags': [],
         }
 
     def test_resolve(self):
@@ -34,6 +36,7 @@ class TestApt(IntegrationTest):
         self.assertEqual(output, {
             'name': 'ogg', 'type': 'system', 'include_path': [],
             'library_path': [], 'headers': [], 'libraries': ['ogg'],
+            'compile_flags': [], 'link_flags': [],
         })
 
         output = json.loads(self.assertPopen([
@@ -42,6 +45,7 @@ class TestApt(IntegrationTest):
         self.assertEqual(output, {
             'name': 'zlib', 'type': 'system', 'include_path': [],
             'library_path': [], 'headers': [], 'libraries': ['z'],
+            'compile_flags': [], 'link_flags': [],
         })
 
         output = json.loads(slurp('mopack/mopack.json'))

@@ -44,6 +44,8 @@ class TestNestedCMake(IntegrationTest):
             'library_path': [os.path.join(self.pkgbuilddir, 'hello')],
             'headers': [],
             'libraries': ['hello'],
+            'compile_flags': [],
+            'link_flags': [],
         })
 
         output = json.loads(slurp('mopack/mopack.json'))
@@ -72,6 +74,8 @@ class TestNestedCMake(IntegrationTest):
                         'library_path': ['.'],
                         'headers': [],
                         'libraries': [{'type': 'guess', 'name': 'hello'}],
+                        'compile_flags': [],
+                        'link_flags': [],
                     },
                 },
                 'path': os.path.join(test_data_dir, 'hello-cmake'),

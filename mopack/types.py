@@ -116,13 +116,40 @@ def list_of(other, listify=False):
     return check
 
 
-def dict_shape(shape, desc):
+def dict_of(key_type, value_type):
+    def check_each(value):
+        # Do this here instead of a dict comprehension so we can guarantee that
+        # `key_type` is called first.
+        for k, v in value.items():
+            yield key_type(k, k), value_type(k, v)
+
     def check(field, value):
-        if ( not isinstance(value, dict) or
-             set(value.keys()) != set(shape.keys()) ):
+        if not isinstance(value, dict):
+            raise FieldError('expected a dict', (field,))
+        with wrap_field_error(field):
+            return {k: v for k, v in check_each(value)}
+
+    return check
+
+
+def dict_shape(shape, desc):
+    def check_item(value, key, check):
+        if key in value:
+            return check(key, value.get(key, None))
+        try:
+            return check(key, None)
+        except FieldError:
+            raise FieldError('expected {}'.format(desc), ())
+
+    def check(field, value):
+        if not isinstance(value, dict):
             raise FieldError('expected {}'.format(desc), (field,))
         with wrap_field_error(field):
-            return {k: shape[k](k, v) for k, v in value.items()}
+            for k in value:
+                if k not in shape:
+                    raise FieldError('unexpected key', (k,))
+            return {k: check_item(value, k, sub_check)
+                    for k, sub_check in shape.items()}
 
     return check
 
@@ -181,4 +208,4 @@ def shell_args(type=list, escapes=False):
         lexer.whitespace_split = True
         return type(lexer)
 
-    return check
+    return maybe(one_of(list_of(string), check, desc='shell arguments'), [])

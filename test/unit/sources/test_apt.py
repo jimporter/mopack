@@ -37,7 +37,8 @@ class TestApt(SourceTest):
                             for i in iterate(submodules))
                 usages.append({
                     'type': 'system', 'include_path': [], 'library_path': [],
-                    'headers': [], 'libraries': libs,
+                    'headers': [], 'libraries': libs, 'compile_flags': [],
+                    'link_flags': [],
                 })
 
         for pkg, usage in zip(packages, usages):
@@ -73,6 +74,7 @@ class TestApt(SourceTest):
             [pkg], ['libfoo-dev'], submodules=['sub'], usages=[{
                 'type': 'system', 'include_path': [], 'library_path': [],
                 'headers': [], 'libraries': ['bar', 'foo_sub'],
+                'compile_flags': [], 'link_flags': [],
             }]
         )
 
@@ -87,6 +89,7 @@ class TestApt(SourceTest):
             [pkg], ['libfoo-dev'], submodules=['sub'], usages=[{
                 'type': 'system', 'include_path': [], 'library_path': [],
                 'headers': [], 'libraries': ['bar', 'foo_sub'],
+                'compile_flags': [], 'link_flags': [],
             }]
         )
 

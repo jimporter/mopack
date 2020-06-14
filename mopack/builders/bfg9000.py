@@ -25,9 +25,7 @@ class Bfg9000Builder(Builder):
 
     def __init__(self, name, *, extra_args=None, usage=None, **kwargs):
         super().__init__(name, usage=usage or 'pkg-config', **kwargs)
-        self.extra_args = types.maybe(types.shell_args(), [])(
-            'extra_args', extra_args
-        )
+        self.extra_args = types.shell_args()('extra_args', extra_args)
 
     def _toolchain_args(self, toolchain):
         return ['--toolchain', toolchain] if toolchain else []

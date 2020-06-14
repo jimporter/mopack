@@ -2,7 +2,7 @@ from pkg_resources import load_entry_point
 
 from ..freezedried import FreezeDried
 from ..options import OptionsSet
-from ..package_defaults import finalize_defaults
+from ..package_defaults import finalize_defaults, package_default
 from ..types import try_load_config
 
 
@@ -17,6 +17,9 @@ class Usage(FreezeDried):
     _type_field = 'type'
     _get_type = _get_usage_type
     _skip_fields = _skip_compare_fields = ('_options',)
+
+    def _package_default(self, other, name, field=None, default=None):
+        return package_default(other, name, 'usage', self.type, field, default)
 
     def set_options(self, options):
         self._options = OptionsSet(options['common'], None)
