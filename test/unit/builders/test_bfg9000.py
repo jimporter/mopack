@@ -1,4 +1,5 @@
 import os
+import subprocess
 from unittest import mock, TestCase
 
 from . import BuilderTest
@@ -13,7 +14,7 @@ from mopack.types import Unset
 
 class TestBfg9000Builder(BuilderTest):
     builder_type = Bfg9000Builder
-    pkgdir = '/path/to/builddir/mopack'
+    pkgdir = os.path.abspath('/path/to/builddir/mopack')
 
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         return os.path.join(self.pkgdir, 'build', name, pkgconfig)
@@ -29,14 +30,18 @@ class TestBfg9000Builder(BuilderTest):
         srcdir = '/path/to/src'
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
-             mock.patch('subprocess.check_call') as mcall:  # noqa
+             mock.patch('subprocess.run') as mcall:  # noqa
             builder.build(self.pkgdir, srcdir, deploy_paths)
             mopen.assert_called_with(os.path.join(self.pkgdir, 'foo.log'), 'w')
             mcall.assert_any_call(
                 ['9k', os.path.join(self.pkgdir, 'build', 'foo')] + extra_args,
-                stdout=mopen(), stderr=mopen()
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                universal_newlines=True, check=True
             )
-            mcall.assert_called_with(['ninja'], stdout=mopen(), stderr=mopen())
+            mcall.assert_called_with(
+                ['ninja'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                universal_newlines=True, check=True
+            )
         self.assertEqual(builder.get_usage(self.pkgdir, submodules, srcdir),
                          usage)
 
@@ -50,13 +55,16 @@ class TestBfg9000Builder(BuilderTest):
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
-             mock.patch('subprocess.check_call') as mcall:  # noqa
+             mock.patch('subprocess.run') as mcall:  # noqa
             builder.deploy(self.pkgdir)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'foo-deploy.log'
             ), 'w')
-            mcall.assert_called_with(['ninja', 'install'], stdout=mopen(),
-                                     stderr=mopen())
+            mcall.assert_called_with(
+                ['ninja', 'install'], stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT, universal_newlines=True,
+                check=True
+            )
 
     def test_extra_args(self):
         builder = self.make_builder('foo', extra_args='--extra args')

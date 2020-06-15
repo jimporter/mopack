@@ -1,4 +1,5 @@
 import os
+import subprocess
 from io import StringIO
 from textwrap import dedent
 from unittest import mock, TestCase
@@ -30,8 +31,8 @@ def mock_open_write():
 
 class TestConan(SourceTest):
     pkg_type = ConanPackage
-    config_file = '/path/to/mopack.yml'
-    pkgdir = '/path/to/builddir/mopack'
+    config_file = os.path.abspath('/path/to/mopack.yml')
+    pkgdir = os.path.abspath('/path/to/builddir/mopack')
     pkgconfdir = os.path.join(pkgdir, 'conan')
     deploy_paths = {'prefix': '/usr/local'}
 
@@ -51,7 +52,7 @@ class TestConan(SourceTest):
         self.assertEqual(pkg.options, {})
 
         with mock_open_log(mock_open_write()) as mopen, \
-             mock.patch('subprocess.check_call') as mcall:  # noqa
+             mock.patch('subprocess.run') as mcall:  # noqa
             ConanPackage.resolve_all(self.pkgdir, [pkg], self.deploy_paths)
 
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
@@ -63,10 +64,11 @@ class TestConan(SourceTest):
                 [generators]
                 pkg_config
             """))
-            mcall.assert_called_with([
-                'conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
-                self.pkgdir
-            ], stdout=mopen(), stderr=mopen())
+            mcall.assert_called_with(
+                ['conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
+                 self.pkgdir], stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT, universal_newlines=True, check=True
+            )
 
         self.check_usage(pkg)
 
@@ -77,7 +79,7 @@ class TestConan(SourceTest):
         self.assertEqual(pkg.options, {'shared': True})
 
         with mock_open_log(mock_open_write()) as mopen, \
-             mock.patch('subprocess.check_call') as mcall:  # noqa
+             mock.patch('subprocess.run') as mcall:  # noqa
             ConanPackage.resolve_all(self.pkgdir, [pkg], self.deploy_paths)
 
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
@@ -90,10 +92,11 @@ class TestConan(SourceTest):
                 [generators]
                 pkg_config
             """))
-            mcall.assert_called_with([
-                'conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
-                self.pkgdir
-            ], stdout=mopen(), stderr=mopen())
+            mcall.assert_called_with(
+                ['conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
+                 self.pkgdir], stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT, universal_newlines=True, check=True
+            )
 
         self.check_usage(pkg)
 
@@ -104,7 +107,7 @@ class TestConan(SourceTest):
         self.assertEqual(pkg.options, {})
 
         with mock_open_log(mock_open_write()) as mopen, \
-             mock.patch('subprocess.check_call') as mcall:  # noqa
+             mock.patch('subprocess.run') as mcall:  # noqa
             ConanPackage.resolve_all(self.pkgdir, [pkg], self.deploy_paths)
 
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
@@ -117,10 +120,11 @@ class TestConan(SourceTest):
                 pkg_config
                 cmake
             """))
-            mcall.assert_called_with([
-                'conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
-                self.pkgdir
-            ], stdout=mopen(), stderr=mopen())
+            mcall.assert_called_with(
+                ['conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
+                 self.pkgdir], stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT, universal_newlines=True, check=True
+            )
 
         self.check_usage(pkg)
 
@@ -132,7 +136,7 @@ class TestConan(SourceTest):
         ]
 
         with mock_open_log(mock_open_write()) as mopen, \
-             mock.patch('subprocess.check_call') as mcall:  # noqa
+             mock.patch('subprocess.run') as mcall:  # noqa
             ConanPackage.resolve_all(self.pkgdir, pkgs, self.deploy_paths)
 
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
@@ -146,10 +150,11 @@ class TestConan(SourceTest):
                 [generators]
                 pkg_config
             """))
-            mcall.assert_called_with([
-                'conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
-                self.pkgdir
-            ], stdout=mopen(), stderr=mopen())
+            mcall.assert_called_with(
+                ['conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
+                 self.pkgdir], stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT, universal_newlines=True, check=True
+            )
 
         for pkg in pkgs:
             self.check_usage(pkg)

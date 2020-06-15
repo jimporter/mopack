@@ -1,4 +1,5 @@
 import os
+import subprocess
 from unittest import mock
 
 from . import SourceTest
@@ -19,13 +20,14 @@ class TestApt(SourceTest):
     def check_resolve_all(self, packages, remotes, *, submodules=None,
                           usages=None):
         with mock_open_log() as mopen, \
-             mock.patch('subprocess.check_call') as mcall:  # noqa
+             mock.patch('subprocess.run') as mcall:  # noqa
             AptPackage.resolve_all(self.pkgdir, packages, self.deploy_paths)
 
             mopen.assert_called_with(os.path.join(self.pkgdir, 'apt.log'), 'w')
             mcall.assert_called_with(
                 ['sudo', 'apt-get', 'install', '-y'] + remotes,
-                stdout=mopen(), stderr=mopen()
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                universal_newlines=True, check=True
             )
 
         if usages is None:

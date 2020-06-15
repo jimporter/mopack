@@ -72,9 +72,11 @@ class TestTarball(SDistTest):
         })
 
         self.assertPopen(['mopack', 'deploy'])
+        include_prefix = '' if platform_name() == 'windows' else 'include/'
+        lib_prefix = '' if platform_name() == 'windows' else 'lib/'
         with pushd(self.prefix):
-            self.assertExists('include/hello.hpp')
-            self.assertExists('lib/pkgconfig/hello.pc')
+            self.assertExists(include_prefix + 'hello.hpp')
+            self.assertExists(lib_prefix + 'pkgconfig/hello.pc')
 
 
 class TestDirectory(SDistTest):

@@ -8,7 +8,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: [3.7]
       fail-fast: false
 
@@ -28,11 +28,15 @@ jobs:
       run: |
         pip install ./bfg9000
         pip install codecov '.[test]'
-    - name: Install apt dependencies
+    - name: Install Apt dependencies
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get install ninja-build
-    - name: Install  dependencies
+    - name: Install Chocolatey dependencies
+      if: matrix.os == 'windows-latest'
+      run: |
+        cinst make ninja pkgconfiglite
+    - name: Install Homebrew dependencies
       if: matrix.os == 'macos-latest'
       run: |
         brew install ninja pkg-config

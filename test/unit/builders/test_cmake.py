@@ -1,4 +1,5 @@
 import os
+import subprocess
 from unittest import mock
 
 from . import BuilderTest
@@ -12,7 +13,7 @@ from mopack.usage.pkg_config import PkgConfigUsage
 
 class TestCMakeBuilder(BuilderTest):
     builder_type = CMakeBuilder
-    pkgdir = '/path/to/builddir/mopack'
+    pkgdir = os.path.abspath('/path/to/builddir/mopack')
 
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         return os.path.join(self.pkgdir, 'build', name, pkgconfig)
@@ -28,12 +29,18 @@ class TestCMakeBuilder(BuilderTest):
         srcdir = '/path/to/src'
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.cmake.pushd'), \
-             mock.patch('subprocess.check_call') as mcall:  # noqa
+             mock.patch('subprocess.run') as mcall:  # noqa
             builder.build(self.pkgdir, srcdir, deploy_paths)
             mopen.assert_called_with(os.path.join(self.pkgdir, 'foo.log'), 'w')
-            mcall.assert_any_call(['cmake', srcdir] + extra_args,
-                                  stdout=mopen(), stderr=mopen())
-            mcall.assert_called_with(['make'], stdout=mopen(), stderr=mopen())
+            mcall.assert_any_call(
+                ['cmake', srcdir, '-G', 'Ninja'] + extra_args,
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                universal_newlines=True, check=True
+            )
+            mcall.assert_called_with(
+                ['ninja'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                universal_newlines=True, check=True
+            )
         self.assertEqual(builder.get_usage(self.pkgdir, submodules, srcdir),
                          usage)
 
@@ -47,13 +54,16 @@ class TestCMakeBuilder(BuilderTest):
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.cmake.pushd'), \
-             mock.patch('subprocess.check_call') as mcall:  # noqa
+             mock.patch('subprocess.run') as mcall:  # noqa
             builder.deploy(self.pkgdir)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'foo-deploy.log'
             ), 'w')
-            mcall.assert_called_with(['make', 'install'], stdout=mopen(),
-                                     stderr=mopen())
+            mcall.assert_called_with(
+                ['ninja', 'install'],
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                universal_newlines=True, check=True
+            )
 
     def test_extra_args(self):
         builder = self.make_builder('foo', extra_args='--extra args',

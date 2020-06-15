@@ -11,7 +11,7 @@ from mopack.sources.system import SystemPackage
 
 
 class TestMakePackage(SourceTest):
-    pkgdir = '/path/to/builddir/mopack'
+    pkgdir = os.path.abspath('/path/to/builddir/mopack')
 
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         return os.path.join(self.pkgdir, 'build', name, pkgconfig)
@@ -25,7 +25,7 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.name, 'foo')
         self.assertEqual(pkg.submodules, None)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
-        self.assertEqual(pkg.path, '/path')
+        self.assertEqual(pkg.path, os.path.normpath('/path'))
         self.assertEqual(pkg.builder.type, 'bfg9000')
 
         self.assertEqual(pkg.get_usage(self.pkgdir, None), {

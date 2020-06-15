@@ -28,8 +28,8 @@ def mock_open_after_first(*args, **kwargs):
 
 
 class SDistTestCase(SourceTest):
-    config_file = '/path/to/mopack.yml'
-    pkgdir = '/path/to/builddir/mopack'
+    config_file = os.path.abspath('/path/to/mopack.yml')
+    pkgdir = os.path.abspath('/path/to/builddir/mopack')
     deploy_paths = {'prefix': '/usr/local'}
 
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
@@ -45,7 +45,7 @@ class SDistTestCase(SourceTest):
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
-             mock.patch('subprocess.check_call'):  # noqa
+             mock.patch('subprocess.run'):  # noqa
             pkg.resolve(self.pkgdir, self.deploy_paths)
             mopen.assert_called_with(os.path.join(self.pkgdir, 'foo.log'), 'w')
         self.assertEqual(pkg.get_usage(self.pkgdir, submodules), usage)
@@ -208,7 +208,7 @@ class TestDirectory(SDistTestCase):
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
-             mock.patch('subprocess.check_call'):  # noqa
+             mock.patch('subprocess.run'):  # noqa
             pkg.deploy(self.pkgdir)
             mopen.assert_called_with(
                 os.path.join(self.pkgdir, 'foo-deploy.log'), 'w'
@@ -484,7 +484,7 @@ class TestTarball(SDistTestCase):
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
-             mock.patch('subprocess.check_call'):  # noqa
+             mock.patch('subprocess.run'):  # noqa
             pkg.deploy(self.pkgdir)
             mopen.assert_called_with(
                 os.path.join(self.pkgdir, 'foo-deploy.log'), 'w'

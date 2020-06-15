@@ -31,7 +31,7 @@ def make_parse_error(e, stream):
 
 @contextmanager
 def load_file(filename, Loader=SafeLoader):
-    with open(filename) as f:
+    with open(filename, newline='') as f:
         try:
             yield yaml.load(f, Loader=Loader)
         except MarkedYAMLError as e:

@@ -32,13 +32,13 @@ class CMakeBuilder(Builder):
         with LogFile.open(pkgdir, self.name) as logfile:
             with pushd(builddir, makedirs=True, exist_ok=True):
                 logfile.check_call(
-                    ['cmake', srcdir] +
+                    ['cmake', srcdir, '-G', 'Ninja'] +
                     self._install_args(deploy_paths) +
                     self.extra_args
                 )
-                logfile.check_call(['make'])
+                logfile.check_call(['ninja'])
 
     def deploy(self, pkgdir):
         with LogFile.open(pkgdir, self.name + '-deploy') as logfile:
             with pushd(self._builddir(pkgdir)):
-                logfile.check_call(['make', 'install'])
+                logfile.check_call(['ninja', 'install'])

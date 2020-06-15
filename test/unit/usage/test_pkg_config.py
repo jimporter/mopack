@@ -1,3 +1,5 @@
+from os.path import abspath
+
 from . import UsageTest
 
 from mopack.usage.pkg_config import PkgConfigUsage
@@ -11,7 +13,7 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.path, 'pkgconfig')
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.get_usage(None, None, '/builddir'), {
-            'type': 'pkg-config', 'path': '/builddir/pkgconfig',
+            'type': 'pkg-config', 'path': abspath('/builddir/pkgconfig'),
             'pcfiles': ['foo']
         })
 
@@ -20,7 +22,7 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.path, 'pkgconf')
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.get_usage(None, None, '/builddir'), {
-            'type': 'pkg-config', 'path': '/builddir/pkgconf',
+            'type': 'pkg-config', 'path': abspath('/builddir/pkgconf'),
             'pcfiles': ['foo']
         })
 
@@ -32,7 +34,7 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.path, 'pkgconfig')
         self.assertEqual(usage.pcfile, None)
         self.assertEqual(usage.get_usage(['sub'], None, '/builddir'), {
-            'type': 'pkg-config', 'path': '/builddir/pkgconfig',
+            'type': 'pkg-config', 'path': abspath('/builddir/pkgconfig'),
             'pcfiles': ['foo_sub'],
         })
 
@@ -41,7 +43,7 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.path, 'pkgconfig')
         self.assertEqual(usage.pcfile, 'bar')
         self.assertEqual(usage.get_usage(['sub'], None, '/builddir'), {
-            'type': 'pkg-config', 'path': '/builddir/pkgconfig',
+            'type': 'pkg-config', 'path': abspath('/builddir/pkgconfig'),
             'pcfiles': ['bar', 'foo_sub'],
         })
 
@@ -49,7 +51,7 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.path, 'pkgconfig')
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.get_usage(['sub'], None, '/builddir'), {
-            'type': 'pkg-config', 'path': '/builddir/pkgconfig',
+            'type': 'pkg-config', 'path': abspath('/builddir/pkgconfig'),
             'pcfiles': ['foo', 'foo_sub'],
         })
 
@@ -58,7 +60,7 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.path, 'pkgconfig')
         self.assertEqual(usage.pcfile, 'bar')
         self.assertEqual(usage.get_usage(['sub'], None, '/builddir'), {
-            'type': 'pkg-config', 'path': '/builddir/pkgconfig',
+            'type': 'pkg-config', 'path': abspath('/builddir/pkgconfig'),
             'pcfiles': ['bar', 'foo_sub'],
         })
 
@@ -70,7 +72,7 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.path, 'pkgconfig')
         self.assertEqual(usage.pcfile, None)
         self.assertEqual(usage.get_usage(['sub'], None, '/builddir'), {
-            'type': 'pkg-config', 'path': '/builddir/pkgconfig',
+            'type': 'pkg-config', 'path': abspath('/builddir/pkgconfig'),
             'pcfiles': ['sub'],
         })
 
@@ -80,7 +82,7 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.path, 'pkgconfig')
         self.assertEqual(usage.pcfile, None)
         self.assertEqual(usage.get_usage(['sub'], None, '/builddir'), {
-            'type': 'pkg-config', 'path': '/builddir/pkgconfig',
+            'type': 'pkg-config', 'path': abspath('/builddir/pkgconfig'),
             'pcfiles': ['sub'],
         })
 
@@ -91,17 +93,18 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.path, 'pkgconfig')
         self.assertEqual(usage.pcfile, None)
         self.assertEqual(usage.get_usage(['sub'], None, '/builddir'), {
-            'type': 'pkg-config', 'path': '/builddir/pkgconfig',
+            'type': 'pkg-config', 'path': abspath('/builddir/pkgconfig'),
             'pcfiles': ['subpc'],
         })
         self.assertEqual(usage.get_usage(['sub2'], None, '/builddir'), {
-            'type': 'pkg-config', 'path': '/builddir/pkgconfig',
+            'type': 'pkg-config', 'path': abspath('/builddir/pkgconfig'),
             'pcfiles': ['sub2'],
         })
 
     def test_boost(self):
         submodules = {'names': '*', 'required': False}
-        final_usage = {'type': 'pkg-config', 'path': '/builddir/pkgconfig',
+        final_usage = {'type': 'pkg-config',
+                       'path': abspath('/builddir/pkgconfig'),
                        'pcfiles': ['boost']}
 
         usage = self.make_usage('boost', submodules=submodules)
@@ -117,7 +120,8 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.pcfile, 'boost')
         self.assertEqual(usage.get_usage(None, None, '/builddir'), final_usage)
         self.assertEqual(usage.get_usage(['thread'], None, '/builddir'),
-                         {'type': 'pkg-config', 'path': '/builddir/pkgconfig',
+                         {'type': 'pkg-config',
+                          'path': abspath('/builddir/pkgconfig'),
                           'pcfiles': ['boost', 'boost_thread']})
 
     def test_invalid(self):

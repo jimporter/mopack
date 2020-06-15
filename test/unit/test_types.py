@@ -1,4 +1,5 @@
 import ntpath
+import os
 import posixpath
 from contextlib import contextmanager
 from unittest import mock, TestCase
@@ -236,13 +237,15 @@ class TestAbsOrInnerPath(TypeTestCase):
 class TestAnyPath(TypeTestCase):
     def test_relative(self):
         self.assertEqual(any_path()('field', 'path'), 'path')
-        self.assertEqual(any_path()('field', '../path'), '../path')
+        self.assertEqual(any_path()('field', '../path'),
+                         os.path.join('..', 'path'))
         self.assertEqual(any_path()('field', 'foo/../bar'), 'bar')
-        self.assertEqual(any_path('/base')('field', 'path'), '/base/path')
+        self.assertEqual(any_path('/base')('field', 'path'),
+                         os.sep + os.path.join('base', 'path'))
 
     def test_absolute(self):
-        self.assertEqual(any_path()('field', '/path'), '/path')
-        self.assertEqual(any_path('/base')('field', '/path'), '/path')
+        self.assertEqual(any_path()('field', '/path'), os.sep + 'path')
+        self.assertEqual(any_path('/base')('field', '/path'), os.sep + 'path')
 
 
 class TestShellArgs(TypeTestCase):

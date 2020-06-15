@@ -1,7 +1,9 @@
 import colorama
 import logging
 import os
+import shlex
 import subprocess
+import textwrap
 import warnings
 from logging import (getLogger, info, debug,  # noqa: F401
                      CRITICAL, ERROR, WARNING, INFO, DEBUG)
@@ -77,9 +79,28 @@ class LogFile:
         self.file.close()
 
     def check_call(self, args, **kwargs):
-        print('$ ' + ' '.join(args), file=self.file, flush=True)
-        return subprocess.check_call(args, stdout=self.file, stderr=self.file,
-                                     **kwargs)
+        command = ' '.join(shlex.quote(i) for i in args)
+        print('$ ' + command, file=self.file, flush=True)
+        try:
+            result = subprocess.run(
+                args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                universal_newlines=True, check=True
+            )
+            self.file.write(result.stdout)
+        except subprocess.CalledProcessError as e:
+            self.file.write(e.stdout)
+            msg = "Command '{}' returned non-zero exit status {}".format(
+                command, e.returncode
+            )
+            if e.stdout:
+                msg += ':\n' + textwrap.indent(e.stdout.rstrip(), '  ')
+                msg += '\n' + str(os.environ)
+            raise subprocess.SubprocessError(msg)
+        except Exception as e:
+            self.file.write(str(e))
+            raise type(e)("Command '{}' failed:\n{}".format(
+                command, textwrap.indent(str(e), '  ')
+            ))
 
     def __enter__(self):
         self.file.__enter__()

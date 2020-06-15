@@ -1,3 +1,5 @@
+from os.path import abspath
+
 from . import SourceTest
 
 from mopack.sources import Package
@@ -7,8 +9,8 @@ from mopack.sources.system import SystemPackage
 
 class TestSystemPackage(SourceTest):
     pkg_type = SystemPackage
-    config_file = '/path/to/mopack.yml'
-    pkgdir = '/path/to/builddir/mopack'
+    config_file = abspath('/path/to/mopack.yml')
+    pkgdir = abspath('/path/to/builddir/mopack')
     deploy_paths = {'prefix': '/usr/local'}
 
     def test_resolve(self):
@@ -24,7 +26,7 @@ class TestSystemPackage(SourceTest):
         pkg = self.make_package('foo', include_path='/path/to/include')
         pkg.resolve(self.pkgdir, self.deploy_paths)
         self.assertEqual(pkg.get_usage(self.pkgdir, None), {
-            'type': 'system', 'include_path': ['/path/to/include'],
+            'type': 'system', 'include_path': [abspath('/path/to/include')],
             'library_path': [], 'headers': [], 'libraries': ['foo'],
             'compile_flags': [], 'link_flags': [],
         })
@@ -34,7 +36,7 @@ class TestSystemPackage(SourceTest):
         pkg.resolve(self.pkgdir, self.deploy_paths)
         self.assertEqual(pkg.get_usage(self.pkgdir, None), {
             'type': 'system', 'include_path': [],
-            'library_path': ['/path/to/lib'], 'headers': [],
+            'library_path': [abspath('/path/to/lib')], 'headers': [],
             'libraries': ['foo'], 'compile_flags': [], 'link_flags': [],
         })
 

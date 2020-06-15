@@ -4,7 +4,7 @@ from contextlib import contextmanager
 
 def try_join(a, b):
     if os.path.isabs(b):
-        return os.path.normpath(b)
+        return os.path.abspath(b)
     return os.path.abspath(os.path.join(a, b))
 
 
