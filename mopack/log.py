@@ -94,7 +94,6 @@ class LogFile:
             )
             if e.stdout:
                 msg += ':\n' + textwrap.indent(e.stdout.rstrip(), '  ')
-                msg += '\n' + str(os.environ)
             raise subprocess.SubprocessError(msg)
         except Exception as e:
             self.file.write(str(e))

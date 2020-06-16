@@ -9,7 +9,13 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        compiler: [cc, msvc]
         python-version: [3.7]
+        exclude:
+          - os: ubuntu-latest
+            compiler: msvc
+          - os: macos-latest
+            compiler: msvc
       fail-fast: false
 
     steps:
@@ -28,20 +34,39 @@ jobs:
       run: |
         pip install ./bfg9000
         pip install codecov '.[test]'
-    - name: Install Apt dependencies
+    - name: Install Linux dependencies
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get install ninja-build
-    - name: Install Chocolatey dependencies
+    - name: Install Windows dependencies
       if: matrix.os == 'windows-latest'
       run: |
-        cinst make ninja pkgconfiglite
-    - name: Install Homebrew dependencies
+        cinst ninja
+        $gnomebase = "https://ftp.gnome.org/pub/gnome/binaries/win32"
+        curl -LO $gnomebase/dependencies/pkg-config_0.26-1_win32.zip
+        curl -LO $gnomebase/glib/2.28/glib_2.28.8-1_win32.zip
+        curl -LO $gnomebase/dependencies/gettext-runtime_0.18.1.1-2_win32.zip
+        7z x -y pkg-config_0.26-1_win32.zip -oC:\pkg-config
+        7z x -y glib_2.28.8-1_win32.zip -oC:\pkg-config
+        7z x -y gettext-runtime_0.18.1.1-2_win32.zip -oC:\pkg-config
+    - name: Install macOS dependencies
       if: matrix.os == 'macos-latest'
       run: |
         brew install ninja pkg-config
-    - name: Run tests
+    - name: Run tests (CC)
+      if: matrix.os != 'windows-latest'
       run: |
+        python setup.py test -q
+    - name: Run tests (MSVC)
+      if: matrix.compiler == 'msvc'
+      run: |
+        $installpath = vswhere -latest -property installationpath
+        Import-Module (Join-Path $installpath "Common7\Tools\Microsoft.VisualStudio.DevShell.dll")
+        $null = Enter-VsDevShell -VsInstallPath $installpath
+        $Env:PKG_CONFIG = "C:\pkg-config\bin\pkg-config.exe"
+        conan profile new default --detect
+        $Env:CC = "cl.exe"
+        $Env:CXX = "cl.exe"
         python setup.py test -q
   lint:
     runs-on: ubuntu-latest
