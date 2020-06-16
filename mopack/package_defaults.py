@@ -7,6 +7,10 @@ from . import types
 _DeferredDefault = namedtuple('_DeferredDefault', ['function', 'check'])
 
 
+def _boost_auto_link(options):
+    return options.common.target_platform == 'windows'
+
+
 def _boost_getdir(name, default):
     def wrapper(options):
         root = options.common.env.get('BOOST_ROOT')
@@ -20,7 +24,7 @@ def _boost_getdir(name, default):
 
 def _boost_submodule_map(options):
     if options.common.target_platform == 'windows':
-        return 'boost_{submodule}'
+        return None
 
     link_flags = ('' if options.common.target_platform == 'darwin'
                   else '-pthread')
@@ -48,6 +52,7 @@ _defaults = {
         },
         'usage': {
             'path/system': {
+                'auto_link': _boost_auto_link,
                 'include_path': _boost_getdir('BOOST_INCLUDEDIR', 'include'),
                 'library_path': _boost_getdir('BOOST_LIBRARYDIR', 'lib'),
                 'headers': ['boost/version.hpp'],

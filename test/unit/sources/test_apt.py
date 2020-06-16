@@ -38,9 +38,9 @@ class TestApt(SourceTest):
                 libs.extend('{}_{}'.format(pkg.name, i)
                             for i in iterate(submodules))
                 usages.append({
-                    'type': 'system', 'include_path': [], 'library_path': [],
-                    'headers': [], 'libraries': libs, 'compile_flags': [],
-                    'link_flags': [],
+                    'type': 'system', 'auto_link': False, 'include_path': [],
+                    'library_path': [], 'headers': [], 'libraries': libs,
+                    'compile_flags': [], 'link_flags': [],
                 })
 
         for pkg, usage in zip(packages, usages):
@@ -74,9 +74,10 @@ class TestApt(SourceTest):
         )
         self.check_resolve_all(
             [pkg], ['libfoo-dev'], submodules=['sub'], usages=[{
-                'type': 'system', 'include_path': [], 'library_path': [],
-                'headers': [], 'libraries': ['bar', 'foo_sub'],
-                'compile_flags': [], 'link_flags': [],
+                'type': 'system', 'auto_link': False, 'include_path': [],
+                'library_path': [], 'headers': [],
+                'libraries': ['bar', 'foo_sub'], 'compile_flags': [],
+                'link_flags': [],
             }]
         )
 
@@ -89,9 +90,10 @@ class TestApt(SourceTest):
         )
         self.check_resolve_all(
             [pkg], ['libfoo-dev'], submodules=['sub'], usages=[{
-                'type': 'system', 'include_path': [], 'library_path': [],
-                'headers': [], 'libraries': ['bar', 'foo_sub'],
-                'compile_flags': [], 'link_flags': [],
+                'type': 'system', 'auto_link': False, 'include_path': [],
+                'library_path': [], 'headers': [],
+                'libraries': ['bar', 'foo_sub'], 'compile_flags': [],
+                'link_flags': [],
             }]
         )
 

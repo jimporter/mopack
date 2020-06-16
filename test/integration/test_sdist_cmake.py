@@ -39,6 +39,7 @@ class TestNestedCMake(IntegrationTest):
         self.assertEqual(output, {
             'name': 'hello',
             'type': 'path',
+            'auto_link': False,
             'include_path': [os.path.join(test_data_dir, 'hello-cmake',
                                           'include')],
             'library_path': [os.path.join(self.pkgbuilddir, 'hello')],
@@ -70,6 +71,7 @@ class TestNestedCMake(IntegrationTest):
                     'extra_args': [],
                     'usage': {
                         'type': 'path',
+                        'auto_link': False,
                         'include_path': ['include'],
                         'library_path': ['.'],
                         'headers': [],

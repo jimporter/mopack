@@ -47,9 +47,16 @@ def _submodule_map(field, value):
 class PathUsage(Usage):
     type = 'path'
 
-    def __init__(self, name, *, include_path=Unset, library_path=Unset,
-                 headers=Unset, libraries=Unset, compile_flags=Unset,
-                 link_flags=Unset, submodule_map=Unset, submodules):
+    def __init__(self, name, *, auto_link=Unset, include_path=Unset,
+                 library_path=Unset, headers=Unset, libraries=Unset,
+                 compile_flags=Unset, link_flags=Unset, submodule_map=Unset,
+                 submodules):
+        # XXX: This can probably be removed if/when we pull more package
+        # resolution logic into mopack.
+        self.auto_link = self._package_default(
+            types.boolean, name, default=False
+        )('auto_link', auto_link)
+
         defaulted_paths = self._package_default(_list_of_paths, name)
         self.include_path = defaulted_paths('include_path', include_path)
         self.library_path = defaulted_paths('library_path', library_path)
@@ -115,6 +122,7 @@ class PathUsage(Usage):
             # instead of just assuming that includes are in the srcdir and libs
             # are in the builddir.
             return self._usage(
+                auto_link=self.auto_link,
                 include_path=[path.try_join(srcdir, i) for i in
                               chain_mapping('include_path')],
                 library_path=[path.try_join(builddir, i) for i in

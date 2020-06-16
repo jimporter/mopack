@@ -49,21 +49,21 @@ jobs:
         7z x -y pkg-config_0.26-1_win32.zip -oC:\pkg-config
         7z x -y glib_2.28.8-1_win32.zip -oC:\pkg-config
         7z x -y gettext-runtime_0.18.1.1-2_win32.zip -oC:\pkg-config
+        echo "::set-env name=PKG_CONFIG::C:\pkg-config\bin\pkg-config.exe"
     - name: Install macOS dependencies
       if: matrix.os == 'macos-latest'
       run: |
         brew install ninja pkg-config
-    - name: Run tests (CC)
-      if: matrix.os != 'windows-latest'
+    - name: Run tests (cc)
+      if: matrix.compiler == 'cc'
       run: |
         python setup.py test -q
-    - name: Run tests (MSVC)
+    - name: Run tests (msvc)
       if: matrix.compiler == 'msvc'
       run: |
         $installpath = vswhere -latest -property installationpath
         Import-Module (Join-Path $installpath "Common7\Tools\Microsoft.VisualStudio.DevShell.dll")
         $null = Enter-VsDevShell -VsInstallPath $installpath
-        $Env:PKG_CONFIG = "C:\pkg-config\bin\pkg-config.exe"
         conan profile new default --detect
         $Env:CC = "cl.exe"
         $Env:CXX = "cl.exe"

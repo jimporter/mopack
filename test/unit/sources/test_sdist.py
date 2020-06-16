@@ -104,9 +104,9 @@ class TestDirectory(SDistTestCase):
                 Bfg9000Builder, 'foo', usage={'type': 'system'}
             ))
         self.check_resolve(pkg, usage={
-            'type': 'system', 'include_path': [], 'library_path': [],
-            'headers': [], 'libraries': ['foo'], 'compile_flags': [],
-            'link_flags': [],
+            'type': 'system', 'auto_link': False, 'include_path': [],
+            'library_path': [], 'headers': [], 'libraries': ['foo'],
+            'compile_flags': [], 'link_flags': [],
         })
 
     def test_infer_submodules(self):
@@ -408,9 +408,9 @@ class TestTarball(SDistTestCase):
                 Bfg9000Builder, 'foo', usage={'type': 'system'}
             ))
         self.check_resolve(pkg, usage={
-            'type': 'system', 'include_path': [], 'library_path': [],
-            'headers': [], 'libraries': ['foo'], 'compile_flags': [],
-            'link_flags': [],
+            'type': 'system', 'auto_link': False, 'include_path': [],
+            'library_path': [], 'headers': [], 'libraries': ['foo'],
+            'compile_flags': [], 'link_flags': [],
         })
 
     def test_usage(self):

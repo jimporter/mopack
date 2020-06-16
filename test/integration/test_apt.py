@@ -16,6 +16,7 @@ class TestApt(IntegrationTest):
     def _usage(self, name, headers=[], libraries=[]):
         return {
             'type': 'system',
+            'auto_link': False,
             'include_path': [],
             'library_path': [],
             'headers': headers,
@@ -34,18 +35,18 @@ class TestApt(IntegrationTest):
             'mopack', 'usage', 'ogg', '--json'
         ]))
         self.assertEqual(output, {
-            'name': 'ogg', 'type': 'system', 'include_path': [],
-            'library_path': [], 'headers': [], 'libraries': ['ogg'],
-            'compile_flags': [], 'link_flags': [],
+            'name': 'ogg', 'type': 'system', 'auto_link': False,
+            'include_path': [], 'library_path': [], 'headers': [],
+            'libraries': ['ogg'], 'compile_flags': [], 'link_flags': [],
         })
 
         output = json.loads(self.assertPopen([
             'mopack', 'usage', 'zlib', '--json'
         ]))
         self.assertEqual(output, {
-            'name': 'zlib', 'type': 'system', 'include_path': [],
-            'library_path': [], 'headers': [], 'libraries': ['z'],
-            'compile_flags': [], 'link_flags': [],
+            'name': 'zlib', 'type': 'system', 'auto_link': False,
+            'include_path': [], 'library_path': [], 'headers': [],
+            'libraries': ['z'], 'compile_flags': [], 'link_flags': [],
         })
 
         output = json.loads(slurp('mopack/mopack.json'))

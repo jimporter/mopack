@@ -17,25 +17,35 @@ class TestSystemPackage(SourceTest):
         pkg = self.make_package('foo')
         pkg.resolve(self.pkgdir, self.deploy_paths)
         self.assertEqual(pkg.get_usage(self.pkgdir, None), {
-            'type': 'system', 'include_path': [], 'library_path': [],
-            'headers': [], 'libraries': ['foo'], 'compile_flags': [],
-            'link_flags': [],
+            'type': 'system', 'auto_link': False, 'include_path': [],
+            'library_path': [], 'headers': [], 'libraries': ['foo'],
+            'compile_flags': [], 'link_flags': [],
+        })
+
+    def test_auto_link(self):
+        pkg = self.make_package('foo', auto_link=True)
+        pkg.resolve(self.pkgdir, self.deploy_paths)
+        self.assertEqual(pkg.get_usage(self.pkgdir, None), {
+            'type': 'system', 'auto_link': True, 'include_path': [],
+            'library_path': [], 'headers': [], 'libraries': ['foo'],
+            'compile_flags': [], 'link_flags': [],
         })
 
     def test_include_path(self):
         pkg = self.make_package('foo', include_path='/path/to/include')
         pkg.resolve(self.pkgdir, self.deploy_paths)
         self.assertEqual(pkg.get_usage(self.pkgdir, None), {
-            'type': 'system', 'include_path': [abspath('/path/to/include')],
-            'library_path': [], 'headers': [], 'libraries': ['foo'],
-            'compile_flags': [], 'link_flags': [],
+            'type': 'system', 'auto_link': False,
+            'include_path': [abspath('/path/to/include')], 'library_path': [],
+            'headers': [], 'libraries': ['foo'], 'compile_flags': [],
+            'link_flags': [],
         })
 
     def test_library_path(self):
         pkg = self.make_package('foo', library_path='/path/to/lib')
         pkg.resolve(self.pkgdir, self.deploy_paths)
         self.assertEqual(pkg.get_usage(self.pkgdir, None), {
-            'type': 'system', 'include_path': [],
+            'type': 'system', 'auto_link': False, 'include_path': [],
             'library_path': [abspath('/path/to/lib')], 'headers': [],
             'libraries': ['foo'], 'compile_flags': [], 'link_flags': [],
         })
@@ -44,42 +54,42 @@ class TestSystemPackage(SourceTest):
         pkg = self.make_package('foo', headers='foo.hpp')
         pkg.resolve(self.pkgdir, self.deploy_paths)
         self.assertEqual(pkg.get_usage(self.pkgdir, None), {
-            'type': 'system', 'include_path': [], 'library_path': [],
-            'headers': ['foo.hpp'], 'libraries': ['foo'], 'compile_flags': [],
-            'link_flags': [],
+            'type': 'system', 'auto_link': False, 'include_path': [],
+            'library_path': [], 'headers': ['foo.hpp'], 'libraries': ['foo'],
+            'compile_flags': [], 'link_flags': [],
         })
 
         pkg = self.make_package('foo', headers=['foo.hpp', 'bar.hpp'])
         pkg.resolve(self.pkgdir, self.deploy_paths)
         self.assertEqual(pkg.get_usage(self.pkgdir, None), {
-            'type': 'system', 'include_path': [], 'library_path': [],
-            'headers': ['foo.hpp', 'bar.hpp'], 'libraries': ['foo'],
-            'compile_flags': [], 'link_flags': [],
+            'type': 'system', 'auto_link': False, 'include_path': [],
+            'library_path': [], 'headers': ['foo.hpp', 'bar.hpp'],
+            'libraries': ['foo'], 'compile_flags': [], 'link_flags': [],
         })
 
     def test_libraries(self):
         pkg = self.make_package('foo', libraries='bar')
         pkg.resolve(self.pkgdir, self.deploy_paths)
         self.assertEqual(pkg.get_usage(self.pkgdir, None), {
-            'type': 'system', 'include_path': [], 'library_path': [],
-            'headers': [], 'libraries': ['bar'], 'compile_flags': [],
-            'link_flags': [],
+            'type': 'system', 'auto_link': False, 'include_path': [],
+            'library_path': [], 'headers': [], 'libraries': ['bar'],
+            'compile_flags': [], 'link_flags': [],
         })
 
         pkg = self.make_package('foo', libraries=['foo', 'bar'])
         pkg.resolve(self.pkgdir, self.deploy_paths)
         self.assertEqual(pkg.get_usage(self.pkgdir, None), {
-            'type': 'system', 'include_path': [], 'library_path': [],
-            'headers': [], 'libraries': ['foo', 'bar'], 'compile_flags': [],
-            'link_flags': [],
+            'type': 'system', 'auto_link': False, 'include_path': [],
+            'library_path': [], 'headers': [], 'libraries': ['foo', 'bar'],
+            'compile_flags': [], 'link_flags': [],
         })
 
         pkg = self.make_package('foo', libraries=None)
         pkg.resolve(self.pkgdir, self.deploy_paths)
         self.assertEqual(pkg.get_usage(self.pkgdir, None), {
-            'type': 'system', 'include_path': [], 'library_path': [],
-            'headers': [], 'libraries': [], 'compile_flags': [],
-            'link_flags': [],
+            'type': 'system', 'auto_link': False, 'include_path': [],
+            'library_path': [], 'headers': [], 'libraries': [],
+            'compile_flags': [], 'link_flags': [],
         })
 
     def test_submodules(self):
@@ -88,31 +98,31 @@ class TestSystemPackage(SourceTest):
 
         pkg = self.make_package('foo', submodules=submodules_required)
         self.assertEqual(pkg.get_usage(self.pkgdir, 'sub'), {
-            'type': 'system', 'include_path': [], 'library_path': [],
-            'headers': [], 'libraries': ['foo_sub'], 'compile_flags': [],
-            'link_flags': [],
+            'type': 'system', 'auto_link': False, 'include_path': [],
+            'library_path': [], 'headers': [], 'libraries': ['foo_sub'],
+            'compile_flags': [], 'link_flags': [],
         })
 
         pkg = self.make_package('foo', libraries='bar',
                                 submodules=submodules_required)
         self.assertEqual(pkg.get_usage(self.pkgdir, 'sub'), {
-            'type': 'system', 'include_path': [], 'library_path': [],
-            'headers': [], 'libraries': ['bar', 'foo_sub'],
+            'type': 'system', 'auto_link': False, 'include_path': [],
+            'library_path': [], 'headers': [], 'libraries': ['bar', 'foo_sub'],
             'compile_flags': [], 'link_flags': [],
         })
 
         pkg = self.make_package('foo', submodules=submodules_optional)
         self.assertEqual(pkg.get_usage(self.pkgdir, 'sub'), {
-            'type': 'system', 'include_path': [], 'library_path': [],
-            'headers': [], 'libraries': ['foo', 'foo_sub'],
+            'type': 'system', 'auto_link': False, 'include_path': [],
+            'library_path': [], 'headers': [], 'libraries': ['foo', 'foo_sub'],
             'compile_flags': [], 'link_flags': [],
         })
 
         pkg = self.make_package('foo', libraries='bar',
                                 submodules=submodules_optional)
         self.assertEqual(pkg.get_usage(self.pkgdir, 'sub'), {
-            'type': 'system', 'include_path': [], 'library_path': [],
-            'headers': [], 'libraries': ['bar', 'foo_sub'],
+            'type': 'system', 'auto_link': False, 'include_path': [],
+            'library_path': [], 'headers': [], 'libraries': ['bar', 'foo_sub'],
             'compile_flags': [], 'link_flags': [],
         })
 

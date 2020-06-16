@@ -46,9 +46,9 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.submodules, {'names': '*', 'required': True})
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         self.assertEqual(pkg.get_usage(self.pkgdir, ['sub']), {
-            'type': 'system', 'include_path': [], 'library_path': [],
-            'headers': [], 'libraries': ['foo_sub'], 'compile_flags': [],
-            'link_flags': [],
+            'type': 'system', 'auto_link': False, 'include_path': [],
+            'library_path': [], 'headers': [], 'libraries': ['foo_sub'],
+            'compile_flags': [], 'link_flags': [],
         })
         with self.assertRaises(ValueError):
             pkg.get_usage(self.pkgdir, None)
@@ -63,9 +63,9 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.submodules, {'names': ['sub'], 'required': True})
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         self.assertEqual(pkg.get_usage(self.pkgdir, ['sub']), {
-            'type': 'system', 'include_path': [], 'library_path': [],
-            'headers': [], 'libraries': ['foo_sub'], 'compile_flags': [],
-            'link_flags': [],
+            'type': 'system', 'auto_link': False, 'include_path': [],
+            'library_path': [], 'headers': [], 'libraries': ['foo_sub'],
+            'compile_flags': [], 'link_flags': [],
         })
         with self.assertRaises(ValueError):
             pkg.get_usage(self.pkgdir, ['bar'])
@@ -83,14 +83,14 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.submodules, {'names': ['sub'], 'required': False})
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         self.assertEqual(pkg.get_usage(self.pkgdir, ['sub']), {
-            'type': 'system', 'include_path': [], 'library_path': [],
-            'headers': [], 'libraries': ['foo', 'foo_sub'],
+            'type': 'system', 'auto_link': False, 'include_path': [],
+            'library_path': [], 'headers': [], 'libraries': ['foo', 'foo_sub'],
             'compile_flags': [], 'link_flags': [],
         })
         self.assertEqual(pkg.get_usage(self.pkgdir, None), {
-            'type': 'system', 'include_path': [], 'library_path': [],
-            'headers': [], 'libraries': ['foo'], 'compile_flags': [],
-            'link_flags': [],
+            'type': 'system', 'auto_link': False, 'include_path': [],
+            'library_path': [], 'headers': [], 'libraries': ['foo'],
+            'compile_flags': [], 'link_flags': [],
         })
         with self.assertRaises(ValueError):
             pkg.get_usage(self.pkgdir, ['bar'])
