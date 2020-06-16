@@ -57,7 +57,8 @@ jobs:
     - name: Run tests (cc)
       if: matrix.compiler == 'cc'
       run: |
-        python setup.py test -q
+        python setup.py coverage -q
+        coverage xml
     - name: Run tests (msvc)
       if: matrix.compiler == 'msvc'
       run: |
@@ -67,7 +68,10 @@ jobs:
         conan profile new default --detect
         $Env:CC = "cl.exe"
         $Env:CXX = "cl.exe"
-        python setup.py test -q
+        python setup.py coverage -q
+        coverage xml
+    - name: Upload coverage
+      uses: codecov/codecov-action@v1
   lint:
     runs-on: ubuntu-latest
 

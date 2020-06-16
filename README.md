@@ -1,6 +1,7 @@
 # mopack
 
 [![Build status][ci-image]][ci-link]
+[![Coverage status][codecov-image]][codecov-link]
 
 **mopack** (pronounced "ammopack" - name subject to change) is an experimental
 *multiple origin* package manager, with an emphasis on C/C++ packages. It's
@@ -51,3 +52,5 @@ This project is licensed under the [BSD 3-clause license](LICENSE).
 
 [ci-image]: https://github.com/jimporter/mopack/workflows/build/badge.svg
 [ci-link]: https://github.com/jimporter/mopack/actions?query=branch%3Amaster+workflow%3Abuild
+[codecov-image]: https://codecov.io/gh/jimporter/mopack/branch/master/graph/badge.svg
+[codecov-link]: https://codecov.io/gh/jimporter/mopack
