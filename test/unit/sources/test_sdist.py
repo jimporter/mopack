@@ -340,7 +340,7 @@ class TestTarball(SDistTestCase):
         with mock.patch('mopack.sources.sdist.urlopen', self.mock_urlopen), \
              mock.patch('tarfile.TarFile.extractall') as mtar:  # noqa
             pkg.fetch(self.pkgdir, None)
-            mtar.assert_called_once_with(srcdir)
+            mtar.assert_called_once_with(srcdir, None)
 
     def test_url(self):
         pkg = self.make_package('foo', build='bfg9000', url=self.srcurl)
@@ -358,6 +358,20 @@ class TestTarball(SDistTestCase):
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
 
         self.check_fetch(pkg)
+        self.check_resolve(pkg)
+
+    def test_zip_path(self):
+        srcpath = os.path.join(test_data_dir, 'hello-bfg.zip')
+        pkg = self.make_package('foo', build='bfg9000', path=srcpath)
+        self.assertEqual(pkg.url, None)
+        self.assertEqual(pkg.path, srcpath)
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+
+        srcdir = os.path.join(self.pkgdir, 'src', 'foo')
+        with mock.patch('mopack.sources.sdist.urlopen', self.mock_urlopen), \
+             mock.patch('zipfile.ZipFile.extractall') as mtar:  # noqa
+            pkg.fetch(self.pkgdir, None)
+            mtar.assert_called_once_with(srcdir, None)
         self.check_resolve(pkg)
 
     def test_missing_url_path(self):

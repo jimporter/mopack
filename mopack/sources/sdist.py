@@ -1,11 +1,10 @@
 import os
 import shutil
-import tarfile
 from io import BytesIO
 from urllib.request import urlopen
 
 from . import Package, submodules_type
-from .. import log, types
+from .. import archive, log, types
 from ..builders import Builder, make_builder
 from ..config import ChildConfig
 
@@ -141,14 +140,13 @@ class TarballPackage(SDistPackage):
         base_srcdir = self._base_srcdir(pkgdir)
         with (self._urlopen(self.url) if self.url else
               open(self.path, 'rb')) as f:
-            # XXX: Support zip.
-            with tarfile.open(mode='r:*', fileobj=f) as tar:
-                self.guessed_srcdir = tar.next().name.split('/', 1)[0]
+            with archive.open(f) as arc:
+                self.guessed_srcdir = arc.getnames()[0].split('/', 1)[0]
                 if self.files:
                     for i in self.files:
-                        tar.extract(i, base_srcdir)
+                        arc.extract(i, base_srcdir)
                 else:
-                    tar.extractall(base_srcdir)
+                    arc.extractall(base_srcdir)
 
         return self._find_mopack(self.srcdir or self.guessed_srcdir,
                                  parent_config)
