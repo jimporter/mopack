@@ -86,9 +86,9 @@ class LogFile:
                 args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                 universal_newlines=True, check=True
             )
-            self.file.write(result.stdout)
+            print(result.stdout, file=self.file)
         except subprocess.CalledProcessError as e:
-            self.file.write(e.stdout)
+            print(e.stdout, file=self.file)
             msg = "Command '{}' returned non-zero exit status {}".format(
                 command, e.returncode
             )
@@ -96,7 +96,7 @@ class LogFile:
                 msg += ':\n' + textwrap.indent(e.stdout.rstrip(), '  ')
             raise subprocess.SubprocessError(msg)
         except Exception as e:
-            self.file.write(str(e))
+            print(str(e), file=self.file)
             raise type(e)("Command '{}' failed:\n{}".format(
                 command, textwrap.indent(str(e), '  ')
             ))

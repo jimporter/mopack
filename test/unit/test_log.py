@@ -2,6 +2,7 @@ import inspect
 import logging
 import warnings
 from io import StringIO
+from subprocess import CalledProcessError, CompletedProcess, SubprocessError
 from unittest import mock, TestCase
 
 from mopack import log
@@ -118,3 +119,63 @@ class TestInit(TestCase):
             with mock.patch('logging.root.setLevel') as mlevel:
                 log.init(debug=True)
                 mlevel.assert_called_once_with(log.DEBUG)
+
+
+class TestLogFile(TestCase):
+    def test_with(self):
+        with mock.patch('builtins.open', mock.mock_open()) as mopen:
+            with log.LogFile.open('pkgdir', 'package'):
+                pass
+            mopen().__exit__.assert_called_once_with(None, None, None)
+
+    def test_close(self):
+        with mock.patch('builtins.open', mock.mock_open()) as mopen:
+            logfile = log.LogFile.open('pkgdir', 'package')
+            logfile.close()
+            mopen().close.assert_called_once_with()
+
+    def test_check_call(self):
+        comp_proc = CompletedProcess(None, 0, stdout='stdout')
+        with mock.patch('builtins.open', mock.mock_open()) as mopen, \
+             mock.patch('subprocess.run', return_value=comp_proc):  # noqa
+            with log.LogFile.open('pkgdir', 'package') as logfile:
+                logfile.check_call(['cmd', '--arg'])
+                output = ''.join(i[-2][0] for i in mopen().write.mock_calls)
+                self.assertEqual(output, '$ cmd --arg\nstdout\n')
+
+    def test_check_call_proc_error_no_output(self):
+        err = CalledProcessError(1, None, '')
+        msg = "Command 'cmd --arg' returned non-zero exit status 1"
+
+        with mock.patch('builtins.open', mock.mock_open()) as mopen, \
+             mock.patch('subprocess.run', side_effect=err):  # noqa
+            with log.LogFile.open('pkgdir', 'package') as logfile:
+                with self.assertRaises(SubprocessError, msg=msg):
+                    logfile.check_call(['cmd', '--arg'])
+                output = ''.join(i[-2][0] for i in mopen().write.mock_calls)
+                self.assertEqual(output, '$ cmd --arg\n\n')
+
+    def test_check_call_proc_error_output(self):
+        err = CalledProcessError(1, None, output='stdout\nstdout\n')
+        msg = ("Command 'cmd --arg' returned non-zero exit status 1:" +
+               "  stdout\n  stdout")
+
+        with mock.patch('builtins.open', mock.mock_open()) as mopen, \
+             mock.patch('subprocess.run', side_effect=err):  # noqa
+            with log.LogFile.open('pkgdir', 'package') as logfile:
+                with self.assertRaises(SubprocessError, msg=msg):
+                    logfile.check_call(['cmd', '--arg'])
+                output = ''.join(i[-2][0] for i in mopen().write.mock_calls)
+                self.assertEqual(output, '$ cmd --arg\nstdout\nstdout\n\n')
+
+    def test_check_call_os_error(self):
+        err = OSError('bad')
+        msg = "Command 'cmd --arg' failed:\n  bad"
+
+        with mock.patch('builtins.open', mock.mock_open()) as mopen, \
+             mock.patch('subprocess.run', side_effect=err):  # noqa
+            with log.LogFile.open('pkgdir', 'package') as logfile:
+                with self.assertRaises(OSError, msg=msg):
+                    logfile.check_call(['cmd', '--arg'])
+                output = ''.join(i[-2][0] for i in mopen().write.mock_calls)
+                self.assertEqual(output, '$ cmd --arg\nbad\n')
