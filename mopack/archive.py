@@ -10,7 +10,7 @@ class Archive:
         if len(split_mode) == 2:
             mode, fmt = split_mode
         else:
-            mode, fmt = split_mode, '*'
+            mode, fmt = split_mode[0], '*'
         full_mode = mode + ':' + fmt
 
         if fmt == '*':
