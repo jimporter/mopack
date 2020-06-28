@@ -135,7 +135,6 @@ class TestCleanNeeded(IntegrationTest):
                 'builder': self._builder('hello'),
                 'url': None,
                 'path': os.path.join(test_data_dir, 'hello-bfg.tar.gz'),
-                'files': None,
                 'srcdir': None,
                 'guessed_srcdir': 'hello-bfg',
             }, {

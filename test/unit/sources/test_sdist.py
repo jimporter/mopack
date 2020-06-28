@@ -326,6 +326,16 @@ class TestDirectory(SDistTestCase):
         with self.assertRaises(TypeError):
             data = pkg.dehydrate()
 
+    def test_builder_types(self):
+        pkg = DirectoryPackage('foo', build='bfg9000', path=self.srcpath,
+                               config_file=self.config_file)
+        self.assertEqual(pkg.builder_types, ['bfg9000'])
+
+        pkg = DirectoryPackage('foo', path=self.srcpath,
+                               config_file=self.config_file)
+        with self.assertRaises(TypeError):
+            pkg.builder_types
+
 
 class TestTarball(SDistTestCase):
     pkg_type = TarballPackage
@@ -676,3 +686,13 @@ class TestTarball(SDistTestCase):
                              config_file=self.config_file)
         with self.assertRaises(TypeError):
             data = pkg.dehydrate()
+
+    def test_builder_types(self):
+        pkg = TarballPackage('foo', build='bfg9000', path=self.srcpath,
+                             config_file=self.config_file)
+        self.assertEqual(pkg.builder_types, ['bfg9000'])
+
+        pkg = TarballPackage('foo', path=self.srcpath,
+                             config_file=self.config_file)
+        with self.assertRaises(TypeError):
+            pkg.builder_types

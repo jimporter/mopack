@@ -41,7 +41,7 @@ class SDistPackage(Package):
         super().set_options(options)
 
     def dehydrate(self):
-        if hasattr(self, 'pending_usage'):  # pragma: no cover
+        if hasattr(self, 'pending_usage'):
             raise TypeError('cannot dehydrate until `pending_usage` is ' +
                             'finalized')
         return super().dehydrate()
@@ -103,15 +103,13 @@ class TarballPackage(SDistPackage):
     _skip_compare_fields = (SDistPackage._skip_compare_fields +
                             ('guessed_srcdir',))
 
-    def __init__(self, name, *, url=None, path=None, files=None, srcdir=None,
-                 **kwargs):
+    def __init__(self, name, *, url=None, path=None, srcdir=None, **kwargs):
         super().__init__(name, **kwargs)
 
         if (url is None) == (path is None):
             raise TypeError('exactly one of `url` or `path` must be specified')
         self.url = url
         self.path = types.maybe(types.any_path(self.config_dir))('path', path)
-        self.files = files
         self.srcdir = types.maybe(types.inner_path)('srcdir', srcdir)
         self.guessed_srcdir = None  # Set in fetch().
 
@@ -149,12 +147,10 @@ class TarballPackage(SDistPackage):
             with (self._urlopen(self.url) if self.url else
                   open(self.path, 'rb')) as f:
                 with archive.open(f) as arc:
-                    self.guessed_srcdir = arc.getnames()[0].split('/', 1)[0]
-                    if self.files:
-                        for i in self.files:
-                            arc.extract(i, base_srcdir)
-                    else:
-                        arc.extractall(base_srcdir)
+                    names = arc.getnames()
+                    self.guessed_srcdir = (names[0].split('/', 1)[0] if names
+                                           else None)
+                    arc.extractall(base_srcdir)
 
         return self._find_mopack(self.srcdir or self.guessed_srcdir,
                                  parent_config)
