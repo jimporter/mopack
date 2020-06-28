@@ -84,7 +84,7 @@ class LogFile:
         try:
             result = subprocess.run(
                 args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, check=True
+                universal_newlines=True, check=True, **kwargs
             )
             print(result.stdout, file=self.file)
         except subprocess.CalledProcessError as e:

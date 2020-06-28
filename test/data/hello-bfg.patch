@@ -1,0 +1,12 @@
+diff --git a/src/hello.cpp b/src/hello.cpp
+index a3361cd..65c8976 100644
+--- a/src/hello.cpp
++++ b/src/hello.cpp
+@@ -4,6 +4,6 @@
+ 
+ namespace hello {
+   void LIBHELLO_PUBLIC say_hello() {
+-    std::cout << "hello, library!" << std::endl;
++    std::cout << "hello, patched!" << std::endl;
+   }
+ }

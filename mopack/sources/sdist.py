@@ -7,6 +7,8 @@ from . import Package, submodules_type
 from .. import archive, log, types
 from ..builders import Builder, make_builder
 from ..config import ChildConfig
+from ..log import LogFile
+from ..path import pushd
 
 
 class SDistPackage(Package):
@@ -103,7 +105,8 @@ class TarballPackage(SDistPackage):
     _skip_compare_fields = (SDistPackage._skip_compare_fields +
                             ('guessed_srcdir',))
 
-    def __init__(self, name, *, url=None, path=None, srcdir=None, **kwargs):
+    def __init__(self, name, *, url=None, path=None, srcdir=None, patch=None,
+                 **kwargs):
         super().__init__(name, **kwargs)
 
         if (url is None) == (path is None):
@@ -111,6 +114,9 @@ class TarballPackage(SDistPackage):
         self.url = url
         self.path = types.maybe(types.any_path(self.config_dir))('path', path)
         self.srcdir = types.maybe(types.inner_path)('srcdir', srcdir)
+        self.patch = types.maybe(types.any_path(self.config_dir))(
+            'patch', patch
+        )
         self.guessed_srcdir = None  # Set in fetch().
 
     def _base_srcdir(self, pkgdir):
@@ -151,6 +157,13 @@ class TarballPackage(SDistPackage):
                     self.guessed_srcdir = (names[0].split('/', 1)[0] if names
                                            else None)
                     arc.extractall(base_srcdir)
+
+            if self.patch:
+                log.info('patching {!r} with {}'.format(self.name, self.patch))
+                with LogFile.open(pkgdir, self.name + '-patch') as logfile, \
+                     open(self.patch) as f, \
+                     pushd(self._srcdir(pkgdir)):  # noqa
+                    logfile.check_call(['patch', '-p1'], stdin=f)
 
         return self._find_mopack(self.srcdir or self.guessed_srcdir,
                                  parent_config)

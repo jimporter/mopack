@@ -137,6 +137,7 @@ class TestCleanNeeded(IntegrationTest):
                 'path': os.path.join(test_data_dir, 'hello-bfg.tar.gz'),
                 'srcdir': None,
                 'guessed_srcdir': 'hello-bfg',
+                'patch': None,
             }, {
                 'name': 'greeter',
                 'config_file': config,

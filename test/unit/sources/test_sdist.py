@@ -1,4 +1,5 @@
 import os
+import subprocess
 from unittest import mock
 
 from . import SourceTest
@@ -356,6 +357,7 @@ class TestTarball(SDistTestCase):
         pkg = self.make_package('foo', build='bfg9000', url=self.srcurl)
         self.assertEqual(pkg.url, self.srcurl)
         self.assertEqual(pkg.path, None)
+        self.assertEqual(pkg.patch, None)
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
 
         self.check_fetch(pkg)
@@ -365,6 +367,7 @@ class TestTarball(SDistTestCase):
         pkg = self.make_package('foo', build='bfg9000', path=self.srcpath)
         self.assertEqual(pkg.url, None)
         self.assertEqual(pkg.path, self.srcpath)
+        self.assertEqual(pkg.patch, None)
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
 
         self.check_fetch(pkg)
@@ -439,6 +442,27 @@ class TestTarball(SDistTestCase):
             'library_path': [], 'headers': [], 'libraries': ['foo'],
             'compile_flags': [], 'link_flags': [],
         })
+
+    def test_patch(self):
+        patch = os.path.join(test_data_dir, 'hello-bfg.patch')
+        pkg = self.make_package('foo', build='bfg9000', path=self.srcpath,
+                                patch=patch)
+        self.assertEqual(pkg.patch, patch)
+
+        srcdir = os.path.join(self.pkgdir, 'src', 'foo')
+        with mock.patch('mopack.sources.sdist.urlopen', self.mock_urlopen), \
+             mock.patch('mopack.sources.sdist.pushd'), \
+             mock.patch('tarfile.TarFile.extractall') as mtar, \
+             mock.patch('builtins.open', mock_open_after_first()) as mopen, \
+             mock.patch('subprocess.run') as mrun:  # noqa
+            pkg.fetch(self.pkgdir, None)
+            mtar.assert_called_once_with(srcdir, None)
+            mrun.assert_called_once_with(
+                ['patch', '-p1'], stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT, stdin=mopen(),
+                universal_newlines=True, check=True
+            )
+        self.check_resolve(pkg)
 
     def test_already_fetched(self):
         def mock_exists(p):
