@@ -391,10 +391,13 @@ class TestTarball(SDistTestCase):
         self.check_resolve(pkg)
 
     def test_infer_build(self):
+        def mock_exists(p):
+            return os.path.basename(p) == 'mopack.yml'
+
         pkg = self.make_package('foo', path=self.srcpath, set_options=False)
         self.assertEqual(pkg.builder, None)
 
-        with mock.patch('os.path.exists', return_value=True), \
+        with mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_after_first(
                  read_data='self:\n  build: bfg9000'
              )), \
@@ -410,7 +413,7 @@ class TestTarball(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath,
                                 usage={'type': 'system'}, set_options=False)
 
-        with mock.patch('os.path.exists', return_value=True), \
+        with mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_after_first(
                  read_data='self:\n  build: bfg9000'
              )), \
@@ -426,6 +429,19 @@ class TestTarball(SDistTestCase):
             'library_path': [], 'headers': [], 'libraries': ['foo'],
             'compile_flags': [], 'link_flags': [],
         })
+
+    def test_already_fetched(self):
+        def mock_exists(p):
+            return os.path.basename(p) == 'foo'
+
+        build = {'type': 'bfg9000', 'extra_args': '--extra'}
+        pkg = self.make_package('foo', path=self.srcpath, build=build,
+                                srcdir='srcdir', usage='pkg-config')
+        with mock.patch('os.path.exists', mock_exists), \
+             mock.patch('tarfile.TarFile.extractall') as mtar:  # noqa
+            pkg.fetch(self.pkgdir, None)
+            mtar.assert_not_called()
+        self.check_resolve(pkg)
 
     def test_usage(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',

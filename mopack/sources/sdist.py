@@ -128,6 +128,10 @@ class TarballPackage(SDistPackage):
 
     def clean_pre(self, pkgdir, new_package):
         if self.equal(new_package, skip_fields=('builder',)):
+            # Since both package objects have the same configuration, pass the
+            # guessed srcdir on to the new package instance. That way, we don't
+            # have to re-extract the tarball to get the guessed srcdir.
+            new_package.guessed_srcdir = self.guessed_srcdir
             return False
 
         log.info('cleaning {!r} sources'.format(self.name))
@@ -135,18 +139,22 @@ class TarballPackage(SDistPackage):
         return True
 
     def fetch(self, pkgdir, parent_config):
-        log.info('fetching {!r} from {}'.format(self.name, self.source))
-
         base_srcdir = self._base_srcdir(pkgdir)
-        with (self._urlopen(self.url) if self.url else
-              open(self.path, 'rb')) as f:
-            with archive.open(f) as arc:
-                self.guessed_srcdir = arc.getnames()[0].split('/', 1)[0]
-                if self.files:
-                    for i in self.files:
-                        arc.extract(i, base_srcdir)
-                else:
-                    arc.extractall(base_srcdir)
+        if os.path.exists(base_srcdir):
+            log.info('{!r} already fetched'.format(self.name))
+        else:
+            where = self.url or self.path
+            log.info('fetching {!r} from {}'.format(self.name, where))
+
+            with (self._urlopen(self.url) if self.url else
+                  open(self.path, 'rb')) as f:
+                with archive.open(f) as arc:
+                    self.guessed_srcdir = arc.getnames()[0].split('/', 1)[0]
+                    if self.files:
+                        for i in self.files:
+                            arc.extract(i, base_srcdir)
+                    else:
+                        arc.extractall(base_srcdir)
 
         return self._find_mopack(self.srcdir or self.guessed_srcdir,
                                  parent_config)
