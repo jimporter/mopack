@@ -8,7 +8,7 @@ from . import *
 
 
 class SDistTest(IntegrationTest):
-    def _check_usage(self, name):
+    def check_usage(self, name):
         output = json.loads(self.assertPopen([
             'mopack', 'usage', name, '--json'
         ]))
@@ -18,6 +18,7 @@ class SDistTest(IntegrationTest):
             'path': os.path.join(self.stage, 'mopack', 'build', name,
                                  'pkgconfig'),
             'pcfiles': [name],
+            'extra_args': [],
         })
 
     def _options(self):
@@ -39,6 +40,7 @@ class SDistTest(IntegrationTest):
                 'type': 'pkg-config',
                 'path': 'pkgconfig',
                 'pcfile': name,
+                'extra_args': [],
             },
         }
 
@@ -55,7 +57,7 @@ class TestDirectory(SDistTest):
         self.assertExists('mopack/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self._check_usage('hello')
+        self.check_usage('hello')
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -86,7 +88,7 @@ class TestTarball(SDistTest):
         self.assertExists('mopack/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self._check_usage('hello')
+        self.check_usage('hello')
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {

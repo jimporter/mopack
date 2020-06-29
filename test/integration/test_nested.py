@@ -13,6 +13,18 @@ class TestNested(IntegrationTest):
         self.prefix = stage_dir('nested-install', chdir=False)
         self.pkgbuilddir = os.path.join(self.stage, 'mopack', 'build')
 
+    def check_usage(self, name):
+        output = json.loads(self.assertPopen([
+            'mopack', 'usage', name, '--json'
+        ]))
+        self.assertEqual(output, {
+            'name': name,
+            'type': 'pkg-config',
+            'path': os.path.join(self.pkgbuilddir, name, 'pkgconfig'),
+            'pcfiles': [name],
+            'extra_args': [],
+        })
+
     def _builder(self, name):
         return {
             'type': 'bfg9000',
@@ -22,6 +34,7 @@ class TestNested(IntegrationTest):
                 'type': 'pkg-config',
                 'path': 'pkgconfig',
                 'pcfile': name,
+                'extra_args': [],
             },
         }
 
@@ -36,25 +49,8 @@ class TestNested(IntegrationTest):
         self.assertExists('mopack/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        output = json.loads(self.assertPopen([
-            'mopack', 'usage', 'greeter', '--json'
-        ]))
-        self.assertEqual(output, {
-            'name': 'greeter',
-            'type': 'pkg-config',
-            'path': os.path.join(self.pkgbuilddir, 'greeter', 'pkgconfig'),
-            'pcfiles': ['greeter'],
-        })
-
-        output = json.loads(self.assertPopen([
-            'mopack', 'usage', 'hello', '--json'
-        ]))
-        self.assertEqual(output, {
-            'name': 'hello',
-            'type': 'pkg-config',
-            'path': os.path.join(self.pkgbuilddir, 'hello', 'pkgconfig'),
-            'pcfiles': ['hello'],
-        })
+        self.check_usage('greeter')
+        self.check_usage('hello')
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {

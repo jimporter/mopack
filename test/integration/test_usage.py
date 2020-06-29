@@ -29,7 +29,8 @@ class TestUsage(IntegrationTest):
             'type': 'pkg-config',
             'path': os.path.join(self.stage, 'mopack', 'build', 'hello',
                                  'pkgconfig'),
-            'pcfiles': ['hello']
+            'pcfiles': ['hello'],
+            'extra_args': [],
         }
         self.assertUsageOutput('hello', expected_output_hello)
         self.assertUsageOutput('hello', expected_output_hello, ['--strict'])

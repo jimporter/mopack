@@ -31,6 +31,7 @@ class TestNestedCMake(IntegrationTest):
             'type': 'pkg-config',
             'path': os.path.join(self.pkgbuilddir, 'greeter', 'pkgconfig'),
             'pcfiles': ['greeter'],
+            'extra_args': [],
         })
 
         output = json.loads(self.assertPopen([
@@ -94,6 +95,7 @@ class TestNestedCMake(IntegrationTest):
                         'type': 'pkg-config',
                         'path': 'pkgconfig',
                         'pcfile': 'greeter',
+                        'extra_args': [],
                     },
                 },
                 'path': os.path.join(test_data_dir, 'greeter-bfg'),

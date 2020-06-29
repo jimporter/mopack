@@ -23,7 +23,7 @@ class PkgConfigUsage(Usage):
     type = 'pkg-config'
 
     def __init__(self, name, *, path='pkgconfig', pcfile=types.Unset,
-                 submodule_map=types.Unset, submodules):
+                 extra_args=None, submodule_map=types.Unset, submodules):
         self.path = types.inner_path('path', path)
         if submodules and submodules['required']:
             # If submodules are required, default to an empty .pc file, since
@@ -35,6 +35,8 @@ class PkgConfigUsage(Usage):
         self.pcfile = types.default(types.string, default_pcfile)(
             'pcfile', pcfile
         )
+
+        self.extra_args = types.shell_args()('extra_args', extra_args)
 
         if submodules:
             self.submodule_map = self._package_default(
@@ -65,4 +67,5 @@ class PkgConfigUsage(Usage):
             if f:
                 pcfiles.append(f)
 
-        return self._usage(path=path, pcfiles=pcfiles)
+        return self._usage(path=path, pcfiles=pcfiles,
+                           extra_args=self.extra_args)

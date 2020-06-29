@@ -30,7 +30,7 @@ class TestMakePackage(SourceTest):
 
         self.assertEqual(pkg.get_usage(self.pkgdir, None), {
             'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['foo']
+            'pcfiles': ['foo'], 'extra_args': [],
         })
         with self.assertRaises(ValueError):
             pkg.get_usage(self.pkgdir, ['sub'])

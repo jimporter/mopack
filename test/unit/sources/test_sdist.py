@@ -42,7 +42,7 @@ class SDistTestCase(SourceTest):
                        ['foo'])
             pcfiles.extend('foo_{}'.format(i) for i in iterate(submodules))
             usage = {'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
-                     'pcfiles': pcfiles}
+                     'pcfiles': pcfiles, 'extra_args': []}
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
@@ -165,7 +165,7 @@ class TestDirectory(SDistTestCase):
         pkg.fetch(self.pkgdir, None)
         self.check_resolve(pkg, usage={
             'type': 'pkg-config', 'path': self.pkgconfdir('foo', 'pkgconf'),
-            'pcfiles': ['foo']
+            'pcfiles': ['foo'], 'extra_args': [],
         })
 
     def test_submodules(self):
@@ -181,7 +181,7 @@ class TestDirectory(SDistTestCase):
                                 submodules=submodules_required)
         self.check_resolve(pkg, submodules=['sub'], usage={
             'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['bar', 'foo_sub']
+            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
         })
 
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
@@ -193,7 +193,7 @@ class TestDirectory(SDistTestCase):
                                 submodules=submodules_optional)
         self.check_resolve(pkg, submodules=['sub'], usage={
             'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['bar', 'foo_sub']
+            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
         })
 
     def test_invalid_submodule(self):
@@ -499,7 +499,7 @@ class TestTarball(SDistTestCase):
         self.check_fetch(pkg)
         self.check_resolve(pkg, usage={
             'type': 'pkg-config', 'path': self.pkgconfdir('foo', 'pkgconf'),
-            'pcfiles': ['foo']
+            'pcfiles': ['foo'], 'extra_args': [],
         })
 
     def test_submodules(self):
@@ -517,7 +517,7 @@ class TestTarball(SDistTestCase):
         self.check_fetch(pkg)
         self.check_resolve(pkg, submodules=['sub'], usage={
             'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['bar', 'foo_sub']
+            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
         })
 
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
@@ -531,7 +531,7 @@ class TestTarball(SDistTestCase):
         self.check_fetch(pkg)
         self.check_resolve(pkg, submodules=['sub'], usage={
             'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['bar', 'foo_sub']
+            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
         })
 
     def test_invalid_submodule(self):

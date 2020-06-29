@@ -43,7 +43,7 @@ class TestConan(SourceTest):
             pcfiles.extend('{}_{}'.format(pkg.name, i)
                            for i in iterate(submodules))
             usage = {'type': 'pkg-config', 'path': self.pkgconfdir,
-                     'pcfiles': pcfiles}
+                     'pcfiles': pcfiles, 'extra_args': []}
         self.assertEqual(pkg.get_usage(self.pkgdir, submodules), usage)
 
     def test_basic(self):
@@ -173,7 +173,7 @@ class TestConan(SourceTest):
                                 submodules=submodules_required)
         self.check_usage(pkg, submodules=['sub'], usage={
             'type': 'pkg-config', 'path': self.pkgconfdir,
-            'pcfiles': ['bar', 'foo_sub']
+            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
         })
 
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
@@ -186,7 +186,7 @@ class TestConan(SourceTest):
                                 submodules=submodules_optional)
         self.check_usage(pkg, submodules=['sub'], usage={
             'type': 'pkg-config', 'path': self.pkgconfdir,
-            'pcfiles': ['bar', 'foo_sub']
+            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
         })
 
     def test_invalid_submodule(self):

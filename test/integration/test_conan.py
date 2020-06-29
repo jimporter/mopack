@@ -25,6 +25,7 @@ class TestConan(IntegrationTest):
             'type': 'pkg-config',
             'path': os.path.join(self.stage, 'mopack', 'conan'),
             'pcfiles': ['zlib'],
+            'extra_args': [],
         })
 
         output = json.loads(slurp('mopack/mopack.json'))
@@ -45,6 +46,11 @@ class TestConan(IntegrationTest):
                 'submodules': None,
                 'remote': 'zlib/1.2.11@conan/stable',
                 'options': {'shared': True},
-                'usage': {'type': 'pkg-config', 'path': '.', 'pcfile': 'zlib'},
+                'usage': {
+                    'type': 'pkg-config',
+                    'path': '.',
+                    'pcfile': 'zlib',
+                    'extra_args': [],
+                },
             }],
         })

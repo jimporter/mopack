@@ -21,6 +21,7 @@ class TestSubmodules(IntegrationTest):
             'path': os.path.join(self.stage, 'mopack', 'build', 'hello',
                                  'pkgconfig'),
             'pcfiles': ['hello_' + i for i in submodules],
+            'extra_args': [],
         })
 
     def test_resolve(self):
@@ -65,6 +66,7 @@ class TestSubmodules(IntegrationTest):
                         'type': 'pkg-config',
                         'path': 'pkgconfig',
                         'pcfile': None,
+                        'extra_args': [],
                         'submodule_map': {
                             '*': {'pcfile': 'hello_{submodule}'},
                         },

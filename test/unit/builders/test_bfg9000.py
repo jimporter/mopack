@@ -25,7 +25,7 @@ class TestBfg9000Builder(BuilderTest):
             pcfiles = ['foo']
             pcfiles.extend('foo_{}'.format(i) for i in iterate(submodules))
             usage = {'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
-                     'pcfiles': pcfiles}
+                     'pcfiles': pcfiles, 'extra_args': []}
 
         srcdir = '/path/to/src'
         with mock_open_log() as mopen, \
@@ -92,7 +92,7 @@ class TestBfg9000Builder(BuilderTest):
 
         self.check_build(builder, usage={
             'type': 'pkg-config', 'path': self.pkgconfdir('foo', 'pkgconf'),
-            'pcfiles': ['foo']
+            'pcfiles': ['foo'], 'extra_args': [],
         })
 
     def test_submodules(self):
@@ -102,7 +102,7 @@ class TestBfg9000Builder(BuilderTest):
         builder = self.make_builder('foo', submodules=submodules_required)
         self.check_build(builder, submodules=['sub'], usage={
             'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['foo_sub']
+            'pcfiles': ['foo_sub'], 'extra_args': [],
         })
 
         builder = self.make_builder(
@@ -111,7 +111,7 @@ class TestBfg9000Builder(BuilderTest):
         )
         self.check_build(builder, submodules=['sub'], usage={
             'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['bar', 'foo_sub']
+            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
         })
 
         builder = self.make_builder('foo', submodules=submodules_optional)
@@ -123,7 +123,7 @@ class TestBfg9000Builder(BuilderTest):
         )
         self.check_build(builder, submodules=['sub'], usage={
             'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['bar', 'foo_sub']
+            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
         })
 
     def test_toolchain(self):
