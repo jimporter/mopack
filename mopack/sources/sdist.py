@@ -8,7 +8,7 @@ from .. import archive, log, types
 from ..builders import Builder, make_builder
 from ..config import ChildConfig
 from ..log import LogFile
-from ..path import pushd
+from ..path import filter_glob, pushd
 
 
 class SDistPackage(Package):
@@ -105,14 +105,15 @@ class TarballPackage(SDistPackage):
     _skip_compare_fields = (SDistPackage._skip_compare_fields +
                             ('guessed_srcdir',))
 
-    def __init__(self, name, *, url=None, path=None, srcdir=None, patch=None,
-                 **kwargs):
+    def __init__(self, name, *, url=None, path=None, files=None, srcdir=None,
+                 patch=None, **kwargs):
         super().__init__(name, **kwargs)
 
         if (url is None) == (path is None):
             raise TypeError('exactly one of `url` or `path` must be specified')
         self.url = url
         self.path = types.maybe(types.any_path(self.config_dir))('path', path)
+        self.files = types.list_of(types.string, listify=True)('files', files)
         self.srcdir = types.maybe(types.inner_path)('srcdir', srcdir)
         self.patch = types.maybe(types.any_path(self.config_dir))(
             'patch', patch
@@ -156,7 +157,11 @@ class TarballPackage(SDistPackage):
                     names = arc.getnames()
                     self.guessed_srcdir = (names[0].split('/', 1)[0] if names
                                            else None)
-                    arc.extractall(base_srcdir)
+                    if self.files:
+                        for i in filter_glob(self.files, names):
+                            arc.extract(i, base_srcdir)
+                    else:
+                        arc.extractall(base_srcdir)
 
             if self.patch:
                 log.info('patching {!r} with {}'.format(self.name, self.patch))

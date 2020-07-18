@@ -34,9 +34,17 @@ class Archive:
         self._archive.__exit__(type, value, traceback)
 
     def getnames(self):
+        def fixdir(info):
+            if info.isdir() and info.name[-1] != '/':
+                return info.name + '/'
+            return info.name
+
         if isinstance(self._archive, zipfile.ZipFile):
-            return self._archive.namelist()
-        return self._archive.getnames()
+            result = self._archive.namelist()
+        else:
+            result = [fixdir(i) for i in self._archive.getmembers()]
+        result.sort()
+        return result
 
     def extract(self, member, path='.'):
         return self._archive.extract(member, path)

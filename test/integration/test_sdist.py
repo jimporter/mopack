@@ -102,6 +102,7 @@ class TestTarball(SDistTest):
                 'builder': self._builder('hello'),
                 'url': None,
                 'path': os.path.join(test_data_dir, 'hello-bfg.tar.gz'),
+                'files': [],
                 'srcdir': None,
                 'guessed_srcdir': 'hello-bfg',
                 'patch': None,

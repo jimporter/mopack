@@ -443,6 +443,22 @@ class TestTarball(SDistTestCase):
             'compile_flags': [], 'link_flags': [],
         })
 
+    def test_files(self):
+        pkg = self.make_package('foo', build='bfg9000', path=self.srcpath,
+                                files='/hello-bfg/include/')
+        self.assertEqual(pkg.files, ['/hello-bfg/include/'])
+
+        srcdir = os.path.join(self.pkgdir, 'src', 'foo')
+        with mock.patch('mopack.sources.sdist.urlopen', self.mock_urlopen), \
+             mock.patch('tarfile.TarFile.extract') as mtar:  # noqa
+            pkg.fetch(self.pkgdir, None)
+            self.assertEqual(mtar.mock_calls, [
+                mock.call('hello-bfg/', srcdir),
+                mock.call('hello-bfg/include/', srcdir),
+                mock.call('hello-bfg/include/hello.hpp', srcdir),
+            ])
+        self.check_resolve(pkg)
+
     def test_patch(self):
         patch = os.path.join(test_data_dir, 'hello-bfg.patch')
         pkg = self.make_package('foo', build='bfg9000', path=self.srcpath,

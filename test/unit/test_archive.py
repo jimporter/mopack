@@ -1,4 +1,7 @@
+import os.path
 from unittest import mock, TestCase
+
+from .. import test_data_dir
 
 from mopack import archive
 
@@ -53,17 +56,17 @@ class TestArchive(TestCase):
                 pass
 
     def test_getnames(self):
-        f = mock.MagicMock()
-        with mock.patch('tarfile.open') as mtar:
-            with archive.open(f, 'r:tar') as arc:
-                arc.getnames()
-            mtar().getnames.assert_called_once_with()
+        d = 'hello-bfg/'
+        names = [d, d + 'build.bfg', d + 'include/', d + 'include/hello.hpp',
+                 d + 'src/', d + 'src/hello.cpp']
 
-        with mock.patch('zipfile.ZipFile') as mzip:
-            with archive.open(f, 'r:zip') as arc:
-                with mock.patch('zipfile.ZipFile', mock.MagicMock):
-                    arc.getnames()
-            mzip().namelist.assert_called_once_with()
+        path = os.path.join(test_data_dir, 'hello-bfg.tar.gz')
+        with open(path, 'rb') as f, archive.open(f, 'r:gz') as arc:
+            self.assertEqual(arc.getnames(), names)
+
+        path = os.path.join(test_data_dir, 'hello-bfg.zip')
+        with open(path, 'rb') as f, archive.open(f, 'r:zip') as arc:
+            self.assertEqual(arc.getnames(), names)
 
     def test_extract(self):
         f = mock.MagicMock()
