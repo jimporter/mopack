@@ -18,9 +18,12 @@ def current_lineno():
 class TestLogger(TestCase):
     @staticmethod
     def _level(levelno):
-        return '\033[{format}m{name}\033[0m'.format(
-            format=log.ColoredStreamHandler._format_codes.get(levelno, '1'),
-            name=logging.getLevelName(levelno).lower()
+        handler = log.ColoredStreamHandler
+        name = logging.getLevelName(levelno).lower()
+        fmt, indent = handler._format_codes.get(levelno, ('1', False))
+        return '{space}\033[{format}m{name}\033[0m'.format(
+            space=' ' * (handler._width - len(name)) if indent else '',
+            format=fmt, name=name
         )
 
     def setUp(self):

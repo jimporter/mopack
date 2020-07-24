@@ -219,14 +219,14 @@ class TestConan(SourceTest):
         newpkg2 = self.make_package(AptPackage, 'foo')
 
         # Conan -> Conan
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('os.remove') as mremove:  # noqa
             self.assertEqual(oldpkg.clean_post(self.pkgdir, newpkg1), False)
             mlog.assert_not_called()
             mremove.assert_not_called()
 
         # Conan -> Apt
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('os.remove') as mremove:  # noqa
             self.assertEqual(oldpkg.clean_post(self.pkgdir, newpkg2), True)
             mlog.assert_called_once()
@@ -235,7 +235,7 @@ class TestConan(SourceTest):
             ))
 
         # Conan -> nothing
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('os.remove') as mremove:  # noqa
             self.assertEqual(oldpkg.clean_post(self.pkgdir, None), True)
             mlog.assert_called_once()
@@ -244,7 +244,7 @@ class TestConan(SourceTest):
             ))
 
         # Error deleting
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('os.remove',
                         side_effect=FileNotFoundError) as mremove:  # noqa
             self.assertEqual(oldpkg.clean_post(self.pkgdir, None), True)
@@ -259,7 +259,7 @@ class TestConan(SourceTest):
         newpkg2 = self.make_package(AptPackage, 'foo')
 
         # Conan -> Conan
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('os.remove') as mremove:  # noqa
             self.assertEqual(oldpkg.clean_all(self.pkgdir, newpkg1),
                              (False, False))
@@ -267,7 +267,7 @@ class TestConan(SourceTest):
             mremove.assert_not_called()
 
         # Conan -> Apt
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('os.remove') as mremove:  # noqa
             self.assertEqual(oldpkg.clean_all(self.pkgdir, newpkg2),
                              (False, True))
@@ -277,7 +277,7 @@ class TestConan(SourceTest):
             ))
 
         # Conan -> nothing
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('os.remove') as mremove:  # noqa
             self.assertEqual(oldpkg.clean_all(self.pkgdir, None),
                              (False, True))
@@ -287,7 +287,7 @@ class TestConan(SourceTest):
             ))
 
         # Error deleting
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('os.remove',
                         side_effect=FileNotFoundError) as mremove:  # noqa
             self.assertEqual(oldpkg.clean_all(self.pkgdir, None),

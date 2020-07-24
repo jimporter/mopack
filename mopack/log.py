@@ -8,14 +8,27 @@ import warnings
 from logging import (getLogger, info, debug,  # noqa: F401
                      CRITICAL, ERROR, WARNING, INFO, DEBUG)
 
+_next_level = INFO + 1
+
+
+def _make_log_level(name, color):
+    global _next_level
+    _next_level += 1
+    assert _next_level < WARNING
+    n = _next_level
+    logging.addLevelName(n, name)
+    ColoredStreamHandler._format_codes[n] = (color, True)
+    return n, lambda package, message=None: log_package(n, package, message)
+
 
 class ColoredStreamHandler(logging.StreamHandler):
+    _width = 9
     _format_codes = {
-        DEBUG: '1;35',
-        INFO: '1;34',
-        WARNING: '1;33',
-        ERROR: '1;31',
-        CRITICAL: '1;41;37',
+        DEBUG: ('1;35', False),
+        INFO: ('1;34', False),
+        WARNING: ('1;33', False),
+        ERROR: ('1;31', False),
+        CRITICAL: ('1;41;37', False),
     }
 
     def __init__(self, *args, debug=False, **kwargs):  # noqa: F811
@@ -23,9 +36,11 @@ class ColoredStreamHandler(logging.StreamHandler):
         super().__init__(*args, **kwargs)
 
     def format(self, record):
-        record.coloredlevel = '\033[{format}m{name}\033[0m'.format(
-            format=self._format_codes.get(record.levelno, '1'),
-            name=record.levelname.lower()
+        name = record.levelname.lower()
+        fmt, indent = self._format_codes.get(record.levelno, ('1', False))
+        record.coloredlevel = '{space}\033[{format}m{name}\033[0m'.format(
+            space=' ' * (self._width - len(name)) if indent else '',
+            format=fmt, name=record.levelname.lower()
         )
         return super().format(record)
 
@@ -35,8 +50,15 @@ class ColoredStreamHandler(logging.StreamHandler):
         return super().emit(record)
 
 
+PKG_CLEAN,   pkg_clean   = _make_log_level('clean',   '1;34')
+PKG_FETCH,   pkg_fetch   = _make_log_level('fetch',   '1;36')
+PKG_PATCH,   pkg_patch   = _make_log_level('patch',   '1;34')
+PKG_RESOLVE, pkg_resolve = _make_log_level('resolve', '1;32')
+PKG_DEPLOY,  pkg_deploy  = _make_log_level('deploy',  '1;32')
+
+
 def _init_logging(logger, debug, stream=None):  # noqa: F811
-    logger.setLevel(logging.DEBUG if debug else logging.INFO)
+    logger.setLevel(DEBUG if debug else INFO)
 
     handler = ColoredStreamHandler(stream, debug=debug)
     fmt = '%(coloredlevel)s: %(message)s'
@@ -57,6 +79,13 @@ def init(color='auto', debug=False, warn_once=False):  # noqa: F811
         warnings.filterwarnings('once')
 
     _init_logging(logging.root, debug)
+
+
+def log_package(level, package, message=None):
+    final_message = '\033[33m{}\033[0m'.format(package)
+    if message:
+        final_message += ' ' + message
+    logging.log(level, final_message)
 
 
 def _showwarning(message, category, filename, lineno, file=None, line=None):

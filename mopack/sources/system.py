@@ -23,7 +23,7 @@ class SystemPackage(BinaryPackage):
         )
 
     def resolve(self, pkgdir, deploy_paths):
-        log.info('resolving {!r} from {}'.format(self.name, self.source))
+        log.pkg_resolve(self.name, 'from {}'.format(self.source))
 
     def deploy(self, pkgdir):
         pass

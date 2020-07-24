@@ -232,28 +232,28 @@ class TestDirectory(SDistTestCase):
         newpkg2 = self.make_package(AptPackage, 'foo')
 
         # Directory -> Directory (same)
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_post(self.pkgdir, oldpkg), False)
             mlog.assert_not_called()
             mclean.assert_not_called()
 
         # Directory -> Directory (different)
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_post(self.pkgdir, newpkg1), True)
             mlog.assert_called_once()
             mclean.assert_called_once_with(self.pkgdir)
 
         # Directory -> Apt
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_post(self.pkgdir, newpkg2), True)
             mlog.assert_called_once()
             mclean.assert_called_once_with(self.pkgdir)
 
         # Directory -> nothing
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_post(self.pkgdir, None), True)
             mlog.assert_called_once()
@@ -266,7 +266,7 @@ class TestDirectory(SDistTestCase):
         newpkg2 = self.make_package(AptPackage, 'foo')
 
         # Directory -> Directory (same)
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_all(self.pkgdir, oldpkg),
                              (False, False))
@@ -274,7 +274,7 @@ class TestDirectory(SDistTestCase):
             mclean.assert_not_called()
 
         # Directory -> Directory (different)
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_all(self.pkgdir, newpkg1),
                              (False, True))
@@ -282,7 +282,7 @@ class TestDirectory(SDistTestCase):
             mclean.assert_called_once_with(self.pkgdir)
 
         # Directory -> Apt
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_all(self.pkgdir, newpkg2),
                              (False, True))
@@ -290,7 +290,7 @@ class TestDirectory(SDistTestCase):
             mclean.assert_called_once_with(self.pkgdir)
 
         # Directory -> nothing
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_all(self.pkgdir, None),
                              (False, True))
@@ -581,28 +581,28 @@ class TestTarball(SDistTestCase):
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
 
         # Tarball -> Tarball (same)
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
             self.assertEqual(oldpkg.clean_pre(self.pkgdir, oldpkg), False)
             mlog.assert_not_called()
             mrmtree.assert_not_called()
 
         # Tarball -> Tarball (different)
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
             self.assertEqual(oldpkg.clean_pre(self.pkgdir, newpkg1), True)
             mlog.assert_called_once()
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
         # Tarball -> Apt
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
             self.assertEqual(oldpkg.clean_pre(self.pkgdir, newpkg2), True)
             mlog.assert_called_once()
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
         # Tarball -> nothing
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
             self.assertEqual(oldpkg.clean_pre(self.pkgdir, None), True)
             mlog.assert_called_once()
@@ -617,28 +617,28 @@ class TestTarball(SDistTestCase):
         newpkg2 = self.make_package(AptPackage, 'foo')
 
         # Tarball -> Tarball (same)
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_post(self.pkgdir, oldpkg), False)
             mlog.assert_not_called()
             mclean.assert_not_called()
 
         # Tarball -> Tarball (different)
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_post(self.pkgdir, newpkg1), True)
             mlog.assert_called_once()
             mclean.assert_called_once_with(self.pkgdir)
 
         # Tarball -> Apt
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_post(self.pkgdir, newpkg2), True)
             mlog.assert_called_once()
             mclean.assert_called_once_with(self.pkgdir)
 
         # Tarball -> nothing
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_post(self.pkgdir, None), True)
             mlog.assert_called_once()
@@ -655,7 +655,7 @@ class TestTarball(SDistTestCase):
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
 
         # Tarball -> Tarball (same)
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
             self.assertEqual(oldpkg.clean_all(self.pkgdir, oldpkg),
@@ -665,7 +665,7 @@ class TestTarball(SDistTestCase):
             mrmtree.assert_not_called()
 
         # Tarball -> Tarball (different)
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
             self.assertEqual(oldpkg.clean_all(self.pkgdir, newpkg1),
@@ -675,7 +675,7 @@ class TestTarball(SDistTestCase):
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
         # Tarball -> Apt
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
             self.assertEqual(oldpkg.clean_all(self.pkgdir, newpkg2),
@@ -685,7 +685,7 @@ class TestTarball(SDistTestCase):
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
         # Tarball -> nothing
-        with mock.patch('mopack.log.info') as mlog, \
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
             self.assertEqual(oldpkg.clean_all(self.pkgdir, None),

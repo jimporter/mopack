@@ -41,7 +41,7 @@ class ConanPackage(BinaryPackage):
              new_package._options.this.generator ):
             return False
 
-        log.info('cleaning {!r}'.format(self.name))
+        log.pkg_clean(self.name)
         if 'pkg_config' in self._options.this.generator:
             try:
                 os.remove(os.path.join(pkgdir, 'conan', self.name + '.pc'))
@@ -51,9 +51,8 @@ class ConanPackage(BinaryPackage):
 
     @classmethod
     def resolve_all(cls, pkgdir, packages, deploy_paths):
-        log.info('resolving {} from {}'.format(
-            ', '.join(repr(i.name) for i in packages), cls.source
-        ))
+        for i in packages:
+            log.pkg_resolve(i.name, 'from {}'.format(cls.source))
 
         options = packages[0]._options.this
         with open(os.path.join(pkgdir, 'conanfile.txt'), 'w') as conan:

@@ -69,16 +69,16 @@ class SDistPackage(Package):
         if self == new_package:
             return False
 
-        log.info('cleaning {!r}'.format(self.name))
+        log.pkg_clean(self.name)
         self.builder.clean(pkgdir)
         return True
 
     def _resolve(self, pkgdir, srcdir, deploy_paths):
-        log.info('resolving {!r}'.format(self.name))
+        log.pkg_resolve(self.name)
         self.builder.build(pkgdir, srcdir, deploy_paths)
 
     def deploy(self, pkgdir):
-        log.info('deploying {!r}'.format(self.name))
+        log.pkg_deploy(self.name)
         self.builder.deploy(pkgdir)
 
 
@@ -90,7 +90,7 @@ class DirectoryPackage(SDistPackage):
         self.path = types.any_path(self.config_dir)('path', path)
 
     def fetch(self, pkgdir, parent_config):
-        log.info('fetching {!r} from {}'.format(self.name, self.source))
+        log.pkg_fetch(self.name, 'from {}'.format(self.source))
         return self._find_mopack(self.path, parent_config)
 
     def resolve(self, pkgdir, deploy_paths):
@@ -139,17 +139,17 @@ class TarballPackage(SDistPackage):
             new_package.guessed_srcdir = self.guessed_srcdir
             return False
 
-        log.info('cleaning {!r} sources'.format(self.name))
+        log.pkg_clean(self.name, 'sources')
         shutil.rmtree(self._base_srcdir(pkgdir), ignore_errors=True)
         return True
 
     def fetch(self, pkgdir, parent_config):
         base_srcdir = self._base_srcdir(pkgdir)
         if os.path.exists(base_srcdir):
-            log.info('{!r} already fetched'.format(self.name))
+            log.pkg_fetch(self.name, 'already fetched')
         else:
             where = self.url or self.path
-            log.info('fetching {!r} from {}'.format(self.name, where))
+            log.pkg_fetch(self.name, 'from {}'.format(where))
 
             with (self._urlopen(self.url) if self.url else
                   open(self.path, 'rb')) as f:
@@ -164,7 +164,7 @@ class TarballPackage(SDistPackage):
                         arc.extractall(base_srcdir)
 
             if self.patch:
-                log.info('patching {!r} with {}'.format(self.name, self.patch))
+                log.pkg_patch(self.name, 'with {}'.format(self.patch))
                 with LogFile.open(pkgdir, self.name + '-patch') as logfile, \
                      open(self.patch) as f, \
                      pushd(self._srcdir(pkgdir)):  # noqa

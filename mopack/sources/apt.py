@@ -12,9 +12,8 @@ class AptPackage(BinaryPackage):
 
     @classmethod
     def resolve_all(cls, pkgdir, packages, deploy_paths):
-        log.info('resolving {} from {}'.format(
-            ', '.join(repr(i.name) for i in packages), cls.source
-        ))
+        for i in packages:
+            log.pkg_resolve(i.name, 'from {}'.format(cls.source))
 
         remotes = [i.remote for i in packages]
         with log.LogFile.open(pkgdir, 'apt') as logfile:
