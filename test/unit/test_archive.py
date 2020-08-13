@@ -70,44 +70,50 @@ class TestArchive(TestCase):
 
     def test_extract(self):
         f = mock.MagicMock()
-        with mock.patch('tarfile.open') as mtar:
+        with mock.patch('tarfile.open') as mtar, \
+             mock.patch('tarfile.TarFile', type(mtar())):  # noqa
             with archive.open(f, 'r:tar') as arc:
                 arc.extract('file.txt')
                 arc.extract('file2.txt', 'path')
+                arc.extract('dir/')
             mtar().extract.assert_has_calls([
                 mock.call('file.txt', '.'),
                 mock.call('file2.txt', 'path'),
+                mock.call('dir', '.'),
             ])
 
         with mock.patch('zipfile.ZipFile') as mzip:
             with archive.open(f, 'r:zip') as arc:
                 arc.extract('file.txt')
                 arc.extract('file2.txt', 'path')
+                arc.extract('dir/')
             mzip().extract.assert_has_calls([
                 mock.call('file.txt', '.'),
                 mock.call('file2.txt', 'path'),
+                mock.call('dir/', '.'),
             ])
 
     def test_extractall(self):
         f = mock.MagicMock()
-        with mock.patch('tarfile.open') as mtar:
+        with mock.patch('tarfile.open') as mtar, \
+             mock.patch('tarfile.TarFile', type(mtar())):  # noqa
             with archive.open(f, 'r:tar') as arc:
                 arc.extractall()
                 arc.extractall('path')
-                arc.extractall(members=['file.txt'])
+                arc.extractall(members=['dir/', 'file.txt'])
             mtar().extractall.assert_has_calls([
                 mock.call('.', None),
                 mock.call('path', None),
-                mock.call('.', ['file.txt'])
+                mock.call('.', ['dir', 'file.txt'])
             ])
 
         with mock.patch('zipfile.ZipFile') as mzip:
             with archive.open(f, 'r:zip') as arc:
                 arc.extractall()
                 arc.extractall('path')
-                arc.extractall(members=['file.txt'])
+                arc.extractall(members=['dir/', 'file.txt'])
             mzip().extractall.assert_has_calls([
                 mock.call('.', None),
                 mock.call('path', None),
-                mock.call('.', ['file.txt'])
+                mock.call('.', ['dir/', 'file.txt'])
             ])

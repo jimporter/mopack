@@ -68,7 +68,7 @@ class Glob:
     def _match_string(s):
         return lambda x: x == s
 
-    def match(self, path, *, match_parent=True, match_child=True):
+    def match(self, path, *, match_child=True):
         path_bits = path.split(posixpath.sep)
         is_directory = path_bits[-1] == ''
         if is_directory:
@@ -87,18 +87,12 @@ class Glob:
                     if i(p):
                         break
                 else:
-                    if p is None:
-                        # `path` is a parent of our pattern.
-                        return bool(is_directory and match_parent)
                     return False
                 recursing = False
                 continue
 
             p = next(path_iter, None)
-            if p is None:
-                # `path` is a parent of our pattern.
-                return bool(is_directory and match_parent)
-            if not i(p):
+            if p is None or not i(p):
                 return False
 
         if next(path_iter, None) is not None:

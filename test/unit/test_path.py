@@ -70,34 +70,23 @@ class TestFilterGlob(TestCase):
 
     def test_absolute_multi(self):
         self.assertEqual(self._glob('/bar/foo'),
-                         ['bar/', 'bar/foo', 'bar/foo/', 'bar/foo/baz'])
-        self.assertEqual(self._glob('/bar/foo', match_parent=False),
                          ['bar/foo', 'bar/foo/', 'bar/foo/baz'])
         self.assertEqual(self._glob('/bar/foo', match_child=False),
-                         ['bar/', 'bar/foo', 'bar/foo/'])
+                         ['bar/foo', 'bar/foo/'])
 
-        self.assertEqual(self._glob('/bar/foo/'),
-                         ['bar/', 'bar/foo/', 'bar/foo/baz'])
-        self.assertEqual(self._glob('/bar/foo/', match_parent=False),
-                         ['bar/foo/', 'bar/foo/baz'])
+        self.assertEqual(self._glob('/bar/foo/'), ['bar/foo/', 'bar/foo/baz'])
         self.assertEqual(self._glob('/bar/foo/', match_child=False),
-                         ['bar/', 'bar/foo/'])
+                         ['bar/foo/'])
 
     def test_relative_multi(self):
         self.assertEqual(self._glob('bar/foo'),
-                         ['bar/', 'bar/foo', 'bar/foo/', 'bar/foo/baz',
-                          'baz/bar/foo'])
-        self.assertEqual(self._glob('bar/foo', match_parent=False),
                          ['bar/foo', 'bar/foo/', 'bar/foo/baz', 'baz/bar/foo'])
         self.assertEqual(self._glob('bar/foo', match_child=False),
-                         ['bar/', 'bar/foo', 'bar/foo/', 'baz/bar/foo'])
+                         ['bar/foo', 'bar/foo/', 'baz/bar/foo'])
 
-        self.assertEqual(self._glob('bar/foo/'),
-                         ['bar/', 'bar/foo/', 'bar/foo/baz'])
-        self.assertEqual(self._glob('bar/foo/', match_parent=False),
-                         ['bar/foo/', 'bar/foo/baz'])
+        self.assertEqual(self._glob('bar/foo/'), ['bar/foo/', 'bar/foo/baz'])
         self.assertEqual(self._glob('bar/foo/', match_child=False),
-                         ['bar/', 'bar/foo/'])
+                         ['bar/foo/'])
 
     def test_absolute_glob(self):
         self.assertEqual(self._glob('/ba*'),
@@ -148,45 +137,30 @@ class TestFilterGlob(TestCase):
 
     def test_relative_starstar(self):
         self.assertEqual(self._glob('bar/**/foo'),
-                         ['bar/', 'bar/foo', 'bar/foo/', 'bar/foo/baz',
-                          'bar/baz/foo', 'baz/bar/foo'])
-        self.assertEqual(self._glob('bar/**/foo', match_parent=False),
-                         ['bar/foo', 'bar/foo/', 'bar/foo/baz',
-                          'bar/baz/foo', 'baz/bar/foo'])
-        self.assertEqual(self._glob('bar/**/foo', match_child=False),
-                         ['bar/', 'bar/foo', 'bar/foo/', 'bar/baz/foo',
+                         ['bar/foo', 'bar/foo/', 'bar/foo/baz', 'bar/baz/foo',
                           'baz/bar/foo'])
+        self.assertEqual(self._glob('bar/**/foo', match_child=False),
+                         ['bar/foo', 'bar/foo/', 'bar/baz/foo', 'baz/bar/foo'])
 
         self.assertEqual(self._glob('bar/**/foo/'),
-                         ['bar/', 'bar/foo/', 'bar/foo/baz'])
-        self.assertEqual(self._glob('bar/**/foo/', match_parent=False),
                          ['bar/foo/', 'bar/foo/baz'])
         self.assertEqual(self._glob('bar/**/foo/', match_child=False),
-                         ['bar/', 'bar/foo/'])
+                         ['bar/foo/'])
 
     def test_consecutive_starstar(self):
         self.assertEqual(self._glob('bar/**/**/foo'),
-                         ['bar/', 'bar/foo', 'bar/foo/', 'bar/foo/baz',
-                          'bar/baz/foo', 'baz/bar/foo'])
-        self.assertEqual(self._glob('bar/**/**/foo', match_parent=False),
-                         ['bar/foo', 'bar/foo/', 'bar/foo/baz',
-                          'bar/baz/foo', 'baz/bar/foo'])
-        self.assertEqual(self._glob('bar/**/**/foo', match_child=False),
-                         ['bar/', 'bar/foo', 'bar/foo/', 'bar/baz/foo',
+                         ['bar/foo', 'bar/foo/', 'bar/foo/baz', 'bar/baz/foo',
                           'baz/bar/foo'])
+        self.assertEqual(self._glob('bar/**/**/foo', match_child=False),
+                         ['bar/foo', 'bar/foo/', 'bar/baz/foo', 'baz/bar/foo'])
 
         self.assertEqual(self._glob('bar/**/**/foo/'),
-                         ['bar/', 'bar/foo/', 'bar/foo/baz'])
-        self.assertEqual(self._glob('bar/**/**/foo/', match_parent=False),
                          ['bar/foo/', 'bar/foo/baz'])
         self.assertEqual(self._glob('bar/**/**/foo/', match_child=False),
-                         ['bar/', 'bar/foo/'])
+                         ['bar/foo/'])
 
     def test_absolute_starstar_start(self):
         self.assertEqual(self._glob('/**/foo'),
-                         ['foo', 'foo/', 'foo/bar', 'bar/foo', 'bar/foo/',
-                          'bar/foo/baz', 'bar/baz/foo', 'baz/bar/foo'])
-        self.assertEqual(self._glob('/**/foo', match_parent=False),
                          ['foo', 'foo/', 'foo/bar', 'bar/foo', 'bar/foo/',
                           'bar/foo/baz', 'bar/baz/foo', 'baz/bar/foo'])
         self.assertEqual(self._glob('/**/foo', match_child=False),
@@ -195,16 +169,11 @@ class TestFilterGlob(TestCase):
 
         self.assertEqual(self._glob('/**/foo/'),
                          ['foo/', 'foo/bar', 'bar/foo/', 'bar/foo/baz'])
-        self.assertEqual(self._glob('/**/foo/', match_parent=False),
-                         ['foo/', 'foo/bar', 'bar/foo/', 'bar/foo/baz'])
         self.assertEqual(self._glob('/**/foo/', match_child=False),
                          ['foo/', 'bar/foo/'])
 
     def test_relative_starstar_start(self):
         self.assertEqual(self._glob('**/foo'),
-                         ['foo', 'foo/', 'foo/bar', 'bar/foo', 'bar/foo/',
-                          'bar/foo/baz', 'bar/baz/foo', 'baz/bar/foo'])
-        self.assertEqual(self._glob('**/foo', match_parent=False),
                          ['foo', 'foo/', 'foo/bar', 'bar/foo', 'bar/foo/',
                           'bar/foo/baz', 'bar/baz/foo', 'baz/bar/foo'])
         self.assertEqual(self._glob('**/foo', match_child=False),
@@ -213,22 +182,16 @@ class TestFilterGlob(TestCase):
 
         self.assertEqual(self._glob('**/foo/'),
                          ['foo/', 'foo/bar', 'bar/foo/', 'bar/foo/baz'])
-        self.assertEqual(self._glob('**/foo/', match_parent=False),
-                         ['foo/', 'foo/bar', 'bar/foo/', 'bar/foo/baz'])
         self.assertEqual(self._glob('**/foo/', match_child=False),
                          ['foo/', 'bar/foo/'])
 
     def test_starstar_end(self):
         self.assertEqual(self._glob('foo/**'),
                          ['foo/', 'foo/bar', 'bar/foo/', 'bar/foo/baz'])
-        self.assertEqual(self._glob('foo/**', match_parent=False),
-                         ['foo/', 'foo/bar', 'bar/foo/', 'bar/foo/baz'])
         self.assertEqual(self._glob('foo/**', match_child=False),
                          ['foo/', 'foo/bar', 'bar/foo/', 'bar/foo/baz'])
 
         self.assertEqual(self._glob('foo/**/'),
-                         ['foo/', 'foo/bar', 'bar/foo/', 'bar/foo/baz'])
-        self.assertEqual(self._glob('foo/**/', match_parent=False),
                          ['foo/', 'foo/bar', 'bar/foo/', 'bar/foo/baz'])
         self.assertEqual(self._glob('foo/**/', match_child=False),
                          ['foo/', 'foo/bar', 'bar/foo/', 'bar/foo/baz'])

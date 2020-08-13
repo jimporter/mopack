@@ -158,6 +158,8 @@ class TarballPackage(SDistPackage):
                     self.guessed_srcdir = (names[0].split('/', 1)[0] if names
                                            else None)
                     if self.files:
+                        # XXX: This doesn't extract parents of our globs, so
+                        # owners/permissions won't be applied to them...
                         for i in filter_glob(self.files, names):
                             arc.extract(i, base_srcdir)
                     else:

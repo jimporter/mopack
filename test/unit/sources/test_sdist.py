@@ -453,8 +453,7 @@ class TestTarball(SDistTestCase):
              mock.patch('tarfile.TarFile.extract') as mtar:  # noqa
             pkg.fetch(self.pkgdir, None)
             self.assertEqual(mtar.mock_calls, [
-                mock.call('hello-bfg/', srcdir),
-                mock.call('hello-bfg/include/', srcdir),
+                mock.call('hello-bfg/include', srcdir),
                 mock.call('hello-bfg/include/hello.hpp', srcdir),
             ])
         self.check_resolve(pkg)
