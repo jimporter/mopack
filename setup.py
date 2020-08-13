@@ -80,7 +80,7 @@ with open(os.path.join(root_dir, 'README.md'), 'r') as f:
 
 try:
     import pypandoc
-    long_desc = pypandoc.convert(long_desc, 'rst', format='md')
+    long_desc = pypandoc.convert_text(long_desc, 'rst', format='md')
 except ImportError:
     pass
 
@@ -115,7 +115,8 @@ setup(
 
     install_requires=['colorama', 'pyyaml', 'setuptools'],
     extras_require={
-        'dev': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6', 'pypandoc'],
+        'dev': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6',
+                'pypandoc >= 1.4'],
         'test': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6'],
     },
 
