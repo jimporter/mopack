@@ -83,6 +83,65 @@ class TestListify(TestCase):
         self.assertEqual(res, ('foo', 'bar'))
 
 
+class TestListView(TestCase):
+    data = [1, 2, 3, 4]
+
+    def test_len(self):
+        self.assertEqual(len( iterutils.list_view(self.data) ), 4)
+        self.assertEqual(len( iterutils.list_view(self.data, 2) ), 2)
+        self.assertEqual(len( iterutils.list_view(self.data, 2, 3) ), 1)
+
+    def test_index(self):
+        view = iterutils.list_view(self.data)
+        self.assertEqual(view[2], 3)
+        self.assertRaises(IndexError, view.__getitem__, -1)
+        self.assertRaises(IndexError, view.__getitem__, 4)
+
+        view = iterutils.list_view(self.data, 2)
+        self.assertEqual(view[1], 4)
+        self.assertRaises(IndexError, view.__getitem__, -1)
+        self.assertRaises(IndexError, view.__getitem__, 2)
+
+        view = iterutils.list_view(self.data, 2, 3)
+        self.assertEqual(view[0], 3)
+        self.assertRaises(IndexError, view.__getitem__, -1)
+        self.assertRaises(IndexError, view.__getitem__, 1)
+
+    def test_slice(self):
+        view = iterutils.list_view(self.data)
+        viewslice = view[1:3]
+        self.assertEqual(list(iter(viewslice)), [2, 3])
+        self.assertRaises(ValueError, view.__getitem__, slice(None, None, 2))
+
+        view = iterutils.list_view(self.data, 1)
+        viewslice = view[1:3]
+        self.assertEqual(list(iter(viewslice)), [3, 4])
+
+    def test_iter(self):
+        view = iterutils.list_view(self.data)
+        self.assertEqual(list(iter(view)), self.data)
+
+        view = iterutils.list_view(self.data, 2)
+        self.assertEqual(list(iter(view)), [3, 4])
+
+        view = iterutils.list_view(self.data, 2, 3)
+        self.assertEqual(list(iter(view)), [3])
+
+    def test_split_at(self):
+        view = iterutils.list_view(self.data)
+        a, b = view.split_at(2)
+        self.assertEqual(list(a), [1, 2])
+        self.assertEqual(list(b), [3, 4])
+
+        a, b = view.split_at(-1)
+        self.assertEqual(list(a), [])
+        self.assertEqual(list(b), [1, 2, 3, 4])
+
+        a, b = view.split_at(10)
+        self.assertEqual(list(a), [1, 2, 3, 4])
+        self.assertEqual(list(b), [])
+
+
 class TestMergeIntoDict(TestCase):
     def test_merge_empty(self):
         d = {}
