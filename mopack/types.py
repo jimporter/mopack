@@ -1,10 +1,21 @@
 import os
+import re
 from contextlib import contextmanager
 from shlex import shlex
 from yaml.error import MarkedYAMLError
 
 from . import iterutils
 from .yaml_tools import MarkedDict
+
+_url_ex = re.compile(
+    r'^'
+    r'[A-Za-z0-9+.-]+://'        # scheme
+    r'(?:[^@:]+(?::[^@:]+)?@)?'  # userinfo (optional)
+    r'[^:]+'                     # host
+    r'(?::\d{1,5})?'             # port (optional)
+    r'(?:[/?#].*)?'              # start of path
+    r'$'
+)
 
 
 class FieldError(TypeError):
@@ -195,6 +206,13 @@ def any_path(base=None):
         return os.path.normpath(value)
 
     return check
+
+
+def url(field, value):
+    value = string(field, value)
+    if not _url_ex.match(value):
+        raise FieldError('expected a URL', (field,))
+    return value
 
 
 def shell_args(type=list, escapes=False):

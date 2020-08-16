@@ -248,6 +248,26 @@ class TestAnyPath(TypeTestCase):
         self.assertEqual(any_path('/base')('field', '/path'), os.sep + 'path')
 
 
+class TestUrl(TypeTestCase):
+    def test_valid(self):
+        urls = ['http://localhost',
+                'http://user:pass@localhost',
+                'http://localhost:1234',
+                'http://localhost/path?query#anchor',
+                'http://user:pass@example.com:1234/path?query#anchor']
+        for i in urls:
+            self.assertEqual(url('field', i), i)
+
+    def test_invalid(self):
+        not_urls = ['path',
+                    'http:localhost',
+                    'http://localhost:foo',
+                    'http://localhost:1234foo']
+        for i in not_urls:
+            with self.assertFieldError(('field',)):
+                url('field', i)
+
+
 class TestShellArgs(TypeTestCase):
     def test_single(self):
         self.assertEqual(shell_args()('field', 'foo'), ['foo'])

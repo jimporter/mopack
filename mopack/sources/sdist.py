@@ -111,7 +111,7 @@ class TarballPackage(SDistPackage):
 
         if (url is None) == (path is None):
             raise TypeError('exactly one of `url` or `path` must be specified')
-        self.url = url
+        self.url = types.maybe(types.url)('url', url)
         self.path = types.maybe(types.any_path(self.config_dir))('path', path)
         self.files = types.list_of(types.string, listify=True)('files', files)
         self.srcdir = types.maybe(types.inner_path)('srcdir', srcdir)
