@@ -1,5 +1,6 @@
 import json
 import os
+from unittest import skipIf
 
 from mopack.path import pushd
 from mopack.platforms import platform_name
@@ -23,7 +24,10 @@ class SDistTest(IntegrationTest):
 
     def _options(self):
         return {
-            'common': {'target_platform': platform_name()},
+            'common': {
+                'target_platform': platform_name(),
+                'env': AlwaysEqual(),
+            },
             'builders': [{
                 'type': 'bfg9000',
                 'toolchain': None,
@@ -158,3 +162,44 @@ class TestTarballPatch(SDistTest):
         with pushd(self.prefix):
             self.assertExists(include_prefix + 'hello.hpp')
             self.assertExists(lib_prefix + 'pkgconfig/hello.pc')
+
+
+@skipIf('boost' not in test_features, 'skipping test requiring boost')
+class TestGit(SDistTest):
+    def setUp(self):
+        self.stage = stage_dir('git')
+        self.prefix = stage_dir('git-install', chdir=False)
+
+    def test_resolve(self):
+        config = os.path.join(test_data_dir, 'mopack-git.yml')
+        self.assertPopen(['mopack', 'resolve', config,
+                          '-Pprefix=' + self.prefix])
+        self.assertExists('mopack/src/bencodehpp/build.bfg')
+        self.assertExists('mopack/build/bencodehpp/')
+        self.assertExists('mopack/bencodehpp.log')
+        self.assertExists('mopack/mopack.json')
+
+        self.check_usage('bencodehpp')
+
+        output = json.loads(slurp('mopack/mopack.json'))
+        self.assertEqual(output['metadata'], {
+            'deploy_paths': {'prefix': self.prefix},
+            'options': self._options(),
+            'packages': [{
+                'name': 'bencodehpp',
+                'config_file': config,
+                'source': 'git',
+                'submodules': None,
+                'builder': self._builder('bencodehpp'),
+                'repository': 'https://github.com/jimporter/bencode.hpp.git',
+                'rev': ['tag', 'v0.2'],
+                'srcdir': '.',
+            }],
+        })
+
+        self.assertPopen(['mopack', 'deploy'])
+        include_prefix = '' if platform_name() == 'windows' else 'include/'
+        lib_prefix = '' if platform_name() == 'windows' else 'lib/'
+        with pushd(self.prefix):
+            self.assertExists(include_prefix + 'bencode.hpp')
+            self.assertExists(lib_prefix + 'pkgconfig/bencodehpp.pc')

@@ -54,7 +54,10 @@ class TestNestedCMake(IntegrationTest):
         self.assertEqual(output['metadata'], {
             'deploy_paths': {'prefix': self.prefix},
             'options': {
-                'common': {'target_platform': platform_name()},
+                'common': {
+                    'target_platform': platform_name(),
+                    'env': AlwaysEqual(),
+                },
                 'builders': [{
                     'type': 'bfg9000',
                     'toolchain': None,

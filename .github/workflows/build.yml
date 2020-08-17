@@ -39,7 +39,7 @@ jobs:
     - name: Install Linux dependencies
       if: matrix.os == 'ubuntu-latest'
       run: |
-        sudo apt-get install ninja-build
+        sudo apt-get install ninja-build libboost-dev
     - name: Install Windows dependencies
       if: matrix.os == 'windows-latest'
       run: |
@@ -52,10 +52,12 @@ jobs:
         7z x -y glib_2.28.8-1_win32.zip -oC:\pkg-config
         7z x -y gettext-runtime_0.18.1.1-2_win32.zip -oC:\pkg-config
         echo "::set-env name=PKG_CONFIG::C:\pkg-config\bin\pkg-config.exe"
+        echo "::set-env name=BOOST_INCLUDEDIR::$env:BOOST_ROOT_1_72_0"
+        echo "::set-env name=MOPACK_SKIPPED_TESTS::boost"
     - name: Install macOS dependencies
       if: matrix.os == 'macos-latest'
       run: |
-        brew install ninja pkg-config
+        brew install ninja pkg-config boost
     - name: Run tests (cc)
       if: matrix.compiler == 'cc'
       run: |
@@ -70,6 +72,7 @@ jobs:
         conan profile new default --detect
         $Env:CC = "cl.exe"
         $Env:CXX = "cl.exe"
+        $Env:MOPACK_SKIPPED_TESTS = ""
         python setup.py coverage -q
         coverage xml
     - name: Upload coverage

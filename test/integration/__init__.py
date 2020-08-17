@@ -5,6 +5,15 @@ import unittest
 
 from .. import *
 
+# Also supported: 'apt'
+test_features = {'boost'}
+for i in os.getenv('MOPACK_EXTRA_TESTS', '').split(' '):
+    if i:
+        test_features.add(i)
+for i in os.getenv('MOPACK_SKIPPED_TESTS', '').split(' '):
+    if i:
+        test_features.remove(i)
+
 
 def stage_dir(name, chdir=True):
     stage = tempfile.mkdtemp(prefix=name + '-', dir=test_stage_dir)

@@ -20,7 +20,6 @@ PlaceholderPackage = _PlaceholderPackage()
 
 class CommonOptions(FreezeDried, BaseOptions):
     _context = 'while adding common options'
-    _skip_fields = ('env',)
 
     def __init__(self):
         self.target_platform = Unset

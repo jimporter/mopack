@@ -13,7 +13,15 @@ _url_ex = re.compile(
     r'(?:[^@:]+(?::[^@:]+)?@)?'  # userinfo (optional)
     r'[^:]+'                     # host
     r'(?::\d{1,5})?'             # port (optional)
-    r'(?:[/?#].*)?'              # start of path
+    r'(?:[/?#].*)?'              # path
+    r'$'
+)
+
+_ssh_ex = re.compile(
+    r'^'
+    r'(?:[^@:]+?@)?'  # username (optional)
+    r'[^:]+:'         # host
+    r'.+'             # path
     r'$'
 )
 
@@ -206,6 +214,13 @@ def any_path(base=None):
         return os.path.normpath(value)
 
     return check
+
+
+def ssh_path(field, value):
+    value = string(field, value)
+    if not _ssh_ex.match(value):
+        raise FieldError('expected an ssh path', (field,))
+    return value
 
 
 def url(field, value):

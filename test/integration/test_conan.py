@@ -32,7 +32,10 @@ class TestConan(IntegrationTest):
         self.assertEqual(output['metadata'], {
             'deploy_paths': {},
             'options': {
-                'common': {'target_platform': platform_name()},
+                'common': {
+                    'target_platform': platform_name(),
+                    'env': AlwaysEqual(),
+                },
                 'builders': [],
                 'sources': [{
                     'source': 'conan',

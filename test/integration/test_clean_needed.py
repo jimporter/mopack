@@ -23,6 +23,19 @@ class TestCleanNeeded(IntegrationTest):
             'extra_args': [],
         })
 
+    def _options(self):
+        return {
+            'common': {
+                'target_platform': platform_name(),
+                'env': AlwaysEqual(),
+            },
+            'builders': [{
+                'type': 'bfg9000',
+                'toolchain': None,
+            }],
+            'sources': [],
+        }
+
     def _builder(self, name, extra_args=[]):
         return {
             'type': 'bfg9000',
@@ -54,14 +67,7 @@ class TestCleanNeeded(IntegrationTest):
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
             'deploy_paths': {},
-            'options': {
-                'common': {'target_platform': platform_name()},
-                'builders': [{
-                    'type': 'bfg9000',
-                    'toolchain': None,
-                }],
-                'sources': [],
-            },
+            'options': self._options(),
             'packages': [{
                 'name': 'hello',
                 'config_file': config,
@@ -97,14 +103,7 @@ class TestCleanNeeded(IntegrationTest):
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
             'deploy_paths': {},
-            'options': {
-                'common': {'target_platform': platform_name()},
-                'builders': [{
-                    'type': 'bfg9000',
-                    'toolchain': None,
-                }],
-                'sources': [],
-            },
+            'options': self._options(),
             'packages': [{
                 'name': 'hello',
                 'config_file': os.path.join(test_data_dir, 'greeter-bfg',

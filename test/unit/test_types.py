@@ -248,6 +248,19 @@ class TestAnyPath(TypeTestCase):
         self.assertEqual(any_path('/base')('field', '/path'), os.sep + 'path')
 
 
+class TestSshPath(TypeTestCase):
+    def test_valid(self):
+        urls = ['server:.',
+                'user@server:~',
+                'git@github.com:user/repo.git']
+        for i in urls:
+            self.assertEqual(ssh_path('field', i), i)
+
+    def test_invalid(self):
+        with self.assertFieldError(('field',)):
+            ssh_path('field', 'path')
+
+
 class TestUrl(TypeTestCase):
     def test_valid(self):
         urls = ['http://localhost',

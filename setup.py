@@ -128,6 +128,7 @@ setup(
             'apt=mopack.sources.apt:AptPackage',
             'conan=mopack.sources.conan:ConanPackage',
             'directory=mopack.sources.sdist:DirectoryPackage',
+            'git=mopack.sources.sdist:GitPackage',
             'system=mopack.sources.system:SystemPackage',
             'tarball=mopack.sources.sdist:TarballPackage',
         ],

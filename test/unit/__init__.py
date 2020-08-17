@@ -1,3 +1,4 @@
+import os
 import pkg_resources
 from contextlib import contextmanager
 from unittest import mock, TestCase
@@ -22,7 +23,8 @@ class OptionsTest(TestCase):
         options = {'common': CommonOptions(), 'sources': {}, 'builders': {}}
         if common_options:
             options['common'].accumulate(common_options)
-        options['common'].finalize()
+        with mock.patch.object(os, 'environ', return_value={}):
+            options['common'].finalize()
 
         for i in pkg_resources.iter_entry_points('mopack.sources'):
             opts_type = i.load().Options

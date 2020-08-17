@@ -7,8 +7,8 @@ from mopack.platforms import platform_name
 from . import *
 
 
-@skipIf(os.getenv('MOPACK_TEST_APT') not in ['1', 'true'],
-        'skipping apt tests; set MOPACK_TEST_APT=1 to enable')
+@skipIf('apt' not in test_features,
+        'skipping apt tests; add `apt` to `MOPACK_EXTRA_TESTS` to enable')
 class TestApt(IntegrationTest):
     def setUp(self):
         self.stage = stage_dir('apt')
@@ -53,7 +53,10 @@ class TestApt(IntegrationTest):
         self.assertEqual(output['metadata'], {
             'deploy_paths': {},
             'options': {
-                'common': {'target_platform': platform_name()},
+                'common': {
+                    'target_platform': platform_name(),
+                    'env': AlwaysEqual(),
+                },
                 'builders': [],
                 'sources': [],
             },

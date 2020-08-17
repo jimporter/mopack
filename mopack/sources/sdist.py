@@ -90,7 +90,7 @@ class DirectoryPackage(SDistPackage):
         self.path = types.any_path(self.config_dir)('path', path)
 
     def fetch(self, pkgdir, parent_config):
-        log.pkg_fetch(self.name, 'from {}'.format(self.source))
+        log.pkg_fetch(self.name, 'from {}'.format(self.path))
         return self._find_mopack(self.path, parent_config)
 
     def resolve(self, pkgdir, deploy_paths):
@@ -174,6 +174,76 @@ class TarballPackage(SDistPackage):
 
         return self._find_mopack(self.srcdir or self.guessed_srcdir,
                                  parent_config)
+
+    def resolve(self, pkgdir, deploy_paths):
+        return self._resolve(pkgdir, self._srcdir(pkgdir), deploy_paths)
+
+    def _get_usage(self, pkgdir, submodules):
+        return self.builder.get_usage(pkgdir, submodules, self._srcdir(pkgdir))
+
+
+class GitPackage(SDistPackage):
+    source = 'git'
+
+    def __init__(self, name, *, repository, tag=None, branch=None, commit=None,
+                 srcdir='.', **kwargs):
+        super().__init__(name, **kwargs)
+        self.repository = types.one_of(
+            types.url, types.ssh_path, types.any_path(self.config_dir),
+            desc='a repository'
+        )('repository', repository)
+
+        rev = {'tag': tag, 'branch': branch, 'commit': commit}
+        if sum(0 if i is None else 1 for i in rev.values()) > 1:
+            raise TypeError('only one of `tag`, `branch`, or `commit` may ' +
+                            'be specified')
+        for k in rev:
+            rev[k] = types.maybe(types.string)(k, rev[k])
+        for k, v in rev.items():
+            if v is not None:
+                self.rev = [k, v]
+                break
+        else:
+            self.rev = ['branch', 'master']
+
+        self.srcdir = types.maybe(types.inner_path)('srcdir', srcdir)
+
+    def _base_srcdir(self, pkgdir):
+        return os.path.join(pkgdir, 'src', self.name)
+
+    def _srcdir(self, pkgdir):
+        return os.path.join(self._base_srcdir(pkgdir), self.srcdir)
+
+    def clean_pre(self, pkgdir, new_package):
+        if self.equal(new_package, skip_fields=('builder',)):
+            return False
+
+        log.pkg_clean(self.name, 'sources')
+        shutil.rmtree(self._base_srcdir(pkgdir), ignore_errors=True)
+        return True
+
+    def fetch(self, pkgdir, parent_config):
+        base_srcdir = self._base_srcdir(pkgdir)
+        with LogFile.open(pkgdir, self.name + '-fetch') as logfile:
+            if os.path.exists(base_srcdir):
+                if self.rev[0] == 'branch':
+                    with pushd(base_srcdir):
+                        logfile.check_call(['git', 'pull'])
+            else:
+                log.pkg_fetch(self.name, 'from {}'.format(self.repository))
+                clone = ['git', 'clone', self.repository, base_srcdir]
+                if self.rev[0] in ['branch', 'tag']:
+                    clone.extend(['--branch', self.rev[1]])
+                    logfile.check_call(clone)
+                elif self.rev[0] == 'commit':
+                    logfile.check_call(clone)
+                    with pushd(base_srcdir):
+                        logfile.check_call(['git', 'checkout', self.rev[1]])
+                else:  # pragma: no cover
+                    raise ValueError('unknown revision type {!r}'
+                                     .format(self.rev[0]))
+
+        return self._find_mopack(self.srcdir, parent_config)
 
     def resolve(self, pkgdir, deploy_paths):
         return self._resolve(pkgdir, self._srcdir(pkgdir), deploy_paths)
