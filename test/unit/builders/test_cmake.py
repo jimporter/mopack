@@ -128,7 +128,7 @@ class TestCMakeBuilder(BuilderTest):
         self.assertEqual(builder.usage, PkgConfigUsage('foo', submodules=None))
 
         self.check_build(builder, deploy_paths, extra_args=[
-            '-DCMAKE_INSTALL_PREFIX:PATH=/usr/local'
+            '-DCMAKE_INSTALL_PREFIX:PATH=' + os.path.abspath('/usr/local')
         ])
 
     def test_clean(self):

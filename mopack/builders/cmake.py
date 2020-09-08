@@ -1,3 +1,4 @@
+import os.path
 import shutil
 
 from . import Builder
@@ -20,7 +21,8 @@ class CMakeBuilder(Builder):
         args = []
         for k, v in deploy_paths.items():
             if k in _known_install_types:
-                args.append('-DCMAKE_INSTALL_{}:PATH={}'.format(k.upper(), v))
+                args.append('-DCMAKE_INSTALL_{}:PATH={}'
+                            .format(k.upper(), os.path.abspath(v)))
         return args
 
     def clean(self, pkgdir):
