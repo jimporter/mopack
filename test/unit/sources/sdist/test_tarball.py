@@ -33,6 +33,7 @@ class TestTarball(SDistTestCase):
         self.assertEqual(pkg.path, None)
         self.assertEqual(pkg.patch, None)
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.should_deploy, True)
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
@@ -43,6 +44,7 @@ class TestTarball(SDistTestCase):
         self.assertEqual(pkg.path, self.srcpath)
         self.assertEqual(pkg.patch, None)
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.should_deploy, True)
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
@@ -53,6 +55,7 @@ class TestTarball(SDistTestCase):
         self.assertEqual(pkg.url, None)
         self.assertEqual(pkg.path, srcpath)
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.should_deploy, True)
 
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
         with mock.patch('mopack.sources.sdist.urlopen', self.mock_urlopen), \
@@ -237,6 +240,7 @@ class TestTarball(SDistTestCase):
     def test_deploy(self):
         pkg = self.make_package('foo', url='http://example.com',
                                 build='bfg9000')
+        self.assertEqual(pkg.should_deploy, True)
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
@@ -245,6 +249,14 @@ class TestTarball(SDistTestCase):
             mopen.assert_called_with(
                 os.path.join(self.pkgdir, 'foo-deploy.log'), 'w'
             )
+
+        pkg = self.make_package('foo', url='http://example.com',
+                                build='bfg9000', deploy=False)
+        self.assertEqual(pkg.should_deploy, False)
+
+        with mock_open_log() as mopen:
+            pkg.deploy(self.pkgdir)
+            mopen.assert_not_called()
 
     def test_clean_pre(self):
         otherpath = os.path.join(test_data_dir, 'other_project.tar.gz')

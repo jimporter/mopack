@@ -24,6 +24,27 @@ class TestMakePackage(SourceTest):
         self.assertIsInstance(pkg, DirectoryPackage)
         self.assertEqual(pkg.name, 'foo')
         self.assertEqual(pkg.submodules, None)
+        self.assertEqual(pkg.should_deploy, True)
+        self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
+        self.assertEqual(pkg.path, os.path.normpath('/path'))
+        self.assertEqual(pkg.builder.type, 'bfg9000')
+
+        self.assertEqual(pkg.get_usage(self.pkgdir, None), {
+            'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
+            'pcfiles': ['foo'], 'extra_args': [],
+        })
+        with self.assertRaises(ValueError):
+            pkg.get_usage(self.pkgdir, ['sub'])
+
+    def test_make_no_deploy(self):
+        pkg = make_package('foo', {
+            'source': 'directory', 'path': '/path', 'build': 'bfg9000',
+            'deploy': False, 'config_file': '/path/to/mopack.yml'
+        })
+        self.assertIsInstance(pkg, DirectoryPackage)
+        self.assertEqual(pkg.name, 'foo')
+        self.assertEqual(pkg.submodules, None)
+        self.assertEqual(pkg.should_deploy, False)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         self.assertEqual(pkg.path, os.path.normpath('/path'))
         self.assertEqual(pkg.builder.type, 'bfg9000')
@@ -44,6 +65,7 @@ class TestMakePackage(SourceTest):
         self.assertIsInstance(pkg, SystemPackage)
         self.assertEqual(pkg.name, 'foo')
         self.assertEqual(pkg.submodules, {'names': '*', 'required': True})
+        self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         self.assertEqual(pkg.get_usage(self.pkgdir, ['sub']), {
             'type': 'system', 'auto_link': False, 'include_path': [],
@@ -61,6 +83,7 @@ class TestMakePackage(SourceTest):
         self.assertIsInstance(pkg, SystemPackage)
         self.assertEqual(pkg.name, 'foo')
         self.assertEqual(pkg.submodules, {'names': ['sub'], 'required': True})
+        self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         self.assertEqual(pkg.get_usage(self.pkgdir, ['sub']), {
             'type': 'system', 'auto_link': False, 'include_path': [],
@@ -81,6 +104,7 @@ class TestMakePackage(SourceTest):
         self.assertIsInstance(pkg, SystemPackage)
         self.assertEqual(pkg.name, 'foo')
         self.assertEqual(pkg.submodules, {'names': ['sub'], 'required': False})
+        self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         self.assertEqual(pkg.get_usage(self.pkgdir, ['sub']), {
             'type': 'system', 'auto_link': False, 'include_path': [],
@@ -102,6 +126,7 @@ class TestMakePackage(SourceTest):
         self.assertIsInstance(pkg, SystemPackage)
         self.assertEqual(pkg.name, 'boost')
         self.assertEqual(pkg.submodules, {'names': '*', 'required': False})
+        self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
 
     def test_invalid(self):

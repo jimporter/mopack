@@ -78,8 +78,9 @@ class SDistPackage(Package):
         self.builder.build(pkgdir, srcdir, deploy_paths)
 
     def deploy(self, pkgdir):
-        log.pkg_deploy(self.name)
-        self.builder.deploy(pkgdir)
+        if self.should_deploy:
+            log.pkg_deploy(self.name)
+            self.builder.deploy(pkgdir)
 
 
 class DirectoryPackage(SDistPackage):

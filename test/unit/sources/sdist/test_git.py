@@ -41,6 +41,7 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.should_deploy, True)
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
@@ -51,6 +52,7 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.should_deploy, True)
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
@@ -62,6 +64,7 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.rev, ['tag', 'v1.0'])
         self.assertEqual(pkg.srcdir, '.')
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.should_deploy, True)
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
@@ -73,6 +76,7 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.rev, ['branch', 'mybranch'])
         self.assertEqual(pkg.srcdir, '.')
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.should_deploy, True)
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
@@ -84,6 +88,7 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.rev, ['commit', 'abcdefg'])
         self.assertEqual(pkg.srcdir, '.')
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.should_deploy, True)
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
@@ -287,6 +292,7 @@ class TestGit(SDistTestCase):
 
     def test_deploy(self):
         pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000')
+        self.assertEqual(pkg.should_deploy, True)
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
@@ -295,6 +301,14 @@ class TestGit(SDistTestCase):
             mopen.assert_called_with(
                 os.path.join(self.pkgdir, 'foo-deploy.log'), 'w'
             )
+
+        pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000',
+                                deploy=False)
+        self.assertEqual(pkg.should_deploy, False)
+
+        with mock_open_log() as mopen:
+            pkg.deploy(self.pkgdir)
+            mopen.assert_not_called()
 
     def test_clean_pre(self):
         otherssh = 'git@github.com:user/other.git'

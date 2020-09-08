@@ -65,6 +65,7 @@ class TestApt(IntegrationTest):
                 'config_file': config,
                 'source': 'apt',
                 'submodules': None,
+                'should_deploy': True,
                 'remote': 'libogg-dev',
                 'usage': self._usage('ogg', libraries=[
                     {'name': 'ogg', 'type': 'guess'},
@@ -74,6 +75,7 @@ class TestApt(IntegrationTest):
                 'config_file': config,
                 'source': 'apt',
                 'submodules': None,
+                'should_deploy': True,
                 'remote': 'zlib1g-dev',
                 'usage': self._usage('zlib', libraries=[
                     {'name': 'zlib', 'type': 'guess'},

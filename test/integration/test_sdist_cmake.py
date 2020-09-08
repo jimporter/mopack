@@ -69,6 +69,7 @@ class TestNestedCMake(IntegrationTest):
                 'config_file': config,
                 'source': 'directory',
                 'submodules': None,
+                'should_deploy': True,
                 'builder': {
                     'type': 'cmake',
                     'name': 'hello',
@@ -90,6 +91,7 @@ class TestNestedCMake(IntegrationTest):
                 'config_file': config,
                 'source': 'directory',
                 'submodules': None,
+                'should_deploy': True,
                 'builder': {
                     'type': 'bfg9000',
                     'name': 'greeter',

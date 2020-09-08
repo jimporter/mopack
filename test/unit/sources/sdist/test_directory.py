@@ -18,6 +18,7 @@ class TestDirectory(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000')
         self.assertEqual(pkg.path, self.srcpath)
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.should_deploy, True)
 
         pkg.fetch(self.pkgdir, None)
         self.check_resolve(pkg)
@@ -30,6 +31,7 @@ class TestDirectory(SDistTestCase):
         self.assertEqual(pkg.builder, self.make_builder(
             Bfg9000Builder, 'foo', extra_args='--extra'
         ))
+        self.assertEqual(pkg.should_deploy, True)
 
         pkg.fetch(self.pkgdir, None)
         self.check_resolve(pkg)
@@ -159,6 +161,7 @@ class TestDirectory(SDistTestCase):
 
     def test_deploy(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000')
+        self.assertEqual(pkg.should_deploy, True)
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
@@ -167,6 +170,14 @@ class TestDirectory(SDistTestCase):
             mopen.assert_called_with(
                 os.path.join(self.pkgdir, 'foo-deploy.log'), 'w'
             )
+
+        pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
+                                deploy=False)
+        self.assertEqual(pkg.should_deploy, False)
+
+        with mock_open_log() as mopen:
+            pkg.deploy(self.pkgdir)
+            mopen.assert_not_called()
 
     def test_clean_pre(self):
         oldpkg = self.make_package('foo', path=self.srcpath, build='bfg9000')

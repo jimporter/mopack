@@ -43,8 +43,9 @@ class Package(FreezeDried):
 
     Options = None
 
-    def __init__(self, name, *, config_file):
+    def __init__(self, name, *, deploy=True, config_file):
         self.name = name
+        self.should_deploy = types.boolean('deploy', deploy)
         self.config_file = config_file
 
     def _package_default(self, other, name, field=None, default=None):

@@ -80,4 +80,5 @@ class ConanPackage(BinaryPackage):
 
     @staticmethod
     def deploy_all(pkgdir, packages):
-        warnings.warn('deploying not supported for conan packages')
+        if any(i.should_deploy for i in packages):
+            warnings.warn('deploying not yet supported for conan packages')

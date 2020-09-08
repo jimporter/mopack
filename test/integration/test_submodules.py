@@ -61,6 +61,7 @@ class TestSubmodules(IntegrationTest):
                     'names': ['french', 'english'],
                     'required': True,
                 },
+                'should_deploy': True,
                 'builder': {
                     'type': 'bfg9000',
                     'name': 'hello',

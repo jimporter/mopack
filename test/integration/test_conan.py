@@ -47,6 +47,7 @@ class TestConan(IntegrationTest):
                 'config_file': config,
                 'source': 'conan',
                 'submodules': None,
+                'should_deploy': True,
                 'remote': 'zlib/1.2.11@conan/stable',
                 'options': {'shared': True},
                 'usage': {

@@ -50,6 +50,7 @@ class TestConan(SourceTest):
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable')
         self.assertEqual(pkg.remote, 'foo/1.2.3@conan/stable')
         self.assertEqual(pkg.options, {})
+        self.assertEqual(pkg.should_deploy, True)
 
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.run') as mcall:  # noqa
@@ -77,6 +78,7 @@ class TestConan(SourceTest):
                                 options={'shared': True})
         self.assertEqual(pkg.remote, 'foo/1.2.3@conan/stable')
         self.assertEqual(pkg.options, {'shared': True})
+        self.assertEqual(pkg.should_deploy, True)
 
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.run') as mcall:  # noqa
@@ -105,6 +107,7 @@ class TestConan(SourceTest):
                                 this_options={'generator': 'cmake'})
         self.assertEqual(pkg.remote, 'foo/1.2.3@conan/stable')
         self.assertEqual(pkg.options, {})
+        self.assertEqual(pkg.should_deploy, True)
 
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.run') as mcall:  # noqa
@@ -199,9 +202,17 @@ class TestConan(SourceTest):
 
     def test_deploy(self):
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable')
+        self.assertEqual(pkg.should_deploy, True)
         with mock.patch('warnings.warn') as mwarn:
             ConanPackage.deploy_all(self.pkgdir, [pkg])
             mwarn.assert_called_once()
+
+        pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
+                                deploy=False)
+        self.assertEqual(pkg.should_deploy, False)
+        with mock.patch('warnings.warn') as mwarn:
+            ConanPackage.deploy_all(self.pkgdir, [pkg])
+            mwarn.assert_not_called()
 
     def test_clean_pre(self):
         oldpkg = self.make_package('foo', remote='foo/1.2.3@conan/stable')
