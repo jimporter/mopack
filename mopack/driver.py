@@ -65,8 +65,8 @@ def resolve(parser, subparser, args):
 
 
 def usage(parser, subparser, args):
-    args.directory = os.environ.get(nested_invoke, args.directory)
-    usage = commands.usage(commands.get_package_dir(args.directory),
+    directory = os.environ.get(nested_invoke, args.directory)
+    usage = commands.usage(commands.get_package_dir(directory),
                            args.package, args.submodules, args.strict)
 
     if args.json:

@@ -12,7 +12,7 @@ mopack_dirname = 'mopack'
 
 
 def get_package_dir(builddir):
-    return os.path.join(builddir, mopack_dirname)
+    return os.path.abspath(os.path.join(builddir, mopack_dirname))
 
 
 BuilderOptsFD = DictToListFreezeDryer(BuilderOptions, lambda x: x.type)
