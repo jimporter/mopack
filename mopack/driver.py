@@ -58,7 +58,7 @@ def resolve(parser, subparser, args):
     if os.environ.get(nested_invoke):
         return 3
 
-    os.environ[nested_invoke] = os.path.abspath(args.directory)
+    os.environ[nested_invoke] = args.directory
     config_data = config.Config(args.file, args.options)
     commands.resolve(config_data, commands.get_package_dir(args.directory),
                      args.deploy_paths)
@@ -108,7 +108,8 @@ def main():
         'resolve', help='fetch and build package dependencies'
     )
     resolve_p.set_defaults(func=resolve, parser=resolve_p)
-    resolve_p.add_argument('--directory', default='.', metavar='PATH',
+    resolve_p.add_argument('--directory', default='.', type=os.path.abspath,
+                           metavar='PATH',
                            help='directory to store local package data in')
     resolve_p.add_argument('-P', '--deploy-path', action=KeyValueAction,
                            dest='deploy_paths', metavar='TYPE=PATH',
@@ -128,7 +129,8 @@ def main():
     usage_p.set_defaults(func=usage, parser=usage_p)
     usage_p.add_argument('-s', '--submodule', action='append',
                          dest='submodules')
-    usage_p.add_argument('--directory', default='.', metavar='PATH',
+    usage_p.add_argument('--directory', default='.', type=os.path.abspath,
+                         metavar='PATH',
                          help='directory storing local package data')
     usage_p.add_argument('--json', action='store_true',
                          help='display results as JSON')
@@ -140,14 +142,16 @@ def main():
         'deploy', help='deploy packages'
     )
     deploy_p.set_defaults(func=deploy, parser=deploy_p)
-    deploy_p.add_argument('--directory', default='.', metavar='PATH',
+    deploy_p.add_argument('--directory', default='.', type=os.path.abspath,
+                          metavar='PATH',
                           help='directory storing local package data')
 
     clean_p = subparsers.add_parser(
         'clean', help='clean package directory'
     )
     clean_p.set_defaults(func=clean, parser=clean_p)
-    clean_p.add_argument('--directory', default='.', metavar='PATH',
+    clean_p.add_argument('--directory', default='.', type=os.path.abspath,
+                         metavar='PATH',
                          help='directory storing local package data')
 
     args = parser.parse_args()
