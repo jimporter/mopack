@@ -14,7 +14,7 @@ class TestConan(IntegrationTest):
         config = os.path.join(test_data_dir, 'mopack-conan.yml')
         self.assertPopen(['mopack', 'resolve', '-Sconan:generator=txt',
                           config])
-        self.assertExists('mopack/conan.log')
+        self.assertExists('mopack/logs/conan.log')
         self.assertExists('mopack/mopack.json')
 
         output = json.loads(self.assertPopen([

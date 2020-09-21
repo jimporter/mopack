@@ -8,6 +8,8 @@ import warnings
 from logging import (getLogger, info, debug,  # noqa: F401
                      CRITICAL, ERROR, WARNING, INFO, DEBUG)
 
+from .iterutils import listify
+
 _next_level = INFO + 1
 
 
@@ -99,9 +101,27 @@ class LogFile:
     def __init__(self, file):
         self.file = file
 
+    @staticmethod
+    def _logdir(pkgdir, kind=None):
+        return os.path.join(pkgdir, 'logs', *listify(kind))
+
     @classmethod
-    def open(cls, pkgdir, name, mode='w'):
-        logname = os.path.join(pkgdir, '{}.log'.format(name))
+    def clean_logs(cls, pkgdir, kind=None):
+        logdir = cls._logdir(pkgdir, kind)
+        if not os.path.exists(logdir):
+            return
+        for i in os.listdir(logdir):
+            if i.endswith('.log'):
+                try:
+                    os.remove(os.path.join(logdir, i))
+                except Exception:  # pragma: no cover
+                    pass
+
+    @classmethod
+    def open(cls, pkgdir, name, kind=None, mode='a'):
+        logdir = cls._logdir(pkgdir, kind)
+        os.makedirs(logdir, exist_ok=True)
+        logname = os.path.join(logdir, '{}.log'.format(name))
         return cls(open(logname, mode))
 
     def close(self):

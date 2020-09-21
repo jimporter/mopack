@@ -29,7 +29,7 @@ class TestSubmodules(IntegrationTest):
         self.assertPopen(['mopack', 'resolve', config])
         self.assertNotExists('mopack/src/hello/hello-bfg/build.bfg')
         self.assertExists('mopack/build/hello/')
-        self.assertExists('mopack/hello.log')
+        self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
         self.check_usage(['french'])

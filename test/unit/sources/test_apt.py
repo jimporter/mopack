@@ -23,7 +23,9 @@ class TestApt(SourceTest):
              mock.patch('subprocess.run') as mcall:  # noqa
             AptPackage.resolve_all(self.pkgdir, packages, self.deploy_paths)
 
-            mopen.assert_called_with(os.path.join(self.pkgdir, 'apt.log'), 'w')
+            mopen.assert_called_with(os.path.join(
+                self.pkgdir, 'logs', 'apt.log'
+            ), 'a')
             mcall.assert_called_with(
                 ['sudo', 'apt-get', 'install', '-y'] + remotes,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,

@@ -298,9 +298,9 @@ class TestGit(SDistTestCase):
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.run'):  # noqa
             pkg.deploy(self.pkgdir)
-            mopen.assert_called_with(
-                os.path.join(self.pkgdir, 'foo-deploy.log'), 'w'
-            )
+            mopen.assert_called_with(os.path.join(
+                self.pkgdir, 'logs', 'deploy', 'foo.log'
+            ), 'a')
 
         pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000',
                                 deploy=False)

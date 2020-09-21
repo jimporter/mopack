@@ -43,10 +43,10 @@ class TestNested(IntegrationTest):
         self.assertPopen(['mopack', 'resolve', config,
                           '-Pprefix=' + self.prefix])
         self.assertExists('mopack/build/greeter/')
-        self.assertExists('mopack/greeter.log')
+        self.assertExists('mopack/logs/greeter.log')
         self.assertExists('mopack/src/hello/hello-bfg/')
         self.assertExists('mopack/build/hello/')
-        self.assertExists('mopack/hello.log')
+        self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
         self.check_usage('greeter')

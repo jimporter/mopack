@@ -5,6 +5,7 @@ import shutil
 from .builders import BuilderOptions
 from .config import CommonOptions, Config, PlaceholderPackage
 from .freezedried import DictKeysFreezeDryer, DictToListFreezeDryer
+from .log import LogFile
 from .sources import Package, PackageOptions
 from .sources.system import fallback_system_package
 
@@ -108,6 +109,7 @@ def _do_fetch(config, old_metadata, pkgdir):
 
 
 def fetch(config, pkgdir):
+    LogFile.clean_logs(pkgdir)
     os.makedirs(pkgdir, exist_ok=True)
 
     old_metadata = Metadata.try_load(pkgdir)
@@ -154,6 +156,7 @@ def resolve(config, pkgdir, deploy_paths=None):
 
 
 def deploy(pkgdir):
+    LogFile.clean_logs(pkgdir, kind='deploy')
     metadata = Metadata.load(pkgdir)
 
     packages, batch_packages = [], {}

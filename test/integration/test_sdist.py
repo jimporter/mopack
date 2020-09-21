@@ -58,7 +58,7 @@ class TestDirectory(SDistTest):
         self.assertPopen(['mopack', 'resolve', config])
         self.assertNotExists('mopack/src/hello/hello-bfg/build.bfg')
         self.assertExists('mopack/build/hello/')
-        self.assertExists('mopack/hello.log')
+        self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
         self.check_usage('hello')
@@ -90,7 +90,7 @@ class TestTarball(SDistTest):
                           '-Pprefix=' + self.prefix])
         self.assertExists('mopack/src/hello/hello-bfg/build.bfg')
         self.assertExists('mopack/build/hello/')
-        self.assertExists('mopack/hello.log')
+        self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
         self.check_usage('hello')
@@ -134,7 +134,7 @@ class TestTarballPatch(SDistTest):
                           '-Pprefix=' + self.prefix])
         self.assertExists('mopack/src/hello/hello-bfg/build.bfg')
         self.assertExists('mopack/build/hello/')
-        self.assertExists('mopack/hello.log')
+        self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
         self.check_usage('hello')
@@ -179,7 +179,7 @@ class TestGit(SDistTest):
                           '-Pprefix=' + self.prefix])
         self.assertExists('mopack/src/bencodehpp/build.bfg')
         self.assertExists('mopack/build/bencodehpp/')
-        self.assertExists('mopack/bencodehpp.log')
+        self.assertExists('mopack/logs/bencodehpp.log')
         self.assertExists('mopack/mopack.json')
 
         self.check_usage('bencodehpp')

@@ -29,7 +29,9 @@ class SDistTestCase(SourceTest):
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.run'):  # noqa
             pkg.resolve(self.pkgdir, self.deploy_paths)
-            mopen.assert_called_with(os.path.join(self.pkgdir, 'foo.log'), 'w')
+            mopen.assert_called_with(os.path.join(
+                self.pkgdir, 'logs', 'foo.log'
+            ), 'a')
         self.assertEqual(pkg.get_usage(self.pkgdir, submodules), usage)
 
     def make_builder(self, builder_type, name, *, submodules=None, **kwargs):

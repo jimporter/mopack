@@ -168,7 +168,7 @@ class TarballPackage(SDistPackage):
 
             if self.patch:
                 log.pkg_patch(self.name, 'with {}'.format(self.patch))
-                with LogFile.open(pkgdir, self.name + '-patch') as logfile, \
+                with LogFile.open(pkgdir, self.name) as logfile, \
                      open(self.patch) as f, \
                      pushd(self._srcdir(pkgdir)):  # noqa
                     logfile.check_call(['patch', '-p1'], stdin=f)
@@ -225,7 +225,7 @@ class GitPackage(SDistPackage):
 
     def fetch(self, pkgdir, parent_config):
         base_srcdir = self._base_srcdir(pkgdir)
-        with LogFile.open(pkgdir, self.name + '-fetch') as logfile:
+        with LogFile.open(pkgdir, self.name) as logfile:
             if os.path.exists(base_srcdir):
                 if self.rev[0] == 'branch':
                     with pushd(base_srcdir):

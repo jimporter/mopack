@@ -55,6 +55,6 @@ class Bfg9000Builder(Builder):
                 logfile.check_call(['ninja'])
 
     def deploy(self, pkgdir):
-        with LogFile.open(pkgdir, self.name + '-deploy') as logfile:
+        with LogFile.open(pkgdir, self.name, kind='deploy') as logfile:
             with pushd(self._builddir(pkgdir)):
                 logfile.check_call(['ninja', 'install'])

@@ -28,7 +28,7 @@ class TestApt(IntegrationTest):
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-apt.yml')
         self.assertPopen(['mopack', 'resolve', config])
-        self.assertExists('mopack/apt.log')
+        self.assertExists('mopack/logs/apt.log')
         self.assertExists('mopack/mopack.json')
 
         output = json.loads(self.assertPopen([

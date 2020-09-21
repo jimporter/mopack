@@ -32,7 +32,9 @@ class TestBfg9000Builder(BuilderTest):
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.run') as mcall:  # noqa
             builder.build(self.pkgdir, srcdir, deploy_paths)
-            mopen.assert_called_with(os.path.join(self.pkgdir, 'foo.log'), 'w')
+            mopen.assert_called_with(os.path.join(
+                self.pkgdir, 'logs', 'foo.log'
+            ), 'a')
             mcall.assert_any_call(
                 ['9k', os.path.join(self.pkgdir, 'build', 'foo')] + extra_args,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -58,8 +60,8 @@ class TestBfg9000Builder(BuilderTest):
              mock.patch('subprocess.run') as mcall:  # noqa
             builder.deploy(self.pkgdir)
             mopen.assert_called_with(os.path.join(
-                self.pkgdir, 'foo-deploy.log'
-            ), 'w')
+                self.pkgdir, 'logs', 'deploy', 'foo.log'
+            ), 'a')
             mcall.assert_called_with(
                 ['ninja', 'install'], stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT, universal_newlines=True,

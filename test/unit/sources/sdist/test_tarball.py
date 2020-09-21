@@ -97,6 +97,7 @@ class TestTarball(SDistTestCase):
              mock.patch('mopack.sources.sdist.pushd'), \
              mock.patch('tarfile.TarFile.extractall') as mtar, \
              mock.patch('builtins.open', mock_open_after_first()) as mopen, \
+             mock.patch('os.makedirs'), \
              mock.patch('subprocess.run') as mrun:  # noqa
             pkg.fetch(self.pkgdir, None)
             mtar.assert_called_once_with(srcdir, None)
@@ -246,9 +247,9 @@ class TestTarball(SDistTestCase):
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.run'):  # noqa
             pkg.deploy(self.pkgdir)
-            mopen.assert_called_with(
-                os.path.join(self.pkgdir, 'foo-deploy.log'), 'w'
-            )
+            mopen.assert_called_with(os.path.join(
+                self.pkgdir, 'logs', 'deploy', 'foo.log'
+            ), 'a')
 
         pkg = self.make_package('foo', url='http://example.com',
                                 build='bfg9000', deploy=False)
