@@ -254,6 +254,15 @@ class TestConan(SourceTest):
                 self.pkgdir, 'conan', 'foo.pc'
             ))
 
+        # Conan -> nothing (quiet)
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
+             mock.patch('os.remove') as mremove:  # noqa
+            self.assertEqual(oldpkg.clean_post(self.pkgdir, None, True), True)
+            mlog.assert_not_called()
+            mremove.assert_called_once_with(os.path.join(
+                self.pkgdir, 'conan', 'foo.pc'
+            ))
+
         # Error deleting
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('os.remove',

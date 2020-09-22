@@ -1,0 +1,5 @@
+packages:
+  hello:
+    source: tarball
+    path: broken-bfg.tar.gz
+    build: bfg9000

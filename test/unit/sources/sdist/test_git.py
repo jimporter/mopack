@@ -349,6 +349,13 @@ class TestGit(SDistTestCase):
             mlog.assert_called_once()
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
+        # Git -> nothing (quiet)
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
+             mock.patch('shutil.rmtree') as mrmtree:  # noqa
+            self.assertEqual(oldpkg.clean_pre(self.pkgdir, None, True), True)
+            mlog.assert_not_called()
+            mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
+
     def test_clean_post(self):
         otherssh = 'git@github.com:user/other.git'
 

@@ -56,6 +56,7 @@ class TestSubmodules(IntegrationTest):
             'packages': [{
                 'name': 'hello',
                 'config_file': config,
+                'resolved': True,
                 'source': 'directory',
                 'submodules': {
                     'names': ['french', 'english'],

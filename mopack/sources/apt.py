@@ -19,6 +19,9 @@ class AptPackage(BinaryPackage):
         with log.LogFile.open(pkgdir, 'apt') as logfile:
             logfile.check_call(['sudo', 'apt-get', 'install', '-y'] + remotes)
 
+        for i in packages:
+            i.resolved = True
+
     @staticmethod
     def deploy_all(pkgdir, packages):
         pass

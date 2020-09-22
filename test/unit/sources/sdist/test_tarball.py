@@ -297,6 +297,13 @@ class TestTarball(SDistTestCase):
             mlog.assert_called_once()
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
+        # Tarball -> nothing (quiet)
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
+             mock.patch('shutil.rmtree') as mrmtree:  # noqa
+            self.assertEqual(oldpkg.clean_pre(self.pkgdir, None, True), True)
+            mlog.assert_not_called()
+            mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
+
     def test_clean_post(self):
         otherpath = os.path.join(test_data_dir, 'other_project.tar.gz')
 
@@ -331,6 +338,13 @@ class TestTarball(SDistTestCase):
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_post(self.pkgdir, None), True)
             mlog.assert_called_once()
+            mclean.assert_called_once_with(self.pkgdir)
+
+        # Tarball -> nothing (quiet)
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
+             mock.patch(mock_bfgclean) as mclean:  # noqa
+            self.assertEqual(oldpkg.clean_post(self.pkgdir, None, True), True)
+            mlog.assert_not_called()
             mclean.assert_called_once_with(self.pkgdir)
 
     def test_clean_all(self):
@@ -380,6 +394,16 @@ class TestTarball(SDistTestCase):
             self.assertEqual(oldpkg.clean_all(self.pkgdir, None),
                              (True, True))
             self.assertEqual(mlog.call_count, 2)
+            mclean.assert_called_once_with(self.pkgdir)
+            mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
+
+        # Tarball -> nothing (quiet)
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
+             mock.patch(mock_bfgclean) as mclean, \
+             mock.patch('shutil.rmtree') as mrmtree:  # noqa
+            self.assertEqual(oldpkg.clean_all(self.pkgdir, None, True),
+                             (True, True))
+            mlog.assert_not_called()
             mclean.assert_called_once_with(self.pkgdir)
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 

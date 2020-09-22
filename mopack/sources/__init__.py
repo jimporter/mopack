@@ -39,7 +39,7 @@ class Package(FreezeDried):
     _type_field = 'source'
     _get_type = _get_source_type
     _skip_fields = ('_options',)
-    _skip_compare_fields = ('config_file', '_options')
+    _skip_compare_fields = ('config_file', 'resolved', '_options')
 
     Options = None
 
@@ -47,6 +47,7 @@ class Package(FreezeDried):
         self.name = name
         self.should_deploy = types.boolean('deploy', deploy)
         self.config_file = config_file
+        self.resolved = False
 
     def _package_default(self, other, name, field=None, default=None):
         return package_default(other, name, 'source', self.source, field,
@@ -85,15 +86,15 @@ class Package(FreezeDried):
                                    options['sources'].get(self.source))
         finalize_defaults(self._options, self)
 
-    def clean_pre(self, pkgdir, new_package):
+    def clean_pre(self, pkgdir, new_package, quiet=False):
         return False
 
-    def clean_post(self, pkgdir, new_package):
+    def clean_post(self, pkgdir, new_package, quiet=False):
         return False
 
-    def clean_all(self, pkgdir, new_package):
-        return (self.clean_pre(pkgdir, new_package),
-                self.clean_post(pkgdir, new_package))
+    def clean_all(self, pkgdir, new_package, quiet=False):
+        return (self.clean_pre(pkgdir, new_package, quiet),
+                self.clean_post(pkgdir, new_package, quiet))
 
     def fetch(self, pkgdir, parent_config):
         pass

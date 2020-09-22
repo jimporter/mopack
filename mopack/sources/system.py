@@ -24,6 +24,7 @@ class SystemPackage(BinaryPackage):
 
     def resolve(self, pkgdir, deploy_paths):
         log.pkg_resolve(self.name, 'from {}'.format(self.source))
+        self.resolved = True
 
     def deploy(self, pkgdir):
         pass
@@ -32,4 +33,5 @@ class SystemPackage(BinaryPackage):
 def fallback_system_package(name, options):
     pkg = SystemPackage(name, config_file=None)
     pkg.set_options(options)
+    pkg.resolved = True
     return pkg

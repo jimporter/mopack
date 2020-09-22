@@ -67,6 +67,7 @@ class TestNestedCMake(IntegrationTest):
             'packages': [{
                 'name': 'hello',
                 'config_file': config,
+                'resolved': True,
                 'source': 'directory',
                 'submodules': None,
                 'should_deploy': True,
@@ -89,6 +90,7 @@ class TestNestedCMake(IntegrationTest):
             }, {
                 'name': 'greeter',
                 'config_file': config,
+                'resolved': True,
                 'source': 'directory',
                 'submodules': None,
                 'should_deploy': True,

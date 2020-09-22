@@ -71,6 +71,7 @@ class TestCleanNeeded(IntegrationTest):
             'packages': [{
                 'name': 'hello',
                 'config_file': config,
+                'resolved': True,
                 'source': 'directory',
                 'submodules': None,
                 'should_deploy': True,
@@ -79,6 +80,7 @@ class TestCleanNeeded(IntegrationTest):
             }, {
                 'name': 'greeter',
                 'config_file': config,
+                'resolved': True,
                 'source': 'directory',
                 'submodules': None,
                 'should_deploy': True,
@@ -110,6 +112,7 @@ class TestCleanNeeded(IntegrationTest):
                 'name': 'hello',
                 'config_file': os.path.join(test_data_dir, 'greeter-bfg',
                                             'mopack.yml'),
+                'resolved': True,
                 'source': 'tarball',
                 'submodules': None,
                 'should_deploy': True,
@@ -123,6 +126,7 @@ class TestCleanNeeded(IntegrationTest):
             }, {
                 'name': 'greeter',
                 'config_file': config,
+                'resolved': True,
                 'source': 'directory',
                 'submodules': None,
                 'should_deploy': True,

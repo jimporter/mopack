@@ -65,17 +65,19 @@ class SDistPackage(Package):
             return config
         return None
 
-    def clean_post(self, pkgdir, new_package):
+    def clean_post(self, pkgdir, new_package, quiet=False):
         if self == new_package:
             return False
 
-        log.pkg_clean(self.name)
+        if not quiet:
+            log.pkg_clean(self.name)
         self.builder.clean(pkgdir)
         return True
 
     def _resolve(self, pkgdir, srcdir, deploy_paths):
         log.pkg_resolve(self.name)
         self.builder.build(pkgdir, srcdir, deploy_paths)
+        self.resolved = True
 
     def deploy(self, pkgdir):
         if self.should_deploy:
@@ -132,7 +134,7 @@ class TarballPackage(SDistPackage):
         with urlopen(url) as f:
             return BytesIO(f.read())
 
-    def clean_pre(self, pkgdir, new_package):
+    def clean_pre(self, pkgdir, new_package, quiet=False):
         if self.equal(new_package, skip_fields=('builder',)):
             # Since both package objects have the same configuration, pass the
             # guessed srcdir on to the new package instance. That way, we don't
@@ -140,7 +142,8 @@ class TarballPackage(SDistPackage):
             new_package.guessed_srcdir = self.guessed_srcdir
             return False
 
-        log.pkg_clean(self.name, 'sources')
+        if not quiet:
+            log.pkg_clean(self.name, 'sources')
         shutil.rmtree(self._base_srcdir(pkgdir), ignore_errors=True)
         return True
 
@@ -215,11 +218,12 @@ class GitPackage(SDistPackage):
     def _srcdir(self, pkgdir):
         return os.path.join(self._base_srcdir(pkgdir), self.srcdir)
 
-    def clean_pre(self, pkgdir, new_package):
+    def clean_pre(self, pkgdir, new_package, quiet=False):
         if self.equal(new_package, skip_fields=('builder',)):
             return False
 
-        log.pkg_clean(self.name, 'sources')
+        if not quiet:
+            log.pkg_clean(self.name, 'sources')
         shutil.rmtree(self._base_srcdir(pkgdir), ignore_errors=True)
         return True
 

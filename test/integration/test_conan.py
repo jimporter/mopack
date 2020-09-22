@@ -45,6 +45,7 @@ class TestConan(IntegrationTest):
             'packages': [{
                 'name': 'zlib',
                 'config_file': config,
+                'resolved': True,
                 'source': 'conan',
                 'submodules': None,
                 'should_deploy': True,

@@ -223,6 +223,13 @@ class TestDirectory(SDistTestCase):
             mlog.assert_called_once()
             mclean.assert_called_once_with(self.pkgdir)
 
+        # Directory -> nothing (quiet)
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
+             mock.patch(mock_bfgclean) as mclean:  # noqa
+            self.assertEqual(oldpkg.clean_post(self.pkgdir, None, True), True)
+            mlog.assert_not_called()
+            mclean.assert_called_once_with(self.pkgdir)
+
     def test_clean_all(self):
         otherpath = os.path.join(test_data_dir, 'other_project')
         oldpkg = self.make_package('foo', path=self.srcpath, build='bfg9000')

@@ -70,6 +70,7 @@ class TestDirectory(SDistTest):
             'packages': [{
                 'name': 'hello',
                 'config_file': config,
+                'resolved': True,
                 'source': 'directory',
                 'submodules': None,
                 'should_deploy': True,
@@ -102,6 +103,7 @@ class TestTarball(SDistTest):
             'packages': [{
                 'name': 'hello',
                 'config_file': config,
+                'resolved': True,
                 'source': 'tarball',
                 'submodules': None,
                 'should_deploy': True,
@@ -146,6 +148,7 @@ class TestTarballPatch(SDistTest):
             'packages': [{
                 'name': 'hello',
                 'config_file': config,
+                'resolved': True,
                 'source': 'tarball',
                 'submodules': None,
                 'should_deploy': True,
@@ -191,6 +194,7 @@ class TestGit(SDistTest):
             'packages': [{
                 'name': 'bencodehpp',
                 'config_file': config,
+                'resolved': True,
                 'source': 'git',
                 'submodules': None,
                 'should_deploy': True,

@@ -35,13 +35,14 @@ class ConanPackage(BinaryPackage):
     def remote_name(self):
         return self.remote.split('/')[0]
 
-    def clean_post(self, pkgdir, new_package):
+    def clean_post(self, pkgdir, new_package, quiet=False):
         if ( new_package and self.source == new_package.source and
              self._options.this.generator ==
              new_package._options.this.generator ):
             return False
 
-        log.pkg_clean(self.name)
+        if not quiet:
+            log.pkg_clean(self.name)
         if 'pkg_config' in self._options.this.generator:
             try:
                 os.remove(os.path.join(pkgdir, 'conan', self.name + '.pc'))
@@ -74,6 +75,9 @@ class ConanPackage(BinaryPackage):
         with log.LogFile.open(pkgdir, 'conan') as logfile:
             logfile.check_call(['conan', 'install', '-if',
                                 cls._installdir(pkgdir), pkgdir])
+
+        for i in packages:
+            i.resolved = True
 
     def _get_usage(self, pkgdir, submodules):
         return self.usage.get_usage(submodules, None, self._installdir(pkgdir))

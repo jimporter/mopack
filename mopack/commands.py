@@ -40,10 +40,6 @@ class Metadata:
     def add_package(self, package):
         self.packages[package.name] = package
 
-    def add_packages(self, packages):
-        for pkg in packages:
-            self.add_package(pkg)
-
     def save(self, pkgdir):
         with open(os.path.join(pkgdir, self.metadata_filename), 'w') as f:
             json.dump({
@@ -100,7 +96,11 @@ def _do_fetch(config, old_metadata, pkgdir):
             old_metadata.packages[pkg.name].clean_pre(pkgdir, pkg)
 
         # Fetch the new package and check for child mopack configs.
-        child_config = pkg.fetch(pkgdir, parent_config=config)
+        try:
+            child_config = pkg.fetch(pkgdir, parent_config=config)
+        except Exception:
+            pkg.clean_pre(pkgdir, None, quiet=True)
+            raise
 
         if child_config:
             child_configs.append(child_config)
@@ -108,13 +108,26 @@ def _do_fetch(config, old_metadata, pkgdir):
     config.add_children(child_configs)
 
 
-def fetch(config, pkgdir):
+def _fill_metadata(config, deploy_paths):
+    config.finalize()
+    metadata = Metadata(deploy_paths, config.options)
+    for pkg in config.packages.values():
+        metadata.add_package(pkg)
+    return metadata
+
+
+def fetch(config, pkgdir, deploy_paths=None):
     LogFile.clean_logs(pkgdir)
     os.makedirs(pkgdir, exist_ok=True)
 
     old_metadata = Metadata.try_load(pkgdir)
-    _do_fetch(config, old_metadata, pkgdir)
-    config.finalize()
+    try:
+        _do_fetch(config, old_metadata, pkgdir)
+    except Exception:
+        _fill_metadata(config, deploy_paths).save(pkgdir)
+        raise
+
+    metadata = _fill_metadata(config, deploy_paths)
 
     # Clean out old package data if needed.
     for pkg in config.packages.values():
@@ -126,11 +139,11 @@ def fetch(config, pkgdir):
     for pkg in old_metadata.packages.values():
         pkg.clean_all(pkgdir, None)
 
+    return metadata
+
 
 def resolve(config, pkgdir, deploy_paths=None):
-    fetch(config, pkgdir)
-
-    metadata = Metadata(deploy_paths, config.options)
+    metadata = fetch(config, pkgdir, deploy_paths)
 
     packages, batch_packages = [], {}
     for pkg in config.packages.values():
@@ -140,8 +153,13 @@ def resolve(config, pkgdir, deploy_paths=None):
             packages.append(pkg)
 
     for t, pkgs in batch_packages.items():
-        t.resolve_all(pkgdir, pkgs, metadata.deploy_paths)
-        metadata.add_packages(pkgs)
+        try:
+            t.resolve_all(pkgdir, pkgs, metadata.deploy_paths)
+        except Exception:
+            for i in pkgs:
+                i.clean_post(pkgdir, None, quiet=True)
+            metadata.save(pkgdir)
+            raise
 
     # Ensure metadata is up-to-date for each non-batch package so that they can
     # find any dependencies they need. XXX: Technically, we're looking to do
@@ -150,9 +168,12 @@ def resolve(config, pkgdir, deploy_paths=None):
     # what the abstractions are.
     metadata.save(pkgdir)
     for pkg in packages:
-        pkg.resolve(pkgdir, metadata.deploy_paths)
-        metadata.add_package(pkg)
-        metadata.save(pkgdir)
+        try:
+            pkg.resolve(pkgdir, metadata.deploy_paths)
+            metadata.save(pkgdir)
+        except Exception:
+            pkg.clean_post(pkgdir, None, quiet=True)
+            raise
 
 
 def deploy(pkgdir):
@@ -161,6 +182,9 @@ def deploy(pkgdir):
 
     packages, batch_packages = [], {}
     for pkg in metadata.packages.values():
+        if not pkg.resolved:
+            raise ValueError('package {!r} has not been resolved successfully'
+                             .format(pkg.name))
         if hasattr(pkg, 'deploy_all'):
             batch_packages.setdefault(type(pkg), []).append(pkg)
         else:
@@ -187,4 +211,8 @@ def usage(pkgdir, name, submodules=None, strict=False):
 
     if package is None:
         package = fallback_system_package(name, metadata.options)
+
+    if not package.resolved:
+        raise ValueError('package {!r} has not been resolved successfully'
+                         .format(name))
     return dict(name=name, **package.get_usage(pkgdir, submodules))

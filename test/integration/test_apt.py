@@ -63,6 +63,7 @@ class TestApt(IntegrationTest):
             'packages': [{
                 'name': 'ogg',
                 'config_file': config,
+                'resolved': True,
                 'source': 'apt',
                 'submodules': None,
                 'should_deploy': True,
@@ -74,6 +75,7 @@ class TestApt(IntegrationTest):
                 'name': 'zlib',
                 'config_file': config,
                 'source': 'apt',
+                'resolved': True,
                 'submodules': None,
                 'should_deploy': True,
                 'remote': 'zlib1g-dev',
