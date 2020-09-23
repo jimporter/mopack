@@ -108,14 +108,14 @@ class TarballPackage(SDistPackage):
     _skip_compare_fields = (SDistPackage._skip_compare_fields +
                             ('guessed_srcdir',))
 
-    def __init__(self, name, *, url=None, path=None, files=None, srcdir=None,
+    def __init__(self, name, *, path=None, url=None, files=None, srcdir=None,
                  patch=None, **kwargs):
         super().__init__(name, **kwargs)
 
-        if (url is None) == (path is None):
-            raise TypeError('exactly one of `url` or `path` must be specified')
-        self.url = types.maybe(types.url)('url', url)
+        if (path is None) == (url is None):
+            raise TypeError('exactly one of `path` or `url` must be specified')
         self.path = types.maybe(types.any_path(self.config_dir))('path', path)
+        self.url = types.maybe(types.url)('url', url)
         self.files = types.list_of(types.string, listify=True)('files', files)
         self.srcdir = types.maybe(types.inner_path)('srcdir', srcdir)
         self.patch = types.maybe(types.any_path(self.config_dir))(
