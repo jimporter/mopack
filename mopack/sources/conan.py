@@ -3,6 +3,7 @@ import warnings
 
 from . import BinaryPackage, PackageOptions
 from .. import log
+from ..iterutils import flatten, iterate, uniques
 
 
 class ConanPackage(BinaryPackage):
@@ -15,11 +16,15 @@ class ConanPackage(BinaryPackage):
             # XXX: Don't always emit pkg_config files once we support other
             # usage types.
             self.generator = ['pkg_config']
+            self.build = []
 
-        def __call__(self, *, generator=None, config_file=None,
+        def __call__(self, *, build=None, generator=None, config_file=None,
                      child_config=False):
             if generator and generator not in self.generator:
                 self.generator.append(generator)
+            if build:
+                self.build.extend(iterate(build))
+                self.build = uniques(self.build)
 
     def __init__(self, name, remote, options=None, usage=None, **kwargs):
         usage = usage or usage or {'type': 'pkg-config', 'path': ''}
@@ -30,6 +35,15 @@ class ConanPackage(BinaryPackage):
     @staticmethod
     def _installdir(pkgdir):
         return os.path.join(pkgdir, 'conan')
+
+    @staticmethod
+    def _build_opts(value):
+        if not value:
+            return []
+        elif 'all' in value:
+            return ['--build']
+        else:
+            return flatten(['--build', i] for i in value)
 
     @property
     def remote_name(self):
@@ -73,8 +87,10 @@ class ConanPackage(BinaryPackage):
                 print(i, file=conan)
 
         with log.LogFile.open(pkgdir, 'conan') as logfile:
-            logfile.check_call(['conan', 'install', '-if',
-                                cls._installdir(pkgdir), pkgdir])
+            logfile.check_call(
+                ['conan', 'install', '-if', cls._installdir(pkgdir)] +
+                cls._build_opts(options.build) + [pkgdir]
+            )
 
         for i in packages:
             i.resolved = True

@@ -1,7 +1,7 @@
 from collections.abc import Iterable, Mapping, Sequence
 
 __all__ = ['isiterable', 'ismapping', 'iterate', 'listify', 'list_view',
-           'merge_dicts', 'merge_into_dict']
+           'merge_dicts', 'merge_into_dict', 'uniques']
 
 
 def isiterable(thing):
@@ -36,6 +36,23 @@ def listify(thing, always_copy=False, scalar_ok=True, type=list):
     elif not isiterable(thing):
         raise TypeError('expected an iterable')
     return type(thing)
+
+
+def flatten(iterables, type=list):
+    result = type()
+    for i in iterables:
+        result.extend(i)
+    return result
+
+
+def uniques(iterable):
+    def generate_uniques(iterable):
+        seen = set()
+        for item in iterable:
+            if item not in seen:
+                seen.add(item)
+                yield item
+    return list(generate_uniques(iterable))
 
 
 class list_view(Sequence):

@@ -83,6 +83,39 @@ class TestListify(TestCase):
         self.assertEqual(res, ('foo', 'bar'))
 
 
+class TestFlatten(TestCase):
+    def test_empty(self):
+        self.assertEqual(iterutils.flatten([]), [])
+        self.assertEqual(iterutils.flatten(i for i in range(0)), [])
+
+    def test_default_type(self):
+        self.assertEqual(iterutils.flatten([[0, 1]] * 3), [0, 1, 0, 1, 0, 1])
+        self.assertEqual(iterutils.flatten([i, i + 1] for i in range(3)),
+                         [0, 1, 1, 2, 2, 3])
+
+    def test_custom_type(self):
+        class custom_list(list):
+            def __eq__(self, rhs):
+                return type(self) == type(rhs) and super().__eq__(rhs)
+
+        self.assertEqual(iterutils.flatten([[0, 1]] * 3, custom_list),
+                         custom_list([0, 1, 0, 1, 0, 1]))
+        self.assertEqual(iterutils.flatten(([i, i + 1] for i in range(3)),
+                                           custom_list),
+                         custom_list([0, 1, 1, 2, 2, 3]))
+
+
+class TestUniques(TestCase):
+    def test_none(self):
+        self.assertEqual(iterutils.uniques([]), [])
+
+    def test_one(self):
+        self.assertEqual(iterutils.uniques([1]), [1])
+
+    def test_many(self):
+        self.assertEqual(iterutils.uniques([1, 2, 1, 3]), [1, 2, 3])
+
+
 class TestListView(TestCase):
     data = [1, 2, 3, 4]
 

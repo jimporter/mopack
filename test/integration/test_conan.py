@@ -39,6 +39,7 @@ class TestConan(IntegrationTest):
                 'builders': [],
                 'sources': [{
                     'source': 'conan',
+                    'build': ['missing'],
                     'generator': ['pkg_config', 'txt', 'cmake'],
                 }],
             },
@@ -49,7 +50,7 @@ class TestConan(IntegrationTest):
                 'source': 'conan',
                 'submodules': None,
                 'should_deploy': True,
-                'remote': 'zlib/1.2.11@conan/stable',
+                'remote': 'zlib/1.2.11',
                 'options': {'shared': True},
                 'usage': {
                     'type': 'pkg-config',
