@@ -51,9 +51,9 @@ jobs:
         7z x -y pkg-config_0.26-1_win32.zip -oC:\pkg-config
         7z x -y glib_2.28.8-1_win32.zip -oC:\pkg-config
         7z x -y gettext-runtime_0.18.1.1-2_win32.zip -oC:\pkg-config
-        echo "::set-env name=PKG_CONFIG::C:\pkg-config\bin\pkg-config.exe"
-        echo "::set-env name=BOOST_INCLUDEDIR::$env:BOOST_ROOT_1_72_0"
-        echo "::set-env name=MOPACK_SKIPPED_TESTS::boost"
+        echo "PKG_CONFIG=C:\pkg-config\bin\pkg-config.exe" >> $env:GITHUB_ENV
+        echo "BOOST_INCLUDEDIR=$env:BOOST_ROOT_1_72_0" >> $env:GITHUB_ENV
+        echo "MOPACK_SKIPPED_TESTS=boost" >> $env:GITHUB_ENV
     - name: Install macOS dependencies
       if: matrix.os == 'macos-latest'
       run: |
