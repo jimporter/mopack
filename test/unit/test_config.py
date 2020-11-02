@@ -12,18 +12,18 @@ foo_cfg = 'packages:\n  foo:\n    source: apt\n    remote: libfoo1-dev\n'
 bar_cfg = 'packages:\n  bar:\n    source: apt\n    remote: libbar1-dev\n'
 
 
-def mock_open_files(*files):
-    i = iter(files)
-
-    def wrapper(*args, **kwargs):
-        return mock.mock_open(read_data=next(i))(*args, **kwargs)
+def mock_open_files(files):
+    def wrapper(filename, *args, **kwargs):
+        return mock.mock_open(read_data=files[os.path.basename(filename)])(
+            filename, *args, **kwargs
+        )
 
     return wrapper
 
 
 class TestConfig(TestCase):
     def test_empty_file(self):
-        with mock.patch('builtins.open', mock_open_files('')):
+        with mock.patch('builtins.open', mock_open_files({'mopack.yml': ''})):
             cfg = Config(['mopack.yml'])
         cfg.finalize()
 
@@ -33,7 +33,8 @@ class TestConfig(TestCase):
         self.assertEqual(list(cfg.packages.items()), [])
 
     def test_single_file(self):
-        with mock.patch('builtins.open', mock_open_files(foobar_cfg)):
+        files = {'mopack.yml': foobar_cfg}
+        with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack.yml'])
         self.assertEqual(list(cfg.packages.items()), [
             ('foo', AptPackage('foo', config_file='mopack.yml')),
@@ -41,7 +42,8 @@ class TestConfig(TestCase):
         ])
 
     def test_multiple_files(self):
-        with mock.patch('builtins.open', mock_open_files(foo_cfg, bar_cfg)):
+        files = {'mopack-foo.yml': foo_cfg, 'mopack-bar.yml': bar_cfg}
+        with mock.patch('builtins.open', mock_open_files(files)):
             # Filenames are in reversed order from file data, since Config
             # loads last-to-first.
             cfg = Config(['mopack-bar.yml', 'mopack-foo.yml'])
@@ -53,7 +55,8 @@ class TestConfig(TestCase):
         ])
 
     def test_override(self):
-        with mock.patch('builtins.open', mock_open_files(foo_cfg, foobar_cfg)):
+        files = {'mopack-foo.yml': foo_cfg, 'mopack-foobar.yml': foobar_cfg}
+        with mock.patch('builtins.open', mock_open_files(files)):
             # Filenames are in reversed order from file data, since Config
             # loads last-to-first.
             cfg = Config(['mopack-foobar.yml', 'mopack-foo.yml'])
@@ -65,7 +68,8 @@ class TestConfig(TestCase):
 
     def test_empty_packages(self):
         data = 'packages:'
-        with mock.patch('builtins.open', mock_open_files(data)):
+        files = {'mopack.yml': data}
+        with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack.yml'])
         cfg.finalize()
 
@@ -74,9 +78,42 @@ class TestConfig(TestCase):
         self.assertEqual(cfg.options, opts)
         self.assertEqual(list(cfg.packages.items()), [])
 
+    def test_packages(self):
+        data = 'packages:\n  foo:\n    source: apt\n'
+        files = {'mopack.yml': data}
+        with mock.patch('builtins.open', mock_open_files(files)):
+            cfg = Config(['mopack.yml'])
+        cfg.finalize()
+
+        opts = {'common': CommonOptions(), 'builders': {}, 'sources': {}}
+        opts['common'].finalize()
+        self.assertEqual(cfg.options, opts)
+
+        pkg = AptPackage('foo', config_file='mopack.yml')
+        pkg.set_options(opts)
+        self.assertEqual(list(cfg.packages.items()), [('foo', pkg)])
+
+    def test_conditional_packages(self):
+        data = ('packages:\n  foo:\n    - if: false\n      source: apt\n' +
+                '    - source: conan\n      remote: foo/1.2.3\n')
+        files = {'mopack.yml': data}
+        with mock.patch('builtins.open', mock_open_files(files)):
+            cfg = Config(['mopack.yml'])
+        cfg.finalize()
+
+        opts = {'common': CommonOptions(), 'builders': {},
+                'sources': {'conan': ConanPackage.Options()}}
+        opts['common'].finalize()
+        self.assertEqual(cfg.options, opts)
+
+        pkg = ConanPackage('foo', remote='foo/1.2.3', config_file='mopack.yml')
+        pkg.set_options(opts)
+        self.assertEqual(list(cfg.packages.items()), [('foo', pkg)])
+
     def test_empty_options(self):
         data = 'options:'
-        with mock.patch('builtins.open', mock_open_files(data)):
+        files = {'mopack.yml': data}
+        with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack.yml'])
         cfg.finalize()
 
@@ -89,7 +126,8 @@ class TestConfig(TestCase):
         data = ('options:\n  target_platform: linux\n' +
                 '  env:\n    FOO: foo\n\n' +
                 'packages:\n  foo:\n    source: apt\n')
-        with mock.patch('builtins.open', mock_open_files(data)):
+        files = {'mopack.yml': data}
+        with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack.yml'])
         cfg.finalize()
 
@@ -111,8 +149,9 @@ class TestConfig(TestCase):
         data2 = ('options:\n  target_platform: windows\n' +
                  '  env:\n    FOO: bad\n\n' +
                  'packages:\n  bar:\n    source: apt\n')
-        with mock.patch('builtins.open', mock_open_files(data1, data2)):
-            cfg = Config(['mopack.yml', 'mopack2.yml'])
+        files = {'mopack.yml': data1, 'mopack2.yml': data2}
+        with mock.patch('builtins.open', mock_open_files(files)):
+            cfg = Config(['mopack2.yml', 'mopack.yml'])
         cfg.finalize()
 
         common_opts = CommonOptions()
@@ -137,7 +176,8 @@ class TestConfig(TestCase):
                 'packages:\n  foo:\n    source: apt\n' +
                 '  bar:\n    source: directory\n    path: /path/to/src\n' +
                 '    build: bfg9000\n')
-        with mock.patch('builtins.open', mock_open_files(data)):
+        files = {'mopack.yml': data}
+        with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack.yml'])
         cfg.finalize()
 
@@ -165,8 +205,9 @@ class TestConfig(TestCase):
                  '    bfg9000:\n      toolchain: bad.bfg\n\n' +
                  'packages:\n  bar:\n    source: directory\n' +
                  '    path: /path/to/src\n    build: bfg9000\n')
-        with mock.patch('builtins.open', mock_open_files(data1, data2)):
-            cfg = Config(['mopack.yml', 'mopack2.yml'])
+        files = {'mopack.yml': data1, 'mopack2.yml': data2}
+        with mock.patch('builtins.open', mock_open_files(files)):
+            cfg = Config(['mopack2.yml', 'mopack.yml'])
         cfg.finalize()
 
         bfg_opts = Bfg9000Builder.Options()
@@ -190,7 +231,8 @@ class TestConfig(TestCase):
                 '    goat:\n      sound: baah\n\n' +
                 'packages:\n  foo:\n    source: apt\n' +
                 '  bar:\n    source: conan\n    remote: bar/1.2.3\n')
-        with mock.patch('builtins.open', mock_open_files(data)):
+        files = {'mopack.yml': data}
+        with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack.yml'])
         cfg.finalize()
 
@@ -217,8 +259,10 @@ class TestConfig(TestCase):
                  'packages:\n  foo:\n    source: apt\n')
         data3 = ('options:\n  sources:\n    conan:\n      generator: bad\n\n' +
                  'packages:\n  bar:\n    source: conan\n    remote: bar/1.2.3')
-        with mock.patch('builtins.open', mock_open_files(data1, data2, data3)):
-            cfg = Config(['mopack.yml', 'mopack2.yml', 'mopack3.yml'],
+        files = {'mopack.yml': data1, 'mopack2.yml': data2,
+                 'mopack3.yml': data3}
+        with mock.patch('builtins.open', mock_open_files(files)):
+            cfg = Config(['mopack3.yml', 'mopack2.yml', 'mopack.yml'],
                          {'sources': {'conan': {'generator': 'txt'}}})
         cfg.finalize()
 
@@ -241,10 +285,11 @@ class TestConfig(TestCase):
 
 class TestChildConfig(TestCase):
     def test_empty_file(self):
-        with mock.patch('builtins.open', mock_open_files('')):
+        files = {'mopack.yml': '', 'mopack-child.yml': ''}
+        with mock.patch('builtins.open', mock_open_files(files)):
             parent = Config(['mopack.yml'])
 
-        with mock.patch('builtins.open', mock_open_files('')):
+        with mock.patch('builtins.open', mock_open_files(files)):
             child = ChildConfig(['mopack-child.yml'], parent=parent)
         self.assertEqual(list(child.packages.items()), [])
 
@@ -256,19 +301,21 @@ class TestChildConfig(TestCase):
         self.assertEqual(list(parent.packages.items()), [])
 
     def test_self_config(self):
-        with mock.patch('builtins.open', mock_open_files('')):
+        cfg = 'self:\n  build: bfg9000\n  usage: pkg-config\n' + bar_cfg
+        files = {'mopack.yml': '', 'mopack-child.yml': cfg}
+        with mock.patch('builtins.open', mock_open_files(files)):
             parent = Config(['mopack.yml'])
 
-        cfg = 'self:\n  build: bfg9000\n  usage: pkg-config\n' + bar_cfg
-        with mock.patch('builtins.open', mock_open_files(cfg)):
+        with mock.patch('builtins.open', mock_open_files(files)):
             child = ChildConfig(['mopack-child.yml'], parent=parent)
         self.assertEqual(child.build, 'bfg9000')
         self.assertEqual(child.usage, 'pkg-config')
 
     def test_child_in_parent(self):
-        with mock.patch('builtins.open', mock_open_files(foobar_cfg)):
+        files = {'mopack.yml': foobar_cfg, 'mopack-child.yml': foo_cfg}
+        with mock.patch('builtins.open', mock_open_files(files)):
             parent = Config(['mopack.yml'])
-        with mock.patch('builtins.open', mock_open_files(foo_cfg)):
+        with mock.patch('builtins.open', mock_open_files(files)):
             child = ChildConfig(['mopack-child.yml'], parent=parent)
         self.assertEqual(list(child.packages.items()), [
             ('foo', PlaceholderPackage)
@@ -281,9 +328,10 @@ class TestChildConfig(TestCase):
         ])
 
     def test_child_not_in_parent(self):
-        with mock.patch('builtins.open', mock_open_files(foo_cfg)):
+        files = {'mopack.yml': foo_cfg, 'mopack-child.yml': bar_cfg}
+        with mock.patch('builtins.open', mock_open_files(files)):
             parent = Config(['mopack.yml'])
-        with mock.patch('builtins.open', mock_open_files(bar_cfg)):
+        with mock.patch('builtins.open', mock_open_files(files)):
             child = ChildConfig(['mopack-child.yml'], parent=parent)
         self.assertEqual(list(child.packages.items()), [
             ('bar', AptPackage('bar', remote='libbar1-dev',
@@ -299,9 +347,10 @@ class TestChildConfig(TestCase):
         ])
 
     def test_child_mixed_in_parent(self):
-        with mock.patch('builtins.open', mock_open_files(foo_cfg)):
+        files = {'mopack.yml': foo_cfg, 'mopack-child.yml': foobar_cfg}
+        with mock.patch('builtins.open', mock_open_files(files)):
             parent = Config(['mopack.yml'])
-        with mock.patch('builtins.open', mock_open_files(foobar_cfg)):
+        with mock.patch('builtins.open', mock_open_files(files)):
             child = ChildConfig(['mopack-child.yml'], parent=parent)
         self.assertEqual(list(child.packages.items()), [
             ('foo', PlaceholderPackage),
@@ -316,10 +365,11 @@ class TestChildConfig(TestCase):
         ])
 
     def test_child_duplicate(self):
+        files = {'mopack-child1.yml': foo_cfg, 'mopack-child2.yml': foo_cfg}
         parent = Config([])
-        with mock.patch('builtins.open', mock_open_files(foo_cfg)):
+        with mock.patch('builtins.open', mock_open_files(files)):
             child1 = ChildConfig(['mopack-child1.yml'], parent=parent)
-        with mock.patch('builtins.open', mock_open_files(foo_cfg)):
+        with mock.patch('builtins.open', mock_open_files(files)):
             child2 = ChildConfig(['mopack-child2.yml'], parent=parent)
 
         parent.add_children([child1, child2])
@@ -329,26 +379,28 @@ class TestChildConfig(TestCase):
         ])
 
     def test_child_conflicts(self):
+        files = {'mopack-child1.yml': foobar_cfg, 'mopack-child2.yml': foo_cfg}
         parent = Config([])
-        with mock.patch('builtins.open', mock_open_files(foobar_cfg)):
+        with mock.patch('builtins.open', mock_open_files(files)):
             child1 = ChildConfig(['mopack-child1.yml'], parent=parent)
-        with mock.patch('builtins.open', mock_open_files(foo_cfg)):
+        with mock.patch('builtins.open', mock_open_files(files)):
             child2 = ChildConfig(['mopack-child2.yml'], parent=parent)
 
         with self.assertRaises(ValueError):
             parent.add_children([child1, child2])
 
     def test_builder_options(self):
-        with mock.patch('builtins.open', mock_open_files('')):
-            parent = Config(['mopack.yml'])
-
         data = ('options:\n  builders:\n' +
                 '    bfg9000:\n      toolchain: toolchain.bfg\n' +
                 '    goat:\n      sound: baah\n\n' +
                 'packages:\n  foo:\n    source: apt\n' +
                 '  bar:\n    source: directory\n    path: /path/to/src\n' +
                 '    build: bfg9000\n')
-        with mock.patch('builtins.open', mock_open_files(data)):
+        files = {'mopack.yml': '', 'mopack-child.yml': data}
+
+        with mock.patch('builtins.open', mock_open_files(files)):
+            parent = Config(['mopack.yml'])
+        with mock.patch('builtins.open', mock_open_files(files)):
             child = ChildConfig(['mopack-child.yml'], parent=parent)
 
         parent.add_children([child])
@@ -370,15 +422,16 @@ class TestChildConfig(TestCase):
         ])
 
     def test_source_options(self):
-        data = ('options:\n  sources:\n    conan:\n      generator: make\n')
-        with mock.patch('builtins.open', mock_open_files(data)):
-            parent = Config(['mopack.yml'])
+        data1 = ('options:\n  sources:\n    conan:\n      generator: make\n')
+        data2 = ('options:\n  sources:\n    conan:\n      generator: cmake\n' +
+                 '    goat:\n      sound: baah\n\n' +
+                 'packages:\n  foo:\n    source: apt\n' +
+                 '  bar:\n    source: conan\n    remote: bar/1.2.3\n')
+        files = {'mopack.yml': data1, 'mopack-child.yml': data2}
 
-        data = ('options:\n  sources:\n    conan:\n      generator: cmake\n' +
-                '    goat:\n      sound: baah\n\n' +
-                'packages:\n  foo:\n    source: apt\n' +
-                '  bar:\n    source: conan\n    remote: bar/1.2.3\n')
-        with mock.patch('builtins.open', mock_open_files(data)):
+        with mock.patch('builtins.open', mock_open_files(files)):
+            parent = Config(['mopack.yml'])
+        with mock.patch('builtins.open', mock_open_files(files)):
             child = ChildConfig(['mopack-child.yml'], parent=parent)
 
         parent.add_children([child])

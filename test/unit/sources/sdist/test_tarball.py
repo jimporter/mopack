@@ -17,6 +17,9 @@ class TestTarball(SDistTestCase):
     srcurl = 'http://example.invalid/hello-bfg.tar.gz'
     srcpath = os.path.join(test_data_dir, 'hello-bfg.tar.gz')
 
+    def setUp(self):
+        self.config = Config([])
+
     def mock_urlopen(self, url):
         return open(self.srcpath, 'rb')
 
@@ -24,7 +27,7 @@ class TestTarball(SDistTestCase):
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
         with mock.patch('mopack.sources.sdist.urlopen', self.mock_urlopen), \
              mock.patch('tarfile.TarFile.extractall') as mtar:  # noqa
-            pkg.fetch(self.pkgdir, None)
+            pkg.fetch(self.pkgdir, self.config)
             mtar.assert_called_once_with(srcdir, None)
 
     def test_url(self):
@@ -60,7 +63,7 @@ class TestTarball(SDistTestCase):
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
         with mock.patch('mopack.sources.sdist.urlopen', self.mock_urlopen), \
              mock.patch('zipfile.ZipFile.extractall') as mtar:  # noqa
-            pkg.fetch(self.pkgdir, None)
+            pkg.fetch(self.pkgdir, self.config)
             mtar.assert_called_once_with(srcdir, None)
         self.check_resolve(pkg)
 
@@ -79,7 +82,7 @@ class TestTarball(SDistTestCase):
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
         with mock.patch('mopack.sources.sdist.urlopen', self.mock_urlopen), \
              mock.patch('tarfile.TarFile.extract') as mtar:  # noqa
-            pkg.fetch(self.pkgdir, None)
+            pkg.fetch(self.pkgdir, self.config)
             self.assertEqual(mtar.mock_calls, [
                 mock.call('hello-bfg/include', srcdir),
                 mock.call('hello-bfg/include/hello.hpp', srcdir),
@@ -99,7 +102,7 @@ class TestTarball(SDistTestCase):
              mock.patch('builtins.open', mock_open_after_first()) as mopen, \
              mock.patch('os.makedirs'), \
              mock.patch('subprocess.run') as mrun:  # noqa
-            pkg.fetch(self.pkgdir, None)
+            pkg.fetch(self.pkgdir, self.config)
             mtar.assert_called_once_with(srcdir, None)
             mrun.assert_called_once_with(
                 ['patch', '-p1'], stdout=subprocess.PIPE,
@@ -132,7 +135,7 @@ class TestTarball(SDistTestCase):
                  read_data='self:\n  build: bfg9000'
              )), \
              mock.patch('tarfile.TarFile.extractall') as mtar:  # noqa
-            config = pkg.fetch(self.pkgdir, Config([]))
+            config = pkg.fetch(self.pkgdir, self.config)
             self.set_options(pkg)
             self.assertEqual(config.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(
@@ -148,7 +151,7 @@ class TestTarball(SDistTestCase):
                  read_data='self:\n  build: bfg9000'
              )), \
              mock.patch('tarfile.TarFile.extractall') as mtar:  # noqa
-            config = pkg.fetch(self.pkgdir, Config([]))
+            config = pkg.fetch(self.pkgdir, self.config)
             self.set_options(pkg)
             self.assertEqual(config.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(

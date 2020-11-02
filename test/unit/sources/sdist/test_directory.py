@@ -14,13 +14,16 @@ class TestDirectory(SDistTestCase):
     pkg_type = DirectoryPackage
     srcpath = os.path.join(test_data_dir, 'hello-bfg')
 
+    def setUp(self):
+        self.config = Config([])
+
     def test_resolve(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000')
         self.assertEqual(pkg.path, self.srcpath)
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
         self.assertEqual(pkg.should_deploy, True)
 
-        pkg.fetch(self.pkgdir, None)
+        pkg.fetch(self.pkgdir, self.config)
         self.check_resolve(pkg)
 
     def test_build(self):
@@ -33,7 +36,7 @@ class TestDirectory(SDistTestCase):
         ))
         self.assertEqual(pkg.should_deploy, True)
 
-        pkg.fetch(self.pkgdir, None)
+        pkg.fetch(self.pkgdir, self.config)
         self.check_resolve(pkg)
 
     def test_infer_build(self):
@@ -41,7 +44,7 @@ class TestDirectory(SDistTestCase):
         self.assertEqual(pkg.builder, None)
 
         with mock.patch('os.path.exists', return_value=True):
-            config = pkg.fetch(self.pkgdir, Config([]))
+            config = pkg.fetch(self.pkgdir, self.config)
             self.set_options(pkg)
             self.assertEqual(config.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(
@@ -53,7 +56,7 @@ class TestDirectory(SDistTestCase):
                                 usage={'type': 'system'}, set_options=False)
 
         with mock.patch('os.path.exists', return_value=True):
-            config = pkg.fetch(self.pkgdir, Config([]))
+            config = pkg.fetch(self.pkgdir, self.config)
             self.set_options(pkg)
             self.assertEqual(config.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(
@@ -71,7 +74,7 @@ class TestDirectory(SDistTestCase):
         self.assertEqual(pkg.builder, None)
 
         with mock.patch('os.path.exists', return_value=True):
-            config = pkg.fetch(self.pkgdir, Config([]))
+            config = pkg.fetch(self.pkgdir, self.config)
             self.set_options(pkg)
             self.assertEqual(config.build, 'bfg9000')
             self.assertEqual(config.submodules, ['french', 'english'])
@@ -87,7 +90,7 @@ class TestDirectory(SDistTestCase):
         self.assertEqual(pkg.builder, None)
 
         with mock.patch('os.path.exists', return_value=True):
-            config = pkg.fetch(self.pkgdir, Config([]))
+            config = pkg.fetch(self.pkgdir, self.config)
             self.set_options(pkg)
             self.assertEqual(config.build, 'bfg9000')
             self.assertEqual(config.submodules, ['french', 'english'])
@@ -106,7 +109,7 @@ class TestDirectory(SDistTestCase):
             Bfg9000Builder, 'foo', usage='pkg-config'
         ))
 
-        pkg.fetch(self.pkgdir, None)
+        pkg.fetch(self.pkgdir, self.config)
         self.check_resolve(pkg)
 
         usage = {'type': 'pkg-config', 'path': 'pkgconf'}
@@ -117,7 +120,7 @@ class TestDirectory(SDistTestCase):
             Bfg9000Builder, 'foo', usage=usage
         ))
 
-        pkg.fetch(self.pkgdir, None)
+        pkg.fetch(self.pkgdir, self.config)
         self.check_resolve(pkg, usage={
             'type': 'pkg-config', 'path': self.pkgconfdir('foo', 'pkgconf'),
             'pcfiles': ['foo'], 'extra_args': [],

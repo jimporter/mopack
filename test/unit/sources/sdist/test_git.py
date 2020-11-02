@@ -17,6 +17,9 @@ class TestGit(SDistTestCase):
     srcurl = 'https://github.com/user/repo.git'
     srcssh = 'git@github.com:user/repo.git'
 
+    def setUp(self):
+        self.config = Config([])
+
     def check_fetch(self, pkg):
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
         git_cmds = [['git', 'clone', pkg.repository, srcdir]]
@@ -28,7 +31,7 @@ class TestGit(SDistTestCase):
         with mock_open_log() as mopen, \
              mock.patch('mopack.sources.sdist.pushd'), \
              mock.patch('subprocess.run') as mrun:  # noqa
-            pkg.fetch(self.pkgdir, None)
+            pkg.fetch(self.pkgdir, self.config)
             mrun.assert_has_calls([
                 mock.call(i, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                           universal_newlines=True, check=True)
@@ -148,7 +151,7 @@ class TestGit(SDistTestCase):
                  read_data='self:\n  build: bfg9000'
              )), \
              mock.patch('subprocess.run') as mrun:  # noqa
-            config = pkg.fetch(self.pkgdir, Config([]))
+            config = pkg.fetch(self.pkgdir, self.config)
             self.set_options(pkg)
             self.assertEqual(config.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(
@@ -165,7 +168,7 @@ class TestGit(SDistTestCase):
                  read_data='self:\n  build: bfg9000'
              )), \
              mock.patch('subprocess.run') as mrun:  # noqa
-            config = pkg.fetch(self.pkgdir, Config([]))
+            config = pkg.fetch(self.pkgdir, self.config)
             self.set_options(pkg)
             self.assertEqual(config.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(
@@ -255,7 +258,7 @@ class TestGit(SDistTestCase):
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('mopack.sources.sdist.pushd'), \
              mock.patch('subprocess.run') as mrun:  # noqa
-            pkg.fetch(self.pkgdir, None)
+            pkg.fetch(self.pkgdir, self.config)
             mrun.assert_called_once_with(
                 ['git', 'pull'], stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT, universal_newlines=True, check=True
@@ -272,7 +275,7 @@ class TestGit(SDistTestCase):
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('mopack.sources.sdist.pushd'), \
              mock.patch('subprocess.run') as mrun:  # noqa
-            pkg.fetch(self.pkgdir, None)
+            pkg.fetch(self.pkgdir, self.config)
             mrun.assert_not_called()
         self.check_resolve(pkg)
 
@@ -286,7 +289,7 @@ class TestGit(SDistTestCase):
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('mopack.sources.sdist.pushd'), \
              mock.patch('subprocess.run') as mrun:  # noqa
-            pkg.fetch(self.pkgdir, None)
+            pkg.fetch(self.pkgdir, self.config)
             mrun.assert_not_called()
         self.check_resolve(pkg)
 

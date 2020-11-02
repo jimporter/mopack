@@ -6,8 +6,8 @@ from yaml.loader import SafeLoader
 from yaml.nodes import MappingNode, SequenceNode
 from yaml.constructor import ConstructorError
 
-__all__ = ['load_file', 'make_parse_error', 'MarkedDict', 'MarkedList',
-           'SafeLineLoader', 'YamlParseError']
+__all__ = ['load_file', 'make_parse_error', 'to_parse_error', 'MarkedDict',
+           'MarkedList', 'SafeLineLoader', 'YamlParseError']
 
 
 class YamlParseError(Exception):
@@ -27,6 +27,15 @@ def make_parse_error(e, stream):
     stream.seek(e.problem_mark.index - e.problem_mark.column, 0)
     snippet = stream.readline().rstrip()
     return YamlParseError(e.problem, e.problem_mark, snippet)
+
+
+@contextmanager
+def to_parse_error(filename):
+    try:
+        yield
+    except MarkedYAMLError as e:
+        with open(filename, newline='') as f:
+            raise make_parse_error(e, f)
 
 
 @contextmanager

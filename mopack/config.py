@@ -1,13 +1,15 @@
 import os
 from itertools import chain
+from yaml.error import MarkedYAMLError
 
 from .builders import make_builder_options
 from .freezedried import FreezeDried
+from .iterutils import isiterable
 from .options import BaseOptions
 from .platforms import platform_name
 from .sources import make_package, make_package_options
 from .types import Unset
-from .yaml_tools import load_file, MarkedDict, SafeLineLoader
+from .yaml_tools import load_file, to_parse_error, MarkedDict, SafeLineLoader
 
 
 class _PlaceholderPackage:
@@ -49,7 +51,7 @@ class BaseConfig:
 
     def __init__(self):
         self._options = self.default_options(pending=True)
-        self.packages = {}
+        self._pending_packages = {}
 
     def _accumulate_config(self, filename):
         filename = os.path.abspath(filename)
@@ -63,18 +65,31 @@ class BaseConfig:
     def _process_packages(self, filename, data):
         if not data:
             return
-        for k, v in data.items():
-            if k in self.packages:
-                continue
-            v['config_file'] = filename
 
+        for name, cfgs in data.items():
             # If a parent package has already defined this package,
             # just store a placeholder to track it. Otherwise, make the
             # real package object.
-            self.packages[k] = (
-                PlaceholderPackage if self._in_parent(k)
-                else make_package(k, v)
-            )
+            if self._in_parent(name):
+                if name not in self._pending_packages:
+                    self._pending_packages[name] = PlaceholderPackage
+                continue
+
+            if name not in self._pending_packages:
+                self._pending_packages[name] = []
+
+            if isiterable(cfgs):
+                for i, cfg in enumerate(cfgs):
+                    if i < len(cfgs) - 1 and 'if' not in cfg:
+                        ctx = 'while constructing package {!r}'.format(name)
+                        msg = ('package config has no `if` field, but is ' +
+                               'not last entry of list')
+                        raise MarkedYAMLError(ctx, cfgs.mark, msg, cfg.mark)
+                    cfg['config_file'] = filename
+                    self._pending_packages[name].append(cfg)
+            else:
+                cfgs['config_file'] = filename
+                self._pending_packages[name].append(cfgs)
 
     def _process_options(self, filename, data):
         if not data:
@@ -86,6 +101,21 @@ class BaseConfig:
                         v = MarkedDict(data[kind].marks[k])
                     v.update(config_file=filename, child_config=self.child)
                     self._options[kind].setdefault(k, []).append(v)
+
+    def _finalize_packages(self, common_opts):
+        self.packages = {}
+        for name, cfgs in self._pending_packages.items():
+            if cfgs is PlaceholderPackage:
+                self.packages[name] = cfgs
+                continue
+
+            for cfg in cfgs:
+                condition = cfg.pop('if', True)
+                if condition:
+                    with to_parse_error(cfg['config_file']):
+                        self.packages[name] = make_package(name, cfg)
+                    break
+        del self._pending_packages
 
     def _in_parent(self, name):
         # We don't have a parent, so this is always false!
@@ -142,6 +172,8 @@ class Config(BaseConfig):
         self._process_options('<command-line>', options or {})
         for f in reversed(filenames):
             self._accumulate_config(f)
+        self._options['common'].finalize()
+        self._finalize_packages(self._options['common'])
 
     def _process_options(self, filename, data):
         super()._process_options(filename, data)
@@ -170,7 +202,6 @@ class Config(BaseConfig):
             'sources': dict(make_options(sources, make_package_options)),
             'builders': dict(make_options(builders, make_builder_options)),
         }
-        self.options['common'].finalize()
 
         for kind in self._option_kinds:
             for name, cfgs in self._options[kind].items():
@@ -194,6 +225,13 @@ class ChildConfig(BaseConfig):
         self.parent = parent
         for f in reversed(filenames):
             self._accumulate_config(f)
+        self._finalize_packages(self._root_parent()._options['common'])
+
+    def _root_parent(self):
+        parent = self.parent
+        while hasattr(parent, 'parent'):
+            parent = self.parent
+        return parent
 
     def _in_parent(self, name):
         return name in self.parent.packages or self.parent._in_parent(name)
