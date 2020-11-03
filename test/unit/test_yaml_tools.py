@@ -49,7 +49,7 @@ class TestLoadFile(TestCase):
              self.assertRaises(YamlParseError):  # noqa
             with load_file('file.yml', Loader=SafeLineLoader) as data:
                 raise MarkedYAMLError('context', data.mark, 'problem',
-                                      data.marks['zoo'])
+                                      data.key_marks['zoo'])
 
 
 class TestMarkedList(TestCase):
@@ -113,18 +113,26 @@ class TestMarkedDict(TestCase):
         m = MarkedDict()
         self.assertEqual(m, {})
         self.assertEqual(m.mark, None)
-        self.assertEqual(m.marks, {})
+        self.assertEqual(m.key_marks, {})
+        self.assertEqual(m.value_marks, {})
 
         m = MarkedDict('mark')
         self.assertEqual(m, {})
         self.assertEqual(m.mark, 'mark')
-        self.assertEqual(m.marks, {})
+        self.assertEqual(m.key_marks, {})
+        self.assertEqual(m.value_marks, {})
 
     def test_add(self):
         m = MarkedDict()
-        m.add('key1', 1, 'mark1')
+        m.add('key1', 1, 'kmark1', 'vmark1')
         self.assertEqual(m, {'key1': 1})
-        self.assertEqual(m.marks, {'key1': 'mark1'})
+        self.assertEqual(m.key_marks, {'key1': 'kmark1'})
+        self.assertEqual(m.value_marks, {'key1': 'vmark1'})
+
+        m.add('key2', 2)
+        self.assertEqual(m, {'key1': 1, 'key2': 2})
+        self.assertEqual(m.key_marks, {'key1': 'kmark1'})
+        self.assertEqual(m.value_marks, {'key1': 'vmark1'})
 
     def test_pop(self):
         m = MarkedDict()
@@ -132,7 +140,8 @@ class TestMarkedDict(TestCase):
 
         self.assertEqual(m.pop('key1'), 1)
         self.assertEqual(m, {})
-        self.assertEqual(m.marks, {})
+        self.assertEqual(m.key_marks, {})
+        self.assertEqual(m.value_marks, {})
 
         self.assertEqual(m.pop('key2', 2), 2)
         with self.assertRaises(KeyError):
@@ -143,36 +152,41 @@ class TestMarkedDict(TestCase):
         m.update({'key1': 1, 'key2': 2})
         self.assertEqual(m, {'key1': 1, 'key2': 2})
         self.assertEqual(m.mark, None)
-        self.assertEqual(m.marks, {})
+        self.assertEqual(m.key_marks, {})
+        self.assertEqual(m.value_marks, {})
 
         m2 = MarkedDict('mark')
-        m.add('key3', 3, 'mark3')
+        m.add('key3', 3, 'kmark3', 'vmark3')
         m.update(m2)
         self.assertEqual(m, {'key1': 1, 'key2': 2, 'key3': 3})
         self.assertEqual(m.mark, 'mark')
-        self.assertEqual(m.marks, {'key3': 'mark3'})
+        self.assertEqual(m.key_marks, {'key3': 'kmark3'})
+        self.assertEqual(m.value_marks, {'key3': 'vmark3'})
 
         m3 = MarkedDict('badmark')
         m.update(m3)
         self.assertEqual(m, {'key1': 1, 'key2': 2, 'key3': 3})
         self.assertEqual(m.mark, 'mark')
-        self.assertEqual(m.marks, {'key3': 'mark3'})
+        self.assertEqual(m.key_marks, {'key3': 'kmark3'})
+        self.assertEqual(m.value_marks, {'key3': 'vmark3'})
 
     def test_update_kwargs(self):
         m = MarkedDict()
         m.update(key1=1, key2=2)
         self.assertEqual(m, {'key1': 1, 'key2': 2})
         self.assertEqual(m.mark, None)
-        self.assertEqual(m.marks, {})
+        self.assertEqual(m.key_marks, {})
+        self.assertEqual(m.value_marks, {})
 
     def test_copy(self):
         m = MarkedDict('mark')
-        m.add('key1', 1, 'mark1')
+        m.add('key1', 1, 'kmark1', 'vmark1')
 
         m2 = m.copy()
         self.assertEqual(m2, {'key1': 1})
         self.assertEqual(m2.mark, 'mark')
-        self.assertEqual(m2.marks, {'key1': 'mark1'})
+        self.assertEqual(m2.key_marks, {'key1': 'kmark1'})
+        self.assertEqual(m2.value_marks, {'key1': 'vmark1'})
 
 
 class TestSafeLineLoader(TestCase):
@@ -192,20 +206,29 @@ class TestSafeLineLoader(TestCase):
         self.assertEqual(data.mark.line, 0)
         self.assertEqual(data.mark.column, 0)
         self.assertEqual({k: (v.line, v.column)
-                          for k, v in data.marks.items()},
+                          for k, v in data.key_marks.items()},
                          {'house': (0, 0), 'zoo': (3, 0)})
+        self.assertEqual({k: (v.line, v.column)
+                          for k, v in data.value_marks.items()},
+                         {'house': (1, 2), 'zoo': (4, 2)})
 
         self.assertEqual(data['house'].mark.line, 1)
         self.assertEqual(data['house'].mark.column, 2)
         self.assertEqual({k: (v.line, v.column)
-                          for k, v in data['house'].marks.items()},
+                          for k, v in data['house'].key_marks.items()},
                          {'cat': (1, 2), 'dog': (2, 2)})
+        self.assertEqual({k: (v.line, v.column)
+                          for k, v in data['house'].value_marks.items()},
+                         {'cat': (1, 7), 'dog': (2, 7)})
 
         self.assertEqual(data['zoo'].mark.line, 4)
         self.assertEqual(data['zoo'].mark.column, 2)
         self.assertEqual({k: (v.line, v.column)
-                          for k, v in data['zoo'].marks.items()},
+                          for k, v in data['zoo'].key_marks.items()},
                          {'panda': (4, 2), 'giraffe': (5, 2)})
+        self.assertEqual({k: (v.line, v.column)
+                          for k, v in data['zoo'].value_marks.items()},
+                         {'panda': (4, 9), 'giraffe': (5, 11)})
 
     def test_sequence(self):
         data = yaml.load(dedent("""

@@ -35,17 +35,18 @@ class SubprocessError(unittest.TestCase.failureException):
 
 
 class IntegrationTest(unittest.TestCase):
-    def assertExists(self, path):
-        if not os.path.exists(path):
+    def assertExistence(self, path, exists):
+        if os.path.exists(path) != exists:
+            msg = '{!r} does not exist' if exists else '{!r} exists'
             raise unittest.TestCase.failureException(
-                '{!r} does not exist'.format(os.path.normpath(path))
+                msg.format(os.path.normpath(path))
             )
 
+    def assertExists(self, path):
+        self.assertExistence(path, True)
+
     def assertNotExists(self, path):
-        if os.path.exists(path):
-            raise unittest.TestCase.failureException(
-                '{!r} exists'.format(os.path.normpath(path))
-            )
+        self.assertExistence(path, False)
 
     def assertPopen(self, command, returncode=0):
         proc = subprocess.Popen(

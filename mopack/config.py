@@ -2,6 +2,7 @@ import os
 from itertools import chain
 from yaml.error import MarkedYAMLError
 
+from . import expression as expr
 from .builders import make_builder_options
 from .freezedried import FreezeDried
 from .iterutils import isiterable
@@ -22,6 +23,7 @@ PlaceholderPackage = _PlaceholderPackage()
 
 class CommonOptions(FreezeDried, BaseOptions):
     _context = 'while adding common options'
+    type = 'common'
 
     def __init__(self):
         self.target_platform = Unset
@@ -102,7 +104,7 @@ class BaseConfig:
                     v.update(config_file=filename, child_config=self.child)
                     self._options[kind].setdefault(k, []).append(v)
 
-    def _finalize_packages(self, common_opts):
+    def _finalize_packages(self, symbols):
         self.packages = {}
         for name, cfgs in self._pending_packages.items():
             if cfgs is PlaceholderPackage:
@@ -110,12 +112,22 @@ class BaseConfig:
                 continue
 
             for cfg in cfgs:
-                condition = cfg.pop('if', True)
-                if condition:
-                    with to_parse_error(cfg['config_file']):
+                with to_parse_error(cfg['config_file']):
+                    if self._evaluate(symbols, cfg, 'if'):
                         self.packages[name] = make_package(name, cfg)
-                    break
+                        break
         del self._pending_packages
+
+    @staticmethod
+    def _evaluate(symbols, data, key):
+        try:
+            mark = data.value_marks.get(key)
+            expression = data.pop(key, True)
+            if isinstance(expression, bool):
+                return expression
+            return expr.evaluate(symbols, expression)
+        except expr.ParseException as e:
+            raise expr.to_yaml_error(e, data.mark, mark)
 
     def _in_parent(self, name):
         # We don't have a parent, so this is always false!
@@ -173,7 +185,11 @@ class Config(BaseConfig):
         for f in reversed(filenames):
             self._accumulate_config(f)
         self._options['common'].finalize()
-        self._finalize_packages(self._options['common'])
+        self._expr_symbols = {
+            'host_platform': platform_name(),
+            'target_platform': self._options['common'].target_platform
+        }
+        self._finalize_packages(self._expr_symbols)
 
     def _process_options(self, filename, data):
         super()._process_options(filename, data)
@@ -225,13 +241,14 @@ class ChildConfig(BaseConfig):
         self.parent = parent
         for f in reversed(filenames):
             self._accumulate_config(f)
-        self._finalize_packages(self._root_parent()._options['common'])
+        self._finalize_packages(self._expr_symbols)
 
-    def _root_parent(self):
+    @property
+    def _expr_symbols(self):
         parent = self.parent
         while hasattr(parent, 'parent'):
             parent = self.parent
-        return parent
+        return parent._expr_symbols
 
     def _in_parent(self, name):
         return name in self.parent.packages or self.parent._in_parent(name)

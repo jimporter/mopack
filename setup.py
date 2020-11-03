@@ -113,7 +113,7 @@ setup(
 
     packages=find_packages(exclude=['test', 'test.*']),
 
-    install_requires=['colorama', 'pyyaml', 'setuptools'],
+    install_requires=['colorama', 'pyparsing', 'pyyaml', 'setuptools'],
     extras_require={
         'dev': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6',
                 'pypandoc >= 1.4'],

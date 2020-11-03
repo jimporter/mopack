@@ -64,7 +64,7 @@ def make_builder(name, config, **kwargs):
         type = config.pop('type')
 
     context = 'while constructing builder {!r}'.format(name)
-    with try_load_config(config, context):
+    with try_load_config(config, context, type):
         return _get_builder_type(type)(name, **config, **kwargs)
 
 

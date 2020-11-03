@@ -12,6 +12,6 @@ class TestInvalid(IntegrationTest):
         output = self.assertPopen(['mopack', 'resolve', config], returncode=1)
         self.assertRegex(output,
                          'error: expected an inner path\n' +
-                         '  in ".+mopack-invalid.yml", line 5, column 5\n'
+                         '  in ".+mopack-invalid.yml", line 5, column 13\n'
                          '      srcdir: \\.\\./foo\n' +
-                         '      \\^\n$')
+                         '              \\^\n$')

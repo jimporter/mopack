@@ -141,7 +141,7 @@ def make_package(name, config):
     source = config.pop('source')
 
     context = 'while constructing package {!r}'.format(name)
-    with try_load_config(config, context):
+    with try_load_config(config, context, source):
         return _get_source_type(source)(name, **config)
 
 

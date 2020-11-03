@@ -98,23 +98,29 @@ class MarkedDict(dict, MarkedCollection):
     def __init__(self, mark=None):
         super().__init__(self)
         self.mark = mark
-        self.marks = {}
+        self.key_marks = {}
+        self.value_marks = {}
 
-    def add(self, key, value, mark):
+    def add(self, key, value, key_mark=None, value_mark=None):
         self[key] = value
-        self.marks[key] = mark
+        if key_mark is not None:
+            self.key_marks[key] = key_mark
+        if value_mark is not None:
+            self.value_marks[key] = value_mark
 
     def pop(self, key, *args):
         result = super().pop(key, *args)
-        self.marks.pop(key, None)
+        self.key_marks.pop(key, None)
+        self.value_marks.pop(key, None)
         return result
 
     def update(self, *args, **kwargs):
         super().update(*args, **kwargs)
-        if len(args) and isinstance(args[0], MarkedCollection):
+        if len(args) and isinstance(args[0], MarkedDict):
             if self.mark is None:
                 self.mark = args[0].mark
-                self.marks.update(args[0].marks)
+                self.key_marks.update(args[0].key_marks)
+                self.value_marks.update(args[0].value_marks)
 
     def copy(self):
         result = MarkedDict()
@@ -162,7 +168,7 @@ class SafeLineLoader(SafeLoader):
                     'found unhashable key', key_node.start_mark
                 )
             value = self.construct_object(value_node, deep=deep)
-            mapping.add(key, value, key_node.start_mark)
+            mapping.add(key, value, key_node.start_mark, value_node.start_mark)
         return mapping
 
 

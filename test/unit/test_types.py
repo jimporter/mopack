@@ -327,9 +327,10 @@ class TestTryLoadConfig(TestCase):
         cfg = self.load_data('foo: Foo\nbar: Bar\n')
         with self.assertRaisesRegex(MarkedYAMLError,
                                     '^context\n' +
+                                    '  in ".*", line 1, column 1\n' +
                                     'expected a boolean\n' +
-                                    '  in ".*", line 1, column 1$'):
-            with try_load_config(cfg, 'context'):
+                                    '  in ".*", line 1, column 6$'):
+            with try_load_config(cfg, 'context', 'kind'):
                 boolean('foo', cfg['foo'])
 
     def test_multiple_fields(self):
@@ -338,6 +339,6 @@ class TestTryLoadConfig(TestCase):
                                     '^context\n' +
                                     '  in ".*", line 1, column 1\n' +
                                     'expected a boolean\n' +
-                                    '  in ".*", line 2, column 3$'):
-            with try_load_config(cfg, 'context'):
+                                    '  in ".*", line 2, column 8$'):
+            with try_load_config(cfg, 'context', 'kind'):
                 dict_shape({'bar': boolean}, 'a bar dict')('foo', cfg['foo'])

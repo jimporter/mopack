@@ -2,6 +2,7 @@ from os.path import abspath
 from unittest import mock, TestCase
 
 from mopack.config import *
+from mopack.yaml_tools import YamlParseError
 from mopack.builders.bfg9000 import Bfg9000Builder
 from mopack.sources.apt import AptPackage
 from mopack.sources.conan import ConanPackage
@@ -109,6 +110,14 @@ class TestConfig(TestCase):
         pkg = ConanPackage('foo', remote='foo/1.2.3', config_file='mopack.yml')
         pkg.set_options(opts)
         self.assertEqual(list(cfg.packages.items()), [('foo', pkg)])
+
+    def test_invalid_conditional_packages(self):
+        data = ('packages:\n  foo:\n    - source: apt\n' +
+                '    - source: conan\n      remote: foo/1.2.3\n')
+        files = {'mopack.yml': data}
+        with self.assertRaises(YamlParseError), \
+             mock.patch('builtins.open', mock_open_files(files)):  # noqa
+            Config(['mopack.yml'])
 
     def test_empty_options(self):
         data = 'options:'

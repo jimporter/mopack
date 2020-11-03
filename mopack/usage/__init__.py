@@ -41,5 +41,5 @@ def make_usage(name, config, **kwargs):
         type = config.pop('type')
 
     context = 'while constructing usage {!r}'.format(type)
-    with try_load_config(config, context):
+    with try_load_config(config, context, type):
         return _get_usage_type(type)(name, **config, **kwargs)

@@ -7,6 +7,11 @@ from yaml.error import MarkedYAMLError
 from . import iterutils
 from .yaml_tools import MarkedDict
 
+
+_unexpected_kwarg_ex = re.compile(
+    r"got an unexpected keyword argument '(\w+)'$"
+)
+
 _url_ex = re.compile(
     r'^'
     r'[A-Za-z0-9+.-]+://'        # scheme
@@ -64,21 +69,28 @@ Unset = _UnsetType()
 
 
 @contextmanager
-def try_load_config(config, context):
+def try_load_config(config, context, kind):
     try:
         yield
     except TypeError as e:
         if not isinstance(config, MarkedDict):
             raise
 
+        msg = str(e)
+        mark = config.mark
         if isinstance(e, FieldError):
             x = config
             for f in e.field[:-1]:
                 x = x[f]
-            mark = x.marks[e.field[-1]]
-        else:
-            mark = config.mark
-        raise MarkedYAMLError(context, config.mark, str(e), mark)
+            mark = x.value_marks[e.field[-1]]
+        elif type(e) == TypeError:
+            m = _unexpected_kwarg_ex.search(msg)
+            if m:
+                msg = ('{!r} got an unexpected keyword argument {!r}'
+                       .format(kind, m.group(1)))
+                mark = config.key_marks[m.group(1)]
+
+        raise MarkedYAMLError(context, config.mark, msg, mark)
 
 
 def maybe(other, default=None):
