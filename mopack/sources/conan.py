@@ -89,7 +89,7 @@ class ConanPackage(BinaryPackage):
         with log.LogFile.open(pkgdir, 'conan') as logfile:
             logfile.check_call(
                 ['conan', 'install', '-if', cls._installdir(pkgdir)] +
-                cls._build_opts(options.build) + [pkgdir]
+                cls._build_opts(options.build) + ['--', pkgdir]
             )
 
         for i in packages:

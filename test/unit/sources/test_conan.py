@@ -67,7 +67,7 @@ class TestConan(SourceTest):
             """))
             mcall.assert_called_with(
                 ['conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
-                 self.pkgdir], stdout=subprocess.PIPE,
+                 '--', self.pkgdir], stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT, universal_newlines=True, check=True
             )
 
@@ -96,7 +96,7 @@ class TestConan(SourceTest):
             """))
             mcall.assert_called_with(
                 ['conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
-                 self.pkgdir], stdout=subprocess.PIPE,
+                 '--', self.pkgdir], stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT, universal_newlines=True, check=True
             )
 
@@ -126,7 +126,7 @@ class TestConan(SourceTest):
             """))
             mcall.assert_called_with(
                 ['conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
-                 '--build', 'foo', self.pkgdir], stdout=subprocess.PIPE,
+                 '--build', 'foo', '--', self.pkgdir], stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT, universal_newlines=True, check=True
             )
 
@@ -156,7 +156,7 @@ class TestConan(SourceTest):
             """))
             mcall.assert_called_with(
                 ['conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
-                 '--build', self.pkgdir], stdout=subprocess.PIPE,
+                 '--build', '--', self.pkgdir], stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT, universal_newlines=True, check=True
             )
 
@@ -186,7 +186,7 @@ class TestConan(SourceTest):
             """))
             mcall.assert_called_with(
                 ['conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
-                 self.pkgdir], stdout=subprocess.PIPE,
+                 '--', self.pkgdir], stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT, universal_newlines=True, check=True
             )
 
