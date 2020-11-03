@@ -104,7 +104,8 @@ class TestConan(SourceTest):
 
     def test_this_options(self):
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
-                                this_options={'generator': 'cmake'})
+                                this_options={'generator': 'cmake',
+                                              'build': 'foo'})
         self.assertEqual(pkg.remote, 'foo/1.2.3@conan/stable')
         self.assertEqual(pkg.options, {})
         self.assertEqual(pkg.should_deploy, True)
@@ -125,7 +126,37 @@ class TestConan(SourceTest):
             """))
             mcall.assert_called_with(
                 ['conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
-                 self.pkgdir], stdout=subprocess.PIPE,
+                 '--build', 'foo', self.pkgdir], stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT, universal_newlines=True, check=True
+            )
+
+        self.check_usage(pkg)
+
+    def test_this_options_build_all(self):
+        pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
+                                this_options={'generator': 'cmake',
+                                              'build': 'all'})
+        self.assertEqual(pkg.remote, 'foo/1.2.3@conan/stable')
+        self.assertEqual(pkg.options, {})
+        self.assertEqual(pkg.should_deploy, True)
+
+        with mock_open_log(mock_open_write()) as mopen, \
+             mock.patch('subprocess.run') as mcall:  # noqa
+            ConanPackage.resolve_all(self.pkgdir, [pkg], self.deploy_paths)
+
+            self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
+                [requires]
+                foo/1.2.3@conan/stable
+
+                [options]
+
+                [generators]
+                pkg_config
+                cmake
+            """))
+            mcall.assert_called_with(
+                ['conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
+                 '--build', self.pkgdir], stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT, universal_newlines=True, check=True
             )
 
