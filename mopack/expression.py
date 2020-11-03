@@ -1,9 +1,13 @@
 import pyparsing as pp
 from yaml.error import Mark, MarkedYAMLError
+from pyparsing import ParseBaseException, ParseException
 
-__all__ = ['evaluate', 'ParseException', 'to_yaml_error']
+__all__ = ['evaluate', 'ParseBaseException', 'ParseException',
+           'SemanticException', 'to_yaml_error']
 
-ParseException = pp.ParseException
+
+class SemanticException(pp.ParseBaseException):
+    pass
 
 
 class Literal:
@@ -18,11 +22,17 @@ class Literal:
 
 
 class Symbol:
-    def __init__(self, symbol):
+    def __init__(self, pstr, loc, symbol):
+        self._pstr = pstr
+        self.loc = loc
         self.symbol = symbol
 
     def __call__(self, symbols):
-        return symbols[self.symbol]
+        try:
+            return symbols[self.symbol]
+        except KeyError:
+            msg = 'undefined symbol {!r}'.format(self.symbol)
+            raise SemanticException(self._pstr, self.loc, msg)
 
     def __repr__(self):
         return '<Symbol({})>'.format(self.symbol)
@@ -70,7 +80,7 @@ true_literal = pp.Keyword('true').setParseAction(lambda t: [Literal(True)])
 false_literal = pp.Keyword('false').setParseAction(lambda t: [Literal(False)])
 bool_literal = true_literal | false_literal
 identifier = pp.Word(pp.alphas + '_', pp.alphanums + '_').setParseAction(
-    lambda t: [Symbol(t[0])]
+    lambda s, loc, t: [Symbol(s, loc, t[0])]
 )
 atom = string_literal | bool_literal | identifier
 
@@ -87,7 +97,9 @@ def evaluate(symbols, expression):
 
 
 def to_yaml_error(e, context_mark, mark):
-    if not e.pstr:
+    assert e.pstr
+
+    if isinstance(e, SemanticException):
         found = ''
     elif e.loc >= len(e.pstr):
         found = ', found end of text'

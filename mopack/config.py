@@ -126,7 +126,7 @@ class BaseConfig:
             if isinstance(expression, bool):
                 return expression
             return expr.evaluate(symbols, expression)
-        except expr.ParseException as e:
+        except expr.ParseBaseException as e:
             raise expr.to_yaml_error(e, data.mark, mark)
 
     def _in_parent(self, name):

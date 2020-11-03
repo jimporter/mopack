@@ -46,13 +46,17 @@ class TestEvaluate(TestCase):
         self.assertEqual(evaluate(self.symbols, '!(foo == "foo")'), False)
         self.assertEqual(evaluate(self.symbols, '!(foo == "bar")'), True)
 
-    def test_invalid(self):
+    def test_invalid_syntax(self):
         with self.assertRaises(ParseException):
             evaluate(self.symbols, 'foo ==')
 
+    def test_undefined_symbol(self):
+        with self.assertRaises(SemanticException):
+            evaluate(self.symbols, 'bar == "bar"')
+
 
 class TestToYamlError(TestCase):
-    def test_convert(self):
+    def test_convert_parse_exc(self):
         try:
             evaluate({}, '"foo" ==')
         except ParseException as e:
@@ -64,3 +68,16 @@ class TestToYamlError(TestCase):
         self.assertEqual(err.problem_mark.index, 16)
         self.assertEqual(err.problem_mark.line, 1)
         self.assertEqual(err.problem_mark.column, 8)
+
+    def test_convert_semantic_exc(self):
+        try:
+            evaluate({}, 'foo == "foo"')
+        except SemanticException as e:
+            err = to_yaml_error(e, None, Mark('name', 10, 1, 2, None, None))
+        self.assertEqual(err.context, 'while parsing expression')
+        self.assertEqual(err.context_mark, None)
+        self.assertEqual(err.problem, "undefined symbol 'foo'")
+        self.assertEqual(err.problem_mark.name, 'name')
+        self.assertEqual(err.problem_mark.index, 10)
+        self.assertEqual(err.problem_mark.line, 1)
+        self.assertEqual(err.problem_mark.column, 2)
