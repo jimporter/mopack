@@ -49,21 +49,21 @@ class SDistPackage(Package):
         return super().dehydrate()
 
     def _find_mopack(self, srcdir, parent_config):
-        mopack = os.path.join(srcdir, 'mopack.yml')
-        if os.path.exists(mopack):
-            config = ChildConfig([mopack], parent=parent_config)
-            if self.builder is None:
-                if not hasattr(self, 'submodules'):
-                    self.submodules = submodules_type('submodules',
-                                                      config.submodules)
-                usage = self.pending_usage or config.usage
-                self.builder = make_builder(
-                    self.name, config.build, usage=usage,
-                    submodules=self.submodules
-                )
-                del self.pending_usage
-            return config
-        return None
+        config = ChildConfig([srcdir], parent=parent_config)
+        if not config:
+            return
+
+        if self.builder is None:
+            if not hasattr(self, 'submodules'):
+                self.submodules = submodules_type('submodules',
+                                                  config.submodules)
+            usage = self.pending_usage or config.usage
+            self.builder = make_builder(
+                self.name, config.build, usage=usage,
+                submodules=self.submodules
+            )
+            del self.pending_usage
+        return config
 
     def clean_post(self, pkgdir, new_package, quiet=False):
         if self == new_package:
@@ -176,8 +176,7 @@ class TarballPackage(SDistPackage):
                      pushd(self._srcdir(pkgdir)):  # noqa
                     logfile.check_call(['patch', '-p1'], stdin=f)
 
-        return self._find_mopack(self.srcdir or self.guessed_srcdir,
-                                 parent_config)
+        return self._find_mopack(self._srcdir(pkgdir), parent_config)
 
     def resolve(self, pkgdir, deploy_paths):
         return self._resolve(pkgdir, self._srcdir(pkgdir), deploy_paths)
@@ -248,7 +247,7 @@ class GitPackage(SDistPackage):
                     raise ValueError('unknown revision type {!r}'
                                      .format(self.rev[0]))
 
-        return self._find_mopack(self.srcdir, parent_config)
+        return self._find_mopack(self._srcdir(pkgdir), parent_config)
 
     def resolve(self, pkgdir, deploy_paths):
         return self._resolve(pkgdir, self._srcdir(pkgdir), deploy_paths)

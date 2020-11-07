@@ -70,6 +70,7 @@ class ConanPackage(BinaryPackage):
             log.pkg_resolve(i.name, 'from {}'.format(cls.source))
 
         options = packages[0]._options.this
+        os.makedirs(pkgdir, exist_ok=True)
         with open(os.path.join(pkgdir, 'conanfile.txt'), 'w') as conan:
             print('[requires]', file=conan)
             for i in packages:

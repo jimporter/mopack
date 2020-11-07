@@ -40,10 +40,14 @@ class TestDirectory(SDistTestCase):
         self.check_resolve(pkg)
 
     def test_infer_build(self):
+        def exists(p):
+            return os.path.basename(p) == 'mopack.yml'
+
         pkg = self.make_package('foo', path=self.srcpath, set_options=False)
         self.assertEqual(pkg.builder, None)
 
-        with mock.patch('os.path.exists', return_value=True):
+        with mock.patch('os.path.isdir', return_value=True), \
+             mock.patch('os.path.exists', exists):  # noqa
             config = pkg.fetch(self.pkgdir, self.config)
             self.set_options(pkg)
             self.assertEqual(config.build, 'bfg9000')
@@ -55,7 +59,8 @@ class TestDirectory(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath,
                                 usage={'type': 'system'}, set_options=False)
 
-        with mock.patch('os.path.exists', return_value=True):
+        with mock.patch('os.path.isdir', return_value=True), \
+             mock.patch('os.path.exists', exists):  # noqa
             config = pkg.fetch(self.pkgdir, self.config)
             self.set_options(pkg)
             self.assertEqual(config.build, 'bfg9000')
@@ -69,11 +74,15 @@ class TestDirectory(SDistTestCase):
         })
 
     def test_infer_submodules(self):
+        def exists(p):
+            return os.path.basename(p) == 'mopack.yml'
+
         srcpath = os.path.join(test_data_dir, 'hello-multi-bfg')
         pkg = self.make_package('foo', path=srcpath, set_options=False)
         self.assertEqual(pkg.builder, None)
 
-        with mock.patch('os.path.exists', return_value=True):
+        with mock.patch('os.path.isdir', return_value=True), \
+             mock.patch('os.path.exists', exists):  # noqa
             config = pkg.fetch(self.pkgdir, self.config)
             self.set_options(pkg)
             self.assertEqual(config.build, 'bfg9000')
@@ -89,7 +98,8 @@ class TestDirectory(SDistTestCase):
                                 set_options=False)
         self.assertEqual(pkg.builder, None)
 
-        with mock.patch('os.path.exists', return_value=True):
+        with mock.patch('os.path.isdir', return_value=True), \
+             mock.patch('os.path.exists', exists):  # noqa
             config = pkg.fetch(self.pkgdir, self.config)
             self.set_options(pkg)
             self.assertEqual(config.build, 'bfg9000')

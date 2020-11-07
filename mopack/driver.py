@@ -85,6 +85,18 @@ def clean(parser, subparser, args):
     commands.clean(commands.get_package_dir(args.directory))
 
 
+def list_files(parser, subparser, args):
+    assert nested_invoke not in os.environ
+    files = commands.list_files(commands.get_package_dir(args.directory),
+                                args.include_implicit, args.strict)
+
+    if args.json:
+        print(json.dumps(files))
+    else:
+        for i in files:
+            print(i)
+
+
 def main():
     parser = argparse.ArgumentParser(prog='mopack')
     parser.add_argument('--version', action='version',
@@ -153,6 +165,20 @@ def main():
     clean_p.add_argument('--directory', default='.', type=os.path.abspath,
                          metavar='PATH',
                          help='directory storing local package data')
+
+    list_files_p = subparsers.add_parser(
+        'list-files', help='list input files'
+    )
+    list_files_p.set_defaults(func=list_files, parser=list_files_p)
+    list_files_p.add_argument('--directory', default='.', type=os.path.abspath,
+                              metavar='PATH',
+                              help='directory storing local package data')
+    list_files_p.add_argument('-I', '--include-implicit', action='store_true',
+                              help='include implicit input files')
+    list_files_p.add_argument('--json', action='store_true',
+                              help='display results as JSON')
+    list_files_p.add_argument('--strict', action='store_true',
+                              help='return an error if package is not defined')
 
     args = parser.parse_args()
     log.init(args.color, debug=args.debug, warn_once=args.warn_once)

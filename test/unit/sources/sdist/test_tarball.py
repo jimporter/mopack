@@ -26,7 +26,9 @@ class TestTarball(SDistTestCase):
     def check_fetch(self, pkg):
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
         with mock.patch('mopack.sources.sdist.urlopen', self.mock_urlopen), \
-             mock.patch('tarfile.TarFile.extractall') as mtar:  # noqa
+             mock.patch('tarfile.TarFile.extractall') as mtar, \
+             mock.patch('os.path.isdir', return_value=True), \
+             mock.patch('os.path.exists', return_value=False):  # noqa
             pkg.fetch(self.pkgdir, self.config)
             mtar.assert_called_once_with(srcdir, None)
 
@@ -62,7 +64,9 @@ class TestTarball(SDistTestCase):
 
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
         with mock.patch('mopack.sources.sdist.urlopen', self.mock_urlopen), \
-             mock.patch('zipfile.ZipFile.extractall') as mtar:  # noqa
+             mock.patch('zipfile.ZipFile.extractall') as mtar, \
+             mock.patch('os.path.isdir', return_value=True), \
+             mock.patch('os.path.exists', return_value=False):  # noqa
             pkg.fetch(self.pkgdir, self.config)
             mtar.assert_called_once_with(srcdir, None)
         self.check_resolve(pkg)
@@ -81,7 +85,9 @@ class TestTarball(SDistTestCase):
 
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
         with mock.patch('mopack.sources.sdist.urlopen', self.mock_urlopen), \
-             mock.patch('tarfile.TarFile.extract') as mtar:  # noqa
+             mock.patch('tarfile.TarFile.extract') as mtar, \
+             mock.patch('os.path.isdir', return_value=True), \
+             mock.patch('os.path.exists', return_value=False):  # noqa
             pkg.fetch(self.pkgdir, self.config)
             self.assertEqual(mtar.mock_calls, [
                 mock.call('hello-bfg/include', srcdir),
@@ -99,6 +105,8 @@ class TestTarball(SDistTestCase):
         with mock.patch('mopack.sources.sdist.urlopen', self.mock_urlopen), \
              mock.patch('mopack.sources.sdist.pushd'), \
              mock.patch('tarfile.TarFile.extractall') as mtar, \
+             mock.patch('os.path.isdir', return_value=True), \
+             mock.patch('os.path.exists', return_value=False), \
              mock.patch('builtins.open', mock_open_after_first()) as mopen, \
              mock.patch('os.makedirs'), \
              mock.patch('subprocess.run') as mrun:  # noqa
@@ -236,8 +244,9 @@ class TestTarball(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, srcdir='srcdir',
                                 build=build, usage='pkg-config')
         with mock.patch('os.path.exists', mock_exists), \
-             mock.patch('tarfile.TarFile.extractall') as mtar:  # noqa
-            pkg.fetch(self.pkgdir, None)
+             mock.patch('tarfile.TarFile.extractall') as mtar, \
+             mock.patch('os.path.isdir', return_value=True):  # noqa
+            pkg.fetch(self.pkgdir, self.config)
             mtar.assert_not_called()
         self.check_resolve(pkg)
 

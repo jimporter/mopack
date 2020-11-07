@@ -1,0 +1,4 @@
+packages:
+  zlib:
+    source: apt
+    remote: zlib1g-dev

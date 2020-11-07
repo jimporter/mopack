@@ -1,0 +1,10 @@
+options:
+  sources:
+    conan:
+      build: missing
+packages:
+  zlib:
+    source: conan
+    remote: zlib/1.2.11
+    options:
+      shared: true

@@ -12,6 +12,9 @@ from .sources import make_package, make_package_options
 from .types import Unset
 from .yaml_tools import load_file, to_parse_error, MarkedDict, SafeLineLoader
 
+mopack_file = 'mopack.yml'
+mopack_local_file = 'mopack-local.yml'
+
 
 class _PlaceholderPackage:
     def __repr__(self):
@@ -54,6 +57,31 @@ class BaseConfig:
     def __init__(self):
         self._options = self.default_options(pending=True)
         self._pending_packages = {}
+
+    def __bool__(self):
+        return bool(self.files)
+
+    @staticmethod
+    def _expand_filenames(filenames):
+        def append_if_exists(collection, name):
+            if os.path.exists(name):
+                collection.append(name)
+
+        regular, local = [], []
+        for f in filenames:
+            f = os.path.abspath(f)
+            if os.path.isdir(f):
+                append_if_exists(regular, os.path.join(f, mopack_file))
+                append_if_exists(local, os.path.join(f, mopack_local_file))
+            else:
+                regular.append(f)
+        return regular + local
+
+    def _load_configs(self, filenames):
+        self.files = self._expand_filenames(filenames)
+        self.implicit_files = []
+        for f in reversed(self.files):
+            self._accumulate_config(f)
 
     def _accumulate_config(self, filename):
         filename = os.path.abspath(filename)
@@ -153,6 +181,9 @@ class BaseConfig:
         # child, rather than at the beginning of the package list.
         new_packages = {}
         for i in children:
+            self.implicit_files.extend(i.files)
+            self.implicit_files.extend(i.implicit_files)
+
             for k, v in i.packages.items():
                 # We have a package that's needed by another; put it in our
                 # packages before the package that depends on it. If it's in
@@ -166,6 +197,9 @@ class BaseConfig:
                         self._options[kind].setdefault(k, []).extend(v)
         new_packages.update(self.packages)
         self.packages = new_packages
+
+    def __repr__(self):
+        return '<{}({!r})>'.format(type(self).__name__, self.files)
 
 
 class Config(BaseConfig):
@@ -182,8 +216,8 @@ class Config(BaseConfig):
     def __init__(self, filenames, options=None):
         super().__init__()
         self._process_options('<command-line>', options or {})
-        for f in reversed(filenames):
-            self._accumulate_config(f)
+        self._load_configs(filenames)
+
         self._options['common'].finalize()
         self._expr_symbols = {
             'host_platform': platform_name(),
@@ -239,15 +273,14 @@ class ChildConfig(BaseConfig):
     def __init__(self, filenames, parent):
         super().__init__()
         self.parent = parent
-        for f in reversed(filenames):
-            self._accumulate_config(f)
+        self._load_configs(filenames)
         self._finalize_packages(self._expr_symbols)
 
     @property
     def _expr_symbols(self):
         parent = self.parent
         while hasattr(parent, 'parent'):
-            parent = self.parent
+            parent = parent.parent
         return parent._expr_symbols
 
     def _in_parent(self, name):

@@ -2,10 +2,10 @@ import json
 import os
 import shutil
 
+from . import log
 from .builders import BuilderOptions
 from .config import CommonOptions, Config, PlaceholderPackage
 from .freezedried import DictKeysFreezeDryer, DictToListFreezeDryer
-from .log import LogFile
 from .sources import Package, PackageOptions
 from .sources.system import fallback_system_package
 
@@ -32,18 +32,26 @@ class Metadata:
     metadata_filename = 'mopack.json'
     version = 1
 
-    def __init__(self, deploy_paths=None, options=None):
+    def __init__(self, deploy_paths=None, options=None, files=None,
+                 implicit_files=None):
         self.deploy_paths = deploy_paths or {}
         self.options = options or Config.default_options()
+        self.files = files or []
+        self.implicit_files = implicit_files or []
         self.packages = {}
 
     def add_package(self, package):
         self.packages[package.name] = package
 
     def save(self, pkgdir):
+        os.makedirs(pkgdir, exist_ok=True)
         with open(os.path.join(pkgdir, self.metadata_filename), 'w') as f:
             json.dump({
                 'version': self.version,
+                'config_files': {
+                    'explicit': self.files,
+                    'implicit': self.implicit_files,
+                },
                 'metadata': {
                     'deploy_paths': self.deploy_paths,
                     'options': OptionsFD.dehydrate(self.options),
@@ -63,6 +71,9 @@ class Metadata:
 
         metadata = Metadata.__new__(Metadata)
         metadata.deploy_paths = data['deploy_paths']
+
+        metadata.files = state['config_files']['explicit']
+        metadata.implicit = state['config_files']['implicit']
 
         metadata.options = OptionsFD.rehydrate(data['options'])
         metadata.packages = PackagesFD.rehydrate(data['packages'])
@@ -110,15 +121,15 @@ def _do_fetch(config, old_metadata, pkgdir):
 
 def _fill_metadata(config, deploy_paths):
     config.finalize()
-    metadata = Metadata(deploy_paths, config.options)
+    metadata = Metadata(deploy_paths, config.options, config.files,
+                        config.implicit_files)
     for pkg in config.packages.values():
         metadata.add_package(pkg)
     return metadata
 
 
 def fetch(config, pkgdir, deploy_paths=None):
-    LogFile.clean_logs(pkgdir)
-    os.makedirs(pkgdir, exist_ok=True)
+    log.LogFile.clean_logs(pkgdir)
 
     old_metadata = Metadata.try_load(pkgdir)
     try:
@@ -143,6 +154,10 @@ def fetch(config, pkgdir, deploy_paths=None):
 
 
 def resolve(config, pkgdir, deploy_paths=None):
+    if not config:
+        log.info('no inputs')
+        return
+
     metadata = fetch(config, pkgdir, deploy_paths)
 
     packages, batch_packages = [], {}
@@ -177,7 +192,7 @@ def resolve(config, pkgdir, deploy_paths=None):
 
 
 def deploy(pkgdir):
-    LogFile.clean_logs(pkgdir, kind='deploy')
+    log.LogFile.clean_logs(pkgdir, kind='deploy')
     metadata = Metadata.load(pkgdir)
 
     packages, batch_packages = [], {}
@@ -216,3 +231,15 @@ def usage(pkgdir, name, submodules=None, strict=False):
         raise ValueError('package {!r} has not been resolved successfully'
                          .format(name))
     return dict(name=name, **package.get_usage(pkgdir, submodules))
+
+
+def list_files(pkgdir, implicit=False, strict=False):
+    try:
+        metadata = Metadata.load(pkgdir)
+        if implicit:
+            return metadata.files + metadata.implicit_files
+        return metadata.files
+    except FileNotFoundError:
+        if strict:
+            raise
+        return []

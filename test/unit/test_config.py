@@ -55,6 +55,24 @@ class TestConfig(TestCase):
                                config_file='mopack2.yml')),
         ])
 
+    def test_directory(self):
+        def exists(p):
+            return os.path.basename(p) == 'dir'
+
+        files = {'mopack.yml': foo_cfg, 'mopack-local.yml': bar_cfg,
+                 'mopack-foobar.yml': foobar_cfg}
+        with mock.patch('os.path.isdir', exists), \
+             mock.patch('os.path.exists', return_value=True), \
+             mock.patch('builtins.open', mock_open_files(files)):  # noqa
+            # Filenames are in reversed order from file data, since Config
+            # loads last-to-first.
+            cfg = Config(['dir', 'mopack-foobar.yml'])
+        self.assertEqual(list(cfg.packages.items()), [
+            ('bar', AptPackage('bar', remote='libbar1-dev',
+                               config_file='mopack2.yml')),
+            ('foo', AptPackage('foo', config_file='mopack.yml')),
+        ])
+
     def test_override(self):
         files = {'mopack-foo.yml': foo_cfg, 'mopack-foobar.yml': foobar_cfg}
         with mock.patch('builtins.open', mock_open_files(files)):
