@@ -44,16 +44,16 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: |
         cinst ninja
-        $gnomebase = "https://ftp.gnome.org/pub/gnome/binaries/win32"
-        curl -LO $gnomebase/dependencies/pkg-config_0.26-1_win32.zip
-        curl -LO $gnomebase/glib/2.28/glib_2.28.8-1_win32.zip
-        curl -LO $gnomebase/dependencies/gettext-runtime_0.18.1.1-2_win32.zip
+        ${gnomebase} = "https://ftp.gnome.org/pub/gnome/binaries/win32"
+        curl -LO ${gnomebase}/dependencies/pkg-config_0.26-1_win32.zip
+        curl -LO ${gnomebase}/glib/2.28/glib_2.28.8-1_win32.zip
+        curl -LO ${gnomebase}/dependencies/gettext-runtime_0.18.1.1-2_win32.zip
         7z x -y pkg-config_0.26-1_win32.zip -oC:\pkg-config
         7z x -y glib_2.28.8-1_win32.zip -oC:\pkg-config
         7z x -y gettext-runtime_0.18.1.1-2_win32.zip -oC:\pkg-config
-        echo "PKG_CONFIG=C:\pkg-config\bin\pkg-config.exe" >> $env:GITHUB_ENV
-        echo "BOOST_INCLUDEDIR=$env:BOOST_ROOT_1_72_0" >> $env:GITHUB_ENV
-        echo "MOPACK_SKIPPED_TESTS=boost" >> $env:GITHUB_ENV
+        echo "PKG_CONFIG=C:\pkg-config\bin\pkg-config.exe" >> ${env:GITHUB_ENV}
+        echo "BOOST_INCLUDEDIR=$env:BOOST_ROOT_1_72_0" >> ${env:GITHUB_ENV}
+        echo "MOPACK_SKIPPED_TESTS=boost" >> ${env:GITHUB_ENV}
     - name: Install macOS dependencies
       if: matrix.os == 'macos-latest'
       run: |
@@ -66,13 +66,13 @@ jobs:
     - name: Run tests (msvc)
       if: matrix.compiler == 'msvc'
       run: |
-        $installpath = vswhere -latest -property installationpath
-        Import-Module (Join-Path $installpath "Common7\Tools\Microsoft.VisualStudio.DevShell.dll")
-        $null = Enter-VsDevShell -VsInstallPath $installpath
+        ${installpath} = vswhere -latest -property installationpath
+        Import-Module (Join-Path ${installpath} "Common7\Tools\Microsoft.VisualStudio.DevShell.dll")
+        ${null} = Enter-VsDevShell -VsInstallPath $installpath
         conan profile new default --detect
-        $Env:CC = "cl.exe"
-        $Env:CXX = "cl.exe"
-        $Env:MOPACK_SKIPPED_TESTS = ""
+        ${env:CC} = "cl.exe"
+        ${env:CXX} = "cl.exe"
+        ${env:MOPACK_SKIPPED_TESTS} = ""
         python setup.py coverage -q
         coverage xml
     - name: Upload coverage
