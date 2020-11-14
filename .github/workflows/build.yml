@@ -62,7 +62,6 @@ jobs:
         if: matrix.compiler == 'cc'
         run: |
           python setup.py coverage -q
-          coverage xml
       - name: Run tests (msvc)
         if: matrix.compiler == 'msvc'
         run: |
@@ -74,9 +73,9 @@ jobs:
           ${env:CXX} = "cl.exe"
           ${env:MOPACK_SKIPPED_TESTS} = ""
           python setup.py coverage -q
-          coverage xml
       - name: Upload coverage
-        uses: codecov/codecov-action@v1
+        run: |
+          codecov
   lint:
     runs-on: ubuntu-latest
 
