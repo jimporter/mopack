@@ -5,6 +5,7 @@ from shlex import shlex
 from yaml.error import MarkedYAMLError
 
 from . import iterutils
+from .exceptions import ConfigurationError
 from .yaml_tools import MarkedDict
 
 
@@ -31,18 +32,32 @@ _ssh_ex = re.compile(
 )
 
 
-class FieldError(TypeError):
+class FieldError(TypeError, ConfigurationError):
     def __init__(self, message, field):
         super().__init__(message)
-        self.field = field
+        self.field = iterutils.listify(field, type=tuple)
+
+
+def to_field_error(e, kind):
+    if type(e) == TypeError:
+        m = _unexpected_kwarg_ex.search(str(e))
+        if m:
+            msg = ('{} got an unexpected keyword argument {!r}'
+                   .format(kind, m.group(1)))
+            return FieldError(msg, m.group(1))
+    return e
 
 
 @contextmanager
-def wrap_field_error(field):
+def wrap_field_error(field, kind=None):
     try:
         yield
-    except FieldError as e:
-        raise FieldError(str(e), (field,) + e.field)
+    except TypeError as e:
+        e = to_field_error(e, kind) if kind else e
+        if not isinstance(e, FieldError):
+            raise e
+        new_field = iterutils.listify(field, type=tuple) + e.field
+        raise FieldError(str(e), new_field)
 
 
 class _UnsetType:
@@ -76,6 +91,7 @@ def try_load_config(config, context, kind):
         if not isinstance(config, MarkedDict):
             raise
 
+        e = to_field_error(e, kind)
         msg = str(e)
         mark = config.mark
         if isinstance(e, FieldError):
@@ -83,12 +99,6 @@ def try_load_config(config, context, kind):
             for f in e.field[:-1]:
                 x = x[f]
             mark = x.value_marks[e.field[-1]]
-        elif type(e) == TypeError:
-            m = _unexpected_kwarg_ex.search(msg)
-            if m:
-                msg = ('{!r} got an unexpected keyword argument {!r}'
-                       .format(kind, m.group(1)))
-                mark = config.key_marks[m.group(1)]
 
         raise MarkedYAMLError(context, config.mark, msg, mark)
 
@@ -119,7 +129,7 @@ def one_of(*args, desc):
             except FieldError:
                 pass
         else:
-            raise FieldError('expected {}'.format(desc), (field,))
+            raise FieldError('expected {}'.format(desc), field)
 
     return check
 
@@ -130,7 +140,7 @@ def constant(*args):
             return value
         raise FieldError('expected one of {}'.format(
             ', '.join(repr(i) for i in args)
-        ), (field,))
+        ), field)
 
     return check
 
@@ -140,7 +150,7 @@ def list_of(other, listify=False):
         if listify:
             value = iterutils.listify(value)
         elif not iterutils.isiterable(value):
-            raise FieldError('expected a list', (field,))
+            raise FieldError('expected a list', field)
         with wrap_field_error(field):
             return [other(i, v) for i, v in enumerate(value)]
 
@@ -156,7 +166,7 @@ def dict_of(key_type, value_type):
 
     def check(field, value):
         if not isinstance(value, dict):
-            raise FieldError('expected a dict', (field,))
+            raise FieldError('expected a dict', field)
         with wrap_field_error(field):
             return {k: v for k, v in check_each(value)}
 
@@ -174,11 +184,11 @@ def dict_shape(shape, desc):
 
     def check(field, value):
         if not isinstance(value, dict):
-            raise FieldError('expected {}'.format(desc), (field,))
+            raise FieldError('expected {}'.format(desc), field)
         with wrap_field_error(field):
             for k in value:
                 if k not in shape:
-                    raise FieldError('unexpected key', (k,))
+                    raise FieldError('unexpected key', k)
             return {k: check_item(value, k, sub_check)
                     for k, sub_check in shape.items()}
 
@@ -187,24 +197,24 @@ def dict_shape(shape, desc):
 
 def string(field, value):
     if not isinstance(value, str):
-        raise FieldError('expected a string', (field,))
+        raise FieldError('expected a string', field)
     return value
 
 
 def boolean(field, value):
     if not isinstance(value, bool):
-        raise FieldError('expected a boolean', (field,))
+        raise FieldError('expected a boolean', field)
     return value
 
 
 def inner_path(field, value):
     value = string(field, value)
     if os.path.isabs(value) or os.path.splitdrive(value)[0]:
-        raise FieldError('expected a relative path', (field,))
+        raise FieldError('expected a relative path', field)
 
     value = os.path.normpath(value)
     if value.split(os.path.sep)[0] == os.path.pardir:
-        raise FieldError('expected an inner path', (field,))
+        raise FieldError('expected an inner path', field)
     return value
 
 
@@ -214,7 +224,7 @@ def abs_or_inner_path(field, value):
         return value
 
     if value.split(os.path.sep)[0] == os.path.pardir:
-        raise FieldError('expected an absolute or inner path', (field,))
+        raise FieldError('expected an absolute or inner path', field)
     return value
 
 
@@ -231,14 +241,14 @@ def any_path(base=None):
 def ssh_path(field, value):
     value = string(field, value)
     if not _ssh_ex.match(value):
-        raise FieldError('expected an ssh path', (field,))
+        raise FieldError('expected an ssh path', field)
     return value
 
 
 def url(field, value):
     value = string(field, value)
     if not _url_ex.match(value):
-        raise FieldError('expected a URL', (field,))
+        raise FieldError('expected a URL', field)
     return value
 
 

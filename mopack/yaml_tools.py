@@ -6,11 +6,13 @@ from yaml.loader import SafeLoader
 from yaml.nodes import MappingNode, SequenceNode
 from yaml.constructor import ConstructorError
 
+from .exceptions import ConfigurationError
+
 __all__ = ['load_file', 'make_parse_error', 'to_parse_error', 'MarkedDict',
            'MarkedList', 'SafeLineLoader', 'YamlParseError']
 
 
-class YamlParseError(Exception):
+class YamlParseError(ConfigurationError):
     def __init__(self, message, mark, snippet):
         self.message = message
         self.mark = mark

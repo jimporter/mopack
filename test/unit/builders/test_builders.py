@@ -1,10 +1,8 @@
-import yaml
 from unittest import TestCase
-from yaml.error import MarkedYAMLError
 
-from mopack.yaml_tools import SafeLineLoader
 from mopack.builders import make_builder
 from mopack.builders.bfg9000 import Bfg9000Builder
+from mopack.types import FieldError
 
 
 class TestMakeBuilder(TestCase):
@@ -18,16 +16,16 @@ class TestMakeBuilder(TestCase):
         self.assertIsInstance(builder, Bfg9000Builder)
         self.assertEqual(builder.name, 'foo')
 
-    def test_invalid(self):
+    def test_unknown_builder(self):
+        self.assertRaises(FieldError, make_builder, 'foo', {'type': 'goofy'},
+                          submodules=None)
+
+    def test_invalid_keys(self):
         self.assertRaises(TypeError, make_builder, 'foo',
-                          {'type': 'bfg9000', 'builddir': '..'},
+                          {'type': 'bfg9000', 'unknown': 'blah'},
                           submodules=None)
 
-    def test_invalid_marked(self):
-        data = yaml.load('type: bfg9000\nbuilddir: ..', Loader=SafeLineLoader)
-        self.assertRaises(MarkedYAMLError, make_builder, 'foo', data,
-                          submodules=None)
-
-    def test_unknown(self):
-        self.assertRaises(ValueError, make_builder, 'foo', {'type': 'goofy'},
+    def test_invalid_values(self):
+        self.assertRaises(FieldError, make_builder, 'foo',
+                          {'type': 'bfg9000', 'extra_args': 1},
                           submodules=None)

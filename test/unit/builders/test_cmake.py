@@ -8,6 +8,7 @@ from .. import mock_open_log
 from mopack.builders import Builder
 from mopack.builders.cmake import CMakeBuilder
 from mopack.iterutils import iterate
+from mopack.usage import make_usage
 from mopack.usage.pkg_config import PkgConfigUsage
 
 
@@ -142,7 +143,8 @@ class TestCMakeBuilder(BuilderTest):
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
     def test_rehydrate(self):
-        usage = {'type': 'pkg-config', 'path': 'pkgconf'}
+        usage = make_usage('foo', {'type': 'pkg-config', 'path': 'pkgconf'},
+                           submodules=None)
         builder = CMakeBuilder('foo', extra_args='--extra args', usage=usage,
                                submodules=None)
         data = builder.dehydrate()

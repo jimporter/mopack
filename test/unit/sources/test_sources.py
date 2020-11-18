@@ -1,13 +1,15 @@
 import os
 import yaml
+from textwrap import dedent
 from yaml.error import MarkedYAMLError
 
 from . import SourceTest
 
-from mopack.yaml_tools import SafeLineLoader
-from mopack.sources import make_package
+from mopack.sources import make_package, try_make_package
 from mopack.sources.sdist import DirectoryPackage
 from mopack.sources.system import SystemPackage
+from mopack.types import FieldError
+from mopack.yaml_tools import SafeLineLoader
 
 
 class TestMakePackage(SourceTest):
@@ -129,13 +131,170 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
 
-    def test_invalid(self):
-        self.assertRaises(TypeError, make_package, 'foo',
-                          {'source': 'directory'})
+    def test_unknown_source(self):
+        cfg = {'source': 'goofy', 'config_file': '/path/to/mopack.yml'}
+        self.assertRaises(FieldError, make_package, 'foo', cfg)
+        self.assertRaises(FieldError, try_make_package, 'foo', cfg)
+        data = yaml.load('source: goofy', Loader=SafeLineLoader)
+        with self.assertRaisesRegex(MarkedYAMLError,
+                                    r'line 1, column 9:\n'
+                                    r'    source: goofy\n'
+                                    r'            \^$'):
+            try_make_package('foo', data)
 
-    def test_invalid_marked(self):
-        data = yaml.load('source: directory', Loader=SafeLineLoader)
-        self.assertRaises(MarkedYAMLError, make_package, 'foo', data)
+    def test_invalid_keys(self):
+        # Missing key
+        cfg = {'source': 'directory', 'config_file': '/path/to/mopack.yml'}
+        self.assertRaises(TypeError, make_package, 'foo', cfg)
+        self.assertRaises(TypeError, try_make_package, 'foo', cfg)
+        data = yaml.load(dedent("""
+          source: directory
+          config_file: /path/to/mopack.yml
+        """), Loader=SafeLineLoader)
+        with self.assertRaisesRegex(MarkedYAMLError,
+                                    r'line 2, column 1:\n'
+                                    r'    source: directory\n'
+                                    r'    \^$'):
+            try_make_package('foo', data)
 
-    def test_unknown(self):
-        self.assertRaises(ValueError, make_package, 'foo', {'source': 'goofy'})
+        # Extra key
+        cfg = {'source': 'directory', 'path': '/path', 'unknown': 'blah',
+               'config_file': '/path/to/mopack.yml'}
+        self.assertRaises(TypeError, make_package, 'foo', cfg)
+        self.assertRaises(TypeError, try_make_package, 'foo', cfg)
+        data = yaml.load(dedent("""
+          source: directory
+          path: /path
+          unknown: blah
+          config_file: /path/to/mopack.yml
+        """), Loader=SafeLineLoader)
+        with self.assertRaisesRegex(MarkedYAMLError,
+                                    r'line 4, column 10:\n'
+                                    r'    unknown: blah\n'
+                                    r'             \^$'):
+            try_make_package('foo', data)
+
+    def test_invalid_values(self):
+        cfg = {'source': 'tarball', 'path': 'file.tar.gz', 'srcdir': '..',
+               'config_file': '/path/to/mopack.yml'}
+        self.assertRaises(FieldError, make_package, 'foo', cfg)
+        self.assertRaises(FieldError, try_make_package, 'foo', cfg)
+        data = yaml.load(dedent("""
+          source: tarball
+          path: file.tar.gz
+          srcdir: ..
+          config_file: /path/to/mopack.yml
+        """), Loader=SafeLineLoader)
+        with self.assertRaisesRegex(MarkedYAMLError,
+                                    r'line 4, column 9:\n'
+                                    r'    srcdir: ..\n'
+                                    r'            \^$'):
+            try_make_package('foo', data)
+
+    def test_unknown_builder(self):
+        data = yaml.load(dedent("""
+          source: directory
+          path: /path
+          build: goofy
+          config_file: /path/to/mopack.yml
+        """), Loader=SafeLineLoader)
+        with self.assertRaisesRegex(MarkedYAMLError,
+                                    r'line 4, column 8:\n'
+                                    r'    build: goofy\n'
+                                    r'           \^$'):
+            try_make_package('foo', data)
+
+        data = yaml.load(dedent("""
+          source: directory
+          path: /path
+          build:
+            type: goofy
+          config_file: /path/to/mopack.yml
+        """), Loader=SafeLineLoader)
+        with self.assertRaisesRegex(MarkedYAMLError,
+                                    r'line 5, column 9:\n'
+                                    r'      type: goofy\n'
+                                    r'            \^$'):
+            try_make_package('foo', data)
+
+    def test_invalid_builder_keys(self):
+        data = yaml.load(dedent("""
+          source: directory
+          path: /path
+          build:
+            type: bfg9000
+            unknown: blah
+          config_file: /path/to/mopack.yml
+        """), Loader=SafeLineLoader)
+        with self.assertRaisesRegex(MarkedYAMLError,
+                                    r'line 6, column 12:\n'
+                                    r'      unknown: blah\n'
+                                    r'               \^$'):
+            try_make_package('foo', data)
+
+    def test_invalid_builder_values(self):
+        data = yaml.load(dedent("""
+          source: directory
+          path: /path
+          build:
+            type: bfg9000
+            extra_args: 1
+          config_file: /path/to/mopack.yml
+        """), Loader=SafeLineLoader)
+        with self.assertRaisesRegex(MarkedYAMLError,
+                                    r'line 6, column 15:\n'
+                                    r'      extra_args: 1\n'
+                                    r'                  \^$'):
+            try_make_package('foo', data)
+
+    def test_unknown_usage(self):
+        data = yaml.load(dedent("""
+          source: apt
+          usage: unknown
+          config_file: /path/to/mopack.yml
+        """), Loader=SafeLineLoader)
+        with self.assertRaisesRegex(MarkedYAMLError,
+                                    r'line 3, column 8:\n'
+                                    r'    usage: unknown\n'
+                                    r'           \^$'):
+            try_make_package('foo', data)
+
+        data = yaml.load(dedent("""
+          source: apt
+          usage:
+            type: unknown
+          config_file: /path/to/mopack.yml
+        """), Loader=SafeLineLoader)
+        with self.assertRaisesRegex(MarkedYAMLError,
+                                    r'line 4, column 9:\n'
+                                    r'      type: unknown\n'
+                                    r'            \^$'):
+            try_make_package('foo', data)
+
+    def test_invalid_usage_keys(self):
+        data = yaml.load(dedent("""
+          source: apt
+          usage:
+            type: pkg-config
+            unknown: blah
+          config_file: /path/to/mopack.yml
+        """), Loader=SafeLineLoader)
+        with self.assertRaisesRegex(MarkedYAMLError,
+                                    r'line 5, column 12:\n'
+                                    r'      unknown: blah\n'
+                                    r'               \^$'):
+            try_make_package('foo', data)
+
+    def test_invalid_usage_values(self):
+        data = yaml.load(dedent("""
+          source: apt
+          usage:
+            type: pkg-config
+            path: ..
+          config_file: /path/to/mopack.yml
+        """), Loader=SafeLineLoader)
+        with self.assertRaisesRegex(MarkedYAMLError,
+                                    r'line 5, column 9:\n'
+                                    r'      path: ..\n'
+                                    r'            \^$'):
+            try_make_package('foo', data)

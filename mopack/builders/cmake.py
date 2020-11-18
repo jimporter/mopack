@@ -13,7 +13,8 @@ _known_install_types = ('prefix', 'bindir', 'libdir', 'includedir')
 class CMakeBuilder(Builder):
     type = 'cmake'
 
-    def __init__(self, name, *, extra_args=None, usage, **kwargs):
+    def __init__(self, name, *, extra_args=None, usage, submodules=None,
+                 **kwargs):
         super().__init__(name, usage=usage, **kwargs)
         self.extra_args = types.shell_args()('extra_args', extra_args)
 

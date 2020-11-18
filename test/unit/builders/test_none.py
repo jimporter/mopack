@@ -6,6 +6,7 @@ from . import BuilderTest
 from mopack.builders import Builder
 from mopack.builders.none import NoneBuilder
 from mopack.iterutils import iterate
+from mopack.usage import make_usage
 from mopack.usage.pkg_config import PkgConfigUsage
 
 
@@ -95,7 +96,8 @@ class TestNoneBuilder(BuilderTest):
             mrmtree.assert_not_called()
 
     def test_rehydrate(self):
-        usage = {'type': 'pkg-config', 'path': 'pkgconf'}
+        usage = make_usage('foo', {'type': 'pkg-config', 'path': 'pkgconf'},
+                           submodules=None)
         builder = NoneBuilder('foo', usage=usage, submodules=None)
         data = builder.dehydrate()
         self.assertEqual(builder, Builder.rehydrate(data))

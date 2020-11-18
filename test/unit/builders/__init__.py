@@ -1,3 +1,5 @@
+from mopack.usage import make_usage
+
 from .. import OptionsTest
 
 
@@ -9,14 +11,17 @@ class BuilderTest(OptionsTest):
         builder.set_options(options)
 
     def make_builder(self, *args, set_options=True, common_options=None,
-                     this_options=None, submodules=None, **kwargs):
+                     this_options=None, usage=None, submodules=None, **kwargs):
         if len(args) == 1:
             builder_type = self.builder_type
             name = args[0]
         else:
             builder_type, name = args
 
-        builder = builder_type(name, submodules=submodules, **kwargs)
+        if usage is not None:
+            usage = make_usage(name, usage, submodules=submodules)
+        builder = builder_type(name, usage=usage, submodules=submodules,
+                               **kwargs)
 
         if set_options:
             self.set_options(builder, common_options, this_options)

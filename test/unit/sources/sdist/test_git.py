@@ -10,6 +10,7 @@ from mopack.config import Config
 from mopack.sources import Package
 from mopack.sources.apt import AptPackage
 from mopack.sources.sdist import GitPackage
+from mopack.types import ConfigurationError
 
 
 class TestGit(SDistTestCase):
@@ -148,12 +149,12 @@ class TestGit(SDistTestCase):
         with mock_open_log(), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_after_first(
-                 read_data='self:\n  build: bfg9000'
+                 read_data='export:\n  build: bfg9000'
              )), \
              mock.patch('subprocess.run') as mrun:  # noqa
             config = pkg.fetch(self.pkgdir, self.config)
             self.set_options(pkg)
-            self.assertEqual(config.build, 'bfg9000')
+            self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(
                 Bfg9000Builder, 'foo'
             ))
@@ -165,12 +166,12 @@ class TestGit(SDistTestCase):
         with mock_open_log(), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_after_first(
-                 read_data='self:\n  build: bfg9000'
+                 read_data='export:\n  build: bfg9000'
              )), \
              mock.patch('subprocess.run') as mrun:  # noqa
             config = pkg.fetch(self.pkgdir, self.config)
             self.set_options(pkg)
-            self.assertEqual(config.build, 'bfg9000')
+            self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(
                 Bfg9000Builder, 'foo', usage={'type': 'system'}
             ))
@@ -473,7 +474,7 @@ class TestGit(SDistTestCase):
 
         pkg = GitPackage('foo', repository=self.srcssh,
                          config_file=self.config_file)
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ConfigurationError):
             data = pkg.dehydrate()
 
     def test_builder_types(self):
@@ -483,5 +484,5 @@ class TestGit(SDistTestCase):
 
         pkg = GitPackage('foo', repository=self.srcssh,
                          config_file=self.config_file)
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ConfigurationError):
             pkg.builder_types

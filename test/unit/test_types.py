@@ -317,6 +317,41 @@ class TestShellArgs(TypeTestCase):
             shell_args()('field', 1)
 
 
+class TestWrapFieldError(TypeTestCase):
+    def test_field_error(self):
+        with self.assertFieldError(('outer', 'inner')):
+            with wrap_field_error('outer'):
+                raise FieldError('msg', 'inner')
+        with self.assertFieldError(('outer', 'inner')):
+            with wrap_field_error('outer', 'kind'):
+                raise FieldError('msg', 'inner')
+
+    def test_matching_type_error(self):
+        msg = "foo got an unexpected keyword argument 'inner'"
+        with self.assertRaises(TypeError):
+            with wrap_field_error('outer'):
+                raise TypeError(msg)
+        with self.assertFieldError(('outer', 'inner')):
+            with wrap_field_error('outer', 'kind'):
+                raise TypeError(msg)
+
+    def test_non_matching_type_error(self):
+        with self.assertRaises(TypeError):
+            with wrap_field_error('outer'):
+                raise TypeError('msg')
+        with self.assertRaises(TypeError):
+            with wrap_field_error('outer', 'kind'):
+                raise TypeError('msg')
+
+    def test_other_error(self):
+        with self.assertRaises(ValueError):
+            with wrap_field_error('outer'):
+                raise ValueError('msg')
+        with self.assertRaises(ValueError):
+            with wrap_field_error('outer', 'kind'):
+                raise ValueError('msg')
+
+
 class TestTryLoadConfig(TestCase):
     def load_data(self, data, Loader=SafeLineLoader):
         with mock.patch('builtins.open', mock.mock_open(read_data=data)):

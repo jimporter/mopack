@@ -4,15 +4,15 @@ from pkg_resources import load_entry_point
 from ..freezedried import FreezeDried
 from ..options import BaseOptions, OptionsSet
 from ..package_defaults import finalize_defaults
-from ..types import try_load_config
-from ..usage import Usage, make_usage
+from ..types import FieldError, wrap_field_error
+from ..usage import Usage
 
 
-def _get_builder_type(type):
+def _get_builder_type(type, field='type'):
     try:
         return load_entry_point('mopack', 'mopack.builders', type)
     except ImportError:
-        raise ValueError('unknown builder {!r}'.format(type))
+        raise FieldError('unknown builder {!r}'.format(type), field)
 
 
 class Builder(FreezeDried):
@@ -23,9 +23,9 @@ class Builder(FreezeDried):
 
     Options = None
 
-    def __init__(self, name, *, usage, submodules):
+    def __init__(self, name, *, usage):
         self.name = name
-        self.usage = make_usage(name, usage, submodules=submodules)
+        self.usage = usage
 
     def _builddir(self, pkgdir):
         return os.path.abspath(os.path.join(pkgdir, 'build', self.name))
@@ -55,17 +55,15 @@ class BuilderOptions(FreezeDried, BaseOptions):
         return _get_builder_type(type).Options
 
 
-def make_builder(name, config, **kwargs):
+def make_builder(name, config, *, field='build', **kwargs):
     if isinstance(config, str):
-        type = config
-        config = {}
+        with wrap_field_error(field, config):
+            return _get_builder_type(config, ())(name, **kwargs)
     else:
-        config = config.copy()
-        type = config.pop('type')
-
-    context = 'while constructing builder {!r}'.format(name)
-    with try_load_config(config, context, type):
-        return _get_builder_type(type)(name, **config, **kwargs)
+        fwd_config = config.copy()
+        type = fwd_config.pop('type')
+        with wrap_field_error(field, type):
+            return _get_builder_type(type)(name, **fwd_config, **kwargs)
 
 
 def make_builder_options(type):

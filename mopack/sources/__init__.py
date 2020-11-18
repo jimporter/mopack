@@ -6,15 +6,15 @@ from ..freezedried import FreezeDried
 from ..iterutils import listify
 from ..options import BaseOptions, OptionsSet
 from ..package_defaults import package_default, finalize_defaults
-from ..types import try_load_config
+from ..types import FieldError, try_load_config
 from ..usage import Usage, make_usage
 
 
-def _get_source_type(source):
+def _get_source_type(source, field='source'):
     try:
         return load_entry_point('mopack', 'mopack.sources', source)
     except ImportError:
-        raise ValueError('unknown source {!r}'.format(source))
+        raise FieldError('unknown source {!r}'.format(source), field)
 
 
 _submodule_dict = types.dict_shape({
@@ -137,12 +137,15 @@ class PackageOptions(FreezeDried, BaseOptions):
 
 
 def make_package(name, config):
-    config = config.copy()
-    source = config.pop('source')
+    fwd_config = config.copy()
+    source = fwd_config.pop('source')
+    return _get_source_type(source)(name, **fwd_config)
 
+
+def try_make_package(name, config):
     context = 'while constructing package {!r}'.format(name)
-    with try_load_config(config, context, source):
-        return _get_source_type(source)(name, **config)
+    with try_load_config(config, context, config['source']):
+        return make_package(name, config)
 
 
 def make_package_options(source):

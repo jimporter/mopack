@@ -8,7 +8,7 @@ from .freezedried import FreezeDried
 from .iterutils import isiterable
 from .options import BaseOptions
 from .platforms import platform_name
-from .sources import make_package, make_package_options
+from .sources import make_package_options, try_make_package
 from .types import Unset
 from .yaml_tools import load_file, to_parse_error, MarkedDict, SafeLineLoader
 
@@ -142,7 +142,7 @@ class BaseConfig:
             for cfg in cfgs:
                 with to_parse_error(cfg['config_file']):
                     if self._evaluate(symbols, cfg, 'if'):
-                        self.packages[name] = make_package(name, cfg)
+                        self.packages[name] = try_make_package(name, cfg)
                         break
         del self._pending_packages
 
@@ -270,9 +270,27 @@ class Config(BaseConfig):
 class ChildConfig(BaseConfig):
     child = True
 
+    class Export:
+        def __init__(self, data, config_file):
+            self.config_file = config_file
+            self.data = data
+
+        @property
+        def submodules(self):
+            return self.data.get('submodules')
+
+        @property
+        def build(self):
+            return self.data.get('build')
+
+        @property
+        def usage(self):
+            return self.data.get('usage')
+
     def __init__(self, filenames, parent):
         super().__init__()
         self.parent = parent
+        self.export = None
         self._load_configs(filenames)
         self._finalize_packages(self._expr_symbols)
 
@@ -286,7 +304,5 @@ class ChildConfig(BaseConfig):
     def _in_parent(self, name):
         return name in self.parent.packages or self.parent._in_parent(name)
 
-    def _process_self(self, filename, data):
-        self.submodules = data.get('submodules')
-        self.build = data.get('build')
-        self.usage = data.get('usage')
+    def _process_export(self, filename, data):
+        self.export = self.Export(data, filename)

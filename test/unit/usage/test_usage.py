@@ -1,10 +1,8 @@
-import yaml
 from unittest import TestCase
-from yaml.error import MarkedYAMLError
 
-from mopack.yaml_tools import SafeLineLoader
 from mopack.usage import make_usage
 from mopack.usage.pkg_config import PkgConfigUsage
+from mopack.types import FieldError
 
 
 class TestMakeUsage(TestCase):
@@ -19,17 +17,16 @@ class TestMakeUsage(TestCase):
         self.assertIsInstance(usage, PkgConfigUsage)
         self.assertEqual(usage.path, 'pkgconfig')
 
-    def test_invalid(self):
+    def test_unknown_usage(self):
+        self.assertRaises(FieldError, make_usage, 'pkg', {'type': 'goofy'},
+                          submodules=None)
+
+    def test_invalid_keys(self):
         self.assertRaises(TypeError, make_usage, 'pkg',
+                          {'type': 'pkg-config', 'unknown': 'blah'},
+                          submodules=None)
+
+    def test_invalid_values(self):
+        self.assertRaises(FieldError, make_usage, 'pkg',
                           {'type': 'pkg-config', 'path': '..'},
-                          submodules=None)
-
-    def test_invalid_marked(self):
-        data = yaml.load('type: pkg-config\npath: ..',
-                         Loader=SafeLineLoader)
-        self.assertRaises(MarkedYAMLError, make_usage, 'pkg', data,
-                          submodules=None)
-
-    def test_unknown(self):
-        self.assertRaises(ValueError, make_usage, 'pkg', {'type': 'goofy'},
                           submodules=None)

@@ -1,0 +1,4 @@
+packages:
+  hello:
+    source: directory
+    path: invalid-bfg

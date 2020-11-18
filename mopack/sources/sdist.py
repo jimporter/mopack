@@ -9,6 +9,8 @@ from ..builders import Builder, make_builder
 from ..config import ChildConfig
 from ..log import LogFile
 from ..path import filter_glob, pushd
+from ..usage import make_usage
+from ..yaml_tools import to_parse_error
 
 
 class SDistPackage(Package):
@@ -28,14 +30,17 @@ class SDistPackage(Package):
             self.submodules = self._package_default(submodules_type, name)(
                 'submodules', submodules
             )
+            if usage is not None:
+                usage = make_usage(name, usage, submodules=self.submodules)
             self.builder = make_builder(name, build, usage=usage,
                                         submodules=self.submodules)
 
     @property
     def builder_types(self):
         if self.builder is None:
-            raise TypeError('cannot get builder types until builder is ' +
-                            'finalized')
+            raise types.ConfigurationError(
+                'cannot get builder types until builder is finalized'
+            )
         return [self.builder.type]
 
     def set_options(self, options):
@@ -44,25 +49,52 @@ class SDistPackage(Package):
 
     def dehydrate(self):
         if hasattr(self, 'pending_usage'):
-            raise TypeError('cannot dehydrate until `pending_usage` is ' +
-                            'finalized')
+            raise types.ConfigurationError(
+                'cannot dehydrate until `pending_usage` is finalized'
+            )
         return super().dehydrate()
 
     def _find_mopack(self, srcdir, parent_config):
         config = ChildConfig([srcdir], parent=parent_config)
-        if not config:
-            return
+        if self.builder:
+            return config
 
-        if self.builder is None:
-            if not hasattr(self, 'submodules'):
-                self.submodules = submodules_type('submodules',
-                                                  config.submodules)
-            usage = self.pending_usage or config.usage
-            self.builder = make_builder(
-                self.name, config.build, usage=usage,
-                submodules=self.submodules
-            )
-            del self.pending_usage
+        if not config or not config.export:
+            raise types.ConfigurationError((
+                'build for package {!r} is not fully defined and package ' +
+                'has no exported config'
+            ).format(self.name))
+        export = config.export
+
+        if hasattr(self, 'submodules'):
+            submodules = self.submodules
+        if not hasattr(self, 'submodules'):
+            with to_parse_error(export.config_file):
+                submodules = submodules_type('submodules', export.submodules)
+
+        if self.pending_usage:
+            # XXX: This doesn't report any useful error message if it fails,
+            # since we've lost the line numbers from the YAML file by now. One
+            # option would be to separate make_usage() from applying submodules
+            # so that we can call make_usage() in __init__() above.
+            usage = make_usage(self.name, self.pending_usage,
+                               submodules=submodules)
+        elif export.usage:
+            with to_parse_error(export.config_file):
+                with types.try_load_config(export.data, 'context', 'kind'):
+                    usage = make_usage(self.name, export.usage,
+                                       submodules=submodules)
+        else:
+            usage = None
+
+        with to_parse_error(export.config_file):
+            with types.try_load_config(export.data, 'context', 'kind'):
+                self.builder = make_builder(self.name, export.build,
+                                            usage=usage, submodules=submodules)
+
+        if not hasattr(self, 'submodules'):
+            self.submodules = submodules
+        del self.pending_usage
         return config
 
     def clean_post(self, pkgdir, new_package, quiet=False):

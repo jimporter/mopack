@@ -5,6 +5,7 @@ import shutil
 from . import log
 from .builders import BuilderOptions
 from .config import CommonOptions, Config, PlaceholderPackage
+from .exceptions import ConfigurationError
 from .freezedried import DictKeysFreezeDryer, DictToListFreezeDryer
 from .sources import Package, PackageOptions
 from .sources.system import fallback_system_package
@@ -134,6 +135,8 @@ def fetch(config, pkgdir, deploy_paths=None):
     old_metadata = Metadata.try_load(pkgdir)
     try:
         _do_fetch(config, old_metadata, pkgdir)
+    except ConfigurationError:
+        raise
     except Exception:
         _fill_metadata(config, deploy_paths).save(pkgdir)
         raise

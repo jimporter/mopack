@@ -3,14 +3,14 @@ from pkg_resources import load_entry_point
 from ..freezedried import FreezeDried
 from ..options import OptionsSet
 from ..package_defaults import finalize_defaults, package_default
-from ..types import try_load_config
+from ..types import FieldError, wrap_field_error
 
 
-def _get_usage_type(type):
+def _get_usage_type(type, field='type'):
     try:
         return load_entry_point('mopack', 'mopack.usage', type)
     except ImportError:
-        raise ValueError('unknown usage {!r}'.format(type))
+        raise FieldError('unknown usage {!r}'.format(type), field)
 
 
 class Usage(FreezeDried):
@@ -32,14 +32,12 @@ class Usage(FreezeDried):
         return '<{}, {}>'.format(type(self).__name__, self.__dict__)
 
 
-def make_usage(name, config, **kwargs):
+def make_usage(name, config, *, field='usage', **kwargs):
     if isinstance(config, str):
-        type = config
-        config = {}
+        with wrap_field_error(field, config):
+            return _get_usage_type(config, ())(name, **kwargs)
     else:
-        config = config.copy()
-        type = config.pop('type')
-
-    context = 'while constructing usage {!r}'.format(type)
-    with try_load_config(config, context, type):
-        return _get_usage_type(type)(name, **config, **kwargs)
+        fwd_config = config.copy()
+        type = fwd_config.pop('type')
+        with wrap_field_error(field, type):
+            return _get_usage_type(type)(name, **fwd_config, **kwargs)

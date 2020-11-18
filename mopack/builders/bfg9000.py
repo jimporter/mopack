@@ -4,6 +4,7 @@ from . import Builder, BuilderOptions
 from .. import types
 from ..log import LogFile
 from ..path import pushd
+from ..usage import make_usage
 
 _known_install_types = ('prefix', 'exec-prefix', 'bindir', 'libdir',
                         'includedir')
@@ -23,8 +24,11 @@ class Bfg9000Builder(Builder):
             if not child_config and self.toolchain is types.Unset:
                 self.toolchain = toolchain
 
-    def __init__(self, name, *, extra_args=None, usage=None, **kwargs):
-        super().__init__(name, usage=usage or 'pkg-config', **kwargs)
+    def __init__(self, name, *, extra_args=None, usage=None, submodules,
+                 **kwargs):
+        if usage is None:
+            usage = make_usage(name, 'pkg-config', submodules=submodules)
+        super().__init__(name, usage=usage, **kwargs)
         self.extra_args = types.shell_args()('extra_args', extra_args)
 
     def _toolchain_args(self, toolchain):
