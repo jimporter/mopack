@@ -74,7 +74,7 @@ class Metadata:
         metadata.deploy_paths = data['deploy_paths']
 
         metadata.files = state['config_files']['explicit']
-        metadata.implicit = state['config_files']['implicit']
+        metadata.implicit_files = state['config_files']['implicit']
 
         metadata.options = OptionsFD.rehydrate(data['options'])
         metadata.packages = PackagesFD.rehydrate(data['packages'])

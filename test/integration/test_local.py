@@ -27,6 +27,15 @@ class TestLocal(IntegrationTest):
             'extra_args': [],
         })
 
+        self.assertOutput(['mopack', 'list-files'], (
+            os.path.join(config, 'mopack.yml') + '\n' +
+            os.path.join(config, 'mopack-local.yml') + '\n'
+        ))
+        output = json.loads(self.assertPopen(['mopack', 'list-files',
+                                              '--json']))
+        self.assertEqual(output, [os.path.join(config, 'mopack.yml'),
+                                  os.path.join(config, 'mopack-local.yml')])
+
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
             'deploy_paths': {},

@@ -22,6 +22,14 @@ class SDistTest(IntegrationTest):
             'extra_args': [],
         })
 
+    def check_list_files(self, files, implicit=[]):
+        output = json.loads(self.assertPopen(['mopack', 'list-files',
+                                              '--json']))
+        self.assertEqual(output, files)
+        output = json.loads(self.assertPopen(['mopack', 'list-files', '-I',
+                                              '--json']))
+        self.assertEqual(output, files + implicit)
+
     def _options(self):
         return {
             'common': {
@@ -62,6 +70,8 @@ class TestDirectory(SDistTest):
         self.assertExists('mopack/mopack.json')
 
         self.check_usage('hello')
+        implicit_cfg = os.path.join(test_data_dir, 'hello-bfg', 'mopack.yml')
+        self.check_list_files([config], [implicit_cfg])
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -95,6 +105,7 @@ class TestTarball(SDistTest):
         self.assertExists('mopack/mopack.json')
 
         self.check_usage('hello')
+        self.check_list_files([config])
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -140,6 +151,7 @@ class TestTarballPatch(SDistTest):
         self.assertExists('mopack/mopack.json')
 
         self.check_usage('hello')
+        self.check_list_files([config])
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -186,6 +198,7 @@ class TestGit(SDistTest):
         self.assertExists('mopack/mopack.json')
 
         self.check_usage('bencodehpp')
+        self.check_list_files([config])
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {

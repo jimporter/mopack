@@ -58,5 +58,5 @@ class IntegrationTest(unittest.TestCase):
             raise SubprocessError(output)
         return output
 
-    def assertOutput(test, command, output, *args, **kwargs):
-        test.assertEqual(assertPopen(command, *args, **kwargs), output)
+    def assertOutput(self, command, output, *args, **kwargs):
+        self.assertEqual(self.assertPopen(command, *args, **kwargs), output)

@@ -19,7 +19,7 @@ class TestInvalid(IntegrationTest):
 
 class TestInvalidChild(IntegrationTest):
     def setUp(self):
-        self.stage = stage_dir('invalid')
+        self.stage = stage_dir('invalid-child')
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-invalid-child.yml')
@@ -30,3 +30,12 @@ class TestInvalidChild(IntegrationTest):
                          r'  in ".+mopack.yml", line 4, column 14\n' +
                          r'      unknown: blah\n' +
                          r'               \^\n$')
+
+
+class TestInvalidListFiles(IntegrationTest):
+    def setUp(self):
+        self.stage = stage_dir('invalid-list-files')
+
+    def test_list_files(self):
+        self.assertOutput(['mopack', 'list-files'], '')
+        self.assertPopen(['mopack', 'list-files', '--strict'], returncode=1)
