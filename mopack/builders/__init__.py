@@ -34,7 +34,7 @@ class Builder(FreezeDried):
         self.usage.set_options(options)
         self._options = OptionsSet(options['common'],
                                    options['builders'].get(self.type))
-        finalize_defaults(self._options, self)
+        finalize_defaults(options['common'], self)
 
     def get_usage(self, pkgdir, submodules, srcdir):
         return self.usage.get_usage(submodules, srcdir, self._builddir(pkgdir))

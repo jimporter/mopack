@@ -23,7 +23,7 @@ class Usage(FreezeDried):
 
     def set_options(self, options):
         self._options = OptionsSet(options['common'], None)
-        finalize_defaults(self._options, self)
+        finalize_defaults(options['common'], self)
 
     def _usage(self, **kwargs):
         return dict(type=self.type, **kwargs)

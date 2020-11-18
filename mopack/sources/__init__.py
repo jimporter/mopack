@@ -84,7 +84,7 @@ class Package(FreezeDried):
     def set_options(self, options):
         self._options = OptionsSet(options['common'],
                                    options['sources'].get(self.source))
-        finalize_defaults(self._options, self)
+        finalize_defaults(options['common'], self)
 
     def clean_pre(self, pkgdir, new_package, quiet=False):
         return False

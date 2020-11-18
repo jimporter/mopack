@@ -3,7 +3,6 @@ from itertools import chain
 from . import Usage
 from .. import path, types
 from ..iterutils import merge_dicts
-from ..package_defaults import package_default
 from ..platforms import package_library_name
 from ..types import Unset
 
@@ -86,10 +85,6 @@ class PathUsage(Usage):
                 types.maybe(_submodule_map), name,
                 default=name + '_{submodule}'
             )('submodule_map', submodule_map)
-
-    def _package_default(self, other, name, field=None, default=None):
-        return package_default(other, name, 'usage', 'path/system', field,
-                               default)
 
     def _get_submodule_mapping(self, submodule):
         if self.submodule_map is None:

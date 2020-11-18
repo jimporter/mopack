@@ -8,25 +8,24 @@ _DeferredDefault = namedtuple('_DeferredDefault', ['function', 'check'])
 
 
 def _boost_auto_link(options):
-    return options.common.target_platform == 'windows'
+    return options.target_platform == 'windows'
 
 
 def _boost_getdir(name, default):
     def wrapper(options):
-        root = options.common.env.get('BOOST_ROOT')
-        p = options.common.env.get(
-            name, os.path.join(root, default) if root else None
-        )
+        root = options.env.get('BOOST_ROOT')
+        p = options.env.get(name, (os.path.join(root, default)
+                                   if root else None))
         return [os.path.abspath(p)] if p is not None else []
 
     return wrapper
 
 
 def _boost_submodule_map(options):
-    if options.common.target_platform == 'windows':
+    if options.target_platform == 'windows':
         return None
 
-    link_flags = ('' if options.common.target_platform == 'darwin'
+    link_flags = ('' if options.target_platform == 'darwin'
                   else '-pthread')
     return {
         'thread': {
@@ -40,6 +39,15 @@ def _boost_submodule_map(options):
     }
 
 
+_boost_path_usage = {
+    'auto_link': _boost_auto_link,
+    'include_path': _boost_getdir('BOOST_INCLUDEDIR', 'include'),
+    'library_path': _boost_getdir('BOOST_LIBRARYDIR', 'lib'),
+    'headers': ['boost/version.hpp'],
+    'libraries': None,
+    'submodule_map': _boost_submodule_map,
+}
+
 _defaults = {
     'boost': {
         'source': {
@@ -51,14 +59,8 @@ _defaults = {
             },
         },
         'usage': {
-            'path/system': {
-                'auto_link': _boost_auto_link,
-                'include_path': _boost_getdir('BOOST_INCLUDEDIR', 'include'),
-                'library_path': _boost_getdir('BOOST_LIBRARYDIR', 'lib'),
-                'headers': ['boost/version.hpp'],
-                'libraries': None,
-                'submodule_map': _boost_submodule_map,
-            },
+            'path': _boost_path_usage,
+            'system': _boost_path_usage,
             'pkg-config': {
                 'submodule_map': None,
             },
