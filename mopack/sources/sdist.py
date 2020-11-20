@@ -8,6 +8,7 @@ from .. import archive, log, types
 from ..builders import Builder, make_builder
 from ..config import ChildConfig
 from ..log import LogFile
+from ..package_defaults import DefaultResolver
 from ..path import filter_glob, pushd
 from ..usage import make_usage
 from ..yaml_tools import to_parse_error
@@ -19,21 +20,25 @@ class SDistPackage(Package):
                             ('pending_usage',))
 
     def __init__(self, name, *, build=None, usage=None, submodules=types.Unset,
-                 **kwargs):
+                 symbols, **kwargs):
         super().__init__(name, **kwargs)
         if build is None:
             self.builder = None
             self.pending_usage = usage
+            self.pending_symbols = symbols
             if submodules is not types.Unset:
                 self.submodules = submodules_type('submodules', submodules)
         else:
-            self.submodules = self._package_default(submodules_type, name)(
+            package_default = DefaultResolver(self, symbols)
+            self.submodules = package_default(submodules_type)(
                 'submodules', submodules
             )
             if usage is not None:
-                usage = make_usage(name, usage, submodules=self.submodules)
+                usage = make_usage(name, usage, submodules=self.submodules,
+                                   symbols=symbols)
             self.builder = make_builder(name, build, usage=usage,
-                                        submodules=self.submodules)
+                                        submodules=self.submodules,
+                                        symbols=symbols)
 
     @property
     def builder_types(self):
@@ -72,28 +77,28 @@ class SDistPackage(Package):
             with to_parse_error(export.config_file):
                 submodules = submodules_type('submodules', export.submodules)
 
+        kwargs = {'submodules': submodules, 'symbols': self.pending_symbols}
         if self.pending_usage:
             # XXX: This doesn't report any useful error message if it fails,
             # since we've lost the line numbers from the YAML file by now. One
             # option would be to separate make_usage() from applying submodules
             # so that we can call make_usage() in __init__() above.
-            usage = make_usage(self.name, self.pending_usage,
-                               submodules=submodules)
+            usage = make_usage(self.name, self.pending_usage, **kwargs)
         elif export.usage:
             with to_parse_error(export.config_file):
                 with types.try_load_config(export.data, 'context', 'kind'):
-                    usage = make_usage(self.name, export.usage,
-                                       submodules=submodules)
+                    usage = make_usage(self.name, export.usage, **kwargs)
         else:
             usage = None
 
         with to_parse_error(export.config_file):
             with types.try_load_config(export.data, 'context', 'kind'):
                 self.builder = make_builder(self.name, export.build,
-                                            usage=usage, submodules=submodules)
+                                            usage=usage, **kwargs)
 
         if not hasattr(self, 'submodules'):
             self.submodules = submodules
+        del self.pending_symbols
         del self.pending_usage
         return config
 

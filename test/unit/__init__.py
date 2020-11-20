@@ -10,6 +10,12 @@ from mopack.config import CommonOptions
 pkg_resources.get_entry_map('mopack')
 
 
+def default_symbols():
+    opts = CommonOptions()
+    opts.finalize()
+    return opts.expr_symbols
+
+
 @contextmanager
 def mock_open_log(new=None, *args, **kwargs):
     with mock.patch('builtins.open', new or mock.mock_open(),
@@ -19,6 +25,8 @@ def mock_open_log(new=None, *args, **kwargs):
 
 
 class OptionsTest(TestCase):
+    symbols = default_symbols()
+
     def make_options(self, common_options=None):
         options = {'common': CommonOptions(), 'sources': {}, 'builders': {}}
         if common_options:

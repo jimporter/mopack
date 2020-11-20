@@ -3,6 +3,7 @@ from itertools import chain
 from . import Usage
 from .. import path, types
 from ..iterutils import merge_dicts
+from ..package_defaults import DefaultResolver
 from ..platforms import package_library_name
 from ..types import Unset
 
@@ -49,20 +50,20 @@ class PathUsage(Usage):
     def __init__(self, name, *, auto_link=Unset, include_path=Unset,
                  library_path=Unset, headers=Unset, libraries=Unset,
                  compile_flags=Unset, link_flags=Unset, submodule_map=Unset,
-                 submodules):
+                 submodules, symbols):
+        package_default = DefaultResolver(self, symbols, name)
+
         # XXX: This can probably be removed if/when we pull more package
         # resolution logic into mopack.
-        self.auto_link = self._package_default(
-            types.boolean, name, default=False
-        )('auto_link', auto_link)
+        self.auto_link = package_default(types.boolean, default=False)(
+            'auto_link', auto_link
+        )
 
-        defaulted_paths = self._package_default(_list_of_paths, name)
+        defaulted_paths = package_default(_list_of_paths)
         self.include_path = defaulted_paths('include_path', include_path)
         self.library_path = defaulted_paths('library_path', library_path)
 
-        self.headers = self._package_default(_list_of_headers, name)(
-            'headers', headers
-        )
+        self.headers = package_default(_list_of_headers)('headers', headers)
 
         if submodules and submodules['required']:
             # If submodules are required, default to an empty list of
@@ -70,9 +71,8 @@ class PathUsage(Usage):
             # always needs linking to.
             libs_checker = types.default(_list_of_libraries, [])
         else:
-            libs_checker = self._package_default(
-                _list_of_libraries, name,
-                default={'type': 'guess', 'name': name}
+            libs_checker = package_default(
+                _list_of_libraries, default={'type': 'guess', 'name': name}
             )
         self.libraries = libs_checker('libraries', libraries)
 
@@ -81,8 +81,8 @@ class PathUsage(Usage):
         self.link_flags = defaulted_flags('link_flags', link_flags)
 
         if submodules:
-            self.submodule_map = self._package_default(
-                types.maybe(_submodule_map), name,
+            self.submodule_map = package_default(
+                types.maybe(_submodule_map),
                 default=name + '_{submodule}'
             )('submodule_map', submodule_map)
 

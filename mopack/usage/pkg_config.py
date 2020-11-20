@@ -3,6 +3,7 @@ import os
 from . import Usage
 from .. import types
 from ..iterutils import listify
+from ..package_defaults import DefaultResolver
 
 
 def _submodule_map(field, value):
@@ -23,7 +24,10 @@ class PkgConfigUsage(Usage):
     type = 'pkg-config'
 
     def __init__(self, name, *, path='pkgconfig', pcfile=types.Unset,
-                 extra_args=None, submodule_map=types.Unset, submodules):
+                 extra_args=None, submodule_map=types.Unset, submodules,
+                 symbols):
+        package_default = DefaultResolver(self, symbols, name)
+
         self.path = types.inner_path('path', path)
         if submodules and submodules['required']:
             # If submodules are required, default to an empty .pc file, since
@@ -39,9 +43,8 @@ class PkgConfigUsage(Usage):
         self.extra_args = types.shell_args()('extra_args', extra_args)
 
         if submodules:
-            self.submodule_map = self._package_default(
-                types.maybe(_submodule_map), name,
-                default=name + '_{submodule}'
+            self.submodule_map = package_default(
+                types.maybe(_submodule_map), default=name + '_{submodule}'
             )('submodule_map', submodule_map)
 
     def _get_submodule_mapping(self, submodule):

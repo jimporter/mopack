@@ -180,6 +180,6 @@ class TestSystemPackage(SourceTest):
 
     def test_rehydrate(self):
         pkg = SystemPackage('foo', config_file=self.config_file,
-                            submodules=None)
+                            symbols=self.symbols)
         data = pkg.dehydrate()
         self.assertEqual(pkg, Package.rehydrate(data))

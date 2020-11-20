@@ -4,7 +4,7 @@ from . import Builder
 class NoneBuilder(Builder):
     type = 'none'
 
-    def __init__(self, name, *, usage, submodules=None, **kwargs):
+    def __init__(self, name, *, usage, submodules, symbols, **kwargs):
         super().__init__(name, usage=usage, **kwargs)
 
     def clean(self, pkgdir):

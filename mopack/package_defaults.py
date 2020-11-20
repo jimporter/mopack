@@ -1,32 +1,28 @@
 import os
-from collections import namedtuple
 from types import FunctionType
 
 from . import types
 
-_DeferredDefault = namedtuple('_DeferredDefault', ['function', 'check'])
-
 
 def _boost_auto_link(options):
-    return options.target_platform == 'windows'
+    return options['target_platform'] == 'windows'
 
 
 def _boost_getdir(name, default):
     def wrapper(options):
-        root = options.env.get('BOOST_ROOT')
-        p = options.env.get(name, (os.path.join(root, default)
-                                   if root else None))
+        root = options['env'].get('BOOST_ROOT')
+        p = options['env'].get(name, (os.path.join(root, default)
+                                      if root else None))
         return [os.path.abspath(p)] if p is not None else []
 
     return wrapper
 
 
 def _boost_submodule_map(options):
-    if options.target_platform == 'windows':
+    if options['target_platform'] == 'windows':
         return None
 
-    link_flags = ('' if options.target_platform == 'darwin'
-                  else '-pthread')
+    link_flags = ('' if options['target_platform'] == 'darwin' else '-pthread')
     return {
         'thread': {
             'libraries': 'boost_thread',
@@ -76,24 +72,24 @@ def get_default(package_name, genus, species, field, default=None):
     return defaults.get('*', {}).get(field, default)
 
 
-def package_default(other, package_name, genus, species, field=None,
-                    default=None):
-    forced_field = field
+class DefaultResolver:
+    def __init__(self, obj, symbols, name=None):
+        self.package_name = name or obj.name
+        self.genus = obj._default_genus
+        self.species = getattr(obj, obj._type_field)
+        self.symbols = symbols
 
-    def check(field, value):
-        if value is types.Unset:
-            value = get_default(package_name, genus, species,
-                                forced_field or field, default)
-            if isinstance(value, FunctionType):
-                return _DeferredDefault(value, other)
-        return other(field, value)
+    def __call__(self, other, field=None, default=None):
+        forced_field = field
 
-    return check
+        def check(field, value):
+            if value is types.Unset:
+                value = get_default(
+                    self.package_name, self.genus, self.species,
+                    forced_field or field, default
+                )
+                if isinstance(value, FunctionType):
+                    value = value(self.symbols)
+            return other(field, value)
 
-
-def finalize_defaults(options, obj, attrs=None):
-    if attrs is None:
-        attrs = obj.__dict__
-    for k, v in attrs.items():
-        if isinstance(v, _DeferredDefault):
-            setattr(obj, k, v.check(k, v.function(options)))
+        return check

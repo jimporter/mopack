@@ -158,7 +158,7 @@ class TestApt(SourceTest):
         self.assertNotEqual(pkg, self.make_package('foo', remote='libbar-dev'))
 
     def test_rehydrate(self):
-        pkg = AptPackage('foo', remote='libbar-dev',
+        pkg = AptPackage('foo', remote='libbar-dev', symbols=self.symbols,
                          config_file=self.config_file)
         data = pkg.dehydrate()
         self.assertEqual(pkg, Package.rehydrate(data))

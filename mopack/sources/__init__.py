@@ -5,7 +5,7 @@ from .. import types
 from ..freezedried import FreezeDried
 from ..iterutils import listify
 from ..options import BaseOptions, OptionsSet
-from ..package_defaults import package_default, finalize_defaults
+from ..package_defaults import DefaultResolver
 from ..types import FieldError, try_load_config
 from ..usage import Usage, make_usage
 
@@ -36,6 +36,7 @@ def submodules_type(field, value):
 
 
 class Package(FreezeDried):
+    _default_genus = 'source'
     _type_field = 'source'
     _get_type = _get_source_type
     _skip_fields = ('_options',)
@@ -48,10 +49,6 @@ class Package(FreezeDried):
         self.should_deploy = types.boolean('deploy', deploy)
         self.config_file = config_file
         self.resolved = False
-
-    def _package_default(self, other, name, field=None, default=None):
-        return package_default(other, name, 'source', self.source, field,
-                               default)
 
     @property
     def config_dir(self):
@@ -84,7 +81,6 @@ class Package(FreezeDried):
     def set_options(self, options):
         self._options = OptionsSet(options['common'],
                                    options['sources'].get(self.source))
-        finalize_defaults(options['common'], self)
 
     def clean_pre(self, pkgdir, new_package, quiet=False):
         return False
@@ -109,12 +105,16 @@ class Package(FreezeDried):
 class BinaryPackage(Package):
     _rehydrate_fields = {'usage': Usage}
 
-    def __init__(self, name, *, usage, submodules=types.Unset, **kwargs):
+    def __init__(self, name, *, usage, submodules=types.Unset, symbols,
+                 **kwargs):
         super().__init__(name, **kwargs)
-        self.submodules = self._package_default(submodules_type, name)(
+        package_default = DefaultResolver(self, symbols, name)
+
+        self.submodules = package_default(submodules_type)(
             'submodules', submodules
         )
-        self.usage = make_usage(name, usage, submodules=self.submodules)
+        self.usage = make_usage(name, usage, submodules=self.submodules,
+                                symbols=symbols)
 
     def set_options(self, options):
         self.usage.set_options(options)
@@ -136,16 +136,16 @@ class PackageOptions(FreezeDried, BaseOptions):
         return _get_source_type(source).Options
 
 
-def make_package(name, config):
+def make_package(name, config, **kwargs):
     fwd_config = config.copy()
     source = fwd_config.pop('source')
-    return _get_source_type(source)(name, **fwd_config)
+    return _get_source_type(source)(name, **fwd_config, **kwargs)
 
 
-def try_make_package(name, config):
+def try_make_package(name, config, **kwargs):
     context = 'while constructing package {!r}'.format(name)
     with try_load_config(config, context, config['source']):
-        return make_package(name, config)
+        return make_package(name, config, **kwargs)
 
 
 def make_package_options(source):

@@ -18,6 +18,14 @@ class FreezeDried:
     _skip_compare_fields = ()
     _rehydrate_fields = {}
 
+    def _skipped_field(self, field, compare=False, extra_skips=[]):
+        # Never save memoization caches!
+        if field.startswith('_memoize_cache_'):
+            return True
+
+        skips = self._skip_compare_fields if compare else self._skip_fields
+        return field in skips or field in extra_skips
+
     def dehydrate(self):
         if self._type_field is None:
             result = {}
@@ -25,7 +33,7 @@ class FreezeDried:
             result = {self._type_field: getattr(self, self._type_field)}
 
         for k, v in vars(self).items():
-            if k in self._skip_fields:
+            if self._skipped_field(k):
                 continue
             result[k] = auto_dehydrate(v, self._rehydrate_fields.get(k))
         return result
@@ -51,8 +59,7 @@ class FreezeDried:
     def equal(self, rhs, skip_fields=[]):
         def fields(obj):
             return {k: v for k, v in vars(obj).items() if
-                    (k not in self._skip_compare_fields and
-                     k not in skip_fields)}
+                    not self._skipped_field(k, True, skip_fields)}
 
         return type(self) == type(rhs) and fields(self) == fields(rhs)
 

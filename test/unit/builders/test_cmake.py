@@ -51,7 +51,9 @@ class TestCMakeBuilder(BuilderTest):
         builder = self.make_builder('foo', usage='pkg-config')
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, [])
-        self.assertEqual(builder.usage, PkgConfigUsage('foo', submodules=None))
+        self.assertEqual(builder.usage, PkgConfigUsage(
+            'foo', submodules=None, symbols=self.symbols
+        ))
 
         self.check_build(builder)
 
@@ -73,7 +75,9 @@ class TestCMakeBuilder(BuilderTest):
                                     usage='pkg-config')
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, ['--extra', 'args'])
-        self.assertEqual(builder.usage, PkgConfigUsage('foo', submodules=None))
+        self.assertEqual(builder.usage, PkgConfigUsage(
+            'foo', submodules=None, symbols=self.symbols
+        ))
 
         self.check_build(builder, extra_args=['--extra', 'args'])
 
@@ -82,8 +86,8 @@ class TestCMakeBuilder(BuilderTest):
         builder = self.make_builder('foo', usage=usage)
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, [])
-        self.assertEqual(builder.usage, PkgConfigUsage('foo', path='pkgconf',
-                                                       submodules=None))
+        self.assertEqual(builder.usage, PkgConfigUsage(
+            'foo', path='pkgconf', submodules=None, symbols=self.symbols))
 
         self.check_build(builder, usage={
             'type': 'pkg-config', 'path': self.pkgconfdir('foo', 'pkgconf'),
@@ -128,7 +132,9 @@ class TestCMakeBuilder(BuilderTest):
         builder = self.make_builder('foo', usage='pkg-config')
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, [])
-        self.assertEqual(builder.usage, PkgConfigUsage('foo', submodules=None))
+        self.assertEqual(builder.usage, PkgConfigUsage(
+            'foo', submodules=None, symbols=self.symbols
+        ))
 
         self.check_build(builder, deploy_paths, extra_args=[
             '-DCMAKE_INSTALL_PREFIX:PATH=' + os.path.abspath('/usr/local')
@@ -144,8 +150,8 @@ class TestCMakeBuilder(BuilderTest):
 
     def test_rehydrate(self):
         usage = make_usage('foo', {'type': 'pkg-config', 'path': 'pkgconf'},
-                           submodules=None)
+                           submodules=None, symbols=self.symbols)
         builder = CMakeBuilder('foo', extra_args='--extra args', usage=usage,
-                               submodules=None)
+                               submodules=None, symbols=self.symbols)
         data = builder.dehydrate()
         self.assertEqual(builder, Builder.rehydrate(data))

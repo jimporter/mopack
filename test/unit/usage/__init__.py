@@ -7,14 +7,18 @@ class UsageTest(OptionsTest):
         usage.set_options(options)
 
     def make_usage(self, *args, set_options=True, common_options=None,
-                   submodules=None, **kwargs):
+                   submodules=None, symbols=None, **kwargs):
+        if symbols is None:
+            symbols = self.symbols
+
         if len(args) == 1:
             usage_type = self.usage_type
             name = args[0]
         else:
             usage_type, name = args
 
-        usage = usage_type(name, submodules=submodules, **kwargs)
+        usage = usage_type(name, submodules=submodules, symbols=symbols,
+                           **kwargs)
 
         if set_options:
             self.set_options(usage, common_options)

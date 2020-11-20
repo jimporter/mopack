@@ -22,7 +22,7 @@ class TestMakePackage(SourceTest):
         pkg = make_package('foo', {
             'source': 'directory', 'path': '/path', 'build': 'bfg9000',
             'config_file': '/path/to/mopack.yml'
-        })
+        }, symbols=self.symbols)
         self.assertIsInstance(pkg, DirectoryPackage)
         self.assertEqual(pkg.name, 'foo')
         self.assertEqual(pkg.submodules, None)
@@ -42,7 +42,7 @@ class TestMakePackage(SourceTest):
         pkg = make_package('foo', {
             'source': 'directory', 'path': '/path', 'build': 'bfg9000',
             'deploy': False, 'config_file': '/path/to/mopack.yml'
-        })
+        }, symbols=self.symbols)
         self.assertIsInstance(pkg, DirectoryPackage)
         self.assertEqual(pkg.name, 'foo')
         self.assertEqual(pkg.submodules, None)
@@ -62,7 +62,7 @@ class TestMakePackage(SourceTest):
         pkg = make_package('foo', {
             'source': 'system', 'submodules': '*',
             'config_file': '/path/to/mopack.yml'
-        })
+        }, symbols=self.symbols)
         self.set_options(pkg)
         self.assertIsInstance(pkg, SystemPackage)
         self.assertEqual(pkg.name, 'foo')
@@ -80,7 +80,7 @@ class TestMakePackage(SourceTest):
         pkg = make_package('foo', {
             'source': 'system', 'submodules': ['sub'],
             'config_file': '/path/to/mopack.yml'
-        })
+        }, symbols=self.symbols)
         self.set_options(pkg)
         self.assertIsInstance(pkg, SystemPackage)
         self.assertEqual(pkg.name, 'foo')
@@ -101,7 +101,7 @@ class TestMakePackage(SourceTest):
             'source': 'system',
             'submodules': {'names': ['sub'], 'required': False},
             'config_file': '/path/to/mopack.yml'
-        })
+        }, symbols=self.symbols)
         self.set_options(pkg)
         self.assertIsInstance(pkg, SystemPackage)
         self.assertEqual(pkg.name, 'foo')
@@ -124,7 +124,7 @@ class TestMakePackage(SourceTest):
     def test_boost(self):
         pkg = make_package('boost', {
             'source': 'system', 'config_file': '/path/to/mopack.yml'
-        })
+        }, symbols=self.symbols)
         self.assertIsInstance(pkg, SystemPackage)
         self.assertEqual(pkg.name, 'boost')
         self.assertEqual(pkg.submodules, {'names': '*', 'required': False})
@@ -140,13 +140,15 @@ class TestMakePackage(SourceTest):
                                     r'line 1, column 9:\n'
                                     r'    source: goofy\n'
                                     r'            \^$'):
-            try_make_package('foo', data)
+            try_make_package('foo', data, symbols=self.symbols)
 
     def test_invalid_keys(self):
         # Missing key
         cfg = {'source': 'directory', 'config_file': '/path/to/mopack.yml'}
-        self.assertRaises(TypeError, make_package, 'foo', cfg)
-        self.assertRaises(TypeError, try_make_package, 'foo', cfg)
+        self.assertRaises(TypeError, make_package, 'foo', cfg,
+                          symbols=self.symbols)
+        self.assertRaises(TypeError, try_make_package, 'foo', cfg,
+                          symbols=self.symbols)
         data = yaml.load(dedent("""
           source: directory
           config_file: /path/to/mopack.yml
@@ -155,13 +157,15 @@ class TestMakePackage(SourceTest):
                                     r'line 2, column 1:\n'
                                     r'    source: directory\n'
                                     r'    \^$'):
-            try_make_package('foo', data)
+            try_make_package('foo', data, symbols=self.symbols)
 
         # Extra key
         cfg = {'source': 'directory', 'path': '/path', 'unknown': 'blah',
                'config_file': '/path/to/mopack.yml'}
-        self.assertRaises(TypeError, make_package, 'foo', cfg)
-        self.assertRaises(TypeError, try_make_package, 'foo', cfg)
+        self.assertRaises(TypeError, make_package, 'foo', cfg,
+                          symbols=self.symbols)
+        self.assertRaises(TypeError, try_make_package, 'foo', cfg,
+                          symbols=self.symbols)
         data = yaml.load(dedent("""
           source: directory
           path: /path
@@ -172,13 +176,15 @@ class TestMakePackage(SourceTest):
                                     r'line 4, column 10:\n'
                                     r'    unknown: blah\n'
                                     r'             \^$'):
-            try_make_package('foo', data)
+            try_make_package('foo', data, symbols=self.symbols)
 
     def test_invalid_values(self):
         cfg = {'source': 'tarball', 'path': 'file.tar.gz', 'srcdir': '..',
                'config_file': '/path/to/mopack.yml'}
-        self.assertRaises(FieldError, make_package, 'foo', cfg)
-        self.assertRaises(FieldError, try_make_package, 'foo', cfg)
+        self.assertRaises(FieldError, make_package, 'foo', cfg,
+                          symbols=self.symbols)
+        self.assertRaises(FieldError, try_make_package, 'foo', cfg,
+                          symbols=self.symbols)
         data = yaml.load(dedent("""
           source: tarball
           path: file.tar.gz
@@ -189,7 +195,7 @@ class TestMakePackage(SourceTest):
                                     r'line 4, column 9:\n'
                                     r'    srcdir: ..\n'
                                     r'            \^$'):
-            try_make_package('foo', data)
+            try_make_package('foo', data, symbols=self.symbols)
 
     def test_unknown_builder(self):
         data = yaml.load(dedent("""
@@ -202,7 +208,7 @@ class TestMakePackage(SourceTest):
                                     r'line 4, column 8:\n'
                                     r'    build: goofy\n'
                                     r'           \^$'):
-            try_make_package('foo', data)
+            try_make_package('foo', data, symbols=self.symbols)
 
         data = yaml.load(dedent("""
           source: directory
@@ -215,7 +221,7 @@ class TestMakePackage(SourceTest):
                                     r'line 5, column 9:\n'
                                     r'      type: goofy\n'
                                     r'            \^$'):
-            try_make_package('foo', data)
+            try_make_package('foo', data, symbols=self.symbols)
 
     def test_invalid_builder_keys(self):
         data = yaml.load(dedent("""
@@ -230,7 +236,7 @@ class TestMakePackage(SourceTest):
                                     r'line 6, column 12:\n'
                                     r'      unknown: blah\n'
                                     r'               \^$'):
-            try_make_package('foo', data)
+            try_make_package('foo', data, symbols=self.symbols)
 
     def test_invalid_builder_values(self):
         data = yaml.load(dedent("""
@@ -245,7 +251,7 @@ class TestMakePackage(SourceTest):
                                     r'line 6, column 15:\n'
                                     r'      extra_args: 1\n'
                                     r'                  \^$'):
-            try_make_package('foo', data)
+            try_make_package('foo', data, symbols=self.symbols)
 
     def test_unknown_usage(self):
         data = yaml.load(dedent("""
@@ -257,7 +263,7 @@ class TestMakePackage(SourceTest):
                                     r'line 3, column 8:\n'
                                     r'    usage: unknown\n'
                                     r'           \^$'):
-            try_make_package('foo', data)
+            try_make_package('foo', data, symbols=self.symbols)
 
         data = yaml.load(dedent("""
           source: apt
@@ -269,7 +275,7 @@ class TestMakePackage(SourceTest):
                                     r'line 4, column 9:\n'
                                     r'      type: unknown\n'
                                     r'            \^$'):
-            try_make_package('foo', data)
+            try_make_package('foo', data, symbols=self.symbols)
 
     def test_invalid_usage_keys(self):
         data = yaml.load(dedent("""
@@ -283,7 +289,7 @@ class TestMakePackage(SourceTest):
                                     r'line 5, column 12:\n'
                                     r'      unknown: blah\n'
                                     r'               \^$'):
-            try_make_package('foo', data)
+            try_make_package('foo', data, symbols=self.symbols)
 
     def test_invalid_usage_values(self):
         data = yaml.load(dedent("""
@@ -297,4 +303,4 @@ class TestMakePackage(SourceTest):
                                     r'line 5, column 9:\n'
                                     r'      path: ..\n'
                                     r'            \^$'):
-            try_make_package('foo', data)
+            try_make_package('foo', data, symbols=self.symbols)

@@ -444,21 +444,23 @@ class TestTarball(SDistTestCase):
 
     def test_rehydrate(self):
         pkg = TarballPackage('foo', path=self.srcpath, build='bfg9000',
+                             symbols=self.symbols,
                              config_file=self.config_file)
         data = pkg.dehydrate()
         self.assertEqual(pkg, Package.rehydrate(data))
 
-        pkg = TarballPackage('foo', path=self.srcpath,
+        pkg = TarballPackage('foo', path=self.srcpath, symbols=self.symbols,
                              config_file=self.config_file)
         with self.assertRaises(ConfigurationError):
             data = pkg.dehydrate()
 
     def test_builder_types(self):
         pkg = TarballPackage('foo', path=self.srcpath, build='bfg9000',
+                             symbols=self.symbols,
                              config_file=self.config_file)
         self.assertEqual(pkg.builder_types, ['bfg9000'])
 
-        pkg = TarballPackage('foo', path=self.srcpath,
+        pkg = TarballPackage('foo', path=self.srcpath, symbols=self.symbols,
                              config_file=self.config_file)
         with self.assertRaises(ConfigurationError):
             pkg.builder_types

@@ -468,21 +468,21 @@ class TestGit(SDistTestCase):
 
     def test_rehydrate(self):
         pkg = GitPackage('foo', repository=self.srcssh, build='bfg9000',
-                         config_file=self.config_file)
+                         symbols=self.symbols, config_file=self.config_file)
         data = pkg.dehydrate()
         self.assertEqual(pkg, Package.rehydrate(data))
 
-        pkg = GitPackage('foo', repository=self.srcssh,
+        pkg = GitPackage('foo', repository=self.srcssh, symbols=self.symbols,
                          config_file=self.config_file)
         with self.assertRaises(ConfigurationError):
             data = pkg.dehydrate()
 
     def test_builder_types(self):
         pkg = GitPackage('foo', repository=self.srcssh, build='bfg9000',
-                         config_file=self.config_file)
+                         symbols=self.symbols, config_file=self.config_file)
         self.assertEqual(pkg.builder_types, ['bfg9000'])
 
-        pkg = GitPackage('foo', repository=self.srcssh,
+        pkg = GitPackage('foo', repository=self.srcssh, symbols=self.symbols,
                          config_file=self.config_file)
         with self.assertRaises(ConfigurationError):
             pkg.builder_types

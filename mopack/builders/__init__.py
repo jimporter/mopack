@@ -3,7 +3,6 @@ from pkg_resources import load_entry_point
 
 from ..freezedried import FreezeDried
 from ..options import BaseOptions, OptionsSet
-from ..package_defaults import finalize_defaults
 from ..types import FieldError, wrap_field_error
 from ..usage import Usage
 
@@ -34,7 +33,6 @@ class Builder(FreezeDried):
         self.usage.set_options(options)
         self._options = OptionsSet(options['common'],
                                    options['builders'].get(self.type))
-        finalize_defaults(options['common'], self)
 
     def get_usage(self, pkgdir, submodules, srcdir):
         return self.usage.get_usage(submodules, srcdir, self._builddir(pkgdir))

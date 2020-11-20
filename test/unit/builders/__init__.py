@@ -11,7 +11,11 @@ class BuilderTest(OptionsTest):
         builder.set_options(options)
 
     def make_builder(self, *args, set_options=True, common_options=None,
-                     this_options=None, usage=None, submodules=None, **kwargs):
+                     this_options=None, usage=None, submodules=None,
+                     symbols=None, **kwargs):
+        if symbols is None:
+            symbols = self.symbols
+
         if len(args) == 1:
             builder_type = self.builder_type
             name = args[0]
@@ -19,9 +23,10 @@ class BuilderTest(OptionsTest):
             builder_type, name = args
 
         if usage is not None:
-            usage = make_usage(name, usage, submodules=submodules)
+            usage = make_usage(name, usage, submodules=submodules,
+                               symbols=symbols)
         builder = builder_type(name, usage=usage, submodules=submodules,
-                               **kwargs)
+                               symbols=symbols, **kwargs)
 
         if set_options:
             self.set_options(builder, common_options, this_options)

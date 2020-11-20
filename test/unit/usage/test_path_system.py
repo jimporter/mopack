@@ -1,10 +1,19 @@
+import os
 from os.path import abspath, normpath
 
 from . import UsageTest
 
+from mopack.iterutils import merge_dicts
 from mopack.platforms import platform_name
 from mopack.types import FieldError
 from mopack.usage.path_system import PathUsage, SystemUsage
+
+
+def boost_getdir(name, default, options):
+    root = options['env'].get('BOOST_ROOT')
+    p = options['env'].get('BOOST_{}DIR'.format(name),
+                           (os.path.join(root, default) if root else None))
+    return [os.path.abspath(p)] if p is not None else []
 
 
 class TestPath(UsageTest):
@@ -315,43 +324,44 @@ class TestPath(UsageTest):
         platform = platform_name()
         submodules = {'names': '*', 'required': False}
 
+        paths = {
+            'include_path': boost_getdir('INCLUDE', 'include', self.symbols),
+            'library_path': boost_getdir('LIBRARY', 'lib', self.symbols),
+        }
         usage = self.make_usage('boost', submodules=submodules)
         self.check_usage(usage, auto_link=(platform == 'windows'),
-                         headers=['boost/version.hpp'], libraries=[])
-        self.assertEqual(usage.get_usage(None, None, None), {
+                         headers=['boost/version.hpp'], libraries=[], **paths)
+        self.assertEqual(usage.get_usage(None, None, None), merge_dicts({
             'type': self.type, 'auto_link': platform == 'windows',
-            'include_path': [], 'library_path': [],
             'headers': ['boost/version.hpp'], 'libraries': [],
             'compile_flags': [], 'link_flags': [],
-        })
+        }, paths))
 
-        self.assertEqual(usage.get_usage(['thread'], None, None), {
+        self.assertEqual(usage.get_usage(['thread'], None, None), merge_dicts({
             'type': self.type, 'auto_link': platform == 'windows',
-            'include_path': [], 'library_path': [],
             'headers': ['boost/version.hpp'],
             'libraries': ['boost_thread'] if platform != 'windows' else [],
             'compile_flags': ['-pthread'] if platform != 'windows' else [],
             'link_flags': ['-pthread'] if platform == 'linux' else [],
-        })
+        }, paths))
 
         usage = self.make_usage('boost', libraries=['boost'],
                                 submodules=submodules)
         self.check_usage(usage, auto_link=(platform == 'windows'),
-                         headers=['boost/version.hpp'], libraries=['boost'])
-        self.assertEqual(usage.get_usage(None, None, None), {
+                         headers=['boost/version.hpp'], libraries=['boost'],
+                         **paths)
+        self.assertEqual(usage.get_usage(None, None, None), merge_dicts({
             'type': self.type, 'auto_link': platform == 'windows',
-            'include_path': [], 'library_path': [],
             'headers': ['boost/version.hpp'], 'libraries': ['boost'],
             'compile_flags': [], 'link_flags': [],
-        })
-        self.assertEqual(usage.get_usage(['regex'], None, None), {
+        }, paths))
+        self.assertEqual(usage.get_usage(['regex'], None, None), merge_dicts({
             'type': self.type, 'auto_link': platform == 'windows',
-            'include_path': [], 'library_path': [],
             'headers': ['boost/version.hpp'],
             'libraries': ['boost'] + (['boost_regex'] if platform != 'windows'
                                       else []),
             'compile_flags': [], 'link_flags': [],
-        })
+        }, paths))
 
     def test_target_platform(self):
         usage = self.make_usage('gl', common_options={

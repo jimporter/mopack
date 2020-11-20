@@ -9,7 +9,10 @@ class SourceTest(OptionsTest):
         pkg.set_options(options)
 
     def make_package(self, *args, set_options=True, common_options=None,
-                     this_options=None, **kwargs):
+                     this_options=None, symbols=None, **kwargs):
+        if symbols is None:
+            symbols = self.symbols
+
         if len(args) == 1:
             pkg_type = self.pkg_type
             name = args[0]
@@ -17,7 +20,7 @@ class SourceTest(OptionsTest):
             pkg_type, name = args
 
         kwargs.setdefault('config_file', self.config_file)
-        pkg = pkg_type(name, **kwargs)
+        pkg = pkg_type(name, symbols=symbols, **kwargs)
 
         if set_options:
             self.set_options(pkg, common_options, this_options)

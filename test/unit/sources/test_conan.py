@@ -371,7 +371,7 @@ class TestConan(SourceTest):
 
     def test_rehydrate(self):
         pkg = ConanPackage('foo', remote='foo/1.2.3@conan/stable',
-                           options={'shared': True},
+                           options={'shared': True}, symbols=self.symbols,
                            config_file=self.config_file)
         data = pkg.dehydrate()
         self.assertEqual(pkg, Package.rehydrate(data))

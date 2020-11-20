@@ -6,6 +6,7 @@ from . import expression as expr
 from .builders import make_builder_options
 from .freezedried import FreezeDried
 from .iterutils import isiterable
+from .objutils import memoize_method
 from .options import BaseOptions
 from .platforms import platform_name
 from .sources import make_package_options, try_make_package
@@ -42,6 +43,19 @@ class CommonOptions(FreezeDried, BaseOptions):
 
     def finalize(self):
         self(target_platform=platform_name(), env=os.environ)
+
+    @property
+    @memoize_method
+    def expr_symbols(self):
+        return {
+            'host_platform': platform_name(),
+            'target_platform': self.target_platform,
+            'env': self.env,
+        }
+
+    def __eq__(self, rhs):
+        return (self.target_platform == rhs.target_platform and
+                self.env == rhs.env)
 
 
 class BaseConfig:
@@ -142,7 +156,9 @@ class BaseConfig:
             for cfg in cfgs:
                 with to_parse_error(cfg['config_file']):
                     if self._evaluate(symbols, cfg, 'if'):
-                        self.packages[name] = try_make_package(name, cfg)
+                        self.packages[name] = try_make_package(
+                            name, cfg, symbols=symbols
+                        )
                         break
         del self._pending_packages
 
@@ -219,11 +235,7 @@ class Config(BaseConfig):
         self._load_configs(filenames)
 
         self._options['common'].finalize()
-        self._expr_symbols = {
-            'host_platform': platform_name(),
-            'target_platform': self._options['common'].target_platform
-        }
-        self._finalize_packages(self._expr_symbols)
+        self._finalize_packages(self._options['common'].expr_symbols)
 
     def _process_options(self, filename, data):
         super()._process_options(filename, data)
@@ -292,14 +304,15 @@ class ChildConfig(BaseConfig):
         self.parent = parent
         self.export = None
         self._load_configs(filenames)
-        self._finalize_packages(self._expr_symbols)
+        common_opts = self._root_config._options['common']
+        self._finalize_packages(common_opts.expr_symbols)
 
     @property
-    def _expr_symbols(self):
-        parent = self.parent
-        while hasattr(parent, 'parent'):
-            parent = parent.parent
-        return parent._expr_symbols
+    def _root_config(self):
+        cfg = self.parent
+        while hasattr(cfg, 'parent'):
+            cfg = cfg.parent
+        return cfg
 
     def _in_parent(self, name):
         return name in self.parent.packages or self.parent._in_parent(name)
