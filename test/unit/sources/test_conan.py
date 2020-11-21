@@ -126,7 +126,7 @@ class TestConan(SourceTest):
             """))
             mcall.assert_called_with(
                 ['conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
-                 '--build', 'foo', '--', self.pkgdir], stdout=subprocess.PIPE,
+                 '--build=foo', '--', self.pkgdir], stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT, universal_newlines=True, check=True
             )
 

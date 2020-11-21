@@ -3,7 +3,7 @@ import warnings
 
 from . import BinaryPackage, PackageOptions
 from .. import log
-from ..iterutils import flatten, iterate, uniques
+from ..iterutils import iterate, uniques
 
 
 class ConanPackage(BinaryPackage):
@@ -43,7 +43,7 @@ class ConanPackage(BinaryPackage):
         elif 'all' in value:
             return ['--build']
         else:
-            return flatten(['--build', i] for i in value)
+            return ['--build=' + i for i in value]
 
     @property
     def remote_name(self):
