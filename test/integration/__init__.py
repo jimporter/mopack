@@ -5,6 +5,9 @@ import unittest
 
 from .. import *
 
+from mopack.iterutils import listify
+
+
 # Also supported: 'apt'
 test_features = {'boost'}
 for i in os.getenv('MOPACK_EXTRA_TESTS', '').split(' '):
@@ -28,10 +31,13 @@ def slurp(filename):
 
 
 class SubprocessError(unittest.TestCase.failureException):
-    def __init__(self, message):
-        unittest.TestCase.failureException.__init__(
-            self, '\n{line}\n{msg}\n{line}'.format(line='-' * 60, msg=message)
+    def __init__(self, returncode, env, message):
+        envstr = ''.join('  {} = {}\n'.format(k, v)
+                         for k, v in (env or {}).items())
+        msg = 'returned {returncode}\n{env}{line}\n{msg}\n{line}'.format(
+            returncode=returncode, env=envstr, line='-' * 60, msg=message
         )
+        super().__init__(msg)
 
 
 class IntegrationTest(unittest.TestCase):
@@ -48,15 +54,22 @@ class IntegrationTest(unittest.TestCase):
     def assertNotExists(self, path):
         self.assertExistence(path, False)
 
-    def assertPopen(self, command, returncode=0):
-        proc = subprocess.Popen(
+    def assertPopen(self, command, *, env=None, extra_env=None, returncode=0):
+        final_env = env if env is not None else os.environ
+        if extra_env:
+            final_env = final_env.copy()
+            final_env.update(extra_env)
+
+        proc = subprocess.run(
             command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            universal_newlines=True
+            env=final_env, universal_newlines=True
         )
-        output = proc.communicate()[0]
-        if proc.returncode != returncode:
-            raise SubprocessError(output)
-        return output
+        if not (returncode == 'any' or
+                (returncode == 'fail' and proc.returncode != 0) or
+                proc.returncode in listify(returncode)):
+            raise SubprocessError(proc.return_code, extra_env or env,
+                                  proc.stdout)
+        return proc.stdout
 
     def assertOutput(self, command, output, *args, **kwargs):
         self.assertEqual(self.assertPopen(command, *args, **kwargs), output)

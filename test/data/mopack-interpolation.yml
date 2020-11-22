@@ -1,0 +1,8 @@
+packages:
+  hello:
+    source: directory
+    path: hello-bfg
+    build:
+      type: bfg9000
+      extra_args: >-
+        ${{ env['MOPACK_TEST_EXTRA'] ? '--extra' : null }}

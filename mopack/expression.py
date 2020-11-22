@@ -55,23 +55,43 @@ class UnaryOp:
 class BinaryOp:
     def __init__(self, left, operator, right):
         self.operator = operator
-        self.left = left
-        self.right = right
+        self.operands = [left, right]
 
     def __call__(self, symbols):
         if self.operator == '==':
-            return self.left(symbols) == self.right(symbols)
+            return self.operands[0](symbols) == self.operands[1](symbols)
         elif self.operator == '!=':
-            return self.left(symbols) != self.right(symbols)
+            return self.operands[0](symbols) != self.operands[1](symbols)
         elif self.operator == '&&':
-            return self.left(symbols) and self.right(symbols)
+            return self.operands[0](symbols) and self.operands[1](symbols)
         elif self.operator == '||':
-            return self.left(symbols) or self.right(symbols)
+            return self.operands[0](symbols) or self.operands[1](symbols)
+        elif self.operator == '[]':
+            return self.operands[0](symbols).get(self.operands[1](symbols))
         assert False
 
     def __repr__(self):
-        return '({} {} {})'.format(self.left, self.operator, self.right)
+        return '({} {} {})'.format(self.operands[0], self.operator,
+                                   self.operands[1])
 
+
+class TernaryOp:
+    def __init__(self, left, first_operator, middle, second_operator, right):
+        self.operator = first_operator + second_operator
+        self.operands = [left, middle, right]
+
+    def __call__(self, symbols):
+        if self.operator == '?:':
+            return (self.operands[1](symbols) if self.operands[0](symbols)
+                    else self.operands[2](symbols))
+        assert False
+
+    def __repr__(self):
+        return '({} {} {}, {})'.format(self.operands[0], self.operator,
+                                       *self.operands[1:])
+
+
+expr = pp.Forward()
 
 string_literal = (pp.QuotedString('"') | pp.QuotedString("'")).setParseAction(
     lambda t: [Literal(t[0])]
@@ -79,21 +99,47 @@ string_literal = (pp.QuotedString('"') | pp.QuotedString("'")).setParseAction(
 true_literal = pp.Keyword('true').setParseAction(lambda t: [Literal(True)])
 false_literal = pp.Keyword('false').setParseAction(lambda t: [Literal(False)])
 bool_literal = true_literal | false_literal
+null_literal = pp.Keyword('null').setParseAction(lambda t: [Literal(None)])
+
 identifier = pp.Word(pp.alphas + '_', pp.alphanums + '_').setParseAction(
     lambda s, loc, t: [Symbol(s, loc, t[0])]
 )
-atom = string_literal | bool_literal | identifier
+pre_expr = identifier | ('(' + expr + ')').setParseAction(lambda t: t[1])
 
-expr = pp.infixNotation(atom, [
+index = (pre_expr + '[' + expr + ']').setParseAction(
+    lambda t: [BinaryOp(t[0], '[]', t[2])]
+)
+
+expr_atom = string_literal | bool_literal | null_literal | index | identifier
+expr <<= pp.infixNotation(expr_atom, [
     ('!', 1, pp.opAssoc.RIGHT, lambda t: [UnaryOp(*t[0])]),
     (pp.oneOf('== !='), 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
     ('&&', 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
     ('||', 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
+    (('?', ':'), 3, pp.opAssoc.LEFT, lambda t: [TernaryOp(*t[0])]),
 ])
 
+expr_holder = ('${{' + expr + '}}').setParseAction(lambda t: t[1])
+bare_string = (pp.SkipTo(pp.Literal('${{') | pp.StringEnd()).leaveWhitespace()
+               .setParseAction(lambda t: t if len(t[0]) else []))
 
-def evaluate(symbols, expression):
-    return expr.parseString(expression, parseAll=True)[0](symbols)
+if_expr = expr_holder | expr
+str_expr = bare_string + (expr_holder + bare_string)[...]
+
+
+def evaluate(symbols, expression, if_context=False):
+    if if_context:
+        return if_expr.parseString(expression, parseAll=True)[0](symbols)
+    else:
+        def evaluate_tok(t):
+            if isinstance(t, str):
+                return t
+            return t(symbols)
+
+        ast = str_expr.parseString(expression, parseAll=True)
+        if len(ast) == 1:
+            return evaluate_tok(ast[0])
+        return ''.join(evaluate_tok(i) for i in ast)
 
 
 def to_yaml_error(e, context_mark, mark):

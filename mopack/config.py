@@ -155,7 +155,8 @@ class BaseConfig:
 
             for cfg in cfgs:
                 with to_parse_error(cfg['config_file']):
-                    if self._evaluate(symbols, cfg, 'if'):
+                    if self._if_evaluate(symbols, cfg, 'if'):
+                        cfg = self._evaluate(symbols, cfg)
                         self.packages[name] = try_make_package(
                             name, cfg, symbols=symbols
                         )
@@ -163,15 +164,26 @@ class BaseConfig:
         del self._pending_packages
 
     @staticmethod
-    def _evaluate(symbols, data, key):
+    def _if_evaluate(symbols, data, key):
         try:
             mark = data.value_marks.get(key)
             expression = data.pop(key, True)
             if isinstance(expression, bool):
                 return expression
-            return expr.evaluate(symbols, expression)
+            return expr.evaluate(symbols, expression, if_context=True)
         except expr.ParseBaseException as e:
             raise expr.to_yaml_error(e, data.mark, mark)
+
+    @classmethod
+    def _evaluate(cls, symbols, data):
+        if isinstance(data, str):
+            return expr.evaluate(symbols, data)
+        elif isinstance(data, dict):
+            for k, v in data.items():
+                data[k] = cls._evaluate(symbols, v)
+            return data
+        else:
+            return data
 
     def _in_parent(self, name):
         # We don't have a parent, so this is always false!
