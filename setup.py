@@ -78,18 +78,13 @@ with open(os.path.join(root_dir, 'README.md'), 'r') as f:
     # Read from the file and strip out the badges.
     long_desc = re.sub(r'(^# mopack)\n\n(.+\n)*', r'\1', f.read())
 
-try:
-    import pypandoc
-    long_desc = pypandoc.convert_text(long_desc, 'rst', format='md')
-except ImportError:
-    pass
-
 setup(
     name='mopack',
     version=version,
 
     description='A multiple-origin package manager',
     long_description=long_desc,
+    long_description_content_type='text/markdown',
     keywords='package manager',
     url='https://github.com/jimporter/mopack',
 
@@ -116,8 +111,7 @@ setup(
 
     install_requires=['colorama', 'pyparsing', 'pyyaml', 'setuptools'],
     extras_require={
-        'dev': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6',
-                'pypandoc >= 1.4'],
+        'dev': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6'],
         'test': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6'],
     },
 
