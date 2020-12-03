@@ -1,7 +1,7 @@
 import os
 
 from . import Usage
-from .. import types
+from .. import path, types
 from ..iterutils import listify
 from ..package_defaults import DefaultResolver
 
@@ -58,12 +58,7 @@ class PkgConfigUsage(Usage):
 
     def get_usage(self, submodules, srcdir, builddir):
         base = builddir if builddir is not None else srcdir
-        if base is None and not os.path.isabs(self.path):
-            # XXX: It would probably be better to do this during construction.
-            raise ValueError('`pkg-config` path must be absolute with ' +
-                             'this package type')
-
-        path = os.path.abspath(os.path.join(base, self.path))
+        pcpath = os.path.abspath(path.try_join(base, self.path))
 
         pcfiles = listify(self.pcfile)
         for i in submodules or []:
@@ -71,5 +66,5 @@ class PkgConfigUsage(Usage):
             if f:
                 pcfiles.append(f)
 
-        return self._usage(path=path, pcfiles=pcfiles,
+        return self._usage(path=pcpath, pcfiles=pcfiles,
                            extra_args=self.extra_args)
