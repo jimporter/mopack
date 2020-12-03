@@ -1,6 +1,7 @@
 import os
 import yaml
 from textwrap import dedent
+from unittest import mock
 from yaml.error import MarkedYAMLError
 
 from . import SourceTest
@@ -69,11 +70,12 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.submodules, {'names': '*', 'required': True})
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
-        self.assertEqual(pkg.get_usage(self.pkgdir, ['sub']), {
-            'type': 'system', 'auto_link': False, 'include_path': [],
-            'library_path': [], 'headers': [], 'libraries': ['foo_sub'],
-            'compile_flags': [], 'link_flags': [],
-        })
+        with mock.patch('subprocess.run', side_effect=OSError()):
+            self.assertEqual(pkg.get_usage(self.pkgdir, ['sub']), {
+                'type': 'path', 'auto_link': False, 'include_path': [],
+                'library_path': [], 'headers': [], 'libraries': ['foo_sub'],
+                'compile_flags': [], 'link_flags': [],
+            })
         with self.assertRaises(ValueError):
             pkg.get_usage(self.pkgdir, None)
 
@@ -87,11 +89,12 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.submodules, {'names': ['sub'], 'required': True})
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
-        self.assertEqual(pkg.get_usage(self.pkgdir, ['sub']), {
-            'type': 'system', 'auto_link': False, 'include_path': [],
-            'library_path': [], 'headers': [], 'libraries': ['foo_sub'],
-            'compile_flags': [], 'link_flags': [],
-        })
+        with mock.patch('subprocess.run', side_effect=OSError()):
+            self.assertEqual(pkg.get_usage(self.pkgdir, ['sub']), {
+                'type': 'path', 'auto_link': False, 'include_path': [],
+                'library_path': [], 'headers': [], 'libraries': ['foo_sub'],
+                'compile_flags': [], 'link_flags': [],
+            })
         with self.assertRaises(ValueError):
             pkg.get_usage(self.pkgdir, ['bar'])
         with self.assertRaises(ValueError):
@@ -108,16 +111,19 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.submodules, {'names': ['sub'], 'required': False})
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
-        self.assertEqual(pkg.get_usage(self.pkgdir, ['sub']), {
-            'type': 'system', 'auto_link': False, 'include_path': [],
-            'library_path': [], 'headers': [], 'libraries': ['foo', 'foo_sub'],
-            'compile_flags': [], 'link_flags': [],
-        })
-        self.assertEqual(pkg.get_usage(self.pkgdir, None), {
-            'type': 'system', 'auto_link': False, 'include_path': [],
-            'library_path': [], 'headers': [], 'libraries': ['foo'],
-            'compile_flags': [], 'link_flags': [],
-        })
+        with mock.patch('subprocess.run', side_effect=OSError()):
+            self.assertEqual(pkg.get_usage(self.pkgdir, ['sub']), {
+                'type': 'path', 'auto_link': False, 'include_path': [],
+                'library_path': [], 'headers': [],
+                'libraries': ['foo', 'foo_sub'], 'compile_flags': [],
+                'link_flags': [],
+            })
+        with mock.patch('subprocess.run', side_effect=OSError()):
+            self.assertEqual(pkg.get_usage(self.pkgdir, None), {
+                'type': 'path', 'auto_link': False, 'include_path': [],
+                'library_path': [], 'headers': [], 'libraries': ['foo'],
+                'compile_flags': [], 'link_flags': [],
+            })
         with self.assertRaises(ValueError):
             pkg.get_usage(self.pkgdir, ['bar'])
 

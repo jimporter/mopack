@@ -12,11 +12,12 @@ class TestUsage(IntegrationTest):
     def assertUsage(self, *args, **kwargs):
         return self.assertPopen(['mopack', 'usage', *args], **kwargs)
 
-    def assertUsageOutput(self, name, expected, extra_args=[]):
-        output = yaml.safe_load(self.assertUsage(name, *extra_args))
+    def assertUsageOutput(self, name, expected, extra_args=[], **kwargs):
+        output = yaml.safe_load(self.assertUsage(name, *extra_args, **kwargs))
         self.assertEqual(output, expected)
 
-        output = json.loads(self.assertUsage(name, '--json', *extra_args))
+        output = json.loads(self.assertUsage(name, '--json', *extra_args,
+                                             **kwargs))
         self.assertEqual(output, expected)
 
     def test_resolve(self):
@@ -37,16 +38,16 @@ class TestUsage(IntegrationTest):
 
         # Usage for `undef`.
         self.assertUsageOutput('undef', {
-            'name': 'undef', 'type': 'system', 'auto_link': False,
+            'name': 'undef', 'type': 'path', 'auto_link': False,
             'include_path': [], 'library_path': [], 'headers': [],
             'libraries': ['undef'], 'compile_flags': [], 'link_flags': [],
-        })
+        }, extra_env={'PKG_CONFIG': 'nonexist'})
         self.assertUsage('undef', '--strict', returncode=1)
 
         # Usage from wrong directory.
         self.assertUsageOutput('hello', {
-            'name': 'hello', 'type': 'system', 'auto_link': False,
+            'name': 'hello', 'type': 'path', 'auto_link': False,
             'include_path': [], 'library_path': [], 'headers': [],
             'libraries': ['hello'], 'compile_flags': [], 'link_flags': [],
-        }, ['--directory=..'])
+        }, ['--directory=..'], extra_env={'PKG_CONFIG': 'nonexist'})
         self.assertUsage('hello', '--strict', '--directory=..', returncode=1)

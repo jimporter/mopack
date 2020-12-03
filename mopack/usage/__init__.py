@@ -21,8 +21,10 @@ class Usage(FreezeDried):
     def set_options(self, options):
         self._options = OptionsSet(options['common'], None)
 
-    def _usage(self, **kwargs):
-        return dict(type=self.type, **kwargs)
+    def _usage(self, *, type=None, **kwargs):
+        if type is None:
+            type = self.type
+        return dict(type=type, **kwargs)
 
     def __repr__(self):
         return '<{}, {}>'.format(type(self).__name__, self.__dict__)

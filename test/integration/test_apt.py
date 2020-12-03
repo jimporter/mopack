@@ -16,6 +16,7 @@ class TestApt(IntegrationTest):
     def _usage(self, name, headers=[], libraries=[]):
         return {
             'type': 'system',
+            'pcfile': name,
             'auto_link': False,
             'include_path': [],
             'library_path': [],
@@ -27,7 +28,8 @@ class TestApt(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-apt.yml')
-        self.assertPopen(['mopack', 'resolve', config])
+        self.assertPopen(['mopack', 'resolve', config],
+                         extra_env={'PKG_CONFIG': 'nonexist'})
         self.assertExists('mopack/logs/apt.log')
         self.assertExists('mopack/mopack.json')
 
@@ -35,7 +37,7 @@ class TestApt(IntegrationTest):
             'mopack', 'usage', 'ogg', '--json'
         ]))
         self.assertEqual(output, {
-            'name': 'ogg', 'type': 'system', 'auto_link': False,
+            'name': 'ogg', 'type': 'path', 'auto_link': False,
             'include_path': [], 'library_path': [], 'headers': [],
             'libraries': ['ogg'], 'compile_flags': [], 'link_flags': [],
         })
@@ -44,7 +46,7 @@ class TestApt(IntegrationTest):
             'mopack', 'usage', 'zlib', '--json'
         ]))
         self.assertEqual(output, {
-            'name': 'zlib', 'type': 'system', 'auto_link': False,
+            'name': 'zlib', 'type': 'path', 'auto_link': False,
             'include_path': [], 'library_path': [], 'headers': [],
             'libraries': ['z'], 'compile_flags': [], 'link_flags': [],
         })

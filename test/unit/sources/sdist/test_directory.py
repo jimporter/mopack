@@ -79,11 +79,12 @@ class TestDirectory(SDistTestCase):
             self.assertEqual(pkg.builder, self.make_builder(
                 Bfg9000Builder, 'foo', usage={'type': 'system'}
             ))
-        self.check_resolve(pkg, usage={
-            'type': 'system', 'auto_link': False, 'include_path': [],
-            'library_path': [], 'headers': [], 'libraries': ['foo'],
-            'compile_flags': [], 'link_flags': [],
-        })
+        with mock.patch('subprocess.run', side_effect=OSError()):
+            self.check_resolve(pkg, usage={
+                'type': 'path', 'auto_link': False, 'include_path': [],
+                'library_path': [], 'headers': [], 'libraries': ['foo'],
+                'compile_flags': [], 'link_flags': [],
+            })
 
     def test_infer_submodules(self):
         data = 'export:\n  submodules: [french, english]\n  build: bfg9000'

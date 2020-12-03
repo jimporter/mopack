@@ -1,3 +1,4 @@
+import subprocess
 from itertools import chain
 
 from . import Usage
@@ -105,7 +106,7 @@ class PathUsage(Usage):
 
         return [make_library(i) for i in libraries]
 
-    def get_usage(self, submodules, srcdir, builddir):
+    def _get_usage(self, submodules, srcdir, builddir, **kwargs):
         def chain_mapping(key):
             return chain(getattr(self, key), mappings.get(key, []))
 
@@ -125,8 +126,29 @@ class PathUsage(Usage):
             libraries=self._get_libraries(chain_mapping('libraries')),
             compile_flags=list(chain_mapping('compile_flags')),
             link_flags=list(chain_mapping('link_flags')),
+            **kwargs
         )
+
+    def get_usage(self, submodules, srcdir, builddir):
+        return self._get_usage(submodules, srcdir, builddir)
 
 
 class SystemUsage(PathUsage):
     type = 'system'
+
+    def __init__(self, name, **kwargs):
+        self.pcfile = name
+        super().__init__(name, **kwargs)
+
+    def get_usage(self, submodules, srcdir, builddir):
+        # TODO: Split this into args so users can pass flags to pkg-config via
+        # the environment variable.
+        pkg_config = self._options.common.env.get('PKG_CONFIG', 'pkg-config')
+        try:
+            subprocess.run([pkg_config, self.pcfile], check=True,
+                           stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL)
+            return self._usage(type='pkg-config', path=None,
+                               pcfiles=[self.pcfile], extra_args=[])
+        except (OSError, subprocess.CalledProcessError):
+            return self._get_usage(submodules, srcdir, builddir, type='path')

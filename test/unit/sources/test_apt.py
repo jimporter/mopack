@@ -40,13 +40,14 @@ class TestApt(SourceTest):
                 libs.extend('{}_{}'.format(pkg.name, i)
                             for i in iterate(submodules))
                 usages.append({
-                    'type': 'system', 'auto_link': False, 'include_path': [],
+                    'type': 'path', 'auto_link': False, 'include_path': [],
                     'library_path': [], 'headers': [], 'libraries': libs,
                     'compile_flags': [], 'link_flags': [],
                 })
 
         for pkg, usage in zip(packages, usages):
-            self.assertEqual(pkg.get_usage(self.pkgdir, submodules), usage)
+            with mock.patch('subprocess.run', side_effect=OSError()):
+                self.assertEqual(pkg.get_usage(self.pkgdir, submodules), usage)
 
     def test_basic(self):
         pkg = self.make_package('foo')
@@ -76,7 +77,7 @@ class TestApt(SourceTest):
         )
         self.check_resolve_all(
             [pkg], ['libfoo-dev'], submodules=['sub'], usages=[{
-                'type': 'system', 'auto_link': False, 'include_path': [],
+                'type': 'path', 'auto_link': False, 'include_path': [],
                 'library_path': [], 'headers': [],
                 'libraries': ['bar', 'foo_sub'], 'compile_flags': [],
                 'link_flags': [],
@@ -92,7 +93,7 @@ class TestApt(SourceTest):
         )
         self.check_resolve_all(
             [pkg], ['libfoo-dev'], submodules=['sub'], usages=[{
-                'type': 'system', 'auto_link': False, 'include_path': [],
+                'type': 'path', 'auto_link': False, 'include_path': [],
                 'library_path': [], 'headers': [],
                 'libraries': ['bar', 'foo_sub'], 'compile_flags': [],
                 'link_flags': [],
