@@ -2,6 +2,8 @@ import pyparsing as pp
 from yaml.error import Mark, MarkedYAMLError
 from pyparsing import ParseBaseException, ParseException
 
+pp.ParserElement.enablePackrat()
+
 __all__ = ['evaluate', 'ParseBaseException', 'ParseException',
            'SemanticException', 'to_yaml_error']
 
