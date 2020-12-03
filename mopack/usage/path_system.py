@@ -112,24 +112,20 @@ class PathUsage(Usage):
         mappings = merge_dicts(*(self._get_submodule_mapping(i)
                                  for i in submodules or []))
 
-        try:
-            # XXX: Provide a way of specifying what these paths are relative to
-            # instead of just assuming that includes are in the srcdir and libs
-            # are in the builddir.
-            return self._usage(
-                auto_link=self.auto_link,
-                include_path=[path.try_join(srcdir, i) for i in
-                              chain_mapping('include_path')],
-                library_path=[path.try_join(builddir, i) for i in
-                              chain_mapping('library_path')],
-                headers=list(chain_mapping('headers')),
-                libraries=self._get_libraries(chain_mapping('libraries')),
-                compile_flags=list(chain_mapping('compile_flags')),
-                link_flags=list(chain_mapping('link_flags')),
-            )
-        except TypeError:
-            raise ValueError('unable to use `path` usage with this package ' +
-                             'type; try `system` usage')
+        # XXX: Provide a way of specifying what these paths are relative to
+        # instead of just assuming that includes are in the srcdir and libs
+        # are in the builddir.
+        return self._usage(
+            auto_link=self.auto_link,
+            include_path=[path.try_join(srcdir, i) for i in
+                          chain_mapping('include_path')],
+            library_path=[path.try_join(builddir, i) for i in
+                          chain_mapping('library_path')],
+            headers=list(chain_mapping('headers')),
+            libraries=self._get_libraries(chain_mapping('libraries')),
+            compile_flags=list(chain_mapping('compile_flags')),
+            link_flags=list(chain_mapping('link_flags')),
+        )
 
 
 class SystemUsage(PathUsage):

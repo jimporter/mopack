@@ -28,7 +28,7 @@ class PkgConfigUsage(Usage):
                  symbols):
         package_default = DefaultResolver(self, symbols, name)
 
-        self.path = types.inner_path('path', path)
+        self.path = types.abs_or_inner_path('path', path)
         if submodules and submodules['required']:
             # If submodules are required, default to an empty .pc file, since
             # we should usually have .pc files for the submodules that handle
@@ -57,12 +57,13 @@ class PkgConfigUsage(Usage):
                     for k, v in self.submodule_map['*'].items()}
 
     def get_usage(self, submodules, srcdir, builddir):
-        if builddir is None:
+        base = builddir if builddir is not None else srcdir
+        if base is None and not os.path.isabs(self.path):
             # XXX: It would probably be better to do this during construction.
-            raise ValueError('unable to use `pkg-config` usage with ' +
-                             'this package type; try `system` usage')
+            raise ValueError('`pkg-config` path must be absolute with ' +
+                             'this package type')
 
-        path = os.path.abspath(os.path.join(builddir, self.path))
+        path = os.path.abspath(os.path.join(base, self.path))
 
         pcfiles = listify(self.pcfile)
         for i in submodules or []:

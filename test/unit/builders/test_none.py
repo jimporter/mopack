@@ -12,10 +12,11 @@ from mopack.usage.pkg_config import PkgConfigUsage
 
 class TestNoneBuilder(BuilderTest):
     builder_type = NoneBuilder
+    srcdir = os.path.abspath('/path/to/src')
     pkgdir = os.path.abspath('/path/to/builddir/mopack')
 
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
-        return os.path.join(self.pkgdir, 'build', name, pkgconfig)
+        return os.path.join(self.srcdir, pkgconfig)
 
     def check_build(self, builder, deploy_paths={}, extra_args=[], *,
                     submodules=None, usage=None):
@@ -25,12 +26,11 @@ class TestNoneBuilder(BuilderTest):
             usage = {'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
                      'pcfiles': pcfiles, 'extra_args': []}
 
-        srcdir = '/path/to/src'
         with mock.patch('subprocess.run') as mcall:
-            builder.build(self.pkgdir, srcdir, deploy_paths)
+            builder.build(self.pkgdir, self.srcdir, deploy_paths)
             mcall.assert_not_called()
-        self.assertEqual(builder.get_usage(self.pkgdir, submodules, srcdir),
-                         usage)
+        self.assertEqual(builder.get_usage(self.pkgdir, submodules,
+                                           self.srcdir), usage)
 
     def test_basic(self):
         builder = self.make_builder('foo', usage='pkg-config')

@@ -7,6 +7,9 @@ class NoneBuilder(Builder):
     def __init__(self, name, *, usage, submodules, symbols, **kwargs):
         super().__init__(name, usage=usage, **kwargs)
 
+    def _builddir(self, pkgdir):
+        return None
+
     def clean(self, pkgdir):
         pass
 

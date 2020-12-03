@@ -11,7 +11,7 @@ class TestTryJoin(TestCase):
 
     def test_second_relative(self):
         self.assertEqual(try_join('/foo', 'bar'), os.path.abspath('/foo/bar'))
-        self.assertRaises(TypeError, try_join, None, 'bar')
+        self.assertRaises(ValueError, try_join, None, 'bar')
 
 
 class TestPushd(TestCase):

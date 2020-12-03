@@ -14,6 +14,8 @@ __all__ = ['filter_glob', 'Glob', 'pushd', 'try_join']
 def try_join(a, b):
     if os.path.isabs(b):
         return os.path.abspath(b)
+    if a is None:
+        raise ValueError('expected absolute path for {!r}'.format(b))
     return os.path.abspath(os.path.join(a, b))
 
 
