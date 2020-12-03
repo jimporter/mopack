@@ -11,6 +11,8 @@ french = library('hello_french', files=['src/hello_french.cpp'],
 install(include, english, french)
 
 pkg_config('hello_english',
-           libs=english)
+           libs=english,
+           auto_fill=True)
 pkg_config('hello_french',
-           libs=french)
+           libs=french,
+           auto_fill=True)

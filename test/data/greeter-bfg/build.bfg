@@ -15,4 +15,4 @@ if argv.extra:
 
 install(lib, include)
 
-pkg_config()
+pkg_config(auto_fill=True)

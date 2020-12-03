@@ -213,7 +213,7 @@ class TestGit(SDistTest):
                 'should_deploy': True,
                 'builder': self._builder('bencodehpp'),
                 'repository': 'https://github.com/jimporter/bencode.hpp.git',
-                'rev': ['tag', 'v0.2'],
+                'rev': ['tag', 'v0.2.1'],
                 'srcdir': '.',
             }],
         })
