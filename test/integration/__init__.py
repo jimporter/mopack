@@ -67,7 +67,7 @@ class IntegrationTest(unittest.TestCase):
         if not (returncode == 'any' or
                 (returncode == 'fail' and proc.returncode != 0) or
                 proc.returncode in listify(returncode)):
-            raise SubprocessError(proc.return_code, extra_env or env,
+            raise SubprocessError(proc.returncode, extra_env or env,
                                   proc.stdout)
         return proc.stdout
 
