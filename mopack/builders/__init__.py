@@ -14,11 +14,11 @@ def _get_builder_type(type, field='type'):
         raise FieldError('unknown builder {!r}'.format(type), field)
 
 
+@FreezeDried.fields(rehydrate={'usage': Usage}, skip={'_options'},
+                    skip_compare={'_options'})
 class Builder(FreezeDried):
     _type_field = 'type'
     _get_type = _get_builder_type
-    _skip_fields = _skip_compare_fields = ('_options',)
-    _rehydrate_fields = {'usage': Usage}
 
     Options = None
 

@@ -38,6 +38,14 @@ def listify(thing, always_copy=False, scalar_ok=True, type=list):
     return type(thing)
 
 
+def each_attr(iterable, attr):
+    for i in iterable:
+        try:
+            yield getattr(i, attr)
+        except AttributeError:
+            pass
+
+
 def flatten(iterables, type=list):
     result = type()
     for i in iterables:

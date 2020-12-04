@@ -1,3 +1,4 @@
+from collections import namedtuple
 from unittest import TestCase
 
 from mopack import iterutils
@@ -81,6 +82,26 @@ class TestListify(TestCase):
         y = ['foo', 'bar']
         res = iterutils.listify(y, type=tuple)
         self.assertEqual(res, ('foo', 'bar'))
+
+
+class TestEachAttr(TestCase):
+    def test_empty(self):
+        self.assertEqual(list(iterutils.each_attr([], 'attr')), [])
+
+    def test_has_attrs(self):
+        T = namedtuple('T', ['attr'])
+        self.assertEqual(list(iterutils.each_attr(
+            [T('foo'), T('bar')], 'attr'
+        )), ['foo', 'bar'])
+
+    def test_no_attrs(self):
+        self.assertEqual(list(iterutils.each_attr(['foo', 'bar'], 'attr')), [])
+
+    def test_mixed(self):
+        T = namedtuple('T', ['attr'])
+        self.assertEqual(list(iterutils.each_attr(
+            [T('foo'), 'bar'], 'attr'
+        )), ['foo'])
 
 
 class TestFlatten(TestCase):

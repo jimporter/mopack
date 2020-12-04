@@ -12,11 +12,11 @@ def _get_usage_type(type, field='type'):
         raise FieldError('unknown usage {!r}'.format(type), field)
 
 
+@FreezeDried.fields(skip={'_options'}, skip_compare={'_options'})
 class Usage(FreezeDried):
     _default_genus = 'usage'
     _type_field = 'type'
     _get_type = _get_usage_type
-    _skip_fields = _skip_compare_fields = ('_options',)
 
     def set_options(self, options):
         self._options = OptionsSet(options['common'], None)

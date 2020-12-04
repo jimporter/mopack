@@ -7,6 +7,7 @@ from . import Package, submodules_type
 from .. import archive, log, types
 from ..builders import Builder, make_builder
 from ..config import ChildConfig
+from ..freezedried import FreezeDried
 from ..log import LogFile
 from ..package_defaults import DefaultResolver
 from ..path import filter_glob, pushd
@@ -14,11 +15,9 @@ from ..usage import make_usage
 from ..yaml_tools import to_parse_error
 
 
+@FreezeDried.fields(rehydrate={'builder': Builder},
+                    skip_compare={'pending_usage'})
 class SDistPackage(Package):
-    _rehydrate_fields = {'builder': Builder}
-    _skip_compare_fields = (Package._skip_compare_fields +
-                            ('pending_usage',))
-
     def __init__(self, name, *, build=None, usage=None, submodules=types.Unset,
                  symbols, **kwargs):
         super().__init__(name, **kwargs)
@@ -140,10 +139,9 @@ class DirectoryPackage(SDistPackage):
         return self.builder.get_usage(pkgdir, submodules, self.path)
 
 
+@FreezeDried.fields(skip_compare={'guessed_srcdir'})
 class TarballPackage(SDistPackage):
     source = 'tarball'
-    _skip_compare_fields = (SDistPackage._skip_compare_fields +
-                            ('guessed_srcdir',))
 
     def __init__(self, name, *, path=None, url=None, files=None, srcdir=None,
                  patch=None, **kwargs):
@@ -172,7 +170,7 @@ class TarballPackage(SDistPackage):
             return BytesIO(f.read())
 
     def clean_pre(self, pkgdir, new_package, quiet=False):
-        if self.equal(new_package, skip_fields=('builder',)):
+        if self.equal(new_package, skip_fields={'builder'}):
             # Since both package objects have the same configuration, pass the
             # guessed srcdir on to the new package instance. That way, we don't
             # have to re-extract the tarball to get the guessed srcdir.
@@ -255,7 +253,7 @@ class GitPackage(SDistPackage):
         return os.path.join(self._base_srcdir(pkgdir), self.srcdir)
 
     def clean_pre(self, pkgdir, new_package, quiet=False):
-        if self.equal(new_package, skip_fields=('builder',)):
+        if self.equal(new_package, skip_fields={'builder'}):
             return False
 
         if not quiet:

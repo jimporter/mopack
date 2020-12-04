@@ -35,12 +35,12 @@ def submodules_type(field, value):
     return _submodule_dict(field, value)
 
 
+@FreezeDried.fields(skip={'_options'},
+                    skip_compare={'config_file', 'resolved', '_options'})
 class Package(FreezeDried):
     _default_genus = 'source'
     _type_field = 'source'
     _get_type = _get_source_type
-    _skip_fields = ('_options',)
-    _skip_compare_fields = ('config_file', 'resolved', '_options')
 
     Options = None
 
@@ -102,9 +102,8 @@ class Package(FreezeDried):
         return '<{}({!r})>'.format(type(self).__name__, self.name)
 
 
+@FreezeDried.fields(rehydrate={'usage': Usage})
 class BinaryPackage(Package):
-    _rehydrate_fields = {'usage': Usage}
-
     def __init__(self, name, *, usage, submodules=types.Unset, symbols,
                  **kwargs):
         super().__init__(name, **kwargs)

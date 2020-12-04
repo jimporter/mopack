@@ -1,3 +1,8 @@
+from itertools import chain
+
+from .iterutils import each_attr, merge_dicts
+
+
 def auto_dehydrate(value, freezedryer=None):
     # If freezedryer is not set, try to dehydrate the value or just return the
     # original value. Otherwise, check if the value is an instance of the
@@ -14,17 +19,37 @@ def auto_dehydrate(value, freezedryer=None):
 
 class FreezeDried:
     _type_field = None
-    _skip_fields = ()
-    _skip_compare_fields = ()
     _rehydrate_fields = {}
+    _skip_fields = set()
+    _skip_compare_fields = set()
 
-    def _skipped_field(self, field, compare=False, extra_skips=[]):
+    def _skipped_field(self, field, compare=False, extra_skips=set()):
         # Never save memoization caches!
         if field.startswith('_memoize_cache_'):
             return True
 
         skips = self._skip_compare_fields if compare else self._skip_fields
         return field in skips or field in extra_skips
+
+    @staticmethod
+    def fields(*, rehydrate=None, skip=None, skip_compare=None):
+        def wrapper(cls):
+            if rehydrate:
+                cls._rehydrate_fields = merge_dicts(*chain(
+                    each_attr(cls.__bases__, '_rehydrate_fields'), [rehydrate]
+                ))
+            if skip:
+                cls._skip_fields = set().union(*chain(
+                    each_attr(cls.__bases__, '_skip_fields'), [skip]
+                ))
+            if skip_compare:
+                cls._skip_compare_fields = set().union(*chain(
+                    each_attr(cls.__bases__, '_skip_compare_fields'),
+                    [skip_compare]
+                ))
+            return cls
+
+        return wrapper
 
     def dehydrate(self):
         if self._type_field is None:
