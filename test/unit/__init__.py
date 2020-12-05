@@ -3,7 +3,7 @@ import pkg_resources
 from contextlib import contextmanager
 from unittest import mock, TestCase
 
-from mopack.config import CommonOptions
+from mopack.options import CommonOptions, Options
 
 # Make sure the entry points are loaded so unit tests can reference them as
 # needed.
@@ -28,20 +28,20 @@ class OptionsTest(TestCase):
     symbols = default_symbols()
 
     def make_options(self, common_options=None):
-        options = {'common': CommonOptions(), 'sources': {}, 'builders': {}}
+        options = Options()
         if common_options:
-            options['common'].accumulate(common_options)
+            options.common.accumulate(common_options)
         with mock.patch.object(os, 'environ', return_value={}):
-            options['common'].finalize()
+            options.common.finalize()
 
         for i in pkg_resources.iter_entry_points('mopack.sources'):
             opts_type = i.load().Options
             if opts_type:
-                options['sources'][opts_type.source] = opts_type()
+                options.sources[opts_type.source] = opts_type()
 
         for i in pkg_resources.iter_entry_points('mopack.builders'):
             opts_type = i.load().Options
             if opts_type:
-                options['builders'][opts_type.type] = opts_type()
+                options.builders[opts_type.type] = opts_type()
 
         return options

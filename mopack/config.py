@@ -3,14 +3,9 @@ from itertools import chain
 from yaml.error import MarkedYAMLError
 
 from . import expression as expr
-from .builders import make_builder_options
-from .freezedried import FreezeDried
 from .iterutils import isiterable
-from .objutils import memoize_method
-from .options import BaseOptions
-from .platforms import platform_name
-from .sources import make_package_options, try_make_package
-from .types import Unset
+from .options import Options
+from .sources import try_make_package
 from .yaml_tools import load_file, to_parse_error, MarkedDict, SafeLineLoader
 
 mopack_file = 'mopack.yml'
@@ -25,51 +20,9 @@ class _PlaceholderPackage:
 PlaceholderPackage = _PlaceholderPackage()
 
 
-class CommonOptions(FreezeDried, BaseOptions):
-    _context = 'while adding common options'
-    type = 'common'
-
-    def __init__(self):
-        self.target_platform = Unset
-        self.env = {}
-
-    def __call__(self, *, target_platform=Unset, env=None, **kwargs):
-        if self.target_platform is Unset:
-            self.target_platform = target_platform
-        if env:
-            for k, v in env.items():
-                if k not in self.env:
-                    self.env[k] = v
-
-    def finalize(self):
-        self(target_platform=platform_name(), env=os.environ)
-
-    @property
-    @memoize_method
-    def expr_symbols(self):
-        return {
-            'host_platform': platform_name(),
-            'target_platform': self.target_platform,
-            'env': self.env,
-        }
-
-    def __eq__(self, rhs):
-        return (self.target_platform == rhs.target_platform and
-                self.env == rhs.env)
-
-
 class BaseConfig:
-    _option_kinds = ('builders', 'sources')
-
-    @classmethod
-    def default_options(cls, pending=False):
-        # This function returns the same data for both "pending" options as we
-        # parse each config file, as well as being the default state for
-        # finalized options.
-        return {i: {} for i in cls._option_kinds}
-
     def __init__(self):
-        self._options = self.default_options(pending=True)
+        self._pending_options = {i: {} for i in Options.option_kinds}
         self._pending_packages = {}
 
     def __bool__(self):
@@ -138,13 +91,13 @@ class BaseConfig:
     def _process_options(self, filename, data):
         if not data:
             return
-        for kind in self._option_kinds:
+        for kind in Options.option_kinds:
             if kind in data:
                 for k, v in data[kind].items():
                     if v is None:
                         v = MarkedDict(data[kind].marks[k])
                     v.update(config_file=filename, child_config=self.child)
-                    self._options[kind].setdefault(k, []).append(v)
+                    self._pending_options[kind].setdefault(k, []).append(v)
 
     def _finalize_packages(self, symbols):
         self.packages = {}
@@ -219,10 +172,9 @@ class BaseConfig:
                 # definition.
                 new_packages[k] = self.packages.pop(k, v)
 
-            for kind in self._option_kinds:
-                if kind in i._options:
-                    for k, v in i._options[kind].items():
-                        self._options[kind].setdefault(k, []).extend(v)
+            for kind in i._pending_options:
+                for k, v in i._pending_options[kind].items():
+                    self._pending_options[kind].setdefault(k, []).extend(v)
         new_packages.update(self.packages)
         self.packages = new_packages
 
@@ -233,59 +185,45 @@ class BaseConfig:
 class Config(BaseConfig):
     child = False
 
-    @classmethod
-    def default_options(cls, pending=False):
-        result = super().default_options(pending)
-        result['common'] = CommonOptions()
-        if not pending:
-            result['common'].finalize()
-        return result
-
     def __init__(self, filenames, options=None):
         super().__init__()
+        self.options = Options()
         self._process_options('<command-line>', options or {})
         self._load_configs(filenames)
 
-        self._options['common'].finalize()
-        self._finalize_packages(self._options['common'].expr_symbols)
+        self.options.common.finalize()
+        self._finalize_packages(self.options.common.expr_symbols)
 
     def _process_options(self, filename, data):
         super()._process_options(filename, data)
 
         if data:
             common = data.copy()
-            for i in self._option_kinds:
+            for i in Options.option_kinds:
                 common.pop(i, None)
             if common:
-                self._options['common'].accumulate(common)
+                self.options.common.accumulate(common)
 
     def finalize(self):
-        def make_options(kinds, make):
-            for i in kinds:
-                opts = make(i)
-                if opts:
-                    yield i, opts
-
         sources = {pkg.source: True for pkg in self.packages.values()}
         builders = {i: True for i in chain.from_iterable(
             pkg.builder_types for pkg in self.packages.values()
         )}
 
-        self.options = {
-            'common': self._options['common'],
-            'sources': dict(make_options(sources, make_package_options)),
-            'builders': dict(make_options(builders, make_builder_options)),
-        }
+        for i in sources:
+            self.options.add('sources', i)
+        for i in builders:
+            self.options.add('builders', i)
 
-        for kind in self._option_kinds:
-            for name, cfgs in self._options[kind].items():
-                if name in self.options[kind]:
+        for kind in self._pending_options:
+            for name, cfgs in self._pending_options[kind].items():
+                if name in getattr(self.options, kind):
                     for cfg in cfgs:
                         final = cfg.pop('final', False)
-                        self.options[kind][name].accumulate(cfg)
+                        getattr(self.options, kind)[name].accumulate(cfg)
                         if final:
                             break
-        del self._options
+        del self._pending_options
 
         for pkg in self.packages.values():
             pkg.set_options(self.options)
@@ -316,7 +254,7 @@ class ChildConfig(BaseConfig):
         self.parent = parent
         self.export = None
         self._load_configs(filenames)
-        common_opts = self._root_config._options['common']
+        common_opts = self._root_config.options.common
         self._finalize_packages(common_opts.expr_symbols)
 
     @property

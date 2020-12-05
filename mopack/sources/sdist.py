@@ -22,11 +22,11 @@ class SDistPackage(Package):
                  symbols, **kwargs):
         super().__init__(name, **kwargs)
         if build is None:
+            if submodules is not types.Unset:
+                self.submodules = submodules_type('submodules', submodules)
             self.builder = None
             self.pending_usage = usage
             self.pending_symbols = symbols
-            if submodules is not types.Unset:
-                self.submodules = submodules_type('submodules', submodules)
         else:
             package_default = DefaultResolver(self, symbols)
             self.submodules = package_default(submodules_type)(

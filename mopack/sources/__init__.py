@@ -2,9 +2,9 @@ import os
 from pkg_resources import load_entry_point
 
 from .. import types
+from ..base_options import BaseOptions, OptionsSet
 from ..freezedried import FreezeDried
 from ..iterutils import listify
-from ..options import BaseOptions, OptionsSet
 from ..package_defaults import DefaultResolver
 from ..types import FieldError, try_load_config
 from ..usage import Usage, make_usage
@@ -79,8 +79,8 @@ class Package(FreezeDried):
         return []
 
     def set_options(self, options):
-        self._options = OptionsSet(options['common'],
-                                   options['sources'].get(self.source))
+        self._options = OptionsSet(options.common,
+                                   options.sources.get(self.source))
 
     def clean_pre(self, pkgdir, new_package, quiet=False):
         return False

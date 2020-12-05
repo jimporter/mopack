@@ -92,18 +92,6 @@ class FreezeDried:
         return self.equal(rhs)
 
 
-class DictKeysFreezeDryer:
-    def __init__(self, **kwargs):
-        self.keys = kwargs
-
-    def dehydrate(self, value):
-        return {k: auto_dehydrate(value[k], type) for k, type in
-                self.keys.items()}
-
-    def rehydrate(self, value):
-        return {k: type.rehydrate(value[k]) for k, type in self.keys.items()}
-
-
 class DictToListFreezeDryer:
     def __init__(self, type, key):
         self.type = type

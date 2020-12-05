@@ -1,8 +1,8 @@
 import os
 from pkg_resources import load_entry_point
 
+from ..base_options import BaseOptions, OptionsSet
 from ..freezedried import FreezeDried
-from ..options import BaseOptions, OptionsSet
 from ..types import FieldError, wrap_field_error
 from ..usage import Usage
 
@@ -31,8 +31,8 @@ class Builder(FreezeDried):
 
     def set_options(self, options):
         self.usage.set_options(options)
-        self._options = OptionsSet(options['common'],
-                                   options['builders'].get(self.type))
+        self._options = OptionsSet(options.common,
+                                   options.builders.get(self.type))
 
     def get_usage(self, pkgdir, submodules, srcdir):
         return self.usage.get_usage(submodules, srcdir, self._builddir(pkgdir))

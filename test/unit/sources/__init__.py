@@ -5,7 +5,7 @@ class SourceTest(OptionsTest):
     def set_options(self, pkg, common_options=None, this_options=None):
         options = self.make_options(common_options)
         if this_options:
-            options['sources'][pkg.source].accumulate(this_options)
+            options.sources[pkg.source].accumulate(this_options)
         pkg.set_options(options)
 
     def make_package(self, *args, set_options=True, common_options=None,

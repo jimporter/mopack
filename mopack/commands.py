@@ -3,11 +3,10 @@ import os
 import shutil
 
 from . import log
-from .builders import BuilderOptions
-from .config import CommonOptions, Config, PlaceholderPackage
+from .config import Options, PlaceholderPackage
 from .exceptions import ConfigurationError
-from .freezedried import DictKeysFreezeDryer, DictToListFreezeDryer
-from .sources import Package, PackageOptions
+from .freezedried import DictToListFreezeDryer
+from .sources import Package
 from .sources.system import fallback_system_package
 
 mopack_dirname = 'mopack'
@@ -17,26 +16,19 @@ def get_package_dir(builddir):
     return os.path.abspath(os.path.join(builddir, mopack_dirname))
 
 
-BuilderOptsFD = DictToListFreezeDryer(BuilderOptions, lambda x: x.type)
-PackageOptsFD = DictToListFreezeDryer(PackageOptions, lambda x: x.source)
-OptionsFD = DictKeysFreezeDryer(common=CommonOptions, builders=BuilderOptsFD,
-                                sources=PackageOptsFD)
-
-PackagesFD = DictToListFreezeDryer(Package, lambda x: x.name)
-
-
 class MetadataVersionError(RuntimeError):
     pass
 
 
 class Metadata:
+    _PackagesFD = DictToListFreezeDryer(Package, lambda x: x.name)
     metadata_filename = 'mopack.json'
     version = 1
 
     def __init__(self, deploy_paths=None, options=None, files=None,
                  implicit_files=None):
         self.deploy_paths = deploy_paths or {}
-        self.options = options or Config.default_options()
+        self.options = options or Options.default()
         self.files = files or []
         self.implicit_files = implicit_files or []
         self.packages = {}
@@ -55,8 +47,8 @@ class Metadata:
                 },
                 'metadata': {
                     'deploy_paths': self.deploy_paths,
-                    'options': OptionsFD.dehydrate(self.options),
-                    'packages': PackagesFD.dehydrate(self.packages),
+                    'options': self.options.dehydrate(),
+                    'packages': self._PackagesFD.dehydrate(self.packages),
                 }
             }, f)
 
@@ -76,8 +68,8 @@ class Metadata:
         metadata.files = state['config_files']['explicit']
         metadata.implicit_files = state['config_files']['implicit']
 
-        metadata.options = OptionsFD.rehydrate(data['options'])
-        metadata.packages = PackagesFD.rehydrate(data['packages'])
+        metadata.options = Options.rehydrate(data['options'])
+        metadata.packages = cls._PackagesFD.rehydrate(data['packages'])
         for pkg in metadata.packages.values():
             pkg.set_options(metadata.options)
 

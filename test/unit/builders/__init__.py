@@ -7,7 +7,7 @@ class BuilderTest(OptionsTest):
     def set_options(self, builder, common_options=None, this_options=None):
         options = self.make_options(common_options)
         if this_options:
-            options['builders'][builder.type].accumulate(this_options)
+            options.builders[builder.type].accumulate(this_options)
         builder.set_options(options)
 
     def make_builder(self, *args, set_options=True, common_options=None,

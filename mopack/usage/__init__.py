@@ -1,7 +1,7 @@
 from pkg_resources import load_entry_point
 
+from ..base_options import OptionsSet
 from ..freezedried import FreezeDried
-from ..options import OptionsSet
 from ..types import FieldError, wrap_field_error
 
 
@@ -19,7 +19,7 @@ class Usage(FreezeDried):
     _get_type = _get_usage_type
 
     def set_options(self, options):
-        self._options = OptionsSet(options['common'], None)
+        self._options = OptionsSet(options.common, None)
 
     def _usage(self, *, type=None, **kwargs):
         if type is None:
