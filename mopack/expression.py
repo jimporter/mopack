@@ -122,22 +122,26 @@ expr <<= pp.infixNotation(expr_atom, [
 ])
 
 expr_holder = ('${{' + expr + '}}').setParseAction(lambda t: t[1])
-bare_string = (pp.SkipTo(pp.Literal('${{') | pp.StringEnd()).leaveWhitespace()
+identifier_holder = ('$' + identifier).setParseAction(lambda t: t[1])
+escaped_dollar = pp.Literal('$$').setParseAction(lambda t: ['$'])
+dollar_expr = escaped_dollar | identifier_holder | expr_holder
+
+bare_string = (pp.SkipTo(pp.Literal('$') | pp.StringEnd()).leaveWhitespace()
                .setParseAction(lambda t: t if len(t[0]) else []))
 
-if_expr = expr_holder | expr
-str_expr = bare_string + (expr_holder + bare_string)[...]
+if_expr = dollar_expr | expr
+str_expr = bare_string + (dollar_expr + bare_string)[...]
 
 
 def evaluate(symbols, expression, if_context=False):
-    if if_context:
-        return if_expr.parseString(expression, parseAll=True)[0](symbols)
-    else:
-        def evaluate_tok(t):
-            if isinstance(t, str):
-                return t
-            return t(symbols)
+    def evaluate_tok(t):
+        if isinstance(t, str):
+            return t
+        return t(symbols)
 
+    if if_context:
+        return evaluate_tok(if_expr.parseString(expression, parseAll=True)[0])
+    else:
         ast = str_expr.parseString(expression, parseAll=True)
         if len(ast) == 1:
             return evaluate_tok(ast[0])

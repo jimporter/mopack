@@ -31,6 +31,14 @@ class TestEvaluate(TestCase):
                          '${{ foo }}')
         self.assertEqual(evaluate(self.symbols, "${{ 'foo }}' }}"), 'foo }}')
 
+        self.assertEqual(evaluate(self.symbols, '$$'), '$')
+        self.assertEqual(evaluate(self.symbols, '$$', True), '$')
+
+        with self.assertRaises(ParseException):
+            evaluate(self.symbols, '$!')
+        with self.assertRaises(ParseException):
+            evaluate(self.symbols, '$!', True)
+
     def test_bool_literal(self):
         self.assertEvaluate('true', True)
         self.assertEvaluate('false', False)
@@ -76,6 +84,10 @@ class TestEvaluate(TestCase):
         self.assertEqual(evaluate(
             self.symbols, "1 ${{ 'foo' }} 2 ${{ 'bar' }} 3"
         ), '1 foo 2 bar 3')
+
+    def test_simple_identifier(self):
+        self.assertEqual(evaluate(self.symbols, '$foo'), 'Foo')
+        self.assertEqual(evaluate(self.symbols, '$foo', True), 'Foo')
 
     def test_invalid_syntax(self):
         with self.assertRaises(ParseException):
