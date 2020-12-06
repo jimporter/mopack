@@ -4,8 +4,8 @@ from . import Builder
 class NoneBuilder(Builder):
     type = 'none'
 
-    def __init__(self, name, *, usage, submodules, symbols, **kwargs):
-        super().__init__(name, usage=usage, **kwargs)
+    def __init__(self, name, *, submodules, **kwargs):
+        super().__init__(name, **kwargs)
 
     def _builddir(self, pkgdir):
         return None

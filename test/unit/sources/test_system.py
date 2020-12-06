@@ -205,7 +205,7 @@ class TestSystemPackage(SourceTest):
         self.assertNotEqual(pkg, self.make_package('bar'))
 
     def test_rehydrate(self):
-        pkg = SystemPackage('foo', config_file=self.config_file,
-                            symbols=self.symbols)
+        opts = self.make_options()
+        pkg = SystemPackage('foo', _options=opts, config_file=self.config_file)
         data = pkg.dehydrate()
-        self.assertEqual(pkg, Package.rehydrate(data))
+        self.assertEqual(pkg, Package.rehydrate(data, _options=opts))

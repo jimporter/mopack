@@ -64,7 +64,7 @@ class FreezeDried:
         return result
 
     @classmethod
-    def rehydrate(cls, config):
+    def rehydrate(cls, config, **kwargs):
         assert cls != FreezeDried
 
         if cls._type_field is None:
@@ -76,7 +76,7 @@ class FreezeDried:
 
         for k, v in config.items():
             if k in this_type._rehydrate_fields and v is not None:
-                v = this_type._rehydrate_fields[k].rehydrate(v)
+                v = this_type._rehydrate_fields[k].rehydrate(v, **kwargs)
             setattr(result, k, v)
 
         return result
@@ -100,6 +100,6 @@ class DictToListFreezeDryer:
     def dehydrate(self, value):
         return [auto_dehydrate(i, self.type) for i in value.values()]
 
-    def rehydrate(self, value):
-        rehydrated = (self.type.rehydrate(i) for i in value)
+    def rehydrate(self, value, **kwargs):
+        rehydrated = (self.type.rehydrate(i, **kwargs) for i in value)
         return {self.key(i): i for i in rehydrated}

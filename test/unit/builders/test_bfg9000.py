@@ -53,7 +53,7 @@ class TestBfg9000Builder(BuilderTest):
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, [])
         self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, symbols=self.symbols
+            'foo', submodules=None, _options=self.make_options()
         ))
 
         self.check_build(builder)
@@ -76,7 +76,7 @@ class TestBfg9000Builder(BuilderTest):
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, ['--extra', 'args'])
         self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, symbols=self.symbols
+            'foo', submodules=None, _options=self.make_options()
         ))
 
         self.check_build(builder, extra_args=['--extra', 'args'])
@@ -86,7 +86,7 @@ class TestBfg9000Builder(BuilderTest):
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, [])
         self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, symbols=self.symbols
+            'foo', submodules=None, _options=self.make_options()
         ))
 
         self.check_build(builder)
@@ -97,7 +97,8 @@ class TestBfg9000Builder(BuilderTest):
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, [])
         self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', path='pkgconf', submodules=None, symbols=self.symbols
+            'foo', path='pkgconf', submodules=None,
+            _options=self.make_options()
         ))
 
         self.check_build(builder, usage={
@@ -143,7 +144,7 @@ class TestBfg9000Builder(BuilderTest):
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, [])
         self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, symbols=self.symbols
+            'foo', submodules=None, _options=self.make_options()
         ))
 
         self.check_build(builder, extra_args=['--toolchain', 'toolchain.bfg'])
@@ -154,7 +155,7 @@ class TestBfg9000Builder(BuilderTest):
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, [])
         self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, symbols=self.symbols
+            'foo', submodules=None, _options=self.make_options()
         ))
 
         self.check_build(builder, deploy_paths, extra_args=[
@@ -170,12 +171,13 @@ class TestBfg9000Builder(BuilderTest):
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
     def test_rehydrate(self):
+        opts = self.make_options()
         usage = make_usage('foo', {'type': 'pkg-config', 'path': 'pkgconf'},
-                           submodules=None, symbols=self.symbols)
+                           submodules=None, _options=opts)
         builder = Bfg9000Builder('foo', extra_args='--extra args', usage=usage,
-                                 submodules=None, symbols=self.symbols)
+                                 submodules=None, _options=opts)
         data = builder.dehydrate()
-        self.assertEqual(builder, Builder.rehydrate(data))
+        self.assertEqual(builder, Builder.rehydrate(data, _options=opts))
 
 
 class TestBfg9000Options(TestCase):

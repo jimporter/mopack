@@ -136,7 +136,7 @@ class TestTarball(SDistTestCase):
         def mock_exists(p):
             return os.path.basename(p) == 'mopack.yml'
 
-        pkg = self.make_package('foo', path=self.srcpath, set_options=False)
+        pkg = self.make_package('foo', path=self.srcpath)
         self.assertEqual(pkg.builder, None)
 
         with mock.patch('os.path.exists', mock_exists), \
@@ -145,7 +145,6 @@ class TestTarball(SDistTestCase):
              )), \
              mock.patch('tarfile.TarFile.extractall') as mtar:  # noqa
             config = pkg.fetch(self.pkgdir, self.config)
-            self.set_options(pkg)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(
                 Bfg9000Builder, 'foo'
@@ -153,7 +152,7 @@ class TestTarball(SDistTestCase):
         self.check_resolve(pkg)
 
         pkg = self.make_package('foo', path=self.srcpath,
-                                usage={'type': 'system'}, set_options=False)
+                                usage={'type': 'system'})
 
         with mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_after_first(
@@ -161,7 +160,6 @@ class TestTarball(SDistTestCase):
              )), \
              mock.patch('tarfile.TarFile.extractall') as mtar:  # noqa
             config = pkg.fetch(self.pkgdir, self.config)
-            self.set_options(pkg)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(
                 Bfg9000Builder, 'foo', usage={'type': 'system'}
@@ -444,24 +442,25 @@ class TestTarball(SDistTestCase):
         ))
 
     def test_rehydrate(self):
+        opts = self.make_options()
         pkg = TarballPackage('foo', path=self.srcpath, build='bfg9000',
-                             symbols=self.symbols,
-                             config_file=self.config_file)
+                             _options=opts, config_file=self.config_file)
         data = pkg.dehydrate()
-        self.assertEqual(pkg, Package.rehydrate(data))
+        self.assertEqual(pkg, Package.rehydrate(data, _options=opts))
 
-        pkg = TarballPackage('foo', path=self.srcpath, symbols=self.symbols,
+        pkg = TarballPackage('foo', path=self.srcpath, _options=opts,
                              config_file=self.config_file)
         with self.assertRaises(ConfigurationError):
             data = pkg.dehydrate()
 
     def test_builder_types(self):
         pkg = TarballPackage('foo', path=self.srcpath, build='bfg9000',
-                             symbols=self.symbols,
+                             _options=self.make_options(),
                              config_file=self.config_file)
         self.assertEqual(pkg.builder_types, ['bfg9000'])
 
-        pkg = TarballPackage('foo', path=self.srcpath, symbols=self.symbols,
+        pkg = TarballPackage('foo', path=self.srcpath,
+                             _options=self.make_options(),
                              config_file=self.config_file)
         with self.assertRaises(ConfigurationError):
             pkg.builder_types

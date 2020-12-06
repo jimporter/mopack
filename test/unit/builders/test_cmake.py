@@ -52,7 +52,7 @@ class TestCMakeBuilder(BuilderTest):
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, [])
         self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, symbols=self.symbols
+            'foo', submodules=None, _options=self.make_options()
         ))
 
         self.check_build(builder)
@@ -76,7 +76,7 @@ class TestCMakeBuilder(BuilderTest):
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, ['--extra', 'args'])
         self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, symbols=self.symbols
+            'foo', submodules=None, _options=self.make_options()
         ))
 
         self.check_build(builder, extra_args=['--extra', 'args'])
@@ -87,7 +87,9 @@ class TestCMakeBuilder(BuilderTest):
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, [])
         self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', path='pkgconf', submodules=None, symbols=self.symbols))
+            'foo', path='pkgconf', submodules=None,
+            _options=self.make_options()
+        ))
 
         self.check_build(builder, usage={
             'type': 'pkg-config', 'path': self.pkgconfdir('foo', 'pkgconf'),
@@ -133,7 +135,7 @@ class TestCMakeBuilder(BuilderTest):
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, [])
         self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, symbols=self.symbols
+            'foo', submodules=None, _options=self.make_options()
         ))
 
         self.check_build(builder, deploy_paths, extra_args=[
@@ -149,9 +151,10 @@ class TestCMakeBuilder(BuilderTest):
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
     def test_rehydrate(self):
+        opts = self.make_options()
         usage = make_usage('foo', {'type': 'pkg-config', 'path': 'pkgconf'},
-                           submodules=None, symbols=self.symbols)
+                           submodules=None, _options=opts)
         builder = CMakeBuilder('foo', extra_args='--extra args', usage=usage,
-                               submodules=None, symbols=self.symbols)
+                               submodules=None, _options=opts)
         data = builder.dehydrate()
-        self.assertEqual(builder, Builder.rehydrate(data))
+        self.assertEqual(builder, Builder.rehydrate(data, _options=opts))

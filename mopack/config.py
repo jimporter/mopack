@@ -99,7 +99,7 @@ class BaseConfig:
                     v.update(config_file=filename, child_config=self.child)
                     self._pending_options[kind].setdefault(k, []).append(v)
 
-    def _finalize_packages(self, symbols):
+    def _finalize_packages(self, options):
         self.packages = {}
         for name, cfgs in self._pending_packages.items():
             if cfgs is PlaceholderPackage:
@@ -108,10 +108,10 @@ class BaseConfig:
 
             for cfg in cfgs:
                 with to_parse_error(cfg['config_file']):
-                    if self._if_evaluate(symbols, cfg, 'if'):
-                        cfg = self._evaluate(symbols, cfg)
+                    if self._if_evaluate(options.expr_symbols, cfg, 'if'):
+                        cfg = self._evaluate(options.expr_symbols, cfg)
                         self.packages[name] = try_make_package(
-                            name, cfg, symbols=symbols
+                            name, cfg, _options=options
                         )
                         break
         del self._pending_packages
@@ -192,7 +192,7 @@ class Config(BaseConfig):
         self._load_configs(filenames)
 
         self.options.common.finalize()
-        self._finalize_packages(self.options.common.expr_symbols)
+        self._finalize_packages(self.options)
 
     def _process_options(self, filename, data):
         super()._process_options(filename, data)
@@ -225,9 +225,6 @@ class Config(BaseConfig):
                             break
         del self._pending_options
 
-        for pkg in self.packages.values():
-            pkg.set_options(self.options)
-
 
 class ChildConfig(BaseConfig):
     child = True
@@ -254,8 +251,7 @@ class ChildConfig(BaseConfig):
         self.parent = parent
         self.export = None
         self._load_configs(filenames)
-        common_opts = self._root_config.options.common
-        self._finalize_packages(common_opts.expr_symbols)
+        self._finalize_packages(self._root_config.options)
 
     @property
     def _root_config(self):

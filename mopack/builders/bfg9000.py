@@ -25,11 +25,11 @@ class Bfg9000Builder(Builder):
                 self.toolchain = toolchain
 
     def __init__(self, name, *, extra_args=None, usage=None, submodules,
-                 symbols, **kwargs):
+                 _options, **kwargs):
         if usage is None:
             usage = make_usage(name, 'pkg-config', submodules=submodules,
-                               symbols=symbols)
-        super().__init__(name, usage=usage, **kwargs)
+                               _options=_options)
+        super().__init__(name, usage=usage, _options=_options, **kwargs)
         self.extra_args = types.shell_args()('extra_args', extra_args)
 
     def _toolchain_args(self, toolchain):
@@ -52,7 +52,7 @@ class Bfg9000Builder(Builder):
             with pushd(srcdir):
                 logfile.check_call(
                     ['9k', builddir] +
-                    self._toolchain_args(self._options.this.toolchain) +
+                    self._toolchain_args(self._this_options.toolchain) +
                     self._install_args(deploy_paths) +
                     self.extra_args
                 )

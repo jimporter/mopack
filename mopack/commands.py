@@ -69,9 +69,9 @@ class Metadata:
         metadata.implicit_files = state['config_files']['implicit']
 
         metadata.options = Options.rehydrate(data['options'])
-        metadata.packages = cls._PackagesFD.rehydrate(data['packages'])
-        for pkg in metadata.packages.values():
-            pkg.set_options(metadata.options)
+        metadata.packages = cls._PackagesFD.rehydrate(
+            data['packages'], _options=metadata.options
+        )
 
         return metadata
 

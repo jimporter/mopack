@@ -1,7 +1,7 @@
 import os
 from pkg_resources import load_entry_point
 
-from ..base_options import BaseOptions, OptionsSet
+from ..base_options import BaseOptions, OptionsHolder
 from ..freezedried import FreezeDried
 from ..types import FieldError, wrap_field_error
 from ..usage import Usage
@@ -14,25 +14,21 @@ def _get_builder_type(type, field='type'):
         raise FieldError('unknown builder {!r}'.format(type), field)
 
 
-@FreezeDried.fields(rehydrate={'usage': Usage}, skip={'_options'},
-                    skip_compare={'_options'})
-class Builder(FreezeDried):
+@FreezeDried.fields(rehydrate={'usage': Usage})
+class Builder(OptionsHolder):
+    _options_type = 'builders'
     _type_field = 'type'
     _get_type = _get_builder_type
 
     Options = None
 
-    def __init__(self, name, *, usage):
+    def __init__(self, name, *, usage, _options):
+        super().__init__(_options)
         self.name = name
         self.usage = usage
 
     def _builddir(self, pkgdir):
         return os.path.abspath(os.path.join(pkgdir, 'build', self.name))
-
-    def set_options(self, options):
-        self.usage.set_options(options)
-        self._options = OptionsSet(options.common,
-                                   options.builders.get(self.type))
 
     def get_usage(self, pkgdir, submodules, srcdir):
         return self.usage.get_usage(submodules, srcdir, self._builddir(pkgdir))

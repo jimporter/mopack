@@ -1,7 +1,6 @@
 from pkg_resources import load_entry_point
 
-from ..base_options import OptionsSet
-from ..freezedried import FreezeDried
+from ..base_options import OptionsHolder
 from ..types import FieldError, wrap_field_error
 
 
@@ -12,14 +11,13 @@ def _get_usage_type(type, field='type'):
         raise FieldError('unknown usage {!r}'.format(type), field)
 
 
-@FreezeDried.fields(skip={'_options'}, skip_compare={'_options'})
-class Usage(FreezeDried):
+class Usage(OptionsHolder):
     _default_genus = 'usage'
     _type_field = 'type'
     _get_type = _get_usage_type
 
-    def set_options(self, options):
-        self._options = OptionsSet(options.common, None)
+    def __init__(self, *, _options):
+        super().__init__(_options)
 
     def _usage(self, *, type=None, **kwargs):
         if type is None:

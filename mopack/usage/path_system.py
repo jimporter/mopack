@@ -51,8 +51,9 @@ class PathUsage(Usage):
     def __init__(self, name, *, auto_link=Unset, include_path=Unset,
                  library_path=Unset, headers=Unset, libraries=Unset,
                  compile_flags=Unset, link_flags=Unset, submodule_map=Unset,
-                 submodules, symbols):
-        package_default = DefaultResolver(self, symbols, name)
+                 submodules, _options):
+        super().__init__(_options=_options)
+        package_default = DefaultResolver(self, _options.expr_symbols, name)
 
         # XXX: This can probably be removed if/when we pull more package
         # resolution logic into mopack.
@@ -100,7 +101,7 @@ class PathUsage(Usage):
         def make_library(lib):
             if isinstance(lib, dict) and lib.get('type') == 'guess':
                 return package_library_name(
-                    self._options.common.target_platform, lib['name']
+                    self._common_options.target_platform, lib['name']
                 )
             return lib
 
@@ -137,13 +138,13 @@ class SystemUsage(PathUsage):
     type = 'system'
 
     def __init__(self, name, **kwargs):
-        self.pcfile = name
         super().__init__(name, **kwargs)
+        self.pcfile = name
 
     def get_usage(self, submodules, srcdir, builddir):
         # TODO: Split this into args so users can pass flags to pkg-config via
         # the environment variable.
-        pkg_config = self._options.common.env.get('PKG_CONFIG', 'pkg-config')
+        pkg_config = self._common_options.env.get('PKG_CONFIG', 'pkg-config')
         try:
             subprocess.run([pkg_config, self.pcfile], check=True,
                            stdout=subprocess.DEVNULL,

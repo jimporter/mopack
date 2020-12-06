@@ -142,8 +142,7 @@ class TestGit(SDistTestCase):
         def mock_exists(p):
             return os.path.basename(p) == 'mopack.yml'
 
-        pkg = self.make_package('foo', repository=self.srcssh,
-                                set_options=False)
+        pkg = self.make_package('foo', repository=self.srcssh)
         self.assertEqual(pkg.builder, None)
 
         with mock_open_log(), \
@@ -153,7 +152,6 @@ class TestGit(SDistTestCase):
              )), \
              mock.patch('subprocess.run') as mrun:  # noqa
             config = pkg.fetch(self.pkgdir, self.config)
-            self.set_options(pkg)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(
                 Bfg9000Builder, 'foo'
@@ -161,7 +159,7 @@ class TestGit(SDistTestCase):
         self.check_resolve(pkg)
 
         pkg = self.make_package('foo', repository=self.srcssh,
-                                usage={'type': 'system'}, set_options=False)
+                                usage={'type': 'system'})
 
         with mock_open_log(), \
              mock.patch('os.path.exists', mock_exists), \
@@ -170,7 +168,6 @@ class TestGit(SDistTestCase):
              )), \
              mock.patch('subprocess.run') as mrun:  # noqa
             config = pkg.fetch(self.pkgdir, self.config)
-            self.set_options(pkg)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(
                 Bfg9000Builder, 'foo', usage={'type': 'system'}
@@ -468,22 +465,25 @@ class TestGit(SDistTestCase):
         ))
 
     def test_rehydrate(self):
+        opts = self.make_options()
         pkg = GitPackage('foo', repository=self.srcssh, build='bfg9000',
-                         symbols=self.symbols, config_file=self.config_file)
+                         _options=opts, config_file=self.config_file)
         data = pkg.dehydrate()
-        self.assertEqual(pkg, Package.rehydrate(data))
+        self.assertEqual(pkg, Package.rehydrate(data, _options=opts))
 
-        pkg = GitPackage('foo', repository=self.srcssh, symbols=self.symbols,
+        pkg = GitPackage('foo', repository=self.srcssh, _options=opts,
                          config_file=self.config_file)
         with self.assertRaises(ConfigurationError):
             data = pkg.dehydrate()
 
     def test_builder_types(self):
         pkg = GitPackage('foo', repository=self.srcssh, build='bfg9000',
-                         symbols=self.symbols, config_file=self.config_file)
+                         _options=self.make_options(),
+                         config_file=self.config_file)
         self.assertEqual(pkg.builder_types, ['bfg9000'])
 
-        pkg = GitPackage('foo', repository=self.srcssh, symbols=self.symbols,
+        pkg = GitPackage('foo', repository=self.srcssh,
+                         _options=self.make_options(),
                          config_file=self.config_file)
         with self.assertRaises(ConfigurationError):
             pkg.builder_types

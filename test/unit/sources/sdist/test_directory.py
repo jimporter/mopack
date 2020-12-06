@@ -53,14 +53,13 @@ class TestDirectory(SDistTestCase):
     def test_infer_build(self):
         mock_open = mock.mock_open(read_data='export:\n  build: bfg9000')
 
-        pkg = self.make_package('foo', path=self.srcpath, set_options=False)
+        pkg = self.make_package('foo', path=self.srcpath)
         self.assertEqual(pkg.builder, None)
 
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open):  # noqa
             config = pkg.fetch(self.pkgdir, self.config)
-            self.set_options(pkg)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(
                 Bfg9000Builder, 'foo'
@@ -68,13 +67,12 @@ class TestDirectory(SDistTestCase):
         self.check_resolve(pkg)
 
         pkg = self.make_package('foo', path=self.srcpath,
-                                usage={'type': 'system'}, set_options=False)
+                                usage={'type': 'system'})
 
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open):  # noqa
             config = pkg.fetch(self.pkgdir, self.config)
-            self.set_options(pkg)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(
                 Bfg9000Builder, 'foo', usage={'type': 'system'}
@@ -91,14 +89,13 @@ class TestDirectory(SDistTestCase):
         mock_open = mock.mock_open(read_data=data)
 
         srcpath = os.path.join(test_data_dir, 'hello-multi-bfg')
-        pkg = self.make_package('foo', path=srcpath, set_options=False)
+        pkg = self.make_package('foo', path=srcpath)
         self.assertEqual(pkg.builder, None)
 
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open):  # noqa
             config = pkg.fetch(self.pkgdir, self.config)
-            self.set_options(pkg)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(config.export.submodules,
                              ['french', 'english'])
@@ -109,15 +106,13 @@ class TestDirectory(SDistTestCase):
             ))
         self.check_resolve(pkg, submodules=['french'])
 
-        pkg = self.make_package('foo', path=srcpath, submodules=['sub'],
-                                set_options=False)
+        pkg = self.make_package('foo', path=srcpath, submodules=['sub'])
         self.assertEqual(pkg.builder, None)
 
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open):  # noqa
             config = pkg.fetch(self.pkgdir, self.config)
-            self.set_options(pkg)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(config.export.submodules,
                              ['french', 'english'])
@@ -129,7 +124,7 @@ class TestDirectory(SDistTestCase):
         self.check_resolve(pkg, submodules=['sub'])
 
     def test_infer_build_invalid(self):
-        pkg = self.make_package('foo', path=self.srcpath, set_options=False)
+        pkg = self.make_package('foo', path=self.srcpath)
 
         child = ''
         with mock.patch('os.path.isdir', mock_isdir), \
@@ -175,8 +170,7 @@ class TestDirectory(SDistTestCase):
         child = 'export:\n  build: bfg9000'
 
         usage = yaml.load('unknown', Loader=SafeLineLoader)
-        pkg = self.make_package('foo', path=self.srcpath, usage=usage,
-                                set_options=False)
+        pkg = self.make_package('foo', path=self.srcpath, usage=usage)
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock.mock_open(read_data=child)), \
@@ -185,8 +179,7 @@ class TestDirectory(SDistTestCase):
 
         usage = yaml.load('type: pkg-config\nunknown: blah',
                           Loader=SafeLineLoader)
-        pkg = self.make_package('foo', path=self.srcpath, usage=usage,
-                                set_options=False)
+        pkg = self.make_package('foo', path=self.srcpath, usage=usage)
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock.mock_open(read_data=child)), \
@@ -382,25 +375,26 @@ class TestDirectory(SDistTestCase):
         ))
 
     def test_rehydrate(self):
+        opts = self.make_options()
         pkg = DirectoryPackage('foo', path=self.srcpath, build='bfg9000',
-                               symbols=self.symbols,
-                               config_file=self.config_file)
+                               _options=opts, config_file=self.config_file)
         data = pkg.dehydrate()
         self.assertNotIn('pending_usage', data)
-        self.assertEqual(pkg, Package.rehydrate(data))
+        self.assertEqual(pkg, Package.rehydrate(data, _options=opts))
 
-        pkg = DirectoryPackage('foo', path=self.srcpath, symbols=self.symbols,
+        pkg = DirectoryPackage('foo', path=self.srcpath, _options=opts,
                                config_file=self.config_file)
         with self.assertRaises(ConfigurationError):
             data = pkg.dehydrate()
 
     def test_builder_types(self):
         pkg = DirectoryPackage('foo', path=self.srcpath, build='bfg9000',
-                               symbols=self.symbols,
+                               _options=self.make_options(),
                                config_file=self.config_file)
         self.assertEqual(pkg.builder_types, ['bfg9000'])
 
-        pkg = DirectoryPackage('foo', path=self.srcpath, symbols=self.symbols,
+        pkg = DirectoryPackage('foo', path=self.srcpath,
+                               _options=self.make_options(),
                                config_file=self.config_file)
         with self.assertRaises(ConfigurationError):
             pkg.builder_types

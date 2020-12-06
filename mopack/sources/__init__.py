@@ -2,7 +2,7 @@ import os
 from pkg_resources import load_entry_point
 
 from .. import types
-from ..base_options import BaseOptions, OptionsSet
+from ..base_options import BaseOptions, OptionsHolder
 from ..freezedried import FreezeDried
 from ..iterutils import listify
 from ..package_defaults import DefaultResolver
@@ -35,16 +35,17 @@ def submodules_type(field, value):
     return _submodule_dict(field, value)
 
 
-@FreezeDried.fields(skip={'_options'},
-                    skip_compare={'config_file', 'resolved', '_options'})
-class Package(FreezeDried):
+@FreezeDried.fields(skip_compare={'config_file', 'resolved'})
+class Package(OptionsHolder):
+    _options_type = 'sources'
     _default_genus = 'source'
     _type_field = 'source'
     _get_type = _get_source_type
 
     Options = None
 
-    def __init__(self, name, *, deploy=True, config_file):
+    def __init__(self, name, *, deploy=True, _options, config_file):
+        super().__init__(_options)
         self.name = name
         self.should_deploy = types.boolean('deploy', deploy)
         self.config_file = config_file
@@ -78,10 +79,6 @@ class Package(FreezeDried):
     def builder_types(self):
         return []
 
-    def set_options(self, options):
-        self._options = OptionsSet(options.common,
-                                   options.sources.get(self.source))
-
     def clean_pre(self, pkgdir, new_package, quiet=False):
         return False
 
@@ -104,20 +101,16 @@ class Package(FreezeDried):
 
 @FreezeDried.fields(rehydrate={'usage': Usage})
 class BinaryPackage(Package):
-    def __init__(self, name, *, usage, submodules=types.Unset, symbols,
+    def __init__(self, name, *, usage, submodules=types.Unset, _options,
                  **kwargs):
-        super().__init__(name, **kwargs)
-        package_default = DefaultResolver(self, symbols, name)
+        super().__init__(name, _options=_options, **kwargs)
+        package_default = DefaultResolver(self, _options.expr_symbols, name)
 
         self.submodules = package_default(submodules_type)(
             'submodules', submodules
         )
         self.usage = make_usage(name, usage, submodules=self.submodules,
-                                symbols=symbols)
-
-    def set_options(self, options):
-        self.usage.set_options(options)
-        super().set_options(options)
+                                _options=_options)
 
     def _get_usage(self, pkgdir, submodules):
         return self.usage.get_usage(submodules, None, None)

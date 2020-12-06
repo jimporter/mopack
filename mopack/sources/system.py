@@ -25,8 +25,6 @@ class SystemPackage(BinaryPackage):
 
 
 def fallback_system_package(name, options):
-    pkg = SystemPackage(name, config_file=None,
-                        symbols=options.common.expr_symbols)
-    pkg.set_options(options)
+    pkg = SystemPackage(name, config_file=None, _options=options)
     pkg.resolved = True
     return pkg

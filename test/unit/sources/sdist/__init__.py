@@ -36,16 +36,15 @@ class SDistTestCase(SourceTest):
         self.assertEqual(pkg.get_usage(self.pkgdir, submodules), usage)
 
     def make_builder(self, builder_type, name, *, usage=None, submodules=None,
-                     symbols=None, **kwargs):
-        if symbols is None:
-            symbols = self.symbols
+                     options=None, **kwargs):
+        if options is None:
+            options = self.make_options()
 
         if usage is not None:
             usage = make_usage(name, usage, submodules=submodules,
-                               symbols=symbols)
+                               _options=options)
         builder = builder_type(name, usage=usage, submodules=submodules,
-                               symbols=symbols, **kwargs)
-        builder.set_options(self.make_options())
+                               _options=options, **kwargs)
         return builder
 
 

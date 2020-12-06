@@ -51,13 +51,13 @@ class ConanPackage(BinaryPackage):
 
     def clean_post(self, pkgdir, new_package, quiet=False):
         if ( new_package and self.source == new_package.source and
-             self._options.this.generator ==
-             new_package._options.this.generator ):
+             self._this_options.generator ==
+             new_package._this_options.generator ):
             return False
 
         if not quiet:
             log.pkg_clean(self.name)
-        if 'pkg_config' in self._options.this.generator:
+        if 'pkg_config' in self._this_options.generator:
             try:
                 os.remove(os.path.join(pkgdir, 'conan', self.name + '.pc'))
             except FileNotFoundError:
@@ -69,7 +69,7 @@ class ConanPackage(BinaryPackage):
         for i in packages:
             log.pkg_resolve(i.name, 'from {}'.format(cls.source))
 
-        options = packages[0]._options.this
+        options = packages[0]._this_options
         os.makedirs(pkgdir, exist_ok=True)
         with open(os.path.join(pkgdir, 'conanfile.txt'), 'w') as conan:
             print('[requires]', file=conan)

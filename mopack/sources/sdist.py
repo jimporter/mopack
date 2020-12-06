@@ -19,25 +19,24 @@ from ..yaml_tools import to_parse_error
                     skip_compare={'pending_usage'})
 class SDistPackage(Package):
     def __init__(self, name, *, build=None, usage=None, submodules=types.Unset,
-                 symbols, **kwargs):
-        super().__init__(name, **kwargs)
+                 _options, **kwargs):
+        super().__init__(name, _options=_options, **kwargs)
         if build is None:
             if submodules is not types.Unset:
                 self.submodules = submodules_type('submodules', submodules)
             self.builder = None
             self.pending_usage = usage
-            self.pending_symbols = symbols
         else:
-            package_default = DefaultResolver(self, symbols)
+            package_default = DefaultResolver(self, _options.expr_symbols)
             self.submodules = package_default(submodules_type)(
                 'submodules', submodules
             )
             if usage is not None:
                 usage = make_usage(name, usage, submodules=self.submodules,
-                                   symbols=symbols)
+                                   _options=_options)
             self.builder = make_builder(name, build, usage=usage,
                                         submodules=self.submodules,
-                                        symbols=symbols)
+                                        _options=_options)
 
     @property
     def builder_types(self):
@@ -46,10 +45,6 @@ class SDistPackage(Package):
                 'cannot get builder types until builder is finalized'
             )
         return [self.builder.type]
-
-    def set_options(self, options):
-        self.builder.set_options(options)
-        super().set_options(options)
 
     def dehydrate(self):
         if hasattr(self, 'pending_usage'):
@@ -76,7 +71,7 @@ class SDistPackage(Package):
             with to_parse_error(export.config_file):
                 submodules = submodules_type('submodules', export.submodules)
 
-        kwargs = {'submodules': submodules, 'symbols': self.pending_symbols}
+        kwargs = {'submodules': submodules, '_options': self._options}
         if self.pending_usage:
             # XXX: This doesn't report any useful error message if it fails,
             # since we've lost the line numbers from the YAML file by now. One
@@ -97,7 +92,6 @@ class SDistPackage(Package):
 
         if not hasattr(self, 'submodules'):
             self.submodules = submodules
-        del self.pending_symbols
         del self.pending_usage
         return config
 

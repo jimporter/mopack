@@ -36,7 +36,7 @@ class TestNoneBuilder(BuilderTest):
         builder = self.make_builder('foo', usage='pkg-config')
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, symbols=self.symbols
+            'foo', submodules=None, _options=self.make_options()
         ))
 
         self.check_build(builder)
@@ -50,7 +50,8 @@ class TestNoneBuilder(BuilderTest):
         builder = self.make_builder('foo', usage=usage)
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', path='pkgconf', submodules=None, symbols=self.symbols
+            'foo', path='pkgconf', submodules=None,
+            _options=self.make_options()
         ))
 
         self.check_build(builder, usage={
@@ -99,9 +100,10 @@ class TestNoneBuilder(BuilderTest):
             mrmtree.assert_not_called()
 
     def test_rehydrate(self):
+        opts = self.make_options()
         usage = make_usage('foo', {'type': 'pkg-config', 'path': 'pkgconf'},
-                           submodules=None, symbols=self.symbols)
+                           submodules=None, _options=opts)
         builder = NoneBuilder('foo', usage=usage, submodules=None,
-                              symbols=self.symbols)
+                              _options=opts)
         data = builder.dehydrate()
-        self.assertEqual(builder, Builder.rehydrate(data))
+        self.assertEqual(builder, Builder.rehydrate(data, _options=opts))

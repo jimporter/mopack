@@ -2,17 +2,16 @@ from .. import OptionsTest
 
 
 class SourceTest(OptionsTest):
-    def set_options(self, pkg, common_options=None, this_options=None):
-        options = self.make_options(common_options)
+    def make_options(self, pkg_type=None, *, common_options=None,
+                     this_options=None):
+        options = super().make_options(common_options)
         if this_options:
-            options.sources[pkg.source].accumulate(this_options)
-        pkg.set_options(options)
+            source = (pkg_type or self.pkg_type).source
+            options.sources[source].accumulate(this_options)
+        return options
 
-    def make_package(self, *args, set_options=True, common_options=None,
-                     this_options=None, symbols=None, **kwargs):
-        if symbols is None:
-            symbols = self.symbols
-
+    def make_package(self, *args, common_options=None, this_options=None,
+                     **kwargs):
         if len(args) == 1:
             pkg_type = self.pkg_type
             name = args[0]
@@ -20,8 +19,6 @@ class SourceTest(OptionsTest):
             pkg_type, name = args
 
         kwargs.setdefault('config_file', self.config_file)
-        pkg = pkg_type(name, symbols=symbols, **kwargs)
-
-        if set_options:
-            self.set_options(pkg, common_options, this_options)
-        return pkg
+        opts = self.make_options(pkg_type, common_options=common_options,
+                                 this_options=this_options)
+        return pkg_type(name, _options=opts, **kwargs)

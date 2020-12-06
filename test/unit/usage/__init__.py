@@ -2,24 +2,13 @@ from .. import OptionsTest
 
 
 class UsageTest(OptionsTest):
-    def set_options(self, usage, common_options=None):
-        options = self.make_options(common_options)
-        usage.set_options(options)
-
-    def make_usage(self, *args, set_options=True, common_options=None,
-                   submodules=None, symbols=None, **kwargs):
-        if symbols is None:
-            symbols = self.symbols
-
+    def make_usage(self, *args, common_options=None, submodules=None,
+                   **kwargs):
         if len(args) == 1:
             usage_type = self.usage_type
             name = args[0]
         else:
             usage_type, name = args
 
-        usage = usage_type(name, submodules=submodules, symbols=symbols,
-                           **kwargs)
-
-        if set_options:
-            self.set_options(usage, common_options)
-        return usage
+        opts = self.make_options(common_options)
+        return usage_type(name, submodules=submodules, _options=opts, **kwargs)

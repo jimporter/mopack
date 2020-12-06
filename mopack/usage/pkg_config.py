@@ -25,8 +25,8 @@ class PkgConfigUsage(Usage):
 
     def __init__(self, name, *, path='pkgconfig', pcfile=types.Unset,
                  extra_args=None, submodule_map=types.Unset, submodules,
-                 symbols):
-        package_default = DefaultResolver(self, symbols, name)
+                 _options):
+        package_default = DefaultResolver(self, _options.expr_symbols, name)
 
         self.path = types.abs_or_inner_path('path', path)
         if submodules and submodules['required']:

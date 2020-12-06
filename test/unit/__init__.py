@@ -3,17 +3,11 @@ import pkg_resources
 from contextlib import contextmanager
 from unittest import mock, TestCase
 
-from mopack.options import CommonOptions, Options
+from mopack.options import Options
 
 # Make sure the entry points are loaded so unit tests can reference them as
 # needed.
 pkg_resources.get_entry_map('mopack')
-
-
-def default_symbols():
-    opts = CommonOptions()
-    opts.finalize()
-    return opts.expr_symbols
 
 
 @contextmanager
@@ -25,8 +19,6 @@ def mock_open_log(new=None, *args, **kwargs):
 
 
 class OptionsTest(TestCase):
-    symbols = default_symbols()
-
     def make_options(self, common_options=None):
         options = Options()
         if common_options:

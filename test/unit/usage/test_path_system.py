@@ -5,7 +5,7 @@ from unittest import mock
 from . import UsageTest
 
 from mopack.iterutils import merge_dicts
-from mopack.platforms import platform_name
+from mopack.options import Options
 from mopack.types import FieldError
 from mopack.usage.path_system import PathUsage, SystemUsage
 
@@ -20,6 +20,7 @@ def boost_getdir(name, default, options):
 class TestPath(UsageTest):
     usage_type = PathUsage
     type = 'path'
+    symbols = Options.default().expr_symbols
 
     def check_usage(self, usage, *, auto_link=False, include_path=[],
                     library_path=[], headers=[],
@@ -322,45 +323,92 @@ class TestPath(UsageTest):
         })
 
     def test_boost(self):
-        platform = platform_name()
         submodules = {'names': '*', 'required': False}
+        for plat in ['linux', 'darwin', 'windows']:
+            opts = {'target_platform': plat}
+            usage = self.make_usage('boost', submodules=submodules,
+                                    common_options=opts)
+            self.check_usage(usage, auto_link=(plat == 'windows'),
+                             headers=['boost/version.hpp'], libraries=[],
+                             include_path=[], library_path=[])
+            self.assertEqual(usage.get_usage(None, None, None), {
+                'type': 'path', 'auto_link': plat == 'windows',
+                'headers': ['boost/version.hpp'], 'libraries': [],
+                'compile_flags': [], 'link_flags': [], 'include_path': [],
+                'library_path': [],
+            })
+            self.assertEqual(usage.get_usage(['thread'], None, None), {
+                'type': 'path', 'auto_link': plat == 'windows',
+                'headers': ['boost/version.hpp'],
+                'libraries': ['boost_thread'] if plat != 'windows' else [],
+                'compile_flags': ['-pthread'] if plat != 'windows' else [],
+                'link_flags': ['-pthread'] if plat == 'linux' else [],
+                'include_path': [], 'library_path': [],
+            })
 
-        paths = {
-            'include_path': boost_getdir('INCLUDE', 'include', self.symbols),
-            'library_path': boost_getdir('LIBRARY', 'lib', self.symbols),
-        }
-        usage = self.make_usage('boost', submodules=submodules)
-        self.check_usage(usage, auto_link=(platform == 'windows'),
+            usage = self.make_usage('boost', libraries=['boost'],
+                                    submodules=submodules, common_options=opts)
+            self.check_usage(usage, auto_link=(plat == 'windows'),
+                             headers=['boost/version.hpp'],
+                             libraries=['boost'], include_path=[],
+                             library_path=[])
+            self.assertEqual(usage.get_usage(None, None, None), {
+                'type': 'path', 'auto_link': plat == 'windows',
+                'headers': ['boost/version.hpp'], 'libraries': ['boost'],
+                'compile_flags': [], 'link_flags': [], 'include_path': [],
+                'library_path': [],
+            })
+            extra_libs = ['boost_regex'] if plat != 'windows' else []
+            self.assertEqual(usage.get_usage(['regex'], None, None), {
+                'type': 'path', 'auto_link': plat == 'windows',
+                'headers': ['boost/version.hpp'],
+                'libraries': ['boost'] + extra_libs,
+                'compile_flags': [], 'link_flags': [], 'include_path': [],
+                'library_path': [],
+            })
+
+    def test_boost_env_vars(self):
+        submodules = {'names': '*', 'required': False}
+        boost_root = os.path.abspath('/boost')
+        boost_inc = os.path.abspath('/boost/inc')
+        opts = {'target_platform': 'linux', 'env': {
+            'BOOST_ROOT': boost_root,
+            'BOOST_INCLUDEDIR': boost_inc,
+        }}
+        paths = {'include_path': [boost_inc],
+                 'library_path': [os.path.join(boost_root, 'lib')]}
+
+        usage = self.make_usage('boost', submodules=submodules,
+                                common_options=opts)
+        self.check_usage(usage, auto_link=False,
                          headers=['boost/version.hpp'], libraries=[], **paths)
         self.assertEqual(usage.get_usage(None, None, None), merge_dicts({
-            'type': 'path', 'auto_link': platform == 'windows',
+            'type': 'path', 'auto_link': False,
             'headers': ['boost/version.hpp'], 'libraries': [],
             'compile_flags': [], 'link_flags': [],
         }, paths))
-
         self.assertEqual(usage.get_usage(['thread'], None, None), merge_dicts({
-            'type': 'path', 'auto_link': platform == 'windows',
+            'type': 'path', 'auto_link': False,
             'headers': ['boost/version.hpp'],
-            'libraries': ['boost_thread'] if platform != 'windows' else [],
-            'compile_flags': ['-pthread'] if platform != 'windows' else [],
-            'link_flags': ['-pthread'] if platform == 'linux' else [],
+            'libraries': ['boost_thread'],
+            'compile_flags': ['-pthread'],
+            'link_flags': ['-pthread'],
         }, paths))
 
         usage = self.make_usage('boost', libraries=['boost'],
-                                submodules=submodules)
-        self.check_usage(usage, auto_link=(platform == 'windows'),
+                                submodules=submodules, common_options=opts)
+        self.check_usage(usage, auto_link=False,
                          headers=['boost/version.hpp'], libraries=['boost'],
                          **paths)
         self.assertEqual(usage.get_usage(None, None, None), merge_dicts({
-            'type': 'path', 'auto_link': platform == 'windows',
+            'type': 'path', 'auto_link': False,
             'headers': ['boost/version.hpp'], 'libraries': ['boost'],
             'compile_flags': [], 'link_flags': [],
         }, paths))
         self.assertEqual(usage.get_usage(['regex'], None, None), merge_dicts({
-            'type': 'path', 'auto_link': platform == 'windows',
+            'type': 'path', 'auto_link': False,
             'headers': ['boost/version.hpp'],
-            'libraries': ['boost'] + (['boost_regex'] if platform != 'windows'
-                                      else []),
+            'libraries': ['boost', 'boost_regex'],
             'compile_flags': [], 'link_flags': [],
         }, paths))
 

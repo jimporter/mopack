@@ -1,8 +1,6 @@
 from os.path import abspath
 from unittest import mock, TestCase
 
-from . import default_symbols
-
 from mopack.config import *
 from mopack.options import Options
 from mopack.yaml_tools import YamlParseError
@@ -25,7 +23,7 @@ def mock_open_files(files):
 
 
 class TestConfig(TestCase):
-    symbols = default_symbols()
+    default_opts = Options.default()
 
     def test_empty_file(self):
         with mock.patch('builtins.open', mock_open_files({'mopack.yml': ''})):
@@ -41,9 +39,9 @@ class TestConfig(TestCase):
         with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack.yml'])
         self.assertEqual(list(cfg.packages.items()), [
-            ('foo', AptPackage('foo', symbols=self.symbols,
+            ('foo', AptPackage('foo', _options=self.default_opts,
                                config_file='mopack.yml')),
-            ('bar', AptPackage('bar', symbols=self.symbols,
+            ('bar', AptPackage('bar', _options=self.default_opts,
                                config_file='mopack.yml')),
         ])
 
@@ -54,11 +52,11 @@ class TestConfig(TestCase):
             # loads last-to-first.
             cfg = Config(['mopack-bar.yml', 'mopack-foo.yml'])
         self.assertEqual(list(cfg.packages.items()), [
-            ('foo', AptPackage('foo', symbols=self.symbols,
-                               remote='libfoo1-dev',
+            ('foo', AptPackage('foo', remote='libfoo1-dev',
+                               _options=self.default_opts,
                                config_file='mopack.yml')),
-            ('bar', AptPackage('bar', symbols=self.symbols,
-                               remote='libbar1-dev',
+            ('bar', AptPackage('bar', remote='libbar1-dev',
+                               _options=self.default_opts,
                                config_file='mopack2.yml')),
         ])
 
@@ -76,9 +74,9 @@ class TestConfig(TestCase):
             cfg = Config(['dir', 'mopack-foobar.yml'])
         self.assertEqual(list(cfg.packages.items()), [
             ('bar', AptPackage('bar', remote='libbar1-dev',
-                               symbols=self.symbols,
+                               _options=self.default_opts,
                                config_file='mopack2.yml')),
-            ('foo', AptPackage('foo', symbols=self.symbols,
+            ('foo', AptPackage('foo', _options=self.default_opts,
                                config_file='mopack.yml')),
         ])
 
@@ -90,9 +88,9 @@ class TestConfig(TestCase):
             cfg = Config(['mopack-foobar.yml', 'mopack-foo.yml'])
         self.assertEqual(list(cfg.packages.items()), [
             ('foo', AptPackage('foo', remote='libfoo1-dev',
-                               symbols=self.symbols,
+                               _options=self.default_opts,
                                config_file='mopack2.yml')),
-            ('bar', AptPackage('bar', symbols=self.symbols,
+            ('bar', AptPackage('bar', _options=self.default_opts,
                                config_file='mopack.yml')),
         ])
 
@@ -117,8 +115,7 @@ class TestConfig(TestCase):
         opts = Options.default()
         self.assertEqual(cfg.options, opts)
 
-        pkg = AptPackage('foo', symbols=self.symbols, config_file='mopack.yml')
-        pkg.set_options(opts)
+        pkg = AptPackage('foo', _options=opts, config_file='mopack.yml')
         self.assertEqual(list(cfg.packages.items()), [('foo', pkg)])
 
     def test_conditional_packages(self):
@@ -133,9 +130,8 @@ class TestConfig(TestCase):
         opts.add('sources', 'conan')
         self.assertEqual(cfg.options, opts)
 
-        pkg = ConanPackage('foo', remote='foo/1.2.3', symbols=self.symbols,
+        pkg = ConanPackage('foo', remote='foo/1.2.3', _options=opts,
                            config_file='mopack.yml')
-        pkg.set_options(opts)
         self.assertEqual(list(cfg.packages.items()), [('foo', pkg)])
 
     def test_invalid_conditional_packages(self):
@@ -172,8 +168,7 @@ class TestConfig(TestCase):
         opts.common.finalize()
         self.assertEqual(cfg.options, opts)
 
-        pkg = AptPackage('foo', symbols=self.symbols, config_file='mopack.yml')
-        pkg.set_options(opts)
+        pkg = AptPackage('foo', _options=opts, config_file='mopack.yml')
         self.assertEqual(list(cfg.packages.items()), [('foo', pkg)])
 
     def test_multiple_common_options(self):
@@ -194,12 +189,8 @@ class TestConfig(TestCase):
         opts.common.finalize()
         self.assertEqual(cfg.options, opts)
 
-        pkg1 = AptPackage('foo', symbols=self.symbols,
-                          config_file='mopack.yml')
-        pkg1.set_options(opts)
-        pkg2 = AptPackage('bar', symbols=self.symbols,
-                          config_file='mopack.yml')
-        pkg2.set_options(opts)
+        pkg1 = AptPackage('foo', _options=opts, config_file='mopack.yml')
+        pkg2 = AptPackage('bar', _options=opts, config_file='mopack.yml')
         self.assertEqual(list(cfg.packages.items()), [
             ('foo', pkg1), ('bar', pkg2)
         ])
@@ -221,13 +212,10 @@ class TestConfig(TestCase):
         opts.builders['bfg9000'].toolchain = 'toolchain.bfg'
         self.assertEqual(cfg.options, opts)
 
-        pkg1 = AptPackage('foo', symbols=self.symbols,
-                          config_file='mopack.yml')
-        pkg1.set_options(opts)
+        pkg1 = AptPackage('foo', _options=opts, config_file='mopack.yml')
         pkg2 = DirectoryPackage('bar', path=abspath('/path/to/src'),
-                                build='bfg9000', symbols=self.symbols,
+                                build='bfg9000', _options=opts,
                                 config_file='mopack.yml')
-        pkg2.set_options(opts)
         self.assertEqual(list(cfg.packages.items()), [
             ('foo', pkg1), ('bar', pkg2)
         ])
@@ -250,13 +238,10 @@ class TestConfig(TestCase):
         opts.builders['bfg9000'].toolchain = 'toolchain.bfg'
         self.assertEqual(cfg.options, opts)
 
-        pkg1 = AptPackage('foo', symbols=self.symbols,
-                          config_file='mopack.yml')
-        pkg1.set_options(opts)
+        pkg1 = AptPackage('foo', _options=opts, config_file='mopack.yml')
         pkg2 = DirectoryPackage('bar', path=abspath('/path/to/src'),
-                                build='bfg9000', symbols=self.symbols,
+                                build='bfg9000', _options=opts,
                                 config_file='mopack.yml')
-        pkg2.set_options(opts)
         self.assertEqual(list(cfg.packages.items()), [
             ('foo', pkg1), ('bar', pkg2)
         ])
@@ -276,12 +261,9 @@ class TestConfig(TestCase):
         opts.sources['conan'].generator.append('cmake')
         self.assertEqual(cfg.options, opts)
 
-        pkg1 = AptPackage('foo', symbols=self.symbols,
-                          config_file='mopack.yml')
-        pkg1.set_options(opts)
-        pkg2 = ConanPackage('bar', remote='bar/1.2.3', symbols=self.symbols,
+        pkg1 = AptPackage('foo', _options=opts, config_file='mopack.yml')
+        pkg2 = ConanPackage('bar', remote='bar/1.2.3', _options=opts,
                             config_file='mopack.yml')
-        pkg2.set_options(opts)
         self.assertEqual(list(cfg.packages.items()), [
             ('foo', pkg1), ('bar', pkg2)
         ])
@@ -305,19 +287,16 @@ class TestConfig(TestCase):
         opts.sources['conan'].generator.extend(['txt', 'cmake', 'make'])
         self.assertEqual(cfg.options, opts)
 
-        pkg1 = AptPackage('foo', symbols=self.symbols,
-                          config_file='mopack.yml')
-        pkg1.set_options(opts)
-        pkg2 = ConanPackage('bar', remote='bar/1.2.3', symbols=self.symbols,
+        pkg1 = AptPackage('foo', _options=opts, config_file='mopack.yml')
+        pkg2 = ConanPackage('bar', remote='bar/1.2.3', _options=opts,
                             config_file='mopack.yml')
-        pkg2.set_options(opts)
         self.assertEqual(list(cfg.packages.items()), [
             ('foo', pkg1), ('bar', pkg2)
         ])
 
 
 class TestChildConfig(TestCase):
-    symbols = default_symbols()
+    default_opts = Options.default()
 
     def test_empty_file(self):
         files = {'mopack.yml': '', 'mopack-child.yml': ''}
@@ -357,9 +336,9 @@ class TestChildConfig(TestCase):
 
         parent.add_children([child])
         self.assertEqual(list(parent.packages.items()), [
-            ('foo', AptPackage('foo', symbols=self.symbols,
+            ('foo', AptPackage('foo', _options=self.default_opts,
                                config_file='mopack.yml')),
-            ('bar', AptPackage('bar', symbols=self.symbols,
+            ('bar', AptPackage('bar', _options=self.default_opts,
                                config_file='mopack.yml')),
         ])
 
@@ -371,17 +350,17 @@ class TestChildConfig(TestCase):
             child = ChildConfig(['mopack-child.yml'], parent=parent)
         self.assertEqual(list(child.packages.items()), [
             ('bar', AptPackage('bar', remote='libbar1-dev',
-                               symbols=self.symbols,
+                               _options=self.default_opts,
                                config_file='mopack-child.yml')),
         ])
 
         parent.add_children([child])
         self.assertEqual(list(parent.packages.items()), [
             ('bar', AptPackage('bar', remote='libbar1-dev',
-                               symbols=self.symbols,
+                               _options=self.default_opts,
                                config_file='mopack-child.yml')),
             ('foo', AptPackage('foo', remote='libfoo1-dev',
-                               symbols=self.symbols,
+                               _options=self.default_opts,
                                config_file='mopack.yml')),
         ])
 
@@ -393,16 +372,16 @@ class TestChildConfig(TestCase):
             child = ChildConfig(['mopack-child.yml'], parent=parent)
         self.assertEqual(list(child.packages.items()), [
             ('foo', PlaceholderPackage),
-            ('bar', AptPackage('bar', symbols=self.symbols,
+            ('bar', AptPackage('bar', _options=self.default_opts,
                                config_file='mopack-child.yml')),
         ])
 
         parent.add_children([child])
         self.assertEqual(list(parent.packages.items()), [
             ('foo', AptPackage('foo', remote='libfoo1-dev',
-                               symbols=self.symbols,
+                               _options=self.default_opts,
                                config_file='mopack.yml')),
-            ('bar', AptPackage('bar', symbols=self.symbols,
+            ('bar', AptPackage('bar', _options=self.default_opts,
                                config_file='mopack-child.yml')),
         ])
 
@@ -417,7 +396,7 @@ class TestChildConfig(TestCase):
         parent.add_children([child1, child2])
         self.assertEqual(list(parent.packages.items()), [
             ('foo', AptPackage('foo', remote='libfoo1-dev',
-                               symbols=self.symbols,
+                               _options=self.default_opts,
                                config_file='mopack.yml')),
         ])
 
@@ -453,13 +432,10 @@ class TestChildConfig(TestCase):
         opts.add('builders', 'bfg9000')
         self.assertEqual(parent.options, opts)
 
-        pkg1 = AptPackage('foo', symbols=self.symbols,
-                          config_file='mopack.yml')
-        pkg1.set_options(opts)
+        pkg1 = AptPackage('foo', _options=opts, config_file='mopack.yml')
         pkg2 = DirectoryPackage('bar', path=abspath('/path/to/src'),
-                                build='bfg9000', symbols=self.symbols,
+                                build='bfg9000', _options=opts,
                                 config_file='mopack.yml')
-        pkg2.set_options(opts)
         self.assertEqual(list(parent.packages.items()), [
             ('foo', pkg1), ('bar', pkg2)
         ])
@@ -485,12 +461,9 @@ class TestChildConfig(TestCase):
         opts.sources['conan'].generator.extend(['make', 'cmake'])
         self.assertEqual(parent.options, opts)
 
-        pkg1 = AptPackage('foo', symbols=self.symbols,
-                          config_file='mopack.yml')
-        pkg1.set_options(opts)
-        pkg2 = ConanPackage('bar', remote='bar/1.2.3', symbols=self.symbols,
+        pkg1 = AptPackage('foo', _options=opts, config_file='mopack.yml')
+        pkg2 = ConanPackage('bar', remote='bar/1.2.3', _options=opts,
                             config_file='mopack.yml')
-        pkg2.set_options(opts)
         self.assertEqual(list(parent.packages.items()), [
             ('foo', pkg1), ('bar', pkg2)
         ])

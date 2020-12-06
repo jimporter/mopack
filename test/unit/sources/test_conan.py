@@ -370,11 +370,12 @@ class TestConan(SourceTest):
         self.assertNotEqual(pkg, self.make_package('foo', remote=remote))
 
     def test_rehydrate(self):
+        opts = self.make_options()
         pkg = ConanPackage('foo', remote='foo/1.2.3@conan/stable',
-                           options={'shared': True}, symbols=self.symbols,
+                           options={'shared': True}, _options=opts,
                            config_file=self.config_file)
         data = pkg.dehydrate()
-        self.assertEqual(pkg, Package.rehydrate(data))
+        self.assertEqual(pkg, Package.rehydrate(data, _options=opts))
 
 
 class TestConanOptions(TestCase):
