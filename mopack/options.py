@@ -51,8 +51,6 @@ class Options(FreezeDried):
     _option_makers = {'sources': make_package_options,
                       'builders': make_builder_options}
     option_kinds = list(_option_makers.keys())
-    kind_to_plural = {'source': 'sources',
-                      'builder': 'builders'}
 
     def __init__(self):
         self.common = CommonOptions()
