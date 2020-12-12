@@ -1,9 +1,9 @@
-import os
-
 from . import Usage
-from .. import path, types
+from .. import types
+from ..freezedried import FreezeDried
 from ..iterutils import listify
 from ..package_defaults import DefaultResolver
+from ..path import Path
 
 
 def _submodule_map(field, value):
@@ -20,15 +20,17 @@ def _submodule_map(field, value):
     )(field, value)
 
 
+@FreezeDried.fields(rehydrate={'path': Path})
 class PkgConfigUsage(Usage):
     type = 'pkg-config'
 
     def __init__(self, name, *, path='pkgconfig', pcfile=types.Unset,
                  extra_args=None, submodule_map=types.Unset, submodules,
-                 _options):
+                 _options, _path_bases):
         package_default = DefaultResolver(self, _options.expr_symbols, name)
 
-        self.path = types.abs_or_inner_path('path', path)
+        bases = Path.Base.filter(['builddir', 'srcdir'], _path_bases)
+        self.path = types.abs_or_inner_path(*bases)('path', path)
         if submodules and submodules['required']:
             # If submodules are required, default to an empty .pc file, since
             # we should usually have .pc files for the submodules that handle
@@ -57,8 +59,7 @@ class PkgConfigUsage(Usage):
                     for k, v in self.submodule_map['*'].items()}
 
     def get_usage(self, submodules, srcdir, builddir):
-        base = builddir if builddir is not None else srcdir
-        pcpath = os.path.abspath(path.try_join(base, self.path))
+        pcpath = self.path.string(srcdir=srcdir, builddir=builddir)
 
         pcfiles = listify(self.pcfile)
         for i in submodules or []:

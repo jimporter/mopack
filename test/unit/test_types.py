@@ -4,6 +4,7 @@ import posixpath
 from contextlib import contextmanager
 from unittest import mock, TestCase
 
+from mopack.path import Path
 from mopack.types import *
 from mopack.yaml_tools import load_file, SafeLineLoader
 
@@ -180,72 +181,93 @@ class TestBoolean(TypeTestCase):
             boolean('field', None)
 
 
-class TestInnerPath(TypeTestCase):
+class TestPathFragment(TypeTestCase):
     def test_valid(self):
-        self.assertEqual(inner_path('field', 'path'), 'path')
-        self.assertEqual(inner_path('field', 'path/..'), '.')
-        self.assertEqual(inner_path('field', 'foo/../bar'), 'bar')
+        self.assertEqual(path_fragment('field', 'path'), 'path')
+        self.assertEqual(path_fragment('field', 'path/..'), '.')
+        self.assertEqual(path_fragment('field', 'foo/../bar'), 'bar')
 
     def test_outer(self):
         with self.assertFieldError(('field',)):
-            inner_path('field', '../path')
+            path_fragment('field', '../path')
         with self.assertFieldError(('field',)):
-            inner_path('field', 'path/../..')
+            path_fragment('field', 'path/../..')
 
     def test_absolute_posix(self):
         with mock.patch('os.path', posixpath):
             with self.assertFieldError(('field',)):
-                inner_path('field', '/path')
+                path_fragment('field', '/path')
 
     def test_absolute_nt(self):
         with mock.patch('os.path', ntpath):
             with self.assertFieldError(('field',)):
-                inner_path('field', '/path')
+                path_fragment('field', '/path')
             with self.assertFieldError(('field',)):
-                inner_path('field', 'C:path')
+                path_fragment('field', 'C:path')
             with self.assertFieldError(('field',)):
-                inner_path('field', 'C:\\path')
+                path_fragment('field', 'C:\\path')
             with self.assertFieldError(('field',)):
-                inner_path('field', 'C:')
+                path_fragment('field', 'C:')
 
 
 class TestAbsOrInnerPath(TypeTestCase):
     def test_inner(self):
-        self.assertEqual(abs_or_inner_path('field', 'path'), 'path')
-        self.assertEqual(abs_or_inner_path('field', 'path/..'), '.')
-        self.assertEqual(abs_or_inner_path('field', 'foo/../bar'), 'bar')
+        fn = abs_or_inner_path('cfgdir')
+        self.assertEqual(fn('field', 'path'), Path('cfgdir', 'path'))
+        self.assertEqual(fn('field', 'path/..'), Path('cfgdir', '.'))
+        self.assertEqual(fn('field', 'foo/../bar'), Path('cfgdir', 'bar'))
+        self.assertEqual(fn('field', Path('cfgdir', 'path')),
+                         Path('cfgdir', 'path'))
 
     def test_outer(self):
         with self.assertFieldError(('field',)):
-            abs_or_inner_path('field', '../path')
+            abs_or_inner_path('cfgdir')('field', '../path')
         with self.assertFieldError(('field',)):
-            abs_or_inner_path('field', 'path/../..')
+            abs_or_inner_path('cfgdir')('field', 'path/../..')
+
+    def test_invalid_base(self):
+        with self.assertFieldError(('field',)):
+            abs_or_inner_path('cfgdir')('field', Path('srcdir', 'path'))
 
     def test_absolute_posix(self):
         with mock.patch('os.path', posixpath):
-            self.assertEqual(abs_or_inner_path('field', '/path'), '/path')
+            self.assertEqual(abs_or_inner_path('cfgdir')('field', '/path'),
+                             Path('absolute', '/path'))
 
     def test_absolute_nt(self):
+        fn = abs_or_inner_path('cfgdir')
         with mock.patch('os.path', ntpath):
-            self.assertEqual(abs_or_inner_path('field', '/path'), '\\path')
-            self.assertEqual(abs_or_inner_path('field', 'C:\\path'),
-                             'C:\\path')
-            self.assertEqual(abs_or_inner_path('field', 'C:'), 'C:')
-            self.assertEqual(abs_or_inner_path('field', 'C:path'), 'C:path')
+            self.assertEqual(fn('field', '/path'), Path('absolute', '\\path'))
+            self.assertEqual(fn('field', 'C:\\path'),
+                             Path('absolute', 'C:\\path'))
+            with self.assertFieldError(('field',)):
+                fn('field', 'C:')
+            with self.assertFieldError(('field',)):
+                fn('field', 'C:path')
 
 
 class TestAnyPath(TypeTestCase):
     def test_relative(self):
-        self.assertEqual(any_path()('field', 'path'), 'path')
-        self.assertEqual(any_path()('field', '../path'),
-                         os.path.join('..', 'path'))
-        self.assertEqual(any_path()('field', 'foo/../bar'), 'bar')
-        self.assertEqual(any_path('/base')('field', 'path'),
-                         os.sep + os.path.join('base', 'path'))
+        fn = any_path('cfgdir')
+        self.assertEqual(fn('field', 'path'), Path('cfgdir', 'path'))
+        self.assertEqual(fn('field', '../path'),
+                         Path('cfgdir', os.path.join('..', 'path')))
+        self.assertEqual(fn('field', 'foo/../bar'), Path('cfgdir', 'bar'))
+        self.assertEqual(fn('field', Path('cfgdir', 'path')),
+                         Path('cfgdir', 'path'))
 
     def test_absolute(self):
-        self.assertEqual(any_path()('field', '/path'), os.sep + 'path')
-        self.assertEqual(any_path('/base')('field', '/path'), os.sep + 'path')
+        fn = any_path('cfgdir')
+        self.assertEqual(fn('field', '/path'),
+                         Path('absolute', os.sep + 'path'))
+        self.assertEqual(fn('field', '/path'),
+                         Path('absolute', os.sep + 'path'))
+        self.assertEqual(fn('field', Path('absolute', '/path')),
+                         Path('absolute', '/path'))
+
+    def test_invalid_base(self):
+        with self.assertFieldError(('field',)):
+            any_path('cfgdir')('field', Path('srcdir', 'path'))
 
 
 class TestSshPath(TypeTestCase):

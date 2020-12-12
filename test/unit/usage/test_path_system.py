@@ -1,13 +1,26 @@
 import os
-from os.path import abspath, normpath
+from os.path import abspath
 from unittest import mock
 
 from . import UsageTest
 
 from mopack.iterutils import merge_dicts
 from mopack.options import Options
+from mopack.path import Path
 from mopack.types import FieldError
 from mopack.usage.path_system import PathUsage, SystemUsage
+
+
+def abspathobj(p):
+    return Path('absolute', p)
+
+
+def srcpathobj(p):
+    return Path('srcdir', p)
+
+
+def buildpathobj(p):
+    return Path('builddir', p)
 
 
 def boost_getdir(name, default, options):
@@ -54,7 +67,7 @@ class TestPath(UsageTest):
 
     def test_include_path(self):
         usage = self.make_usage('foo', include_path='include')
-        self.check_usage(usage, include_path=['include'])
+        self.check_usage(usage, include_path=[srcpathobj('include')])
         self.assertEqual(usage.get_usage(None, '/srcdir', '/builddir'), {
             'type': 'path', 'auto_link': False,
             'include_path': [abspath('/srcdir/include')], 'library_path': [],
@@ -63,7 +76,7 @@ class TestPath(UsageTest):
         })
 
         usage = self.make_usage('foo', include_path=['include'])
-        self.check_usage(usage, include_path=['include'])
+        self.check_usage(usage, include_path=[srcpathobj('include')])
         self.assertEqual(usage.get_usage(None, '/srcdir', '/builddir'), {
             'type': 'path', 'auto_link': False,
             'include_path': [abspath('/srcdir/include')], 'library_path': [],
@@ -71,9 +84,28 @@ class TestPath(UsageTest):
             'link_flags': [],
         })
 
+    def test_include_path_builddir(self):
+        usage = self.make_usage('foo', include_path=buildpathobj('include'))
+        self.check_usage(usage, include_path=[buildpathobj('include')])
+        self.assertEqual(usage.get_usage(None, '/srcdir', '/builddir'), {
+            'type': 'path', 'auto_link': False,
+            'include_path': [abspath('/builddir/include')], 'library_path': [],
+            'headers': [], 'libraries': ['foo'], 'compile_flags': [],
+            'link_flags': [],
+        })
+
+        usage = self.make_usage('foo', include_path=[buildpathobj('include')])
+        self.check_usage(usage, include_path=[buildpathobj('include')])
+        self.assertEqual(usage.get_usage(None, '/srcdir', '/builddir'), {
+            'type': 'path', 'auto_link': False,
+            'include_path': [abspath('/builddir/include')], 'library_path': [],
+            'headers': [], 'libraries': ['foo'], 'compile_flags': [],
+            'link_flags': [],
+        })
+
     def test_include_path_absolute(self):
         usage = self.make_usage('foo', include_path='/path/to/include')
-        self.check_usage(usage, include_path=[normpath('/path/to/include')])
+        self.check_usage(usage, include_path=[abspathobj('/path/to/include')])
         self.assertEqual(usage.get_usage(None, '/srcdir', '/builddir'), {
             'type': 'path', 'auto_link': False,
             'include_path': [abspath('/path/to/include')], 'library_path': [],
@@ -82,7 +114,7 @@ class TestPath(UsageTest):
         })
 
         usage = self.make_usage('foo', include_path='/path/to/include')
-        self.check_usage(usage, include_path=[normpath('/path/to/include')])
+        self.check_usage(usage, include_path=[abspathobj('/path/to/include')])
         self.assertEqual(usage.get_usage(None, None, None), {
             'type': 'path', 'auto_link': False,
             'include_path': [abspath('/path/to/include')], 'library_path': [],
@@ -96,7 +128,7 @@ class TestPath(UsageTest):
 
     def test_library_path(self):
         usage = self.make_usage('foo', library_path='lib')
-        self.check_usage(usage, library_path=['lib'])
+        self.check_usage(usage, library_path=[buildpathobj('lib')])
         self.assertEqual(usage.get_usage(None, '/srcdir', '/builddir'), {
             'type': 'path', 'auto_link': False, 'include_path': [],
             'library_path': [abspath('/builddir/lib')], 'headers': [],
@@ -104,16 +136,33 @@ class TestPath(UsageTest):
         })
 
         usage = self.make_usage('foo', library_path=['lib'])
-        self.check_usage(usage, library_path=['lib'])
+        self.check_usage(usage, library_path=[buildpathobj('lib')])
         self.assertEqual(usage.get_usage(None, '/srcdir', '/builddir'), {
             'type': 'path', 'auto_link': False, 'include_path': [],
             'library_path': [abspath('/builddir/lib')], 'headers': [],
             'libraries': ['foo'], 'compile_flags': [], 'link_flags': [],
         })
 
+    def test_library_path_srcdir(self):
+        usage = self.make_usage('foo', library_path=srcpathobj('lib'))
+        self.check_usage(usage, library_path=[srcpathobj('lib')])
+        self.assertEqual(usage.get_usage(None, '/srcdir', '/builddir'), {
+            'type': 'path', 'auto_link': False, 'include_path': [],
+            'library_path': [abspath('/srcdir/lib')], 'headers': [],
+            'libraries': ['foo'], 'compile_flags': [], 'link_flags': [],
+        })
+
+        usage = self.make_usage('foo', library_path=[srcpathobj('lib')])
+        self.check_usage(usage, library_path=[srcpathobj('lib')])
+        self.assertEqual(usage.get_usage(None, '/srcdir', '/builddir'), {
+            'type': 'path', 'auto_link': False, 'include_path': [],
+            'library_path': [abspath('/srcdir/lib')], 'headers': [],
+            'libraries': ['foo'], 'compile_flags': [], 'link_flags': [],
+        })
+
     def test_library_path_absolute(self):
         usage = self.make_usage('foo', library_path='/path/to/lib')
-        self.check_usage(usage, library_path=[normpath('/path/to/lib')])
+        self.check_usage(usage, library_path=[abspathobj('/path/to/lib')])
         self.assertEqual(usage.get_usage(None, '/srcdir', '/builddir'), {
             'type': 'path', 'auto_link': False, 'include_path': [],
             'library_path': [abspath('/path/to/lib')], 'headers': [],
@@ -121,7 +170,7 @@ class TestPath(UsageTest):
         })
 
         usage = self.make_usage('foo', library_path='/path/to/lib')
-        self.check_usage(usage, library_path=[normpath('/path/to/lib')])
+        self.check_usage(usage, library_path=[abspathobj('/path/to/lib')])
         self.assertEqual(usage.get_usage(None, None, None), {
             'type': 'path', 'auto_link': False, 'include_path': [],
             'library_path': [abspath('/path/to/lib')], 'headers': [],
@@ -377,11 +426,13 @@ class TestPath(UsageTest):
         }}
         paths = {'include_path': [boost_inc],
                  'library_path': [os.path.join(boost_root, 'lib')]}
+        pathobjs = {k: [abspathobj(i) for i in v] for k, v in paths.items()}
 
         usage = self.make_usage('boost', submodules=submodules,
                                 common_options=opts)
         self.check_usage(usage, auto_link=False,
-                         headers=['boost/version.hpp'], libraries=[], **paths)
+                         headers=['boost/version.hpp'], libraries=[],
+                         **pathobjs)
         self.assertEqual(usage.get_usage(None, None, None), merge_dicts({
             'type': 'path', 'auto_link': False,
             'headers': ['boost/version.hpp'], 'libraries': [],
@@ -399,7 +450,7 @@ class TestPath(UsageTest):
                                 submodules=submodules, common_options=opts)
         self.check_usage(usage, auto_link=False,
                          headers=['boost/version.hpp'], libraries=['boost'],
-                         **paths)
+                         **pathobjs)
         self.assertEqual(usage.get_usage(None, None, None), merge_dicts({
             'type': 'path', 'auto_link': False,
             'headers': ['boost/version.hpp'], 'libraries': ['boost'],
@@ -456,13 +507,16 @@ class TestPath(UsageTest):
         })
 
     def test_invalid_usage(self):
-        usage = self.make_usage('foo', include_path='include')
-        with self.assertRaises(ValueError):
-            usage.get_usage(None, None, None)
+        with self.assertRaises(FieldError):
+            self.make_usage('foo', include_path=Path('builddir', 'include'),
+                            _path_bases={'srcdir'})
 
-        usage = self.make_usage('foo', library_path='lib')
-        with self.assertRaises(ValueError):
-            usage.get_usage(None, None, None)
+        with self.assertRaises(FieldError):
+            self.make_usage('foo', library_path=Path('srcdir', 'lib'),
+                            _path_bases={'builddir'})
+
+        with self.assertRaises(FieldError):
+            self.make_usage('foo', include_path='include', _path_bases={})
 
 
 class TestSystem(TestPath):

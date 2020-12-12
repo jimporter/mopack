@@ -12,10 +12,10 @@ _known_install_types = ('prefix', 'bindir', 'libdir', 'includedir')
 
 class CMakeBuilder(Builder):
     type = 'cmake'
+    _path_bases = {'srcdir', 'builddir'}
 
-    def __init__(self, name, *, extra_args=None, usage, submodules, _options,
-                 **kwargs):
-        super().__init__(name, usage=usage, _options=_options, **kwargs)
+    def __init__(self, name, *, extra_args=None, submodules, **kwargs):
+        super().__init__(name, **kwargs)
         self.extra_args = types.shell_args()('extra_args', extra_args)
 
     def _install_args(self, deploy_paths):

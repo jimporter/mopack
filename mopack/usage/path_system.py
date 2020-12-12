@@ -2,9 +2,11 @@ import subprocess
 from itertools import chain
 
 from . import Usage
-from .. import path, types
+from .. import types
+from ..freezedried import FreezeDried, ListFreezeDryer
 from ..iterutils import merge_dicts
 from ..package_defaults import DefaultResolver
+from ..path import Path
 from ..platforms import package_library_name
 from ..types import Unset
 
@@ -19,39 +21,47 @@ def _library(field, value):
     return value
 
 
-_list_of_paths = types.list_of(types.abs_or_inner_path, listify=True)
+def _list_of_paths(*bases):
+    return types.list_of(types.abs_or_inner_path(*bases), listify=True)
+
+
 _list_of_headers = types.list_of(types.string, listify=True)
 _list_of_libraries = types.list_of(types.one_of(
     types.string, _library, desc='library'
 ), listify=True)
 
 
-def _submodule_map(field, value):
-    try:
-        value = {'*': {'libraries': types.string(field, value)}}
-    except types.FieldError:
-        pass
+def _submodule_map(srcbases, buildbases):
+    def check(field, value):
+        try:
+            value = {'*': {'libraries': types.string(field, value)}}
+        except types.FieldError:
+            pass
 
-    return types.dict_of(
-        types.string,
-        types.dict_shape({
-            'include_path': _list_of_paths,
-            'library_path': _list_of_paths,
-            'headers': _list_of_headers,
-            'libraries': _list_of_libraries,
-            'compile_flags': types.shell_args(),
-            'link_flags': types.shell_args(),
-        }, 'a submodule map')
-    )(field, value)
+        return types.dict_of(
+            types.string,
+            types.dict_shape({
+                'include_path': _list_of_paths(*srcbases),
+                'library_path': _list_of_paths(*buildbases),
+                'headers': _list_of_headers,
+                'libraries': _list_of_libraries,
+                'compile_flags': types.shell_args(),
+                'link_flags': types.shell_args(),
+            }, 'a submodule map')
+        )(field, value)
+
+    return check
 
 
+@FreezeDried.fields(rehydrate={'include_path': ListFreezeDryer(Path),
+                               'library_path': ListFreezeDryer(Path)})
 class PathUsage(Usage):
     type = 'path'
 
     def __init__(self, name, *, auto_link=Unset, include_path=Unset,
                  library_path=Unset, headers=Unset, libraries=Unset,
                  compile_flags=Unset, link_flags=Unset, submodule_map=Unset,
-                 submodules, _options):
+                 submodules, _options, _path_bases):
         super().__init__(_options=_options)
         package_default = DefaultResolver(self, _options.expr_symbols, name)
 
@@ -61,9 +71,15 @@ class PathUsage(Usage):
             'auto_link', auto_link
         )
 
-        defaulted_paths = package_default(_list_of_paths)
-        self.include_path = defaulted_paths('include_path', include_path)
-        self.library_path = defaulted_paths('library_path', library_path)
+        srcbases = Path.Base.filter(['srcdir', 'builddir'], _path_bases)
+        buildbases = Path.Base.filter(['builddir', 'srcdir'], _path_bases)
+
+        self.include_path = package_default(
+            _list_of_paths(*srcbases)
+        )('include_path', include_path)
+        self.library_path = package_default(
+            _list_of_paths(*buildbases)
+        )('library_path', library_path)
 
         self.headers = package_default(_list_of_headers)('headers', headers)
 
@@ -84,7 +100,7 @@ class PathUsage(Usage):
 
         if submodules:
             self.submodule_map = package_default(
-                types.maybe(_submodule_map),
+                types.maybe(_submodule_map(srcbases, buildbases)),
                 default=name + '_{submodule}'
             )('submodule_map', submodule_map)
 
@@ -114,14 +130,11 @@ class PathUsage(Usage):
         mappings = merge_dicts(*(self._get_submodule_mapping(i)
                                  for i in submodules or []))
 
-        # XXX: Provide a way of specifying what these paths are relative to
-        # instead of just assuming that includes are in the srcdir and libs
-        # are in the builddir.
         return self._usage(
             auto_link=self.auto_link,
-            include_path=[path.try_join(srcdir, i) for i in
+            include_path=[i.string(srcdir=srcdir, builddir=builddir) for i in
                           chain_mapping('include_path')],
-            library_path=[path.try_join(builddir, i) for i in
+            library_path=[i.string(srcdir=srcdir, builddir=builddir) for i in
                           chain_mapping('library_path')],
             headers=list(chain_mapping('headers')),
             libraries=self._get_libraries(chain_mapping('libraries')),

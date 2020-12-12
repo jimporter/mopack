@@ -2,7 +2,6 @@ import os
 from unittest import mock
 
 from mopack.iterutils import iterate
-from mopack.usage import make_usage
 
 from .. import SourceTest
 from ... import mock_open_log
@@ -35,16 +34,14 @@ class SDistTestCase(SourceTest):
             ), 'a')
         self.assertEqual(pkg.get_usage(self.pkgdir, submodules), usage)
 
-    def make_builder(self, builder_type, name, *, usage=None, submodules=None,
-                     options=None, **kwargs):
+    def make_builder(self, builder_type, name, *, submodules=None,
+                     options=None, usage=None, **kwargs):
         if options is None:
             options = self.make_options()
 
-        if usage is not None:
-            usage = make_usage(name, usage, submodules=submodules,
-                               _options=options)
-        builder = builder_type(name, usage=usage, submodules=submodules,
-                               _options=options, **kwargs)
+        builder = builder_type(name, submodules=submodules, _options=options,
+                               **kwargs)
+        builder.set_usage(usage, submodules=submodules)
         return builder
 
 

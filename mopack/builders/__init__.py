@@ -4,7 +4,7 @@ from pkg_resources import load_entry_point
 from ..base_options import BaseOptions, OptionsHolder
 from ..freezedried import FreezeDried
 from ..types import FieldError, wrap_field_error
-from ..usage import Usage
+from ..usage import make_usage, Usage
 
 
 def _get_builder_type(type, field='type'):
@@ -22,13 +22,17 @@ class Builder(OptionsHolder):
 
     Options = None
 
-    def __init__(self, name, *, usage, _options):
+    def __init__(self, name, *, _options):
         super().__init__(_options)
         self.name = name
-        self.usage = usage
 
     def _builddir(self, pkgdir):
         return os.path.abspath(os.path.join(pkgdir, 'build', self.name))
+
+    def set_usage(self, usage, *, submodules):
+        self.usage = make_usage(self.name, usage, submodules=submodules,
+                                _options=self._options,
+                                _path_bases=self._path_bases)
 
     def get_usage(self, pkgdir, submodules, srcdir):
         return self.usage.get_usage(submodules, srcdir, self._builddir(pkgdir))

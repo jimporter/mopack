@@ -6,6 +6,7 @@ from yaml.error import MarkedYAMLError
 
 from . import SourceTest
 
+from mopack.path import Path
 from mopack.sources import make_package, try_make_package
 from mopack.sources.sdist import DirectoryPackage
 from mopack.sources.system import SystemPackage
@@ -29,7 +30,7 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.submodules, None)
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
-        self.assertEqual(pkg.path, os.path.normpath('/path'))
+        self.assertEqual(pkg.path, Path('absolute', '/path'))
         self.assertEqual(pkg.builder.type, 'bfg9000')
 
         self.assertEqual(pkg.get_usage(self.pkgdir, None), {
@@ -49,7 +50,7 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.submodules, None)
         self.assertEqual(pkg.should_deploy, False)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
-        self.assertEqual(pkg.path, os.path.normpath('/path'))
+        self.assertEqual(pkg.path, Path('absolute', '/path'))
         self.assertEqual(pkg.builder.type, 'bfg9000')
 
         self.assertEqual(pkg.get_usage(self.pkgdir, None), {

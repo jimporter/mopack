@@ -32,7 +32,7 @@ class TestNested(IntegrationTest):
             'extra_args': [],
             'usage': {
                 'type': 'pkg-config',
-                'path': 'pkgconfig',
+                'path': ['builddir', 'pkgconfig'],
                 'pcfile': name,
                 'extra_args': [],
             },
@@ -76,7 +76,7 @@ class TestNested(IntegrationTest):
                 'should_deploy': True,
                 'builder': self._builder('hello'),
                 'url': None,
-                'path': os.path.join(test_data_dir, 'hello-bfg.tar.gz'),
+                'path': ['cfgdir', os.path.join('..', 'hello-bfg.tar.gz')],
                 'files': [],
                 'srcdir': None,
                 'guessed_srcdir': 'hello-bfg',
@@ -89,7 +89,7 @@ class TestNested(IntegrationTest):
                 'submodules': None,
                 'should_deploy': True,
                 'builder': self._builder('greeter'),
-                'path': os.path.join(test_data_dir, 'greeter-bfg'),
+                'path': ['cfgdir', 'greeter-bfg'],
             }],
         })
 

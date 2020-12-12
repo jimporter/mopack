@@ -1,6 +1,8 @@
+import operator
 import pyparsing as pp
-from yaml.error import Mark, MarkedYAMLError
+from functools import reduce
 from pyparsing import ParseBaseException, ParseException
+from yaml.error import Mark, MarkedYAMLError
 
 pp.ParserElement.enablePackrat()
 
@@ -145,7 +147,7 @@ def evaluate(symbols, expression, if_context=False):
         ast = str_expr.parseString(expression, parseAll=True)
         if len(ast) == 1:
             return evaluate_tok(ast[0])
-        return ''.join(evaluate_tok(i) for i in ast)
+        return reduce(operator.add, (evaluate_tok(i) for i in ast))
 
 
 def to_yaml_error(e, context_mark, mark):

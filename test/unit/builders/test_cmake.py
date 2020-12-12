@@ -8,13 +8,13 @@ from .. import mock_open_log
 from mopack.builders import Builder
 from mopack.builders.cmake import CMakeBuilder
 from mopack.iterutils import iterate
-from mopack.usage import make_usage
 from mopack.usage.pkg_config import PkgConfigUsage
 
 
 class TestCMakeBuilder(BuilderTest):
     builder_type = CMakeBuilder
     pkgdir = os.path.abspath('/path/to/builddir/mopack')
+    path_bases = {'srcdir', 'builddir'}
 
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         return os.path.join(self.pkgdir, 'build', name, pkgconfig)
@@ -52,7 +52,8 @@ class TestCMakeBuilder(BuilderTest):
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, [])
         self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, _options=self.make_options()
+            'foo', submodules=None, _options=self.make_options(),
+            _path_bases=self.path_bases
         ))
 
         self.check_build(builder)
@@ -76,7 +77,8 @@ class TestCMakeBuilder(BuilderTest):
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, ['--extra', 'args'])
         self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, _options=self.make_options()
+            'foo', submodules=None, _options=self.make_options(),
+            _path_bases=self.path_bases
         ))
 
         self.check_build(builder, extra_args=['--extra', 'args'])
@@ -88,7 +90,7 @@ class TestCMakeBuilder(BuilderTest):
         self.assertEqual(builder.extra_args, [])
         self.assertEqual(builder.usage, PkgConfigUsage(
             'foo', path='pkgconf', submodules=None,
-            _options=self.make_options()
+            _options=self.make_options(), _path_bases=self.path_bases
         ))
 
         self.check_build(builder, usage={
@@ -135,7 +137,8 @@ class TestCMakeBuilder(BuilderTest):
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, [])
         self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, _options=self.make_options()
+            'foo', submodules=None, _options=self.make_options(),
+            _path_bases=self.path_bases
         ))
 
         self.check_build(builder, deploy_paths, extra_args=[
@@ -152,9 +155,9 @@ class TestCMakeBuilder(BuilderTest):
 
     def test_rehydrate(self):
         opts = self.make_options()
-        usage = make_usage('foo', {'type': 'pkg-config', 'path': 'pkgconf'},
-                           submodules=None, _options=opts)
-        builder = CMakeBuilder('foo', extra_args='--extra args', usage=usage,
+        builder = CMakeBuilder('foo', extra_args='--extra args',
                                submodules=None, _options=opts)
+        builder.set_usage({'type': 'pkg-config', 'path': 'pkgconf'},
+                          submodules=None)
         data = builder.dehydrate()
         self.assertEqual(builder, Builder.rehydrate(data, _options=opts))

@@ -50,7 +50,7 @@ class SDistTest(IntegrationTest):
             'extra_args': [],
             'usage': {
                 'type': 'pkg-config',
-                'path': 'pkgconfig',
+                'path': ['builddir', 'pkgconfig'],
                 'pcfile': name,
                 'extra_args': [],
             },
@@ -85,7 +85,7 @@ class TestDirectory(SDistTest):
                 'submodules': None,
                 'should_deploy': True,
                 'builder': self._builder('hello'),
-                'path': os.path.join(test_data_dir, 'hello-bfg'),
+                'path': ['cfgdir', 'hello-bfg'],
             }],
         })
 
@@ -120,7 +120,7 @@ class TestTarball(SDistTest):
                 'should_deploy': True,
                 'builder': self._builder('hello'),
                 'url': None,
-                'path': os.path.join(test_data_dir, 'hello-bfg.tar.gz'),
+                'path': ['cfgdir', 'hello-bfg.tar.gz'],
                 'files': [],
                 'srcdir': None,
                 'guessed_srcdir': 'hello-bfg',
@@ -166,11 +166,11 @@ class TestTarballPatch(SDistTest):
                 'should_deploy': True,
                 'builder': self._builder('hello'),
                 'url': None,
-                'path': os.path.join(test_data_dir, 'hello-bfg.tar.gz'),
+                'path': ['cfgdir', 'hello-bfg.tar.gz'],
                 'files': [],
                 'srcdir': None,
                 'guessed_srcdir': 'hello-bfg',
-                'patch': os.path.join(test_data_dir, 'hello-bfg.patch'),
+                'patch': ['cfgdir', 'hello-bfg.patch'],
             }],
         })
 

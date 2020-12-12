@@ -28,7 +28,7 @@ class ConanPackage(BinaryPackage):
 
     def __init__(self, name, remote, options=None, usage=None, **kwargs):
         usage = usage or usage or {'type': 'pkg-config', 'path': ''}
-        super().__init__(name, usage=usage, **kwargs)
+        super().__init__(name, usage=usage, _path_bases={'builddir'}, **kwargs)
         self.remote = remote
         self.options = options or {}
 

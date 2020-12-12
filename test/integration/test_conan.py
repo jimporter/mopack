@@ -54,7 +54,7 @@ class TestConan(IntegrationTest):
                 'options': {'shared': True},
                 'usage': {
                     'type': 'pkg-config',
-                    'path': '.',
+                    'path': ['builddir', ''],
                     'pcfile': 'zlib',
                     'extra_args': [],
                 },

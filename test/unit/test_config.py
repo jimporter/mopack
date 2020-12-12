@@ -1,4 +1,4 @@
-from os.path import abspath
+from os.path import normpath
 from unittest import mock, TestCase
 
 from mopack.config import *
@@ -213,7 +213,7 @@ class TestConfig(TestCase):
         self.assertEqual(cfg.options, opts)
 
         pkg1 = AptPackage('foo', _options=opts, config_file='mopack.yml')
-        pkg2 = DirectoryPackage('bar', path=abspath('/path/to/src'),
+        pkg2 = DirectoryPackage('bar', path=normpath('/path/to/src'),
                                 build='bfg9000', _options=opts,
                                 config_file='mopack.yml')
         self.assertEqual(list(cfg.packages.items()), [
@@ -239,7 +239,7 @@ class TestConfig(TestCase):
         self.assertEqual(cfg.options, opts)
 
         pkg1 = AptPackage('foo', _options=opts, config_file='mopack.yml')
-        pkg2 = DirectoryPackage('bar', path=abspath('/path/to/src'),
+        pkg2 = DirectoryPackage('bar', path=normpath('/path/to/src'),
                                 build='bfg9000', _options=opts,
                                 config_file='mopack.yml')
         self.assertEqual(list(cfg.packages.items()), [
@@ -433,7 +433,7 @@ class TestChildConfig(TestCase):
         self.assertEqual(parent.options, opts)
 
         pkg1 = AptPackage('foo', _options=opts, config_file='mopack.yml')
-        pkg2 = DirectoryPackage('bar', path=abspath('/path/to/src'),
+        pkg2 = DirectoryPackage('bar', path=normpath('/path/to/src'),
                                 build='bfg9000', _options=opts,
                                 config_file='mopack.yml')
         self.assertEqual(list(parent.packages.items()), [

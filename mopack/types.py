@@ -6,6 +6,7 @@ from yaml.error import MarkedYAMLError
 
 from . import iterutils
 from .exceptions import ConfigurationError
+from .path import Path
 from .yaml_tools import MarkedDict
 
 
@@ -38,7 +39,7 @@ class FieldError(TypeError, ConfigurationError):
         self.field = iterutils.listify(field, type=tuple)
 
 
-def to_field_error(e, kind):
+def kwarg_error_to_field_error(e, kind):
     if type(e) == TypeError:
         m = _unexpected_kwarg_ex.search(str(e))
         if m:
@@ -53,11 +54,21 @@ def wrap_field_error(field, kind=None):
     try:
         yield
     except TypeError as e:
-        e = to_field_error(e, kind) if kind else e
+        e = kwarg_error_to_field_error(e, kind) if kind else e
         if not isinstance(e, FieldError):
             raise e
         new_field = iterutils.listify(field, type=tuple) + e.field
         raise FieldError(str(e), new_field)
+
+
+@contextmanager
+def ensure_field_error(field):
+    try:
+        yield
+    except Exception as e:
+        if isinstance(e, FieldError):
+            raise
+        raise FieldError(str(e), field)
 
 
 class _UnsetType:
@@ -91,7 +102,7 @@ def try_load_config(config, context, kind):
         if not isinstance(config, MarkedDict):
             raise
 
-        e = to_field_error(e, kind)
+        e = kwarg_error_to_field_error(e, kind)
         msg = str(e)
         mark = config.mark
         if isinstance(e, FieldError):
@@ -207,7 +218,7 @@ def boolean(field, value):
     return value
 
 
-def inner_path(field, value):
+def path_fragment(field, value):
     value = string(field, value)
     if os.path.isabs(value) or os.path.splitdrive(value)[0]:
         raise FieldError('expected a relative path', field)
@@ -218,22 +229,21 @@ def inner_path(field, value):
     return value
 
 
-def abs_or_inner_path(field, value):
-    value = os.path.normpath(string(field, value))
-    if os.path.isabs(value):
-        return value
-
-    if value.split(os.path.sep)[0] == os.path.pardir:
-        raise FieldError('expected an absolute or inner path', field)
-    return value
-
-
-def any_path(base=None):
+def abs_or_inner_path(*bases):
     def check(field, value):
-        value = string(field, value)
-        if base:
-            value = os.path.join(base, value)
-        return os.path.normpath(value)
+        with ensure_field_error(field):
+            value = Path.ensure_path(value, bases + ('absolute',))
+            if not value.is_abs() and not value.is_inner():
+                raise FieldError('expected an absolute or inner path', field)
+            return value
+
+    return check
+
+
+def any_path(*bases):
+    def check(field, value):
+        with ensure_field_error(field):
+            return Path.ensure_path(value, bases + ('absolute',))
 
     return check
 

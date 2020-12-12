@@ -10,6 +10,8 @@ def auto_dehydrate(value, freezedryer=None):
     # not, use the freezerdryer's `dehydrate()` method. This lets the value's
     # subtype extend `dehydrate()` if needed.
 
+    if value is None:
+        return None
     if freezedryer is None:
         return value.dehydrate() if hasattr(value, 'dehydrate') else value
     if isinstance(freezedryer, type) and isinstance(value, freezedryer):
@@ -90,6 +92,17 @@ class FreezeDried:
 
     def __eq__(self, rhs):
         return self.equal(rhs)
+
+
+class ListFreezeDryer:
+    def __init__(self, type):
+        self.type = type
+
+    def dehydrate(self, value):
+        return [auto_dehydrate(i, self.type) for i in value]
+
+    def rehydrate(self, value, **kwargs):
+        return [self.type.rehydrate(i, **kwargs) for i in value]
 
 
 class DictToListFreezeDryer:

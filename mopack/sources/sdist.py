@@ -8,10 +8,10 @@ from .. import archive, log, types
 from ..builders import Builder, make_builder
 from ..config import ChildConfig
 from ..freezedried import FreezeDried
+from ..glob import filter_glob
 from ..log import LogFile
 from ..package_defaults import DefaultResolver
-from ..path import filter_glob, pushd
-from ..usage import make_usage
+from ..path import Path, pushd
 from ..yaml_tools import to_parse_error
 
 
@@ -31,12 +31,11 @@ class SDistPackage(Package):
             self.submodules = package_default(submodules_type)(
                 'submodules', submodules
             )
-            if usage is not None:
-                usage = make_usage(name, usage, submodules=self.submodules,
-                                   _options=_options)
-            self.builder = make_builder(name, build, usage=usage,
-                                        submodules=self.submodules,
-                                        _options=_options)
+            self.builder = make_builder(
+                name, build, submodules=self.submodules,
+                _options=_options
+            )
+            self.builder.set_usage(usage, submodules=self.submodules)
 
     @property
     def builder_types(self):
@@ -72,24 +71,22 @@ class SDistPackage(Package):
                 submodules = submodules_type('submodules', export.submodules)
 
         kwargs = {'submodules': submodules, '_options': self._options}
-        if self.pending_usage:
+        with to_parse_error(export.config_file):
+            with types.try_load_config(export.data, 'context', 'kind'):
+                builder = make_builder(self.name, export.build, **kwargs)
+
+        if not self.pending_usage and export.usage:
+            with to_parse_error(export.config_file):
+                with types.try_load_config(export.data, 'context', 'kind'):
+                    builder.set_usage(export.usage, submodules=submodules)
+        else:
             # XXX: This doesn't report any useful error message if it fails,
             # since we've lost the line numbers from the YAML file by now. One
             # option would be to separate make_usage() from applying submodules
             # so that we can call make_usage() in __init__() above.
-            usage = make_usage(self.name, self.pending_usage, **kwargs)
-        elif export.usage:
-            with to_parse_error(export.config_file):
-                with types.try_load_config(export.data, 'context', 'kind'):
-                    usage = make_usage(self.name, export.usage, **kwargs)
-        else:
-            usage = None
+            builder.set_usage(self.pending_usage, submodules=submodules)
 
-        with to_parse_error(export.config_file):
-            with types.try_load_config(export.data, 'context', 'kind'):
-                self.builder = make_builder(self.name, export.build,
-                                            usage=usage, **kwargs)
-
+        self.builder = builder
         if not hasattr(self, 'submodules'):
             self.submodules = submodules
         del self.pending_usage
@@ -115,25 +112,29 @@ class SDistPackage(Package):
             self.builder.deploy(pkgdir)
 
 
+@FreezeDried.fields(rehydrate={'path': Path})
 class DirectoryPackage(SDistPackage):
     source = 'directory'
 
     def __init__(self, name, *, path, **kwargs):
         super().__init__(name, **kwargs)
-        self.path = types.any_path(self.config_dir)('path', path)
+        self.path = types.any_path('cfgdir')('path', path)
 
     def fetch(self, pkgdir, parent_config):
-        log.pkg_fetch(self.name, 'from {}'.format(self.path))
-        return self._find_mopack(self.path, parent_config)
+        path = self.path.string(cfgdir=self.config_dir)
+        log.pkg_fetch(self.name, 'from {}'.format(path))
+        return self._find_mopack(path, parent_config)
 
     def resolve(self, pkgdir, deploy_paths):
-        return self._resolve(pkgdir, self.path, deploy_paths)
+        path = self.path.string(cfgdir=self.config_dir)
+        return self._resolve(pkgdir, path, deploy_paths)
 
     def _get_usage(self, pkgdir, submodules):
-        return self.builder.get_usage(pkgdir, submodules, self.path)
+        path = self.path.string(cfgdir=self.config_dir)
+        return self.builder.get_usage(pkgdir, submodules, path)
 
 
-@FreezeDried.fields(skip_compare={'guessed_srcdir'})
+@FreezeDried.fields(rehydrate={'path': Path}, skip_compare={'guessed_srcdir'})
 class TarballPackage(SDistPackage):
     source = 'tarball'
 
@@ -143,13 +144,12 @@ class TarballPackage(SDistPackage):
 
         if (path is None) == (url is None):
             raise TypeError('exactly one of `path` or `url` must be specified')
-        self.path = types.maybe(types.any_path(self.config_dir))('path', path)
+
+        self.path = types.maybe(types.any_path('cfgdir'))('path', path)
         self.url = types.maybe(types.url)('url', url)
         self.files = types.list_of(types.string, listify=True)('files', files)
-        self.srcdir = types.maybe(types.inner_path)('srcdir', srcdir)
-        self.patch = types.maybe(types.any_path(self.config_dir))(
-            'patch', patch
-        )
+        self.srcdir = types.maybe(types.path_fragment)('srcdir', srcdir)
+        self.patch = types.maybe(types.any_path('cfgdir'))('patch', patch)
         self.guessed_srcdir = None  # Set in fetch().
 
     def _base_srcdir(self, pkgdir):
@@ -181,11 +181,11 @@ class TarballPackage(SDistPackage):
         if os.path.exists(base_srcdir):
             log.pkg_fetch(self.name, 'already fetched')
         else:
-            where = self.url or self.path
+            where = self.url or self.path.string(cfgdir=self.config_dir)
             log.pkg_fetch(self.name, 'from {}'.format(where))
 
             with (self._urlopen(self.url) if self.url else
-                  open(self.path, 'rb')) as f:
+                  open(self.path.string(cfgdir=self.config_dir), 'rb')) as f:
                 with archive.open(f) as arc:
                     names = arc.getnames()
                     self.guessed_srcdir = (names[0].split('/', 1)[0] if names
@@ -199,9 +199,10 @@ class TarballPackage(SDistPackage):
                         arc.extractall(base_srcdir)
 
             if self.patch:
-                log.pkg_patch(self.name, 'with {}'.format(self.patch))
+                patch = self.patch.string(cfgdir=self.config_dir)
+                log.pkg_patch(self.name, 'with {}'.format(patch))
                 with LogFile.open(pkgdir, self.name) as logfile, \
-                     open(self.patch) as f, \
+                     open(patch) as f, \
                      pushd(self._srcdir(pkgdir)):  # noqa
                     logfile.check_call(['patch', '-p1'], stdin=f)
 
@@ -221,7 +222,7 @@ class GitPackage(SDistPackage):
                  srcdir='.', **kwargs):
         super().__init__(name, **kwargs)
         self.repository = types.one_of(
-            types.url, types.ssh_path, types.any_path(self.config_dir),
+            types.url, types.ssh_path, types.any_path('cfgdir'),
             desc='a repository'
         )('repository', repository)
 
@@ -238,7 +239,7 @@ class GitPackage(SDistPackage):
         else:
             self.rev = ['branch', 'master']
 
-        self.srcdir = types.maybe(types.inner_path)('srcdir', srcdir)
+        self.srcdir = types.maybe(types.path_fragment)('srcdir', srcdir)
 
     def _base_srcdir(self, pkgdir):
         return os.path.join(pkgdir, 'src', self.name)

@@ -6,6 +6,7 @@ from .... import *
 
 from mopack.builders.bfg9000 import Bfg9000Builder
 from mopack.config import Config
+from mopack.path import Path
 from mopack.sources import Package
 from mopack.sources.apt import AptPackage
 from mopack.sources.sdist import DirectoryPackage
@@ -30,7 +31,7 @@ class TestDirectory(SDistTestCase):
 
     def test_resolve(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000')
-        self.assertEqual(pkg.path, self.srcpath)
+        self.assertEqual(pkg.path, Path('absolute', self.srcpath))
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
         self.assertEqual(pkg.should_deploy, True)
 
@@ -41,7 +42,7 @@ class TestDirectory(SDistTestCase):
         build = {'type': 'bfg9000', 'extra_args': '--extra'}
         pkg = self.make_package('foo', path=self.srcpath, build=build,
                                 usage='pkg-config')
-        self.assertEqual(pkg.path, self.srcpath)
+        self.assertEqual(pkg.path, Path('absolute', self.srcpath))
         self.assertEqual(pkg.builder, self.make_builder(
             Bfg9000Builder, 'foo', extra_args='--extra'
         ))
@@ -154,7 +155,7 @@ class TestDirectory(SDistTestCase):
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock.mock_open(read_data=child)), \
-             self.assertRaisesRegex(YamlParseError, loc):  # noqa
+             self.assertRaises(YamlParseError):  # noqa
             pkg.fetch(self.pkgdir, self.config)
 
         child = ('export:\n  build: bfg9000\n  usage:\n' +
@@ -189,7 +190,7 @@ class TestDirectory(SDistTestCase):
     def test_usage(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 usage='pkg-config')
-        self.assertEqual(pkg.path, self.srcpath)
+        self.assertEqual(pkg.path, Path('absolute', self.srcpath))
         self.assertEqual(pkg.builder, self.make_builder(
             Bfg9000Builder, 'foo', usage='pkg-config'
         ))
@@ -200,7 +201,7 @@ class TestDirectory(SDistTestCase):
         usage = {'type': 'pkg-config', 'path': 'pkgconf'}
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 usage=usage)
-        self.assertEqual(pkg.path, self.srcpath)
+        self.assertEqual(pkg.path, Path('absolute', self.srcpath))
         self.assertEqual(pkg.builder, self.make_builder(
             Bfg9000Builder, 'foo', usage=usage
         ))

@@ -1,17 +1,8 @@
-import os.path
+import ntpath
+import os
 from unittest import mock, TestCase
 
 from mopack.path import *
-
-
-class TestTryJoin(TestCase):
-    def test_second_absolute(self):
-        self.assertEqual(try_join('/foo', '/bar'), os.path.abspath('/bar'))
-        self.assertEqual(try_join(None, '/bar'), os.path.abspath('/bar'))
-
-    def test_second_relative(self):
-        self.assertEqual(try_join('/foo', 'bar'), os.path.abspath('/foo/bar'))
-        self.assertRaises(ValueError, try_join, None, 'bar')
 
 
 class TestPushd(TestCase):
@@ -38,123 +29,117 @@ class TestPushd(TestCase):
         mmakedirs.assert_called_once_with('foo', 0o777, False)
 
 
-class TestFilterGlob(TestCase):
-    _common_paths = ['foo', 'foo/', 'foo/bar', 'foobar', 'bar', 'bar/',
-                     'bar/foo', 'bar/foo/', 'bar/foo/baz', 'bar/baz/foo',
-                     'baz/bar/foo']
+class TestPath(TestCase):
+    def test_construct(self):
+        p = Path(Path.Base.cfgdir, 'foo')
+        self.assertEqual(p.base, Path.Base.cfgdir)
+        self.assertEqual(p.path, 'foo')
+        self.assertEqual(p.is_abs(), False)
+        self.assertEqual(p.is_inner(), True)
 
-    def _glob(self, pattern, paths=None, **kwargs):
-        return list(filter_glob(pattern, paths or self._common_paths,
-                                **kwargs))
+        p = Path('cfgdir', 'foo')
+        self.assertEqual(p.base, Path.Base.cfgdir)
+        self.assertEqual(p.path, 'foo')
+        self.assertEqual(p.is_abs(), False)
+        self.assertEqual(p.is_inner(), True)
 
-    def test_absolute_simple(self):
-        self.assertEqual(self._glob('/foo'), ['foo', 'foo/', 'foo/bar'])
-        self.assertEqual(self._glob('/foo/'), ['foo/', 'foo/bar'])
+        p = Path(Path.Base.cfgdir, 'foo/bar')
+        self.assertEqual(p.base, Path.Base.cfgdir)
+        self.assertEqual(p.path, os.path.join('foo', 'bar'))
+        self.assertEqual(p.is_abs(), False)
+        self.assertEqual(p.is_inner(), True)
 
-    def test_relative_simple(self):
-        self.assertEqual(self._glob('foo'),
-                         ['foo', 'foo/', 'foo/bar', 'bar/foo', 'bar/foo/',
-                          'bar/foo/baz', 'bar/baz/foo', 'baz/bar/foo'])
-        self.assertEqual(self._glob('foo/'),
-                         ['foo/', 'foo/bar', 'bar/foo/', 'bar/foo/baz'])
+        p = Path(Path.Base.cfgdir, '../bar')
+        self.assertEqual(p.base, Path.Base.cfgdir)
+        self.assertEqual(p.path, os.path.join('..', 'bar'))
+        self.assertEqual(p.is_abs(), False)
+        self.assertEqual(p.is_inner(), False)
 
-    def test_absolute_multi(self):
-        self.assertEqual(self._glob('/bar/foo'),
-                         ['bar/foo', 'bar/foo/', 'bar/foo/baz'])
-        self.assertEqual(self._glob('/bar/foo/'), ['bar/foo/', 'bar/foo/baz'])
+        p = Path(Path.Base.cfgdir, 'foo/bar/../baz')
+        self.assertEqual(p.base, Path.Base.cfgdir)
+        self.assertEqual(p.path, os.path.join('foo', 'baz'))
+        self.assertEqual(p.is_abs(), False)
+        self.assertEqual(p.is_inner(), True)
 
-    def test_relative_multi(self):
-        self.assertEqual(self._glob('bar/foo'),
-                         ['bar/foo', 'bar/foo/', 'bar/foo/baz', 'baz/bar/foo'])
-        self.assertEqual(self._glob('bar/foo/'), ['bar/foo/', 'bar/foo/baz'])
+        p = Path(Path.Base.cfgdir, '/foo')
+        self.assertEqual(p.base, Path.Base.absolute)
+        self.assertEqual(p.path, os.sep + 'foo')
+        self.assertEqual(p.is_abs(), True)
+        self.assertEqual(p.is_inner(), True)
 
-    def test_absolute_glob(self):
-        self.assertEqual(self._glob('/ba*'),
-                         ['bar', 'bar/', 'bar/foo', 'bar/foo/', 'bar/foo/baz',
-                          'bar/baz/foo', 'baz/bar/foo'])
-        self.assertEqual(self._glob('/ba*/'),
-                         ['bar/', 'bar/foo', 'bar/foo/', 'bar/foo/baz',
-                          'bar/baz/foo', 'baz/bar/foo'])
-        self.assertEqual(self._glob('/*ar'),
-                         ['foobar', 'bar', 'bar/', 'bar/foo', 'bar/foo/',
-                          'bar/foo/baz', 'bar/baz/foo'])
-        self.assertEqual(self._glob('/*ar/'),
-                         ['bar/', 'bar/foo', 'bar/foo/', 'bar/foo/baz',
-                          'bar/baz/foo'])
+        p = Path(Path.Base.absolute, '/foo')
+        self.assertEqual(p.base, Path.Base.absolute)
+        self.assertEqual(p.path, os.sep + 'foo')
+        self.assertEqual(p.is_abs(), True)
+        self.assertEqual(p.is_inner(), True)
 
-    def test_relative_glob(self):
-        self.assertEqual(self._glob('ba*'),
-                         ['foo/bar', 'bar', 'bar/', 'bar/foo', 'bar/foo/',
-                          'bar/foo/baz', 'bar/baz/foo', 'baz/bar/foo'])
-        self.assertEqual(self._glob('ba*/'),
-                         ['bar/', 'bar/foo', 'bar/foo/', 'bar/foo/baz',
-                          'bar/baz/foo', 'baz/bar/foo'])
-        self.assertEqual(self._glob('*ar'), [
-            'foo/bar', 'foobar', 'bar', 'bar/', 'bar/foo', 'bar/foo/',
-            'bar/foo/baz', 'bar/baz/foo', 'baz/bar/foo'
-        ])
-        self.assertEqual(self._glob('*ar/'),
-                         ['bar/', 'bar/foo', 'bar/foo/', 'bar/foo/baz',
-                          'bar/baz/foo', 'baz/bar/foo'])
+        p = Path(Path.Base.cfgdir, '.')
+        self.assertEqual(p.base, Path.Base.cfgdir)
+        self.assertEqual(p.path, '')
+        self.assertEqual(p.is_abs(), False)
+        self.assertEqual(p.is_inner(), True)
 
-    def test_relative_starstar(self):
-        self.assertEqual(self._glob('bar/**/foo'),
-                         ['bar/foo', 'bar/foo/', 'bar/foo/baz', 'bar/baz/foo',
-                          'baz/bar/foo'])
-        self.assertEqual(self._glob('bar/**/foo/'),
-                         ['bar/foo/', 'bar/foo/baz'])
+        p = Path(Path.Base.cfgdir, '')
+        self.assertEqual(p.base, Path.Base.cfgdir)
+        self.assertEqual(p.path, '')
+        self.assertEqual(p.is_abs(), False)
+        self.assertEqual(p.is_inner(), True)
 
-    def test_consecutive_starstar(self):
-        self.assertEqual(self._glob('bar/**/**/foo'),
-                         ['bar/foo', 'bar/foo/', 'bar/foo/baz', 'bar/baz/foo',
-                          'baz/bar/foo'])
-        self.assertEqual(self._glob('bar/**/**/foo/'),
-                         ['bar/foo/', 'bar/foo/baz'])
+    def test_construct_invalid(self):
+        with self.assertRaises(TypeError):
+            Path(Path.Base.cfgdir, 1)
+        with self.assertRaises(TypeError):
+            Path('goofy', 'foo')
+        with self.assertRaises(ValueError):
+            Path(Path.Base.absolute, 'foo')
 
-    def test_absolute_starstar_start(self):
-        self.assertEqual(self._glob('/**/foo'),
-                         ['foo', 'foo/', 'foo/bar', 'bar/foo', 'bar/foo/',
-                          'bar/foo/baz', 'bar/baz/foo', 'baz/bar/foo'])
-        self.assertEqual(self._glob('/**/foo/'),
-                         ['foo/', 'foo/bar', 'bar/foo/', 'bar/foo/baz'])
+        with mock.patch('os.path', ntpath), \
+             self.assertRaises(ValueError):  # noqa
+            Path(Path.Base.cfgdir, 'C:foo')
 
-    def test_relative_starstar_start(self):
-        self.assertEqual(self._glob('**/foo'),
-                         ['foo', 'foo/', 'foo/bar', 'bar/foo', 'bar/foo/',
-                          'bar/foo/baz', 'bar/baz/foo', 'baz/bar/foo'])
-        self.assertEqual(self._glob('**/foo/'),
-                         ['foo/', 'foo/bar', 'bar/foo/', 'bar/foo/baz'])
+    def test_ensure_path(self):
+        self.assertEqual(Path.ensure_path('foo', ['srcdir', 'builddir']),
+                         Path(Path.Base.srcdir, 'foo'))
+        self.assertEqual(Path.ensure_path(Path(Path.Base.srcdir, 'foo'),
+                                          ['srcdir', 'builddir']),
+                         Path(Path.Base.srcdir, 'foo'))
 
-    def test_starstar_end(self):
-        self.assertEqual(self._glob('foo/**'),
-                         ['foo/', 'foo/bar', 'bar/foo/', 'bar/foo/baz'])
-        self.assertEqual(self._glob('foo/**/'),
-                         ['foo/', 'foo/bar', 'bar/foo/', 'bar/foo/baz'])
+        with self.assertRaises(TypeError):
+            Path.ensure_path(Path(Path.Base.srcdir, 'foo'), ['builddir'])
+        with self.assertRaises(TypeError):
+            Path.ensure_path('foo', [])
 
-    def test_complicated(self):
-        self.assertEqual(self._glob('*a*/**/*.txt', [
-            'bar/', 'bar/file.txt', 'foo/bar/file.txt'
-        ]), ['bar/file.txt', 'foo/bar/file.txt'])
-        self.assertEqual(self._glob('*a*/baz/**/*.txt', [
-            'bar/', 'bar/file.txt', 'bar/baz/file.txt',
-            'foo/bar/baz/quux/file.txt'
-        ]), ['bar/baz/file.txt', 'foo/bar/baz/quux/file.txt'])
-        self.assertEqual(self._glob('*a*/**/*o*/**', [
-            'bar/', 'bar/foo', 'bar/foo/'
-        ]), ['bar/foo/'])
+    def test_base_filter(self):
+        bases = ['srcdir', 'builddir']
+        self.assertEqual(Path.Base.filter(bases, {}), [])
+        self.assertEqual(Path.Base.filter(bases, {'srcdir', 'builddir'}),
+                         [Path.Base.srcdir, Path.Base.builddir])
+        self.assertEqual(Path.Base.filter(bases, {'srcdir'}),
+                         [Path.Base.srcdir])
+        self.assertEqual(Path.Base.filter(bases, {'cfgdir', 'srcdir'}),
+                         [Path.Base.srcdir])
 
-    def test_multiple(self):
-        self.assertEqual(self._glob(['/foo', '/bar']),
-                         ['foo', 'foo/', 'foo/bar', 'bar', 'bar/', 'bar/foo',
-                          'bar/foo/', 'bar/foo/baz', 'bar/baz/foo'])
-        self.assertEqual(self._glob(['/foo/', '/bar/']),
-                         ['foo/', 'foo/bar', 'bar/', 'bar/foo', 'bar/foo/',
-                          'bar/foo/baz', 'bar/baz/foo'])
+    def test_add(self):
+        p = Path(Path.Base.srcdir, 'foo')
+        self.assertEqual(p + 'bar', Path(Path.Base.srcdir, 'foobar'))
 
-    def test_empty(self):
-        self.assertEqual(self._glob(''), self._common_paths)
-        self.assertEqual(self._glob('/'), self._common_paths)
+        p = Path(Path.Base.srcdir, '')
+        self.assertEqual(p + '/bar', Path(Path.Base.srcdir, 'bar'))
+        with self.assertRaises(ValueError):
+            p + 'bar'
 
-    def test_explicit_glob(self):
-        g = Glob('/foo')
-        self.assertEqual(self._glob(g), ['foo', 'foo/', 'foo/bar'])
+    def test_string(self):
+        p = Path(Path.Base.srcdir, 'foo')
+        self.assertEqual(p.string(srcdir='/srcdir'),
+                         os.path.abspath(os.path.join('/srcdir', 'foo')))
+
+        p = Path(Path.Base.absolute, '/foo')
+        self.assertEqual(p.string(), os.path.abspath('/foo'))
+
+    def test_rehydrate(self):
+        p = Path(Path.Base.srcdir, 'foo')
+        data = p.dehydrate()
+        self.assertEqual(p, Path.rehydrate(data))
+
+        with self.assertRaises(TypeError):
+            Path.rehydrate('foo')
