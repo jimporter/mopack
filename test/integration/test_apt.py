@@ -70,6 +70,7 @@ class TestApt(IntegrationTest):
                 'submodules': None,
                 'should_deploy': True,
                 'remote': 'libogg-dev',
+                'repository': None,
                 'usage': self._usage('ogg', libraries=[
                     {'name': 'ogg', 'type': 'guess'},
                 ]),
@@ -81,6 +82,7 @@ class TestApt(IntegrationTest):
                 'submodules': None,
                 'should_deploy': True,
                 'remote': 'zlib1g-dev',
+                'repository': None,
                 'usage': self._usage('zlib', libraries=[
                     {'name': 'zlib', 'type': 'guess'},
                 ]),

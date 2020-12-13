@@ -26,7 +26,18 @@ class TestApt(SourceTest):
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'apt.log'
             ), 'a')
-            mcall.assert_called_with(
+            for i in packages:
+                if i.repository:
+                    mcall.assert_any_call(
+                        ['sudo', 'add-apt-repository', '-y', i.repository],
+                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                        universal_newlines=True, check=True
+                    )
+            mcall.assert_any_call(
+                ['sudo', 'apt-get', 'update'], stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT, universal_newlines=True, check=True
+            )
+            mcall.assert_any_call(
                 ['sudo', 'apt-get', 'install', '-y'] + remotes,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                 universal_newlines=True, check=True
@@ -52,11 +63,20 @@ class TestApt(SourceTest):
     def test_basic(self):
         pkg = self.make_package('foo')
         self.assertEqual(pkg.remote, 'libfoo-dev')
+        self.assertEqual(pkg.repository, None)
         self.check_resolve_all([pkg], ['libfoo-dev'])
 
     def test_remote(self):
         pkg = self.make_package('foo', remote='foo-dev')
         self.assertEqual(pkg.remote, 'foo-dev')
+        self.assertEqual(pkg.repository, None)
+        self.check_resolve_all([pkg], ['foo-dev'])
+
+    def test_repository(self):
+        pkg = self.make_package('foo', remote='foo-dev',
+                                repository='ppa:foo/stable')
+        self.assertEqual(pkg.remote, 'foo-dev')
+        self.assertEqual(pkg.repository, 'ppa:foo/stable')
         self.check_resolve_all([pkg], ['foo-dev'])
 
     def test_multiple(self):
