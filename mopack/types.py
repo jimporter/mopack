@@ -39,13 +39,21 @@ class FieldError(TypeError, ConfigurationError):
         self.field = iterutils.listify(field, type=tuple)
 
 
+class FieldKeyError(FieldError):
+    pass
+
+
+class FieldValueError(FieldError):
+    pass
+
+
 def kwarg_error_to_field_error(e, kind):
     if type(e) == TypeError:
         m = _unexpected_kwarg_ex.search(str(e))
         if m:
             msg = ('{} got an unexpected keyword argument {!r}'
                    .format(kind, m.group(1)))
-            return FieldError(msg, m.group(1))
+            return FieldKeyError(msg, m.group(1))
     return e
 
 
@@ -58,7 +66,7 @@ def wrap_field_error(field, kind=None):
         if not isinstance(e, FieldError):
             raise e
         new_field = iterutils.listify(field, type=tuple) + e.field
-        raise FieldError(str(e), new_field)
+        raise type(e)(str(e), new_field)
 
 
 @contextmanager
@@ -68,7 +76,7 @@ def ensure_field_error(field):
     except Exception as e:
         if isinstance(e, FieldError):
             raise
-        raise FieldError(str(e), field)
+        raise FieldValueError(str(e), field)
 
 
 class _UnsetType:
@@ -109,7 +117,9 @@ def try_load_config(config, context, kind):
             x = config
             for f in e.field[:-1]:
                 x = x[f]
-            mark = x.value_marks[e.field[-1]]
+            marks = (x.key_marks if isinstance(e, FieldKeyError)
+                     else x.value_marks)
+            mark = marks[e.field[-1]]
 
         raise MarkedYAMLError(context, config.mark, msg, mark)
 
@@ -137,10 +147,10 @@ def one_of(*args, desc):
         for i in args:
             try:
                 return i(field, value)
-            except FieldError:
+            except FieldValueError:
                 pass
         else:
-            raise FieldError('expected {}'.format(desc), field)
+            raise FieldValueError('expected {}'.format(desc), field)
 
     return check
 
@@ -149,7 +159,7 @@ def constant(*args):
     def check(field, value):
         if value in args:
             return value
-        raise FieldError('expected one of {}'.format(
+        raise FieldValueError('expected one of {}'.format(
             ', '.join(repr(i) for i in args)
         ), field)
 
@@ -161,7 +171,7 @@ def list_of(other, listify=False):
         if listify:
             value = iterutils.listify(value)
         elif not iterutils.isiterable(value):
-            raise FieldError('expected a list', field)
+            raise FieldValueError('expected a list', field)
         with wrap_field_error(field):
             return [other(i, v) for i, v in enumerate(value)]
 
@@ -177,7 +187,7 @@ def dict_of(key_type, value_type):
 
     def check(field, value):
         if not isinstance(value, dict):
-            raise FieldError('expected a dict', field)
+            raise FieldValueError('expected a dict', field)
         with wrap_field_error(field):
             return {k: v for k, v in check_each(value)}
 
@@ -190,16 +200,16 @@ def dict_shape(shape, desc):
             return check(key, value.get(key, None))
         try:
             return check(key, None)
-        except FieldError:
-            raise FieldError('expected {}'.format(desc), ())
+        except FieldValueError:
+            raise FieldValueError('expected {}'.format(desc), ())
 
     def check(field, value):
         if not isinstance(value, dict):
-            raise FieldError('expected {}'.format(desc), field)
+            raise FieldValueError('expected {}'.format(desc), field)
         with wrap_field_error(field):
             for k in value:
                 if k not in shape:
-                    raise FieldError('unexpected key', k)
+                    raise FieldValueError('unexpected key', k)
             return {k: check_item(value, k, sub_check)
                     for k, sub_check in shape.items()}
 
@@ -208,24 +218,24 @@ def dict_shape(shape, desc):
 
 def string(field, value):
     if not isinstance(value, str):
-        raise FieldError('expected a string', field)
+        raise FieldValueError('expected a string', field)
     return value
 
 
 def boolean(field, value):
     if not isinstance(value, bool):
-        raise FieldError('expected a boolean', field)
+        raise FieldValueError('expected a boolean', field)
     return value
 
 
 def path_fragment(field, value):
     value = string(field, value)
     if os.path.isabs(value) or os.path.splitdrive(value)[0]:
-        raise FieldError('expected a relative path', field)
+        raise FieldValueError('expected a relative path', field)
 
     value = os.path.normpath(value)
     if value.split(os.path.sep)[0] == os.path.pardir:
-        raise FieldError('expected an inner path', field)
+        raise FieldValueError('expected an inner path', field)
     return value
 
 
@@ -234,7 +244,8 @@ def abs_or_inner_path(*bases):
         with ensure_field_error(field):
             value = Path.ensure_path(value, bases + ('absolute',))
             if not value.is_abs() and not value.is_inner():
-                raise FieldError('expected an absolute or inner path', field)
+                raise FieldValueError('expected an absolute or inner path',
+                                      field)
             return value
 
     return check
@@ -251,14 +262,14 @@ def any_path(*bases):
 def ssh_path(field, value):
     value = string(field, value)
     if not _ssh_ex.match(value):
-        raise FieldError('expected an ssh path', field)
+        raise FieldValueError('expected an ssh path', field)
     return value
 
 
 def url(field, value):
     value = string(field, value)
     if not _url_ex.match(value):
-        raise FieldError('expected a URL', field)
+        raise FieldValueError('expected a URL', field)
     return value
 
 

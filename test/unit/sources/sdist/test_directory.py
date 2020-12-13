@@ -143,7 +143,7 @@ class TestDirectory(SDistTestCase):
             pkg.fetch(self.pkgdir, self.config)
 
         child = 'export:\n  build:\n    type: bfg9000\n    unknown: blah'
-        loc = 'line 4, column 14'
+        loc = 'line 4, column 5'
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock.mock_open(read_data=child)), \
@@ -160,7 +160,7 @@ class TestDirectory(SDistTestCase):
 
         child = ('export:\n  build: bfg9000\n  usage:\n' +
                  '    type: pkg-config\n    unknown: blah')
-        loc = 'line 5, column 14'
+        loc = 'line 5, column 5'
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock.mock_open(read_data=child)), \

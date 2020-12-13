@@ -3,7 +3,7 @@ from pkg_resources import load_entry_point
 
 from ..base_options import BaseOptions, OptionsHolder
 from ..freezedried import FreezeDried
-from ..types import FieldError, wrap_field_error
+from ..types import FieldValueError, wrap_field_error
 from ..usage import make_usage, Usage
 
 
@@ -11,7 +11,7 @@ def _get_builder_type(type, field='type'):
     try:
         return load_entry_point('mopack', 'mopack.builders', type)
     except ImportError:
-        raise FieldError('unknown builder {!r}'.format(type), field)
+        raise FieldValueError('unknown builder {!r}'.format(type), field)
 
 
 @FreezeDried.fields(rehydrate={'usage': Usage})

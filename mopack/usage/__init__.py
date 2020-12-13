@@ -1,14 +1,14 @@
 from pkg_resources import load_entry_point
 
 from ..base_options import OptionsHolder
-from ..types import FieldError, wrap_field_error
+from ..types import FieldValueError, wrap_field_error
 
 
 def _get_usage_type(type, field='type'):
     try:
         return load_entry_point('mopack', 'mopack.usage', type)
     except ImportError:
-        raise FieldError('unknown usage {!r}'.format(type), field)
+        raise FieldValueError('unknown usage {!r}'.format(type), field)
 
 
 class Usage(OptionsHolder):

@@ -177,9 +177,9 @@ class TestMakePackage(SourceTest):
           config_file: /path/to/mopack.yml
         """), Loader=SafeLineLoader)
         with self.assertRaisesRegex(MarkedYAMLError,
-                                    r'line 4, column 10:\n'
+                                    r'line 4, column 1:\n'
                                     r'    unknown: blah\n'
-                                    r'             \^$'):
+                                    r'    \^$'):
             try_make_package('foo', data, _options=self.make_options())
 
     def test_invalid_values(self):
@@ -237,9 +237,9 @@ class TestMakePackage(SourceTest):
           config_file: /path/to/mopack.yml
         """), Loader=SafeLineLoader)
         with self.assertRaisesRegex(MarkedYAMLError,
-                                    r'line 6, column 12:\n'
+                                    r'line 6, column 3:\n'
                                     r'      unknown: blah\n'
-                                    r'               \^$'):
+                                    r'      \^$'):
             try_make_package('foo', data, _options=self.make_options())
 
     def test_invalid_builder_values(self):
@@ -290,9 +290,9 @@ class TestMakePackage(SourceTest):
           config_file: /path/to/mopack.yml
         """), Loader=SafeLineLoader)
         with self.assertRaisesRegex(MarkedYAMLError,
-                                    r'line 5, column 12:\n'
+                                    r'line 5, column 3:\n'
                                     r'      unknown: blah\n'
-                                    r'               \^$'):
+                                    r'      \^$'):
             try_make_package('foo', data, _options=self.make_options())
 
     def test_invalid_usage_values(self):

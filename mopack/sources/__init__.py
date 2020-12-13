@@ -6,7 +6,7 @@ from ..base_options import BaseOptions, OptionsHolder
 from ..freezedried import FreezeDried
 from ..iterutils import listify
 from ..package_defaults import DefaultResolver
-from ..types import FieldError, try_load_config
+from ..types import FieldValueError, try_load_config
 from ..usage import Usage, make_usage
 
 
@@ -14,7 +14,7 @@ def _get_source_type(source, field='source'):
     try:
         return load_entry_point('mopack', 'mopack.sources', source)
     except ImportError:
-        raise FieldError('unknown source {!r}'.format(source), field)
+        raise FieldValueError('unknown source {!r}'.format(source), field)
 
 
 _submodule_dict = types.dict_shape({

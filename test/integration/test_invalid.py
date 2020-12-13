@@ -27,9 +27,9 @@ class TestInvalidChild(IntegrationTest):
         self.assertRegex(output,
                          r'error: bfg9000 got an unexpected keyword ' +
                          r"argument 'unknown'\n" +
-                         r'  in ".+mopack.yml", line 4, column 14\n' +
+                         r'  in ".+mopack.yml", line 4, column 5\n' +
                          r'      unknown: blah\n' +
-                         r'               \^\n$')
+                         r'      \^\n$')
 
 
 class TestInvalidListFiles(IntegrationTest):
