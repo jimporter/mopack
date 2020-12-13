@@ -29,10 +29,9 @@ class Builder(OptionsHolder):
     def _builddir(self, pkgdir):
         return os.path.abspath(os.path.join(pkgdir, 'build', self.name))
 
-    def set_usage(self, usage, *, submodules):
-        self.usage = make_usage(self.name, usage, submodules=submodules,
-                                _options=self._options,
-                                _path_bases=self._path_bases)
+    def set_usage(self, usage, **kwargs):
+        self.usage = make_usage(self.name, usage, _options=self._options,
+                                _path_bases=self._path_bases, **kwargs)
 
     def get_usage(self, pkgdir, submodules, srcdir):
         return self.usage.get_usage(submodules, srcdir, self._builddir(pkgdir))

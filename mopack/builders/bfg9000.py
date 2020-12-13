@@ -28,10 +28,10 @@ class Bfg9000Builder(Builder):
         super().__init__(name, **kwargs)
         self.extra_args = types.shell_args()('extra_args', extra_args)
 
-    def set_usage(self, usage=None, *, submodules):
+    def set_usage(self, usage=None, **kwargs):
         if usage is None:
             usage = 'pkg-config'
-        super().set_usage(usage, submodules=submodules)
+        super().set_usage(usage, **kwargs)
 
     def _toolchain_args(self, toolchain):
         return ['--toolchain', toolchain] if toolchain else []

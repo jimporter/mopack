@@ -32,6 +32,21 @@ class TestInvalidChild(IntegrationTest):
                          r'      \^\n$')
 
 
+class TestInvalidParent(IntegrationTest):
+    def setUp(self):
+        self.stage = stage_dir('invalid-parent')
+
+    def test_resolve(self):
+        config = os.path.join(test_data_dir, 'mopack-invalid-parent.yml')
+        output = self.assertPopen(['mopack', 'resolve', config], returncode=1)
+        self.assertRegex(output,
+                         r"error: unknown usage 'unknown'\n" +
+                         r'  in ".+mopack-invalid-parent.yml", ' +
+                         r'line 6, column 13\n' +
+                         r'        type: unknown\n' +
+                         r'              \^\n$')
+
+
 class TestInvalidListFiles(IntegrationTest):
     def setUp(self):
         self.stage = stage_dir('invalid-list-files')

@@ -70,21 +70,26 @@ class SDistPackage(Package):
             with to_parse_error(export.config_file):
                 submodules = submodules_type('submodules', export.submodules)
 
-        kwargs = {'submodules': submodules, '_options': self._options}
+        context = 'while constructing package {!r}'.format(self.name)
         with to_parse_error(export.config_file):
-            with types.try_load_config(export.data, 'context', 'kind'):
-                builder = make_builder(self.name, export.build, **kwargs)
+            with types.try_load_config(export.data, context, self.source):
+                builder = make_builder(self.name, export.build,
+                                       submodules=submodules,
+                                       _options=self._options)
 
         if not self.pending_usage and export.usage:
             with to_parse_error(export.config_file):
-                with types.try_load_config(export.data, 'context', 'kind'):
+                with types.try_load_config(export.data, context, self.source):
                     builder.set_usage(export.usage, submodules=submodules)
         else:
-            # XXX: This doesn't report any useful error message if it fails,
-            # since we've lost the line numbers from the YAML file by now. One
-            # option would be to separate make_usage() from applying submodules
-            # so that we can call make_usage() in __init__() above.
-            builder.set_usage(self.pending_usage, submodules=submodules)
+            # Note: If this fails and `pending_usage` is a string, this won't
+            # report any line number information for the error, since we've
+            # lost that info in by now in that case.
+            with to_parse_error(self.config_file):
+                with types.try_load_config(self.pending_usage, context,
+                                           self.source):
+                    builder.set_usage(self.pending_usage, field=None,
+                                      submodules=submodules)
 
         self.builder = builder
         if not hasattr(self, 'submodules'):

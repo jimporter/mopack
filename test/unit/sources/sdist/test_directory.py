@@ -181,10 +181,11 @@ class TestDirectory(SDistTestCase):
         usage = yaml.load('type: pkg-config\nunknown: blah',
                           Loader=SafeLineLoader)
         pkg = self.make_package('foo', path=self.srcpath, usage=usage)
+        loc = 'line 2, column 1'
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock.mock_open(read_data=child)), \
-             self.assertRaises(FieldError):  # noqa
+             self.assertRaisesRegex(YamlParseError, loc):  # noqa
             pkg.fetch(self.pkgdir, self.config)
 
     def test_usage(self):

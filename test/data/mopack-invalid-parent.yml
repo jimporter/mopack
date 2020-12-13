@@ -1,0 +1,6 @@
+packages:
+  hello:
+    source: directory
+    path: hello-bfg
+    usage:
+      type: unknown
