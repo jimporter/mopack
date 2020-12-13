@@ -1,12 +1,12 @@
 import os
 import re
 from contextlib import contextmanager
-from shlex import shlex
 from yaml.error import MarkedYAMLError
 
 from . import iterutils
 from .exceptions import ConfigurationError
 from .path import Path
+from .shell import split_posix
 from .yaml_tools import MarkedDict
 
 
@@ -275,13 +275,6 @@ def url(field, value):
 
 def shell_args(type=list, escapes=False):
     def check(field, value):
-        value = string(field, value)
-
-        lexer = shlex(value, posix=True)
-        lexer.commenters = ''
-        if not escapes:
-            lexer.escape = ''
-        lexer.whitespace_split = True
-        return type(lexer)
+        return split_posix(string(field, value), type, escapes)
 
     return maybe(one_of(list_of(string), check, desc='shell arguments'), [])
