@@ -29,6 +29,7 @@ class TestBfg9000Builder(BuilderTest):
                      'pcfiles': pcfiles, 'extra_args': []}
 
         srcdir = '/path/to/src'
+        builddir = os.path.join(self.pkgdir, 'build', 'foo')
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.run') as mcall:  # noqa
@@ -37,7 +38,7 @@ class TestBfg9000Builder(BuilderTest):
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')
             mcall.assert_any_call(
-                ['9k', os.path.join(self.pkgdir, 'build', 'foo')] + extra_args,
+                ['bfg9000', 'configure', builddir] + extra_args,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                 universal_newlines=True, check=True
             )

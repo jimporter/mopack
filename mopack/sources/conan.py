@@ -4,6 +4,7 @@ import warnings
 from . import BinaryPackage, PackageOptions
 from .. import log
 from ..iterutils import iterate, uniques
+from ..shell import get_cmd
 
 
 class ConanPackage(BinaryPackage):
@@ -87,9 +88,10 @@ class ConanPackage(BinaryPackage):
             for i in options.generator:
                 print(i, file=conan)
 
+        conan = get_cmd(packages[0]._common_options.env, 'CONAN', 'conan')
         with log.LogFile.open(pkgdir, 'conan') as logfile:
             logfile.check_call(
-                ['conan', 'install', '-if', cls._installdir(pkgdir)] +
+                conan + ['install', '-if', cls._installdir(pkgdir)] +
                 cls._build_opts(options.build) + ['--', pkgdir]
             )
 

@@ -3,6 +3,48 @@ from unittest import TestCase
 from mopack.objutils import *
 
 
+class TestMemoize(TestCase):
+    def test_memoize_0_args(self):
+        i = 0
+
+        @memoize
+        def f():
+            nonlocal i
+            i += 1
+            return i
+
+        self.assertEqual(f(), 1)
+        self.assertEqual(f(), 1)
+
+    def test_memoize_1_arg(self):
+        i = 0
+
+        @memoize
+        def f(j):
+            nonlocal i
+            i += 1
+            return i + j
+
+        self.assertEqual(f(0), 1)
+        self.assertEqual(f(1), 3)
+        self.assertEqual(f(0), 1)
+
+    def test_memoize_reset(self):
+        i = 0
+
+        @memoize
+        def f(j):
+            nonlocal i
+            i += 1
+            return i + j
+
+        self.assertEqual(f(0), 1)
+        self.assertEqual(f(1), 3)
+        f._reset()
+        self.assertEqual(f(0), 3)
+        self.assertEqual(f(1), 5)
+
+
 class TestMemoizeMethod(TestCase):
     def test_memoize_0_args(self):
         class Foo:

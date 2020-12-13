@@ -4,6 +4,7 @@ from . import Builder, BuilderOptions
 from .. import types
 from ..log import LogFile
 from ..path import pushd
+from ..shell import get_cmd
 
 _known_install_types = ('prefix', 'exec-prefix', 'bindir', 'libdir',
                         'includedir')
@@ -49,18 +50,21 @@ class Bfg9000Builder(Builder):
     def build(self, pkgdir, srcdir, deploy_paths={}):
         builddir = self._builddir(pkgdir)
 
+        bfg9000 = get_cmd(self._common_options.env, 'BFG9000', 'bfg9000')
+        ninja = get_cmd(self._common_options.env, 'NINJA', 'ninja')
         with LogFile.open(pkgdir, self.name) as logfile:
             with pushd(srcdir):
                 logfile.check_call(
-                    ['9k', builddir] +
+                    bfg9000 + ['configure', builddir] +
                     self._toolchain_args(self._this_options.toolchain) +
                     self._install_args(deploy_paths) +
                     self.extra_args
                 )
             with pushd(builddir):
-                logfile.check_call(['ninja'])
+                logfile.check_call(ninja)
 
     def deploy(self, pkgdir):
+        ninja = get_cmd(self._common_options.env, 'NINJA', 'ninja')
         with LogFile.open(pkgdir, self.name, kind='deploy') as logfile:
             with pushd(self._builddir(pkgdir)):
-                logfile.check_call(['ninja', 'install'])
+                logfile.check_call(ninja + ['install'])

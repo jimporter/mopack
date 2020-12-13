@@ -1,6 +1,8 @@
 import platform
 import subprocess
 
+from .objutils import memoize
+
 
 def framework(name):
     return {'type': 'framework', 'name': name}
@@ -25,6 +27,7 @@ _package_library_names = {
 }
 
 
+@memoize
 def platform_name():
     system = platform.system().lower()
     if system.startswith('cygwin'):

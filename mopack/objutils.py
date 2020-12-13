@@ -1,7 +1,7 @@
 import functools
 from .iterutils import isiterable
 
-__all__ = ['hashify', 'memoize_method']
+__all__ = ['hashify', 'memoize', 'memoize_method']
 
 
 def hashify(thing):
@@ -10,6 +10,24 @@ def hashify(thing):
     elif isiterable(thing):
         return tuple(hashify(i) for i in thing)
     return thing
+
+
+def memoize(fn):
+    cache = {}
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        key = (hashify(args), hashify(kwargs))
+        if key in cache:
+            return cache[key]
+        result = cache[key] = fn(*args, **kwargs)
+        return result
+
+    def reset():
+        cache.clear()
+
+    wrapper._reset = reset
+    return wrapper
 
 
 def memoize_method(fn):

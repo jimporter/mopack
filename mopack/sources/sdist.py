@@ -12,6 +12,7 @@ from ..glob import filter_glob
 from ..log import LogFile
 from ..package_defaults import DefaultResolver
 from ..path import Path, pushd
+from ..shell import get_cmd
 from ..yaml_tools import to_parse_error
 
 
@@ -204,12 +205,13 @@ class TarballPackage(SDistPackage):
                         arc.extractall(base_srcdir)
 
             if self.patch:
+                patch_cmd = get_cmd(self._common_options.env, 'PATCH', 'patch')
                 patch = self.patch.string(cfgdir=self.config_dir)
                 log.pkg_patch(self.name, 'with {}'.format(patch))
                 with LogFile.open(pkgdir, self.name) as logfile, \
                      open(patch) as f, \
                      pushd(self._srcdir(pkgdir)):  # noqa
-                    logfile.check_call(['patch', '-p1'], stdin=f)
+                    logfile.check_call(patch_cmd + ['-p1'], stdin=f)
 
         return self._find_mopack(self._srcdir(pkgdir), parent_config)
 
@@ -263,11 +265,13 @@ class GitPackage(SDistPackage):
 
     def fetch(self, pkgdir, parent_config):
         base_srcdir = self._base_srcdir(pkgdir)
+        git = get_cmd(self._common_options.env, 'GIT', 'git')
+
         with LogFile.open(pkgdir, self.name) as logfile:
             if os.path.exists(base_srcdir):
                 if self.rev[0] == 'branch':
                     with pushd(base_srcdir):
-                        logfile.check_call(['git', 'pull'])
+                        logfile.check_call(git + ['pull'])
             else:
                 log.pkg_fetch(self.name, 'from {}'.format(self.repository))
                 clone = ['git', 'clone', self.repository, base_srcdir]
@@ -277,7 +281,7 @@ class GitPackage(SDistPackage):
                 elif self.rev[0] == 'commit':
                     logfile.check_call(clone)
                     with pushd(base_srcdir):
-                        logfile.check_call(['git', 'checkout', self.rev[1]])
+                        logfile.check_call(git + ['checkout', self.rev[1]])
                 else:  # pragma: no cover
                     raise ValueError('unknown revision type {!r}'
                                      .format(self.rev[0]))

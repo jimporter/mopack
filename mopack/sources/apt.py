@@ -1,5 +1,6 @@
 from . import BinaryPackage
 from .. import log
+from ..shell import get_cmd
 
 
 class AptPackage(BinaryPackage):
@@ -16,8 +17,9 @@ class AptPackage(BinaryPackage):
             log.pkg_resolve(i.name, 'from {}'.format(cls.source))
 
         remotes = [i.remote for i in packages]
+        apt = get_cmd(packages[0]._common_options.env, 'APT', 'sudo apt-get')
         with log.LogFile.open(pkgdir, 'apt') as logfile:
-            logfile.check_call(['sudo', 'apt-get', 'install', '-y'] + remotes)
+            logfile.check_call(apt + ['install', '-y'] + remotes)
 
         for i in packages:
             i.resolved = True

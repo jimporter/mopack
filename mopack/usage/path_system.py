@@ -8,6 +8,7 @@ from ..iterutils import merge_dicts
 from ..package_defaults import DefaultResolver
 from ..path import Path
 from ..platforms import package_library_name
+from ..shell import get_cmd
 from ..types import Unset
 
 
@@ -155,11 +156,10 @@ class SystemUsage(PathUsage):
         self.pcfile = name
 
     def get_usage(self, submodules, srcdir, builddir):
-        # TODO: Split this into args so users can pass flags to pkg-config via
-        # the environment variable.
-        pkg_config = self._common_options.env.get('PKG_CONFIG', 'pkg-config')
+        pkg_config = get_cmd(self._common_options.env, 'PKG_CONFIG',
+                             'pkg-config')
         try:
-            subprocess.run([pkg_config, self.pcfile], check=True,
+            subprocess.run(pkg_config + [self.pcfile], check=True,
                            stdout=subprocess.DEVNULL,
                            stderr=subprocess.DEVNULL)
             return self._usage(type='pkg-config', path=None,

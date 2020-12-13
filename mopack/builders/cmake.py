@@ -5,6 +5,7 @@ from . import Builder
 from .. import types
 from ..log import LogFile
 from ..path import pushd
+from ..shell import get_cmd
 
 # XXX: Handle exec-prefix, which CMake doesn't work with directly.
 _known_install_types = ('prefix', 'bindir', 'libdir', 'includedir')
@@ -32,16 +33,19 @@ class CMakeBuilder(Builder):
     def build(self, pkgdir, srcdir, deploy_paths={}):
         builddir = self._builddir(pkgdir)
 
+        cmake = get_cmd(self._common_options.env, 'CMAKE', 'cmake')
+        ninja = get_cmd(self._common_options.env, 'NINJA', 'ninja')
         with LogFile.open(pkgdir, self.name) as logfile:
             with pushd(builddir, makedirs=True, exist_ok=True):
                 logfile.check_call(
-                    ['cmake', srcdir, '-G', 'Ninja'] +
+                    cmake + [srcdir, '-G', 'Ninja'] +
                     self._install_args(deploy_paths) +
                     self.extra_args
                 )
-                logfile.check_call(['ninja'])
+                logfile.check_call(ninja)
 
     def deploy(self, pkgdir):
+        ninja = get_cmd(self._common_options.env, 'NINJA', 'ninja')
         with LogFile.open(pkgdir, self.name, kind='deploy') as logfile:
             with pushd(self._builddir(pkgdir)):
-                logfile.check_call(['ninja', 'install'])
+                logfile.check_call(ninja + ['install'])
