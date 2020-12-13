@@ -13,12 +13,18 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         compiler: [cc, msvc]
         python-version: [3.6, 3.7, 3.8, 3.9]
+
+        include:
+          - os: ubuntu-latest
+            extra-tests: [apt]
         exclude:
           - os: ubuntu-latest
             compiler: msvc
           - os: macos-latest
             compiler: msvc
       fail-fast: false
+    env:
+      MOPACK_EXTRA_TESTS: ${{ join(matrix.extra-tests, ' ') }}
 
     steps:
       - uses: actions/checkout@v2
