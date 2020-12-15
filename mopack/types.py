@@ -168,12 +168,15 @@ def constant(*args):
 
 def list_of(other, listify=False):
     def check(field, value):
-        if listify:
-            value = iterutils.listify(value)
-        elif not iterutils.isiterable(value):
+        if iterutils.isiterable(value):
+            with wrap_field_error(field):
+                return [other(i, v) for i, v in enumerate(value)]
+        elif listify:
+            if value is not None:
+                return [other(field, value)]
+            return []
+        else:
             raise FieldValueError('expected a list', field)
-        with wrap_field_error(field):
-            return [other(i, v) for i, v in enumerate(value)]
 
     return check
 

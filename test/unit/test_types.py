@@ -99,6 +99,8 @@ class TestListOf(TypeTestCase):
             list_of(string)('field', {})
         with self.assertFieldError(('field', 0), 'expected a string'):
             list_of(string)('field', [1])
+        with self.assertFieldError(('field',), 'expected a string'):
+            list_of(string, listify=True)('field', 1)
 
 
 class TestDictOf(TypeTestCase):
