@@ -117,8 +117,8 @@ def try_load_config(config, context, kind):
             x = config
             for f in e.field[:-1]:
                 x = x[f]
-            marks = (x.key_marks if isinstance(e, FieldKeyError)
-                     else x.value_marks)
+            marks = (x.value_marks if isinstance(e, FieldValueError)
+                     else x.marks)
             mark = marks[e.field[-1]]
 
         raise MarkedYAMLError(context, config.mark, msg, mark)

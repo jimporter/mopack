@@ -75,6 +75,10 @@ class MarkedList(list, MarkedCollection):
         for i in range(len(self.marks), len(self)):
             self.marks.append(None)
 
+    @property
+    def value_marks(self):
+        return self.marks
+
     def append(self, value, mark):
         self._fill_marks()
         super().append(value)
@@ -100,19 +104,19 @@ class MarkedDict(dict, MarkedCollection):
     def __init__(self, mark=None):
         super().__init__(self)
         self.mark = mark
-        self.key_marks = {}
+        self.marks = {}
         self.value_marks = {}
 
     def add(self, key, value, key_mark=None, value_mark=None):
         self[key] = value
         if key_mark is not None:
-            self.key_marks[key] = key_mark
+            self.marks[key] = key_mark
         if value_mark is not None:
             self.value_marks[key] = value_mark
 
     def pop(self, key, *args):
         result = super().pop(key, *args)
-        self.key_marks.pop(key, None)
+        self.marks.pop(key, None)
         self.value_marks.pop(key, None)
         return result
 
@@ -121,7 +125,7 @@ class MarkedDict(dict, MarkedCollection):
         if len(args) and isinstance(args[0], MarkedDict):
             if self.mark is None:
                 self.mark = args[0].mark
-                self.key_marks.update(args[0].key_marks)
+                self.marks.update(args[0].marks)
                 self.value_marks.update(args[0].value_marks)
 
     def copy(self):
