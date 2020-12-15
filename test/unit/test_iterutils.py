@@ -48,6 +48,20 @@ class TestIterate(TestCase):
                          ['foo', 'bar'])
 
 
+class TestIteritems(TestCase):
+    def test_list(self):
+        self.assertEqual(
+            list(iterutils.iteritems(['foo', 'bar'])),
+            [(0, 'foo'), (1, 'bar')]
+        )
+
+    def test_dict(self):
+        self.assertEqual(
+            list(iterutils.iteritems({'foo': 'Foo', 'bar': 'Bar'})),
+            [('foo', 'Foo'), ('bar', 'Bar')]
+        )
+
+
 class TestListify(TestCase):
     def test_none(self):
         self.assertEqual(iterutils.listify(None), [])

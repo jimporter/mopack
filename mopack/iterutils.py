@@ -1,7 +1,7 @@
 from collections.abc import Iterable, Mapping, Sequence
 
-__all__ = ['isiterable', 'ismapping', 'iterate', 'listify', 'list_view',
-           'merge_dicts', 'merge_into_dict', 'uniques']
+__all__ = ['isiterable', 'ismapping', 'iterate', 'iteritems', 'listify',
+           'list_view', 'merge_dicts', 'merge_into_dict', 'uniques']
 
 
 def isiterable(thing):
@@ -26,6 +26,12 @@ def iterate(thing):
         return iter(thing)
     else:
         return generate_one(thing)
+
+
+def iteritems(iterable):
+    if ismapping(iterable):
+        return iterable.items()
+    return enumerate(iterable)
 
 
 def listify(thing, always_copy=False, scalar_ok=True, type=list):

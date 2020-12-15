@@ -3,7 +3,7 @@ from itertools import chain
 from yaml.error import MarkedYAMLError
 
 from . import expression as expr
-from .iterutils import isiterable
+from .iterutils import isiterable, iteritems
 from .options import Options
 from .sources import try_make_package
 from .yaml_tools import load_file, to_parse_error, MarkedDict, SafeLineLoader
@@ -131,8 +131,8 @@ class BaseConfig:
     def _evaluate(cls, symbols, data):
         if isinstance(data, str):
             return expr.evaluate(symbols, data)
-        elif isinstance(data, dict):
-            for k, v in data.items():
+        elif isinstance(data, (dict, list)):
+            for k, v in iteritems(data):
                 data[k] = cls._evaluate(symbols, v)
             return data
         else:
