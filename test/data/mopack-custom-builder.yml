@@ -1,0 +1,10 @@
+packages:
+  hello:
+    source: tarball
+    path: hello-bfg.tar.gz
+    build:
+      type: custom
+      build_commands:
+        - bfg9000 configure $builddir
+        - ninja -C $builddir/.
+    usage: pkg-config

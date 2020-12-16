@@ -29,6 +29,9 @@ class Usage(OptionsHolder):
 
 
 def make_usage(name, config, *, field='usage', **kwargs):
+    if config is None:
+        raise TypeError('usage not specified')
+
     if isinstance(config, str):
         with wrap_field_error(field, config):
             return _get_usage_type(config, ())(name, **kwargs)

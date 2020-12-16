@@ -46,8 +46,8 @@ def _submodule_map(srcbases, buildbases):
                 'library_path': _list_of_paths(*buildbases),
                 'headers': _list_of_headers,
                 'libraries': _list_of_libraries,
-                'compile_flags': types.shell_args(),
-                'link_flags': types.shell_args(),
+                'compile_flags': types.maybe(types.shell_args(srcbases), []),
+                'link_flags': types.maybe(types.shell_args(srcbases), []),
             }, 'a submodule map')
         )(field, value)
 
@@ -95,7 +95,7 @@ class PathUsage(Usage):
             )
         self.libraries = libs_checker('libraries', libraries)
 
-        defaulted_flags = types.default(types.shell_args(), [])
+        defaulted_flags = types.default(types.shell_args(srcbases), [])
         self.compile_flags = defaulted_flags('compile_flags', compile_flags)
         self.link_flags = defaulted_flags('link_flags', link_flags)
 

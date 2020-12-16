@@ -4,6 +4,7 @@ import posixpath
 from contextlib import contextmanager
 from unittest import mock, TestCase
 
+from mopack.placeholder import placeholder
 from mopack.path import Path
 from mopack.types import *
 from mopack.yaml_tools import load_file, SafeLineLoader
@@ -306,39 +307,61 @@ class TestUrl(TypeTestCase):
 
 
 class TestShellArgs(TypeTestCase):
+    bases = ['srcdir', 'builddir']
+
+    def test_empty(self):
+        self.assertEqual(shell_args(self.bases)('field', ''), [])
+        self.assertEqual(shell_args(self.bases)('field', []), [])
+
     def test_single(self):
-        self.assertEqual(shell_args()('field', 'foo'), ['foo'])
+        self.assertEqual(shell_args(self.bases)('field', 'foo'), ['foo'])
 
     def test_multiple(self):
-        self.assertEqual(shell_args()('field', 'foo bar baz'),
+        self.assertEqual(shell_args(self.bases)('field', 'foo bar baz'),
                          ['foo', 'bar', 'baz'])
 
     def test_quote(self):
-        self.assertEqual(shell_args()('field', 'foo "bar baz"'),
+        self.assertEqual(shell_args(self.bases)('field', 'foo "bar baz"'),
                          ['foo', 'bar baz'])
-        self.assertEqual(shell_args()('field', 'foo"bar baz"'), ['foobar baz'])
+        self.assertEqual(shell_args(self.bases)('field', 'foo"bar baz"'),
+                         ['foobar baz'])
+
+    def test_placeholder_string(self):
+        srcdir = Path('srcdir', '')
+        srcdir_ph = placeholder(srcdir)
+        shell = shell_args(self.bases)
+        self.assertEqual(shell('field', srcdir_ph), [srcdir])
+        self.assertEqual(shell('field', srcdir_ph + ' foo'), [srcdir, 'foo'])
+        self.assertEqual(shell('field', 'foo ' + srcdir_ph + ' bar'),
+                         ['foo', srcdir, 'bar'])
+        self.assertEqual(shell('field', srcdir_ph + '/foo'), [srcdir + '/foo'])
+        self.assertEqual(shell('field', '"' + srcdir_ph + '/ foo"'),
+                         [srcdir + '/ foo'])
+
+        with self.assertFieldError(('field',)):
+            shell('field', 'foo' + srcdir_ph)
 
     def test_list(self):
-        self.assertEqual(shell_args()('field', ['foo', 'bar baz']),
+        self.assertEqual(shell_args(self.bases)('field', ['foo', 'bar baz']),
                          ['foo', 'bar baz'])
 
-    def test_empty(self):
-        self.assertEqual(shell_args()('field', ''), [])
-        self.assertEqual(shell_args()('field', []), [])
-        self.assertEqual(shell_args()('field', None), [])
-
     def test_type(self):
-        self.assertEqual(shell_args(type=tuple)('field', 'foo bar baz'),
-                         ('foo', 'bar', 'baz'))
+        self.assertEqual(
+            shell_args(self.bases, type=tuple)('field', 'foo bar baz'),
+            ('foo', 'bar', 'baz')
+        )
 
     def test_escapes(self):
-        self.assertEqual(shell_args()('field', 'foo\\ bar'), ['foo\\', 'bar'])
-        self.assertEqual(shell_args(escapes=True)('field', 'foo\\ bar'),
+        s = 'foo\\ bar'
+        self.assertEqual(shell_args(self.bases)('field', s), ['foo\\', 'bar'])
+        self.assertEqual(shell_args(self.bases, escapes=True)('field', s),
                          ['foo bar'])
 
     def test_invalid(self):
         with self.assertFieldError(('field',)):
-            shell_args()('field', 1)
+            shell_args(self.bases)('field', 1)
+        with self.assertFieldError(('field',)):
+            shell_args(self.bases)('field', '"foo')
 
 
 class TestWrapFieldError(TypeTestCase):

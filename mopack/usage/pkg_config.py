@@ -38,11 +38,13 @@ class PkgConfigUsage(Usage):
             default_pcfile = None
         else:
             default_pcfile = name
+
         self.pcfile = types.default(types.string, default_pcfile)(
             'pcfile', pcfile
         )
-
-        self.extra_args = types.shell_args()('extra_args', extra_args)
+        self.extra_args = types.maybe(types.shell_args(bases), [])(
+            'extra_args', extra_args
+        )
 
         if submodules:
             self.submodule_map = package_default(

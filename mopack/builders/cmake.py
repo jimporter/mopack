@@ -1,5 +1,4 @@
 import os.path
-import shutil
 
 from . import Builder
 from .. import types
@@ -13,11 +12,13 @@ _known_install_types = ('prefix', 'bindir', 'libdir', 'includedir')
 
 class CMakeBuilder(Builder):
     type = 'cmake'
-    _path_bases = {'srcdir', 'builddir'}
+    _path_bases = ('srcdir', 'builddir')
 
     def __init__(self, name, *, extra_args=None, submodules, **kwargs):
         super().__init__(name, **kwargs)
-        self.extra_args = types.shell_args()('extra_args', extra_args)
+        self.extra_args = types.maybe(types.shell_args(self._path_bases), [])(
+            'extra_args', extra_args
+        )
 
     def _install_args(self, deploy_paths):
         args = []
@@ -26,9 +27,6 @@ class CMakeBuilder(Builder):
                 args.append('-DCMAKE_INSTALL_{}:PATH={}'
                             .format(k.upper(), os.path.abspath(v)))
         return args
-
-    def clean(self, pkgdir):
-        shutil.rmtree(self._builddir(pkgdir), ignore_errors=True)
 
     def build(self, pkgdir, srcdir, deploy_paths={}):
         builddir = self._builddir(pkgdir)

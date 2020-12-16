@@ -3,7 +3,7 @@ from . import Builder
 
 class NoneBuilder(Builder):
     type = 'none'
-    _path_bases = {'srcdir'}
+    _path_bases = ('srcdir',)
 
     def __init__(self, name, *, submodules, **kwargs):
         super().__init__(name, **kwargs)

@@ -1,5 +1,3 @@
-import shutil
-
 from . import Builder, BuilderOptions
 from .. import types
 from ..log import LogFile
@@ -12,7 +10,7 @@ _known_install_types = ('prefix', 'exec-prefix', 'bindir', 'libdir',
 
 class Bfg9000Builder(Builder):
     type = 'bfg9000'
-    _path_bases = {'srcdir', 'builddir'}
+    _path_bases = ('srcdir', 'builddir')
 
     class Options(BuilderOptions):
         type = 'bfg9000'
@@ -27,7 +25,9 @@ class Bfg9000Builder(Builder):
 
     def __init__(self, name, *, extra_args=None, submodules, **kwargs):
         super().__init__(name, **kwargs)
-        self.extra_args = types.shell_args()('extra_args', extra_args)
+        self.extra_args = types.maybe(types.shell_args(self._path_bases), [])(
+            'extra_args', extra_args
+        )
 
     def set_usage(self, usage=None, **kwargs):
         if usage is None:
@@ -43,9 +43,6 @@ class Bfg9000Builder(Builder):
             if k in _known_install_types:
                 args.extend(['--' + k, v])
         return args
-
-    def clean(self, pkgdir):
-        shutil.rmtree(self._builddir(pkgdir), ignore_errors=True)
 
     def build(self, pkgdir, srcdir, deploy_paths={}):
         builddir = self._builddir(pkgdir)

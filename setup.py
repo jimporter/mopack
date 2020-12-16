@@ -130,6 +130,7 @@ setup(
         'mopack.builders': [
             'bfg9000=mopack.builders.bfg9000:Bfg9000Builder',
             'cmake=mopack.builders.cmake:CMakeBuilder',
+            'custom=mopack.builders.custom:CustomBuilder',
             'none=mopack.builders.none:NoneBuilder',
         ],
         'mopack.usage': [

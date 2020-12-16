@@ -2,6 +2,7 @@ import ntpath
 import os
 from unittest import mock, TestCase
 
+from mopack.placeholder import placeholder
 from mopack.path import *
 
 
@@ -109,6 +110,16 @@ class TestPath(TestCase):
         with self.assertRaises(TypeError):
             Path.ensure_path('foo', [])
 
+    def test_ensure_path_placeholder(self):
+        bases = ['srcdir', 'builddir']
+        srcdir = placeholder(Path(Path.Base.srcdir, ''))
+        self.assertEqual(Path.ensure_path(srcdir, bases),
+                         Path(Path.Base.srcdir, ''))
+        self.assertEqual(Path.ensure_path(srcdir + '/foo', bases),
+                         Path(Path.Base.srcdir, 'foo'))
+        with self.assertRaises(ValueError):
+            Path.ensure_path(srcdir + '/foo' + srcdir, bases)
+
     def test_base_filter(self):
         bases = ['srcdir', 'builddir']
         self.assertEqual(Path.Base.filter(bases, {}), [])
@@ -143,3 +154,20 @@ class TestPath(TestCase):
 
         with self.assertRaises(TypeError):
             Path.rehydrate('foo')
+
+
+class TestAutoPath(TestCase):
+    def test_ensure(self):
+        bases = ['srcdir', 'builddir']
+        path = Path(Path.Base.srcdir, 'foo')
+        ph = placeholder(path)
+
+        self.assertEqual(auto_path_ensure(path, bases), path)
+        self.assertEqual(auto_path_ensure(ph + 'bar', bases), path + 'bar')
+        self.assertEqual(auto_path_ensure('foo', bases), 'foo')
+
+    def test_string(self):
+        p = Path(Path.Base.srcdir, 'foo')
+        self.assertEqual(auto_path_string(p, srcdir='/srcdir'),
+                         os.path.abspath(os.path.join('/srcdir', 'foo')))
+        self.assertEqual(auto_path_string('foo', srcdir='/srcdir'), 'foo')

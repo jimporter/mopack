@@ -5,7 +5,8 @@ from yaml.error import MarkedYAMLError
 
 from . import iterutils
 from .exceptions import ConfigurationError
-from .path import Path
+from .path import auto_path_ensure, Path
+from .placeholder import PlaceholderString
 from .shell import split_posix
 from .yaml_tools import MarkedDict
 
@@ -276,8 +277,21 @@ def url(field, value):
     return value
 
 
-def shell_args(type=list, escapes=False):
-    def check(field, value):
-        return split_posix(string(field, value), type, escapes)
+def shell_args(bases, type=list, escapes=False):
+    bases = list(bases) + ['absolute']
 
-    return maybe(one_of(list_of(string), check, desc='shell arguments'), [])
+    def check_item(field, value):
+        with ensure_field_error(field):
+            return auto_path_ensure(value, bases)
+
+    def check(field, value):
+        with ensure_field_error(field):
+            if isinstance(value, PlaceholderString):
+                stashed, placeholders = value.stash()
+                args = split_posix(stashed, type, escapes)
+                return [auto_path_ensure(
+                    PlaceholderString.unstash(i, placeholders), bases
+                ) for i in args]
+            return split_posix(string(field, value), type, escapes)
+
+    return one_of(list_of(check_item), check, desc='shell arguments')

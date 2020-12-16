@@ -5,6 +5,7 @@ from .builders import BuilderOptions, make_builder_options
 from .freezedried import DictToListFreezeDryer, FreezeDried
 from .objutils import memoize_method
 from .path import Path
+from .placeholder import placeholder
 from .platforms import platform_name
 from .sources import make_package_options, PackageOptions
 from .types import Unset
@@ -32,7 +33,7 @@ class CommonOptions(FreezeDried, BaseOptions):
     @property
     @memoize_method
     def expr_symbols(self):
-        path_vars = {i.name: Path(i, '') for i in Path.Base
+        path_vars = {i.name: placeholder(Path(i, '')) for i in Path.Base
                      if i != Path.Base.absolute}
         return dict(
             host_platform=platform_name(),

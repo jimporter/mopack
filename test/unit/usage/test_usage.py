@@ -24,18 +24,25 @@ class TestMakeUsage(UsageTest):
         self.assertEqual(usage.path, Path('builddir', 'pkgconfig'))
 
     def test_unknown_usage(self):
-        self.assertRaises(FieldError, make_usage, 'pkg', {'type': 'goofy'},
-                          submodules=None, _options=self.make_options(),
-                          _path_bases=self.path_bases)
+        with self.assertRaises(FieldError):
+            make_usage('pkg', {'type': 'goofy'}, submodules=None,
+                       _options=self.make_options(),
+                       _path_bases=self.path_bases)
+
+    def test_no_usage(self):
+        with self.assertRaises(TypeError):
+            make_usage('pkg', None, submodules=None,
+                       _options=self.make_options(),
+                       _path_bases=self.path_bases)
 
     def test_invalid_keys(self):
-        self.assertRaises(TypeError, make_usage, 'pkg',
-                          {'type': 'pkg-config', 'unknown': 'blah'},
-                          submodules=None, _options=self.make_options(),
-                          _path_bases=self.path_bases)
+        with self.assertRaises(TypeError):
+            make_usage('pkg', {'type': 'pkg-config', 'unknown': 'blah'},
+                       submodules=None, _options=self.make_options(),
+                       _path_bases=self.path_bases)
 
     def test_invalid_values(self):
-        self.assertRaises(FieldError, make_usage, 'pkg',
-                          {'type': 'pkg-config', 'path': '..'},
-                          submodules=None, _options=self.make_options(),
-                          _path_bases=self.path_bases)
+        with self.assertRaises(FieldError):
+            make_usage('pkg', {'type': 'pkg-config', 'path': '..'},
+                       submodules=None, _options=self.make_options(),
+                       _path_bases=self.path_bases)

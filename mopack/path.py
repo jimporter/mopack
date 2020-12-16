@@ -2,9 +2,11 @@ import os
 from contextlib import contextmanager
 from enum import Enum
 
-from .freezedried import FreezeDried
+from .freezedried import auto_dehydrate, FreezeDried
+from .placeholder import PlaceholderString
 
-__all__ = ['Path', 'pushd']
+__all__ = ['auto_path_ensure', 'auto_path_string', 'Path',
+           'PathOrStrFreezeDryer', 'pushd']
 
 
 @contextmanager
@@ -74,6 +76,17 @@ class Path(FreezeDried):
         if len(bases) == 0:
             raise TypeError('no bases specified')
         bases = [cls.Base.ensure_base(i) for i in bases]
+
+        if isinstance(path, PlaceholderString):
+            bits = path.unboxed_bits
+            types = [type(i) for i in bits]
+            if types == [Path]:
+                path = bits[0]
+            elif types == [Path, str]:
+                path = bits[0] + bits[1]
+            else:
+                raise ValueError('invalid placeholder format')
+
         if isinstance(path, Path):
             if path.base not in bases:
                 raise TypeError('invalid base {!r}'.format(path.base.name))
@@ -117,6 +130,32 @@ class Path(FreezeDried):
     def __repr__(self):
         if self.base == self.Base.absolute:
             path = self.path
+        elif self.path == '':
+            path = '$({})'.format(self.base.name)
         else:
-            path = '$({})/{})'.format(self.base.name, self.path)
+            path = '$({})/{}'.format(self.base.name, self.path)
         return "<{}({!r})>".format(type(self).__name__, path)
+
+
+class PathOrStrFreezeDryer:
+    @staticmethod
+    def dehydrate(value):
+        return auto_dehydrate(value)
+
+    @staticmethod
+    def rehydrate(value, **kwargs):
+        if isinstance(value, str):
+            return value
+        return Path.rehydrate(value, **kwargs)
+
+
+def auto_path_ensure(thing, *args, **kwargs):
+    if isinstance(thing, str):
+        return thing
+    return Path.ensure_path(thing, *args, **kwargs)
+
+
+def auto_path_string(thing, **kwargs):
+    if isinstance(thing, Path):
+        return thing.string(**kwargs)
+    return thing
