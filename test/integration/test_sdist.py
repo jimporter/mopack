@@ -30,11 +30,12 @@ class SDistTest(IntegrationTest):
                                               '--json']))
         self.assertEqual(output, files + implicit)
 
-    def _options(self):
+    def _options(self, deploy_paths={}):
         return {
             'common': {
                 'target_platform': platform_name(),
                 'env': AlwaysEqual(),
+                'deploy_paths': deploy_paths,
             },
             'builders': [{
                 'type': 'bfg9000',
@@ -75,7 +76,6 @@ class TestDirectory(SDistTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'deploy_paths': {},
             'options': self._options(),
             'packages': [{
                 'name': 'hello',
@@ -109,8 +109,7 @@ class TestTarball(SDistTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'deploy_paths': {'prefix': self.prefix},
-            'options': self._options(),
+            'options': self._options({'prefix': self.prefix}),
             'packages': [{
                 'name': 'hello',
                 'config_file': config,
@@ -155,8 +154,7 @@ class TestTarballPatch(SDistTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'deploy_paths': {'prefix': self.prefix},
-            'options': self._options(),
+            'options': self._options({'prefix': self.prefix}),
             'packages': [{
                 'name': 'hello',
                 'config_file': config,
@@ -202,8 +200,7 @@ class TestGit(SDistTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'deploy_paths': {'prefix': self.prefix},
-            'options': self._options(),
+            'options': self._options({'prefix': self.prefix}),
             'packages': [{
                 'name': 'bencodehpp',
                 'config_file': config,

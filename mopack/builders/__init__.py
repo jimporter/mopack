@@ -34,6 +34,10 @@ class Builder(OptionsHolder):
         shutil.rmtree(self._builddir(pkgdir), ignore_errors=True)
 
     def set_usage(self, usage, **kwargs):
+        # We set the usage separately since, even though the builder owns the
+        # usage, they're siblings in the mopack.yml file. This would confuse
+        # the FieldError wrapping, making errors in usage appear as if they
+        # were "inside" the builder. Thus, the separate `set_usage` call.
         self.usage = make_usage(self.name, usage, _options=self._options,
                                 _path_bases=self._path_bases, **kwargs)
 

@@ -18,8 +18,8 @@ class TestNoneBuilder(BuilderTest):
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         return os.path.join(self.srcdir, pkgconfig)
 
-    def check_build(self, builder, deploy_paths={}, extra_args=[], *,
-                    submodules=None, usage=None):
+    def check_build(self, builder, extra_args=[], *, submodules=None,
+                    usage=None):
         if usage is None:
             pcfiles = ['foo']
             pcfiles.extend('foo_{}'.format(i) for i in iterate(submodules))
@@ -27,7 +27,7 @@ class TestNoneBuilder(BuilderTest):
                      'pcfiles': pcfiles, 'extra_args': []}
 
         with mock.patch('subprocess.run') as mcall:
-            builder.build(self.pkgdir, self.srcdir, deploy_paths)
+            builder.build(self.pkgdir, self.srcdir)
             mcall.assert_not_called()
         self.assertEqual(builder.get_usage(self.pkgdir, submodules,
                                            self.srcdir), usage)

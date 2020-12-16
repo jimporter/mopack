@@ -19,8 +19,8 @@ class TestCMakeBuilder(BuilderTest):
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         return os.path.join(self.pkgdir, 'build', name, pkgconfig)
 
-    def check_build(self, builder, deploy_paths={}, extra_args=[], *,
-                    submodules=None, usage=None):
+    def check_build(self, builder, extra_args=[], *, submodules=None,
+                    usage=None):
         if usage is None:
             pcfiles = ['foo']
             pcfiles.extend('foo_{}'.format(i) for i in iterate(submodules))
@@ -31,7 +31,7 @@ class TestCMakeBuilder(BuilderTest):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.cmake.pushd'), \
              mock.patch('subprocess.run') as mcall:  # noqa
-            builder.build(self.pkgdir, srcdir, deploy_paths)
+            builder.build(self.pkgdir, srcdir)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')
@@ -133,7 +133,8 @@ class TestCMakeBuilder(BuilderTest):
 
     def test_deploy_paths(self):
         deploy_paths = {'prefix': '/usr/local', 'goofy': '/foo/bar'}
-        builder = self.make_builder('foo', usage='pkg-config')
+        builder = self.make_builder('foo', usage='pkg-config',
+                                    deploy_paths=deploy_paths)
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, [])
         self.assertEqual(builder.usage, PkgConfigUsage(
@@ -141,7 +142,7 @@ class TestCMakeBuilder(BuilderTest):
             _path_bases=self.path_bases
         ))
 
-        self.check_build(builder, deploy_paths, extra_args=[
+        self.check_build(builder, extra_args=[
             '-DCMAKE_INSTALL_PREFIX:PATH=' + os.path.abspath('/usr/local')
         ])
 

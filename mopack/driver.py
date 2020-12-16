@@ -59,9 +59,8 @@ def resolve(parser, subparser, args):
         return 3
 
     os.environ[nested_invoke] = args.directory
-    config_data = config.Config(args.file, args.options)
-    commands.resolve(config_data, commands.get_package_dir(args.directory),
-                     args.deploy_paths)
+    config_data = config.Config(args.file, args.options, args.deploy_paths)
+    commands.resolve(config_data, commands.get_package_dir(args.directory))
 
 
 def usage(parser, subparser, args):

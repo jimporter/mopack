@@ -1,5 +1,7 @@
 import os
+import subprocess
 import yaml
+from unittest import mock
 
 from . import *
 from .... import *
@@ -250,8 +252,24 @@ class TestDirectory(SDistTestCase):
             pkg.get_usage(self.pkgdir, ['invalid'])
 
     def test_deploy(self):
-        pkg = self.make_package('foo', path=self.srcpath, build='bfg9000')
+        deploy_paths = {'prefix': '/usr/local'}
+        pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
+                                deploy_paths=deploy_paths)
         self.assertEqual(pkg.should_deploy, True)
+
+        with mock_open_log() as mopen, \
+             mock.patch('mopack.builders.bfg9000.pushd'), \
+             mock.patch('subprocess.run') as mrun:  # noqa
+            pkg.resolve(self.pkgdir)
+            mopen.assert_called_with(os.path.join(
+                self.pkgdir, 'logs', 'foo.log'
+            ), 'a')
+            builddir = os.path.join(self.pkgdir, 'build', 'foo')
+            mrun.assert_any_call(
+                ['bfg9000', 'configure', builddir, '--prefix', '/usr/local'],
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                universal_newlines=True, check=True
+            )
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \

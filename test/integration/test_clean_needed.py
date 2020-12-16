@@ -28,6 +28,7 @@ class TestCleanNeeded(IntegrationTest):
             'common': {
                 'target_platform': platform_name(),
                 'env': AlwaysEqual(),
+                'deploy_paths': {},
             },
             'builders': [{
                 'type': 'bfg9000',
@@ -66,7 +67,6 @@ class TestCleanNeeded(IntegrationTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'deploy_paths': {},
             'options': self._options(),
             'packages': [{
                 'name': 'hello',
@@ -106,7 +106,6 @@ class TestCleanNeeded(IntegrationTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'deploy_paths': {},
             'options': self._options(),
             'packages': [{
                 'name': 'hello',

@@ -8,11 +8,12 @@ from . import *
 
 
 class CommonTest(IntegrationTest):
-    def _options(self):
+    def _options(self, deploy_paths={}):
         return {
             'common': {
                 'target_platform': platform_name(),
                 'env': AlwaysEqual(),
+                'deploy_paths': deploy_paths,
             },
             'builders': [{
                 'type': 'bfg9000',
@@ -53,8 +54,7 @@ class TestBroken(CommonTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'deploy_paths': {'prefix': self.prefix},
-            'options': self._options(),
+            'options': self._options({'prefix': self.prefix}),
             'packages': [{
                 'name': 'hello',
                 'config_file': config,
@@ -98,8 +98,7 @@ class TestBrokenPatch(CommonTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'deploy_paths': {'prefix': self.prefix},
-            'options': self._options(),
+            'options': self._options({'prefix': self.prefix}),
             'packages': [{
                 'name': 'hello',
                 'config_file': config,

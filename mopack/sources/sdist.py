@@ -107,9 +107,9 @@ class SDistPackage(Package):
         self.builder.clean(pkgdir)
         return True
 
-    def _resolve(self, pkgdir, srcdir, deploy_paths):
+    def _resolve(self, pkgdir, srcdir):
         log.pkg_resolve(self.name)
-        self.builder.build(pkgdir, srcdir, deploy_paths)
+        self.builder.build(pkgdir, srcdir)
         self.resolved = True
 
     def deploy(self, pkgdir):
@@ -131,9 +131,9 @@ class DirectoryPackage(SDistPackage):
         log.pkg_fetch(self.name, 'from {}'.format(path))
         return self._find_mopack(path, parent_config)
 
-    def resolve(self, pkgdir, deploy_paths):
+    def resolve(self, pkgdir):
         path = self.path.string(cfgdir=self.config_dir)
-        return self._resolve(pkgdir, path, deploy_paths)
+        return self._resolve(pkgdir, path)
 
     def _get_usage(self, pkgdir, submodules):
         path = self.path.string(cfgdir=self.config_dir)
@@ -215,8 +215,8 @@ class TarballPackage(SDistPackage):
 
         return self._find_mopack(self._srcdir(pkgdir), parent_config)
 
-    def resolve(self, pkgdir, deploy_paths):
-        return self._resolve(pkgdir, self._srcdir(pkgdir), deploy_paths)
+    def resolve(self, pkgdir):
+        return self._resolve(pkgdir, self._srcdir(pkgdir))
 
     def _get_usage(self, pkgdir, submodules):
         return self.builder.get_usage(pkgdir, submodules, self._srcdir(pkgdir))
@@ -288,8 +288,8 @@ class GitPackage(SDistPackage):
 
         return self._find_mopack(self._srcdir(pkgdir), parent_config)
 
-    def resolve(self, pkgdir, deploy_paths):
-        return self._resolve(pkgdir, self._srcdir(pkgdir), deploy_paths)
+    def resolve(self, pkgdir):
+        return self._resolve(pkgdir, self._srcdir(pkgdir))
 
     def _get_usage(self, pkgdir, submodules):
         return self.builder.get_usage(pkgdir, submodules, self._srcdir(pkgdir))

@@ -25,9 +25,7 @@ class Metadata:
     metadata_filename = 'mopack.json'
     version = 1
 
-    def __init__(self, deploy_paths=None, options=None, files=None,
-                 implicit_files=None):
-        self.deploy_paths = deploy_paths or {}
+    def __init__(self, options=None, files=None, implicit_files=None):
         self.options = options or Options.default()
         self.files = files or []
         self.implicit_files = implicit_files or []
@@ -46,7 +44,6 @@ class Metadata:
                     'implicit': self.implicit_files,
                 },
                 'metadata': {
-                    'deploy_paths': self.deploy_paths,
                     'options': self.options.dehydrate(),
                     'packages': self._PackagesFD.dehydrate(self.packages),
                 }
@@ -63,8 +60,6 @@ class Metadata:
             )
 
         metadata = Metadata.__new__(Metadata)
-        metadata.deploy_paths = data['deploy_paths']
-
         metadata.files = state['config_files']['explicit']
         metadata.implicit_files = state['config_files']['implicit']
 
@@ -112,16 +107,15 @@ def _do_fetch(config, old_metadata, pkgdir):
     config.add_children(child_configs)
 
 
-def _fill_metadata(config, deploy_paths):
+def _fill_metadata(config):
     config.finalize()
-    metadata = Metadata(deploy_paths, config.options, config.files,
-                        config.implicit_files)
+    metadata = Metadata(config.options, config.files, config.implicit_files)
     for pkg in config.packages.values():
         metadata.add_package(pkg)
     return metadata
 
 
-def fetch(config, pkgdir, deploy_paths=None):
+def fetch(config, pkgdir):
     log.LogFile.clean_logs(pkgdir)
 
     old_metadata = Metadata.try_load(pkgdir)
@@ -130,10 +124,10 @@ def fetch(config, pkgdir, deploy_paths=None):
     except ConfigurationError:
         raise
     except Exception:
-        _fill_metadata(config, deploy_paths).save(pkgdir)
+        _fill_metadata(config).save(pkgdir)
         raise
 
-    metadata = _fill_metadata(config, deploy_paths)
+    metadata = _fill_metadata(config)
 
     # Clean out old package data if needed.
     for pkg in config.packages.values():
@@ -148,12 +142,12 @@ def fetch(config, pkgdir, deploy_paths=None):
     return metadata
 
 
-def resolve(config, pkgdir, deploy_paths=None):
+def resolve(config, pkgdir):
     if not config:
         log.info('no inputs')
         return
 
-    metadata = fetch(config, pkgdir, deploy_paths)
+    metadata = fetch(config, pkgdir)
 
     packages, batch_packages = [], {}
     for pkg in config.packages.values():
@@ -164,7 +158,7 @@ def resolve(config, pkgdir, deploy_paths=None):
 
     for t, pkgs in batch_packages.items():
         try:
-            t.resolve_all(pkgdir, pkgs, metadata.deploy_paths)
+            t.resolve_all(pkgdir, pkgs)
         except Exception:
             for i in pkgs:
                 i.clean_post(pkgdir, None, quiet=True)
@@ -179,7 +173,7 @@ def resolve(config, pkgdir, deploy_paths=None):
     metadata.save(pkgdir)
     for pkg in packages:
         try:
-            pkg.resolve(pkgdir, metadata.deploy_paths)
+            pkg.resolve(pkgdir)
             metadata.save(pkgdir)
         except Exception:
             pkg.clean_post(pkgdir, None, quiet=True)

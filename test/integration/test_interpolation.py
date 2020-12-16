@@ -25,6 +25,7 @@ class TestInterpolation(IntegrationTest):
             'common': {
                 'target_platform': platform_name(),
                 'env': AlwaysEqual(),
+                'deploy_paths': {},
             },
             'builders': [{
                 'type': 'bfg9000',
@@ -62,7 +63,6 @@ class TestInterpolation(IntegrationTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'deploy_paths': {},
             'options': self._options(),
             'packages': [{
                 'name': 'hello',
@@ -88,7 +88,6 @@ class TestInterpolation(IntegrationTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'deploy_paths': {},
             'options': self._options(),
             'packages': [{
                 'name': 'hello',

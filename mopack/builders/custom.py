@@ -25,7 +25,7 @@ class CustomBuilder(Builder):
         ), [])
         self.build_commands = cmds_type('build_commands', build_commands)
 
-    def build(self, pkgdir, srcdir, deploy_paths={}):
+    def build(self, pkgdir, srcdir):
         builddir = self._builddir(pkgdir)
 
         with LogFile.open(pkgdir, self.name) as logfile:

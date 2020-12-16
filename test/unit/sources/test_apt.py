@@ -15,13 +15,12 @@ class TestApt(SourceTest):
     pkg_type = AptPackage
     config_file = '/path/to/mopack.yml'
     pkgdir = '/path/to/builddir/mopack'
-    deploy_paths = {'prefix': '/usr/local'}
 
     def check_resolve_all(self, packages, remotes, *, submodules=None,
                           usages=None):
         with mock_open_log() as mopen, \
              mock.patch('subprocess.run') as mcall:  # noqa
-            AptPackage.resolve_all(self.pkgdir, packages, self.deploy_paths)
+            AptPackage.resolve_all(self.pkgdir, packages)
 
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'apt.log'

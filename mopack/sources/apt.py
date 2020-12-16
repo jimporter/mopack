@@ -16,7 +16,7 @@ class AptPackage(BinaryPackage):
         self.repository = types.maybe(types.string)('repository', repository)
 
     @classmethod
-    def resolve_all(cls, pkgdir, packages, deploy_paths):
+    def resolve_all(cls, pkgdir, packages):
         for i in packages:
             log.pkg_resolve(i.name, 'from {}'.format(cls.source))
 

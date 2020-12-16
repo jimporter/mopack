@@ -21,8 +21,8 @@ class TestCustomBuilder(BuilderTest):
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         return os.path.join(self.pkgdir, 'build', name, pkgconfig)
 
-    def check_build(self, builder, build_commands=None, deploy_paths={}, *,
-                    submodules=None, usage=None):
+    def check_build(self, builder, build_commands=None, *, submodules=None,
+                    usage=None):
         if usage is None:
             pcfiles = ['foo']
             pcfiles.extend('foo_{}'.format(i) for i in iterate(submodules))
@@ -32,7 +32,7 @@ class TestCustomBuilder(BuilderTest):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.custom.pushd'), \
              mock.patch('subprocess.run') as mcall:  # noqa
-            builder.build(self.pkgdir, self.srcdir, deploy_paths)
+            builder.build(self.pkgdir, self.srcdir)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')

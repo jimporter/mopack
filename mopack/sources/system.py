@@ -16,7 +16,7 @@ class SystemPackage(BinaryPackage):
             'compile_flags': compile_flags, 'link_flags': link_flags,
         }, **kwargs)
 
-    def resolve(self, pkgdir, deploy_paths):
+    def resolve(self, pkgdir):
         log.pkg_resolve(self.name, 'from {}'.format(self.source))
         self.resolved = True
 

@@ -12,7 +12,6 @@ mock_bfgclean = 'mopack.builders.bfg9000.Bfg9000Builder.clean'
 class SDistTestCase(SourceTest):
     config_file = os.path.abspath('/path/to/mopack.yml')
     pkgdir = os.path.abspath('/path/to/builddir/mopack')
-    deploy_paths = {'prefix': '/usr/local'}
 
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         return os.path.join(self.pkgdir, 'build', name, pkgconfig)
@@ -28,7 +27,7 @@ class SDistTestCase(SourceTest):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.run'):  # noqa
-            pkg.resolve(self.pkgdir, self.deploy_paths)
+            pkg.resolve(self.pkgdir)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')

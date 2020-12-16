@@ -44,7 +44,7 @@ class Bfg9000Builder(Builder):
                 args.extend(['--' + k, v])
         return args
 
-    def build(self, pkgdir, srcdir, deploy_paths={}):
+    def build(self, pkgdir, srcdir):
         builddir = self._builddir(pkgdir)
 
         bfg9000 = get_cmd(self._common_options.env, 'BFG9000', 'bfg9000')
@@ -54,7 +54,7 @@ class Bfg9000Builder(Builder):
                 logfile.check_call(
                     bfg9000 + ['configure', builddir] +
                     self._toolchain_args(self._this_options.toolchain) +
-                    self._install_args(deploy_paths) +
+                    self._install_args(self._common_options.deploy_paths) +
                     self.extra_args
                 )
             with pushd(builddir):

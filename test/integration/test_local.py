@@ -38,11 +38,11 @@ class TestLocal(IntegrationTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'deploy_paths': {},
             'options': {
                 'common': {
                     'target_platform': platform_name(),
                     'env': AlwaysEqual(),
+                    'deploy_paths': {},
                 },
                 'builders': [],
                 'sources': [{

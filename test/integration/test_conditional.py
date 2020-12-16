@@ -28,6 +28,7 @@ class TestConditional(IntegrationTest):
             'common': {
                 'target_platform': platform_name(),
                 'env': AlwaysEqual(),
+                'deploy_paths': {},
             },
             'builders': [{
                 'type': 'bfg9000',
@@ -91,39 +92,6 @@ class TestConditional(IntegrationTest):
                 'path': ['cfgdir', 'hello-bfg'],
             }
         self.assertEqual(output['metadata'], {
-            'deploy_paths': {},
             'options': self._options(),
             'packages': [hellopkg],
-        })
-
-    def _test_resolve(self):
-        config = os.path.join(test_data_dir, 'mopack-tarball.yml')
-        self.assertPopen(['mopack', 'resolve', config,
-                          '-Pprefix=' + self.prefix])
-        self.assertExists('mopack/src/hello/hello-bfg/build.bfg')
-        self.assertExists('mopack/build/hello/')
-        self.assertExists('mopack/logs/hello.log')
-        self.assertExists('mopack/mopack.json')
-
-        self.check_usage('hello')
-
-        output = json.loads(slurp('mopack/mopack.json'))
-        self.assertEqual(output['metadata'], {
-            'deploy_paths': {'prefix': self.prefix},
-            'options': self._options(),
-            'packages': [{
-                'name': 'hello',
-                'config_file': config,
-                'resolved': True,
-                'source': 'tarball',
-                'submodules': None,
-                'should_deploy': True,
-                'builder': self._builder('hello'),
-                'url': None,
-                'path': os.path.join(test_data_dir, 'hello-bfg.tar.gz'),
-                'files': [],
-                'srcdir': None,
-                'guessed_srcdir': 'hello-bfg',
-                'patch': None,
-            }],
         })

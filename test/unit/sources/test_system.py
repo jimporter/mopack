@@ -12,11 +12,10 @@ class TestSystemPackage(SourceTest):
     pkg_type = SystemPackage
     config_file = abspath('/path/to/mopack.yml')
     pkgdir = abspath('/path/to/builddir/mopack')
-    deploy_paths = {'prefix': '/usr/local'}
 
     def test_resolve_path(self):
         pkg = self.make_package('foo')
-        pkg.resolve(self.pkgdir, self.deploy_paths)
+        pkg.resolve(self.pkgdir)
         with mock.patch('subprocess.run', side_effect=OSError()):
             self.assertEqual(pkg.get_usage(self.pkgdir, None), {
                 'type': 'path', 'auto_link': False, 'include_path': [],
@@ -26,7 +25,7 @@ class TestSystemPackage(SourceTest):
 
     def test_resolve_pkg_config(self):
         pkg = self.make_package('foo')
-        pkg.resolve(self.pkgdir, self.deploy_paths)
+        pkg.resolve(self.pkgdir)
         with mock.patch('subprocess.run'):
             self.assertEqual(pkg.get_usage(self.pkgdir, None), {
                 'type': 'pkg-config', 'path': None, 'pcfiles': ['foo'],
@@ -35,7 +34,7 @@ class TestSystemPackage(SourceTest):
 
     def test_auto_link(self):
         pkg = self.make_package('foo', auto_link=True)
-        pkg.resolve(self.pkgdir, self.deploy_paths)
+        pkg.resolve(self.pkgdir)
         with mock.patch('subprocess.run', side_effect=OSError()):
             self.assertEqual(pkg.get_usage(self.pkgdir, None), {
                 'type': 'path', 'auto_link': True, 'include_path': [],
@@ -45,7 +44,7 @@ class TestSystemPackage(SourceTest):
 
     def test_include_path(self):
         pkg = self.make_package('foo', include_path='/path/to/include')
-        pkg.resolve(self.pkgdir, self.deploy_paths)
+        pkg.resolve(self.pkgdir)
         with mock.patch('subprocess.run', side_effect=OSError()):
             self.assertEqual(pkg.get_usage(self.pkgdir, None), {
                 'type': 'path', 'auto_link': False,
@@ -56,7 +55,7 @@ class TestSystemPackage(SourceTest):
 
     def test_library_path(self):
         pkg = self.make_package('foo', library_path='/path/to/lib')
-        pkg.resolve(self.pkgdir, self.deploy_paths)
+        pkg.resolve(self.pkgdir)
         with mock.patch('subprocess.run', side_effect=OSError()):
             self.assertEqual(pkg.get_usage(self.pkgdir, None), {
                 'type': 'path', 'auto_link': False, 'include_path': [],
@@ -66,7 +65,7 @@ class TestSystemPackage(SourceTest):
 
     def test_headers(self):
         pkg = self.make_package('foo', headers='foo.hpp')
-        pkg.resolve(self.pkgdir, self.deploy_paths)
+        pkg.resolve(self.pkgdir)
         with mock.patch('subprocess.run', side_effect=OSError()):
             self.assertEqual(pkg.get_usage(self.pkgdir, None), {
                 'type': 'path', 'auto_link': False, 'include_path': [],
@@ -75,7 +74,7 @@ class TestSystemPackage(SourceTest):
             })
 
         pkg = self.make_package('foo', headers=['foo.hpp', 'bar.hpp'])
-        pkg.resolve(self.pkgdir, self.deploy_paths)
+        pkg.resolve(self.pkgdir)
         with mock.patch('subprocess.run', side_effect=OSError()):
             self.assertEqual(pkg.get_usage(self.pkgdir, None), {
                 'type': 'path', 'auto_link': False, 'include_path': [],
@@ -85,7 +84,7 @@ class TestSystemPackage(SourceTest):
 
     def test_libraries(self):
         pkg = self.make_package('foo', libraries='bar')
-        pkg.resolve(self.pkgdir, self.deploy_paths)
+        pkg.resolve(self.pkgdir)
         with mock.patch('subprocess.run', side_effect=OSError()):
             self.assertEqual(pkg.get_usage(self.pkgdir, None), {
                 'type': 'path', 'auto_link': False, 'include_path': [],
@@ -94,7 +93,7 @@ class TestSystemPackage(SourceTest):
             })
 
         pkg = self.make_package('foo', libraries=['foo', 'bar'])
-        pkg.resolve(self.pkgdir, self.deploy_paths)
+        pkg.resolve(self.pkgdir)
         with mock.patch('subprocess.run', side_effect=OSError()):
             self.assertEqual(pkg.get_usage(self.pkgdir, None), {
                 'type': 'path', 'auto_link': False, 'include_path': [],
@@ -103,7 +102,7 @@ class TestSystemPackage(SourceTest):
             })
 
         pkg = self.make_package('foo', libraries=None)
-        pkg.resolve(self.pkgdir, self.deploy_paths)
+        pkg.resolve(self.pkgdir)
         with mock.patch('subprocess.run', side_effect=OSError()):
             self.assertEqual(pkg.get_usage(self.pkgdir, None), {
                 'type': 'path', 'auto_link': False, 'include_path': [],

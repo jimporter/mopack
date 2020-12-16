@@ -19,8 +19,8 @@ def mock_open_log(new=None, *args, **kwargs):
 
 
 class OptionsTest(TestCase):
-    def make_options(self, common_options=None):
-        options = Options()
+    def make_options(self, common_options=None, deploy_paths=None):
+        options = Options(deploy_paths)
         if common_options:
             options.common.accumulate(common_options)
         with mock.patch.object(os, 'environ', return_value={}):

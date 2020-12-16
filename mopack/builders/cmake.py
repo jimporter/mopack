@@ -28,7 +28,7 @@ class CMakeBuilder(Builder):
                             .format(k.upper(), os.path.abspath(v)))
         return args
 
-    def build(self, pkgdir, srcdir, deploy_paths={}):
+    def build(self, pkgdir, srcdir):
         builddir = self._builddir(pkgdir)
 
         cmake = get_cmd(self._common_options.env, 'CMAKE', 'cmake')
@@ -37,7 +37,7 @@ class CMakeBuilder(Builder):
             with pushd(builddir, makedirs=True, exist_ok=True):
                 logfile.check_call(
                     cmake + [srcdir, '-G', 'Ninja'] +
-                    self._install_args(deploy_paths) +
+                    self._install_args(self._common_options.deploy_paths) +
                     self.extra_args
                 )
                 logfile.check_call(ninja)

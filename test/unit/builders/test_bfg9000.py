@@ -20,8 +20,8 @@ class TestBfg9000Builder(BuilderTest):
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         return os.path.join(self.pkgdir, 'build', name, pkgconfig)
 
-    def check_build(self, builder, deploy_paths={}, extra_args=[], *,
-                    submodules=None, usage=None):
+    def check_build(self, builder, extra_args=[], *, submodules=None,
+                    usage=None):
         if usage is None:
             pcfiles = ['foo']
             pcfiles.extend('foo_{}'.format(i) for i in iterate(submodules))
@@ -33,7 +33,7 @@ class TestBfg9000Builder(BuilderTest):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.run') as mcall:  # noqa
-            builder.build(self.pkgdir, srcdir, deploy_paths)
+            builder.build(self.pkgdir, srcdir)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')
@@ -156,7 +156,7 @@ class TestBfg9000Builder(BuilderTest):
 
     def test_deploy_paths(self):
         deploy_paths = {'prefix': '/usr/local', 'goofy': '/foo/bar'}
-        builder = self.make_builder('foo')
+        builder = self.make_builder('foo', deploy_paths=deploy_paths)
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, [])
         self.assertEqual(builder.usage, PkgConfigUsage(
@@ -164,9 +164,7 @@ class TestBfg9000Builder(BuilderTest):
             _path_bases=self.path_bases
         ))
 
-        self.check_build(builder, deploy_paths, extra_args=[
-            '--prefix', '/usr/local'
-        ])
+        self.check_build(builder, extra_args=['--prefix', '/usr/local'])
 
     def test_clean(self):
         builder = self.make_builder('foo')

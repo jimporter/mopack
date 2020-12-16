@@ -34,7 +34,6 @@ class TestConan(SourceTest):
     config_file = os.path.abspath('/path/to/mopack.yml')
     pkgdir = os.path.abspath('/path/to/builddir/mopack')
     pkgconfdir = os.path.join(pkgdir, 'conan')
-    deploy_paths = {'prefix': '/usr/local'}
 
     def check_usage(self, pkg, *, submodules=None, usage=None):
         if usage is None:
@@ -54,7 +53,7 @@ class TestConan(SourceTest):
 
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.run') as mcall:  # noqa
-            ConanPackage.resolve_all(self.pkgdir, [pkg], self.deploy_paths)
+            ConanPackage.resolve_all(self.pkgdir, [pkg])
 
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
                 [requires]
@@ -82,7 +81,7 @@ class TestConan(SourceTest):
 
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.run') as mcall:  # noqa
-            ConanPackage.resolve_all(self.pkgdir, [pkg], self.deploy_paths)
+            ConanPackage.resolve_all(self.pkgdir, [pkg])
 
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
                 [requires]
@@ -112,7 +111,7 @@ class TestConan(SourceTest):
 
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.run') as mcall:  # noqa
-            ConanPackage.resolve_all(self.pkgdir, [pkg], self.deploy_paths)
+            ConanPackage.resolve_all(self.pkgdir, [pkg])
 
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
                 [requires]
@@ -142,7 +141,7 @@ class TestConan(SourceTest):
 
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.run') as mcall:  # noqa
-            ConanPackage.resolve_all(self.pkgdir, [pkg], self.deploy_paths)
+            ConanPackage.resolve_all(self.pkgdir, [pkg])
 
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
                 [requires]
@@ -171,7 +170,7 @@ class TestConan(SourceTest):
 
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.run') as mcall:  # noqa
-            ConanPackage.resolve_all(self.pkgdir, pkgs, self.deploy_paths)
+            ConanPackage.resolve_all(self.pkgdir, pkgs)
 
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
                 [requires]

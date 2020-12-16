@@ -15,9 +15,10 @@ class CommonOptions(FreezeDried, BaseOptions):
     _context = 'while adding common options'
     type = 'common'
 
-    def __init__(self):
+    def __init__(self, deploy_paths=None):
         self.target_platform = Unset
         self.env = {}
+        self.deploy_paths = deploy_paths or {}
 
     def __call__(self, *, target_platform=Unset, env=None, **kwargs):
         if self.target_platform is Unset:
@@ -57,8 +58,8 @@ class Options(FreezeDried):
                       'builders': make_builder_options}
     option_kinds = list(_option_makers.keys())
 
-    def __init__(self):
-        self.common = CommonOptions()
+    def __init__(self, deploy_paths=None):
+        self.common = CommonOptions(deploy_paths)
         for i in self.option_kinds:
             setattr(self, i, {})
 
