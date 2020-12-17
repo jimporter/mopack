@@ -17,5 +17,5 @@ class NoneBuilder(Builder):
     def build(self, pkgdir, srcdir):
         pass
 
-    def deploy(self, pkgdir):
+    def deploy(self, pkgdir, srcdir):
         pass

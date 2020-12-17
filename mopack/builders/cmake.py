@@ -44,7 +44,7 @@ class CMakeBuilder(Builder):
                 )
                 logfile.check_call(ninja)
 
-    def deploy(self, pkgdir):
+    def deploy(self, pkgdir, srcdir):
         ninja = get_cmd(self._common_options.env, 'NINJA', 'ninja')
         with LogFile.open(pkgdir, self.name, kind='deploy') as logfile:
             with pushd(self._builddir(pkgdir)):

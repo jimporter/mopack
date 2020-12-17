@@ -43,7 +43,7 @@ class TestNoneBuilder(BuilderTest):
         self.check_build(builder)
 
         with mock.patch('subprocess.run') as mcall:
-            builder.deploy(self.pkgdir)
+            builder.deploy(self.pkgdir, self.srcdir)
             mcall.assert_not_called()
 
     def test_usage_full(self):

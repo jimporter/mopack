@@ -15,6 +15,7 @@ from mopack.types import Unset
 
 class TestBfg9000Builder(BuilderTest):
     builder_type = Bfg9000Builder
+    srcdir = os.path.abspath('/path/to/src')
     pkgdir = os.path.abspath('/path/to/builddir/mopack')
     path_bases = {'srcdir', 'builddir'}
 
@@ -29,12 +30,11 @@ class TestBfg9000Builder(BuilderTest):
             usage = {'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
                      'pcfiles': pcfiles, 'extra_args': []}
 
-        srcdir = '/path/to/src'
         builddir = os.path.join(self.pkgdir, 'build', 'foo')
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.run') as mcall:  # noqa
-            builder.build(self.pkgdir, srcdir)
+            builder.build(self.pkgdir, self.srcdir)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')
@@ -47,8 +47,9 @@ class TestBfg9000Builder(BuilderTest):
                 ['ninja'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                 universal_newlines=True, check=True
             )
-        self.assertEqual(builder.get_usage(self.pkgdir, submodules, srcdir),
-                         usage)
+        self.assertEqual(builder.get_usage(
+            self.pkgdir, submodules, self.srcdir
+        ), usage)
 
     def test_basic(self):
         builder = self.make_builder('foo')
@@ -64,7 +65,7 @@ class TestBfg9000Builder(BuilderTest):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.run') as mcall:  # noqa
-            builder.deploy(self.pkgdir)
+            builder.deploy(self.pkgdir, self.srcdir)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'deploy', 'foo.log'
             ), 'a')

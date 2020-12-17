@@ -107,15 +107,15 @@ class SDistPackage(Package):
         self.builder.clean(pkgdir)
         return True
 
-    def _resolve(self, pkgdir, srcdir):
+    def resolve(self, pkgdir):
         log.pkg_resolve(self.name)
-        self.builder.build(pkgdir, srcdir)
+        self.builder.build(pkgdir, self._srcdir(pkgdir))
         self.resolved = True
 
     def deploy(self, pkgdir):
         if self.should_deploy:
             log.pkg_deploy(self.name)
-            self.builder.deploy(pkgdir)
+            self.builder.deploy(pkgdir, self._srcdir(pkgdir))
 
 
 @FreezeDried.fields(rehydrate={'path': Path})
@@ -126,14 +126,13 @@ class DirectoryPackage(SDistPackage):
         super().__init__(name, **kwargs)
         self.path = types.any_path('cfgdir')('path', path)
 
+    def _srcdir(self, pkgdir):
+        return self.path.string(cfgdir=self.config_dir)
+
     def fetch(self, pkgdir, parent_config):
         path = self.path.string(cfgdir=self.config_dir)
         log.pkg_fetch(self.name, 'from {}'.format(path))
         return self._find_mopack(path, parent_config)
-
-    def resolve(self, pkgdir):
-        path = self.path.string(cfgdir=self.config_dir)
-        return self._resolve(pkgdir, path)
 
     def _get_usage(self, pkgdir, submodules):
         path = self.path.string(cfgdir=self.config_dir)
@@ -215,9 +214,6 @@ class TarballPackage(SDistPackage):
 
         return self._find_mopack(self._srcdir(pkgdir), parent_config)
 
-    def resolve(self, pkgdir):
-        return self._resolve(pkgdir, self._srcdir(pkgdir))
-
     def _get_usage(self, pkgdir, submodules):
         return self.builder.get_usage(pkgdir, submodules, self._srcdir(pkgdir))
 
@@ -287,9 +283,6 @@ class GitPackage(SDistPackage):
                                      .format(self.rev[0]))
 
         return self._find_mopack(self._srcdir(pkgdir), parent_config)
-
-    def resolve(self, pkgdir):
-        return self._resolve(pkgdir, self._srcdir(pkgdir))
 
     def _get_usage(self, pkgdir, submodules):
         return self.builder.get_usage(pkgdir, submodules, self._srcdir(pkgdir))

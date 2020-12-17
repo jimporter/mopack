@@ -21,28 +21,28 @@ class CustomBuilder(Builder):
                  submodules, **kwargs):
         super().__init__(name, **kwargs)
 
-        self.build_commands = types.maybe(types.list_of(
-            types.shell_args(('srcdir', 'builddir'))
-        ), [])('build_commands', build_commands)
+        cmds_type = types.maybe(types.list_of(
+            types.shell_args(self._path_bases)
+        ), [])
+        self.build_commands = cmds_type('build_commands', build_commands)
+        self.deploy_commands = cmds_type('deploy_commands', deploy_commands)
 
-        self.deploy_commands = types.maybe(types.list_of(
-            types.shell_args(('builddir'))
-        ), [])('deploy_commands', deploy_commands)
+    def _execute(self, logfile, commands, **kwargs):
+        for line in commands:
+            logfile.check_call(line.fill(**kwargs))
 
     def build(self, pkgdir, srcdir):
         builddir = self._builddir(pkgdir)
 
         with LogFile.open(pkgdir, self.name) as logfile:
             with pushd(srcdir):
-                for line in self.build_commands:
-                    logfile.check_call(line.fill(
-                        srcdir=srcdir, builddir=builddir
-                    ))
+                self._execute(logfile, self.build_commands, srcdir=srcdir,
+                              builddir=builddir)
 
-    def deploy(self, pkgdir):
+    def deploy(self, pkgdir, srcdir):
         builddir = self._builddir(pkgdir)
 
         with LogFile.open(pkgdir, self.name, kind='deploy') as logfile:
             with pushd(builddir):
-                for line in self.deploy_commands:
-                    logfile.check_call(line.fill(builddir=builddir))
+                self._execute(logfile, self.deploy_commands, srcdir=srcdir,
+                              builddir=builddir)
