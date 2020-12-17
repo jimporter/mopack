@@ -44,7 +44,7 @@ class TestConditional(IntegrationTest):
             'extra_args': [],
             'usage': {
                 'type': 'pkg-config',
-                'path': ['builddir', 'pkgconfig'],
+                'path': {'base': 'builddir', 'path': 'pkgconfig'},
                 'pcfile': name,
                 'extra_args': [],
             },
@@ -74,7 +74,7 @@ class TestConditional(IntegrationTest):
                 'should_deploy': True,
                 'builder': self._builder('hello'),
                 'url': None,
-                'path': ['cfgdir', 'hello-bfg.tar.gz'],
+                'path': {'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
                 'files': [],
                 'srcdir': None,
                 'guessed_srcdir': 'hello-bfg',
@@ -89,7 +89,7 @@ class TestConditional(IntegrationTest):
                 'submodules': None,
                 'should_deploy': True,
                 'builder': self._builder('hello'),
-                'path': ['cfgdir', 'hello-bfg'],
+                'path': {'base': 'cfgdir', 'path': 'hello-bfg'},
             }
         self.assertEqual(output['metadata'], {
             'options': self._options(),

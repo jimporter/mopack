@@ -1,13 +1,15 @@
 from . import Builder, BuilderOptions
 from .. import types
+from ..freezedried import FreezeDried
 from ..log import LogFile
 from ..path import pushd
-from ..shell import get_cmd
+from ..shell import get_cmd, ShellArguments
 
 _known_install_types = ('prefix', 'exec-prefix', 'bindir', 'libdir',
                         'includedir')
 
 
+@FreezeDried.fields(rehydrate={'extra_args': ShellArguments})
 class Bfg9000Builder(Builder):
     type = 'bfg9000'
     _path_bases = ('srcdir', 'builddir')
@@ -25,7 +27,7 @@ class Bfg9000Builder(Builder):
 
     def __init__(self, name, *, extra_args=None, submodules, **kwargs):
         super().__init__(name, **kwargs)
-        self.extra_args = types.maybe(types.shell_args(self._path_bases), [])(
+        self.extra_args = types.shell_args(self._path_bases, none_ok=True)(
             'extra_args', extra_args
         )
 
@@ -55,7 +57,7 @@ class Bfg9000Builder(Builder):
                     bfg9000 + ['configure', builddir] +
                     self._toolchain_args(self._this_options.toolchain) +
                     self._install_args(self._common_options.deploy_paths) +
-                    self.extra_args
+                    self.extra_args.fill(srcdir=srcdir, builddir=builddir)
                 )
             with pushd(builddir):
                 logfile.check_call(ninja)

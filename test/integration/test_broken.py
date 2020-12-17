@@ -29,7 +29,7 @@ class CommonTest(IntegrationTest):
             'extra_args': [],
             'usage': {
                 'type': 'pkg-config',
-                'path': ['builddir', 'pkgconfig'],
+                'path': {'base': 'builddir', 'path': 'pkgconfig'},
                 'pcfile': name,
                 'extra_args': [],
             },
@@ -64,7 +64,7 @@ class TestBroken(CommonTest):
                 'should_deploy': True,
                 'builder': self._builder('hello'),
                 'url': None,
-                'path': ['cfgdir', 'broken-bfg.tar.gz'],
+                'path': {'base': 'cfgdir', 'path': 'broken-bfg.tar.gz'},
                 'files': [],
                 'srcdir': None,
                 'guessed_srcdir': 'hello-bfg',
@@ -108,11 +108,11 @@ class TestBrokenPatch(CommonTest):
                 'should_deploy': True,
                 'builder': self._builder('hello'),
                 'url': None,
-                'path': ['cfgdir', 'broken-bfg.tar.gz'],
+                'path': {'base': 'cfgdir', 'path': 'broken-bfg.tar.gz'},
                 'files': [],
                 'srcdir': None,
                 'guessed_srcdir': 'hello-bfg',
-                'patch': ['cfgdir', 'hello-bfg.patch'],
+                'patch': {'base': 'cfgdir', 'path': 'hello-bfg.patch'},
             }],
         })
 

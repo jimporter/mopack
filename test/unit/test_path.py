@@ -117,6 +117,17 @@ class TestPath(TestCase):
                          Path(Path.Base.srcdir, ''))
         self.assertEqual(Path.ensure_path(srcdir + '/foo', bases),
                          Path(Path.Base.srcdir, 'foo'))
+
+        subsrcdir = placeholder(Path(Path.Base.srcdir, 'subdir'))
+        self.assertEqual(Path.ensure_path(subsrcdir, bases),
+                         Path(Path.Base.srcdir, 'subdir'))
+        self.assertEqual(Path.ensure_path(subsrcdir + '/foo', bases),
+                         Path(Path.Base.srcdir, 'subdir/foo'))
+        self.assertEqual(Path.ensure_path(subsrcdir + 'foo', bases),
+                         Path(Path.Base.srcdir, 'subdirfoo'))
+
+        with self.assertRaises(ValueError):
+            Path.ensure_path(srcdir + 'foo', bases)
         with self.assertRaises(ValueError):
             Path.ensure_path(srcdir + '/foo' + srcdir, bases)
 
@@ -129,15 +140,6 @@ class TestPath(TestCase):
                          [Path.Base.srcdir])
         self.assertEqual(Path.Base.filter(bases, {'cfgdir', 'srcdir'}),
                          [Path.Base.srcdir])
-
-    def test_add(self):
-        p = Path(Path.Base.srcdir, 'foo')
-        self.assertEqual(p + 'bar', Path(Path.Base.srcdir, 'foobar'))
-
-        p = Path(Path.Base.srcdir, '')
-        self.assertEqual(p + '/bar', Path(Path.Base.srcdir, 'bar'))
-        with self.assertRaises(ValueError):
-            p + 'bar'
 
     def test_string(self):
         p = Path(Path.Base.srcdir, 'foo')
@@ -154,20 +156,3 @@ class TestPath(TestCase):
 
         with self.assertRaises(TypeError):
             Path.rehydrate('foo')
-
-
-class TestAutoPath(TestCase):
-    def test_ensure(self):
-        bases = ['srcdir', 'builddir']
-        path = Path(Path.Base.srcdir, 'foo')
-        ph = placeholder(path)
-
-        self.assertEqual(auto_path_ensure(path, bases), path)
-        self.assertEqual(auto_path_ensure(ph + 'bar', bases), path + 'bar')
-        self.assertEqual(auto_path_ensure('foo', bases), 'foo')
-
-    def test_string(self):
-        p = Path(Path.Base.srcdir, 'foo')
-        self.assertEqual(auto_path_string(p, srcdir='/srcdir'),
-                         os.path.abspath(os.path.join('/srcdir', 'foo')))
-        self.assertEqual(auto_path_string('foo', srcdir='/srcdir'), 'foo')

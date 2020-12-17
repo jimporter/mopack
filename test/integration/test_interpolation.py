@@ -41,7 +41,7 @@ class TestInterpolation(IntegrationTest):
             'extra_args': extra_args,
             'usage': {
                 'type': 'pkg-config',
-                'path': ['builddir', 'pkgconfig'],
+                'path': {'base': 'builddir', 'path': 'pkgconfig'},
                 'pcfile': name,
                 'extra_args': [],
             },
@@ -72,7 +72,7 @@ class TestInterpolation(IntegrationTest):
                 'submodules': None,
                 'should_deploy': True,
                 'builder': self._builder('hello', extra_args=['--extra']),
-                'path': ['cfgdir', 'hello-bfg'],
+                'path': {'base': 'cfgdir', 'path': 'hello-bfg'},
             }],
         })
 
@@ -97,6 +97,6 @@ class TestInterpolation(IntegrationTest):
                 'submodules': None,
                 'should_deploy': True,
                 'builder': self._builder('hello'),
-                'path': ['cfgdir', 'hello-bfg'],
+                'path': {'base': 'cfgdir', 'path': 'hello-bfg'},
             }],
         })

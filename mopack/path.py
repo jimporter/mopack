@@ -2,11 +2,10 @@ import os
 from contextlib import contextmanager
 from enum import Enum
 
-from .freezedried import auto_dehydrate, FreezeDried
+from .freezedried import FreezeDried
 from .placeholder import PlaceholderString
 
-__all__ = ['auto_path_ensure', 'auto_path_string', 'Path',
-           'PathOrStrFreezeDryer', 'pushd']
+__all__ = ['Path', 'pushd']
 
 
 @contextmanager
@@ -63,13 +62,13 @@ class Path(FreezeDried):
             self.base = base
 
     def dehydrate(self):
-        return [self.base.name, self.path]
+        return {'base': self.base.name, 'path': self.path}
 
     @classmethod
     def rehydrate(cls, config, **kwargs):
-        if not isinstance(config, list) or len(config) != 2:
-            raise TypeError('expected a list')
-        return cls(cls.Base[config[0]], config[1])
+        if not isinstance(config, dict):
+            raise TypeError('expected a dict')
+        return cls(cls.Base[config['base']], config['path'])
 
     @classmethod
     def ensure_path(cls, path, bases):
@@ -78,12 +77,18 @@ class Path(FreezeDried):
         bases = [cls.Base.ensure_base(i) for i in bases]
 
         if isinstance(path, PlaceholderString):
-            bits = path.unboxed_bits
+            bits = path.unbox()
             types = [type(i) for i in bits]
             if types == [Path]:
                 path = bits[0]
             elif types == [Path, str]:
-                path = bits[0] + bits[1]
+                if bits[0].path:
+                    path = Path(bits[0].base, bits[0].path + bits[1])
+                else:
+                    suffix = os.path.normpath(bits[1])
+                    if suffix and suffix[0] != os.path.sep:
+                        raise ValueError('expected a directory separator')
+                    path = Path(bits[0].base, suffix[1:])
             else:
                 raise ValueError('invalid placeholder format')
 
@@ -99,17 +104,6 @@ class Path(FreezeDried):
     def is_inner(self):
         return (self.path != os.path.pardir and
                 not self.path.startswith(os.path.pardir + os.path.sep))
-
-    def __add__(self, rhs):
-        if not isinstance(rhs, str):
-            return NotImplemented
-
-        if not self.path:
-            suffix = os.path.normpath(rhs)
-            if suffix and suffix[0] != os.path.sep:
-                raise ValueError('expected a directory separator')
-            return Path(self.base, suffix[1:])
-        return Path(self.base, self.path + rhs)
 
     def __eq__(self, rhs):
         if not isinstance(rhs, Path):
@@ -135,27 +129,3 @@ class Path(FreezeDried):
         else:
             path = '$({})/{}'.format(self.base.name, self.path)
         return "<{}({!r})>".format(type(self).__name__, path)
-
-
-class PathOrStrFreezeDryer:
-    @staticmethod
-    def dehydrate(value):
-        return auto_dehydrate(value)
-
-    @staticmethod
-    def rehydrate(value, **kwargs):
-        if isinstance(value, str):
-            return value
-        return Path.rehydrate(value, **kwargs)
-
-
-def auto_path_ensure(thing, *args, **kwargs):
-    if isinstance(thing, str):
-        return thing
-    return Path.ensure_path(thing, *args, **kwargs)
-
-
-def auto_path_string(thing, **kwargs):
-    if isinstance(thing, Path):
-        return thing.string(**kwargs)
-    return thing

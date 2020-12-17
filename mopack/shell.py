@@ -2,11 +2,26 @@ from collections.abc import MutableSequence
 from enum import Enum
 from shlex import shlex
 
+from .freezedried import auto_dehydrate
+from .iterutils import isiterable, listify
+from .path import Path
+from .placeholder import PlaceholderString
 from .platforms import platform_name
 
 
 _Token = Enum('Token', ['char', 'quote', 'space'])
 _State = Enum('State', ['between', 'char', 'word', 'quoted'])
+
+
+def split_posix_str(s, type=list, escapes=False):
+    if not isinstance(s, str):
+        raise TypeError('expected a string')
+    lexer = shlex(s, posix=True)
+    lexer.commenters = ''
+    if not escapes:
+        lexer.escape = ''
+    lexer.whitespace_split = True
+    return type(lexer)
 
 
 def _tokenize_windows(s):
@@ -26,7 +41,7 @@ def _tokenize_windows(s):
             escapes = 0
 
 
-def split_windows(s, type=list):
+def split_windows_str(s, type=list):
     if not isinstance(s, str):
         raise TypeError('expected a string')
 
@@ -58,22 +73,82 @@ def split_windows(s, type=list):
     return args if mutable else type(args)
 
 
-def split_posix(s, type=list, escapes=False):
-    if not isinstance(s, str):
-        raise TypeError('expected a string')
-    lexer = shlex(s, posix=True)
-    lexer.commenters = ''
-    if not escapes:
-        lexer.escape = ''
-    lexer.whitespace_split = True
-    return type(lexer)
-
-
-def split_native(s, type=list):
+def split_native_str(s, type=list):
     if platform_name() == 'windows':
-        return split_windows(s, type)
-    return split_posix(s, type)
+        return split_windows_str(s, type)
+    return split_posix_str(s, type)
+
+
+class ShellArguments:
+    def __init__(self, args=()):
+        self.args = listify(args, scalar_ok=False, type=tuple)
+
+    def fill(self, **kwargs):
+        result = []
+        for i in self.args:
+            if isinstance(i, Path):
+                result.append(i.string(**kwargs))
+            elif isiterable(i):
+                arg = ''
+                for j in i:
+                    if isinstance(j, Path):
+                        arg += j.string(**kwargs)
+                    else:
+                        arg += j
+                result.append(arg)
+            else:
+                result.append(i)
+        return result
+
+    def dehydrate(self):
+        def dehydrate_each(value):
+            if isiterable(value):
+                return [auto_dehydrate(i) for i in value]
+            return auto_dehydrate(value)
+
+        return [dehydrate_each(i) for i in self.args]
+
+    @classmethod
+    def rehydrate(self, value, **kwargs):
+        def rehydrate_each(value):
+            if isinstance(value, dict):
+                return Path.rehydrate(value, **kwargs)
+            elif isiterable(value):
+                return tuple(rehydrate_each(i) for i in value)
+            return value
+
+        return ShellArguments(rehydrate_each(i) for i in value)
+
+    def __iter__(self):
+        return iter(self.args)
+
+    def __eq__(self, rhs):
+        if not isinstance(rhs, ShellArguments):
+            return NotImplemented
+        return self.args == rhs.args
+
+    def __repr__(self):
+        return '<ShellArguments{!r}>'.format(self.args)
+
+
+def _wrap_placeholder(split_fn):
+    def wrapped(value, *args, **kwargs):
+        if isinstance(value, PlaceholderString):
+            stashed, placeholders = value.stash()
+            args = split_fn(stashed, *args, **kwargs)
+            return ShellArguments(
+                PlaceholderString.unstash(i, placeholders).unbox(simplify=True)
+                for i in args
+            )
+        return ShellArguments(split_fn(value, *args, **kwargs))
+
+    return wrapped
+
+
+split_posix = _wrap_placeholder(split_posix_str)
+split_windows = _wrap_placeholder(split_windows_str)
+split_native = _wrap_placeholder(split_native_str)
 
 
 def get_cmd(env, cmdvar, default):
-    return split_native(env.get(cmdvar, default))
+    return split_native_str(env.get(cmdvar, default))

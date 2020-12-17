@@ -2,12 +2,13 @@ import os
 import subprocess
 from unittest import mock, TestCase
 
-from . import BuilderTest
+from . import BuilderTest, through_json
 from .. import mock_open_log
 
 from mopack.builders import Builder, BuilderOptions
 from mopack.builders.bfg9000 import Bfg9000Builder
 from mopack.iterutils import iterate
+from mopack.shell import ShellArguments
 from mopack.usage.pkg_config import PkgConfigUsage
 from mopack.types import Unset
 
@@ -52,7 +53,7 @@ class TestBfg9000Builder(BuilderTest):
     def test_basic(self):
         builder = self.make_builder('foo')
         self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.extra_args, [])
+        self.assertEqual(builder.extra_args, ShellArguments())
         self.assertEqual(builder.usage, PkgConfigUsage(
             'foo', submodules=None, _options=self.make_options(),
             _path_bases=self.path_bases
@@ -76,7 +77,8 @@ class TestBfg9000Builder(BuilderTest):
     def test_extra_args(self):
         builder = self.make_builder('foo', extra_args='--extra args')
         self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.extra_args, ['--extra', 'args'])
+        self.assertEqual(builder.extra_args,
+                         ShellArguments(['--extra', 'args']))
         self.assertEqual(builder.usage, PkgConfigUsage(
             'foo', submodules=None, _options=self.make_options(),
             _path_bases=self.path_bases
@@ -87,7 +89,7 @@ class TestBfg9000Builder(BuilderTest):
     def test_usage_str(self):
         builder = self.make_builder('foo', usage='pkg-config')
         self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.extra_args, [])
+        self.assertEqual(builder.extra_args, ShellArguments())
         self.assertEqual(builder.usage, PkgConfigUsage(
             'foo', submodules=None, _options=self.make_options(),
             _path_bases=self.path_bases
@@ -99,7 +101,7 @@ class TestBfg9000Builder(BuilderTest):
         usage = {'type': 'pkg-config', 'path': 'pkgconf'}
         builder = self.make_builder('foo', usage=usage)
         self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.extra_args, [])
+        self.assertEqual(builder.extra_args, ShellArguments())
         self.assertEqual(builder.usage, PkgConfigUsage(
             'foo', path='pkgconf', submodules=None,
             _options=self.make_options(), _path_bases=self.path_bases
@@ -146,7 +148,7 @@ class TestBfg9000Builder(BuilderTest):
             'toolchain': 'toolchain.bfg'
         })
         self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.extra_args, [])
+        self.assertEqual(builder.extra_args, ShellArguments())
         self.assertEqual(builder.usage, PkgConfigUsage(
             'foo', submodules=None, _options=self.make_options(),
             _path_bases=self.path_bases
@@ -158,7 +160,7 @@ class TestBfg9000Builder(BuilderTest):
         deploy_paths = {'prefix': '/usr/local', 'goofy': '/foo/bar'}
         builder = self.make_builder('foo', deploy_paths=deploy_paths)
         self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.extra_args, [])
+        self.assertEqual(builder.extra_args, ShellArguments())
         self.assertEqual(builder.usage, PkgConfigUsage(
             'foo', submodules=None, _options=self.make_options(),
             _path_bases=self.path_bases
@@ -180,7 +182,7 @@ class TestBfg9000Builder(BuilderTest):
                                  submodules=None, _options=opts)
         builder.set_usage({'type': 'pkg-config', 'path': 'pkgconf'},
                           submodules=None)
-        data = builder.dehydrate()
+        data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(data, _options=opts))
 
 
@@ -207,16 +209,16 @@ class TestBfg9000Options(TestCase):
     def test_rehydrate(self):
         opts_toolchain = Bfg9000Builder.Options()
         opts_toolchain(toolchain='toolchain.bfg')
-        data = opts_toolchain.dehydrate()
+        data = through_json(opts_toolchain.dehydrate())
         self.assertEqual(opts_toolchain, BuilderOptions.rehydrate(data))
 
         opts_none = Bfg9000Builder.Options()
         opts_none(toolchain=None)
-        data = opts_none.dehydrate()
+        data = through_json(opts_none.dehydrate())
         self.assertEqual(opts_none, BuilderOptions.rehydrate(data))
 
         opts_default = Bfg9000Builder.Options()
-        data = opts_default.dehydrate()
+        data = through_json(opts_default.dehydrate())
         rehydrated = BuilderOptions.rehydrate(data)
         self.assertEqual(opts_default, rehydrated)
         self.assertEqual(opts_none, rehydrated)

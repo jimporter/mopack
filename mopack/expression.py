@@ -62,7 +62,9 @@ class BinaryOp:
         self.operands = [left, right]
 
     def __call__(self, symbols):
-        if self.operator == '==':
+        if self.operator == '+':
+            return self.operands[0](symbols) + self.operands[1](symbols)
+        elif self.operator == '==':
             return self.operands[0](symbols) == self.operands[1](symbols)
         elif self.operator == '!=':
             return self.operands[0](symbols) != self.operands[1](symbols)
@@ -117,6 +119,7 @@ index = (pre_expr + '[' + expr + ']').setParseAction(
 expr_atom = string_literal | bool_literal | null_literal | index | identifier
 expr <<= pp.infixNotation(expr_atom, [
     ('!', 1, pp.opAssoc.RIGHT, lambda t: [UnaryOp(*t[0])]),
+    ('+', 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
     (pp.oneOf('== !='), 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
     ('&&', 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
     ('||', 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),

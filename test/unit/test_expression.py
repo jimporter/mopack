@@ -46,17 +46,25 @@ class TestEvaluate(TestCase):
     def test_null_literal(self):
         self.assertEvaluate('null', None)
 
+    def test_add(self):
+        self.assertEvaluate('"Foo" + "Bar"', 'FooBar')
+        self.assertEvaluate('foo + "Bar"', 'FooBar')
+        self.assertEvaluate('"Foo" + bar["baz"]', 'FooBaz')
+        self.assertEvaluate('foo + bar["baz"]', 'FooBaz')
+
     def test_equal(self):
         self.assertEvaluate('"Foo" == "Foo"', True)
         self.assertEvaluate('"Foo" == "Bar"', False)
         self.assertEvaluate('foo == "Foo"', True)
         self.assertEvaluate('foo == "Bar"', False)
+        self.assertEvaluate('foo == bar', False)
 
     def test_not_equal(self):
         self.assertEvaluate('"Foo" != "Foo"', False)
         self.assertEvaluate('"Foo" != "Bar"', True)
         self.assertEvaluate('foo != "Foo"', False)
         self.assertEvaluate('foo != "Bar"', True)
+        self.assertEvaluate('foo != bar', True)
 
     def test_and(self):
         self.assertEvaluate('foo == "Foo" && true', True)

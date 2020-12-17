@@ -5,9 +5,9 @@ from yaml.error import MarkedYAMLError
 
 from . import iterutils
 from .exceptions import ConfigurationError
-from .path import auto_path_ensure, Path
+from .path import Path
 from .placeholder import PlaceholderString
-from .shell import split_posix
+from .shell import ShellArguments, split_posix
 from .yaml_tools import MarkedDict
 
 
@@ -201,7 +201,7 @@ def dict_of(key_type, value_type):
 def dict_shape(shape, desc):
     def check_item(value, key, check):
         if key in value:
-            return check(key, value.get(key, None))
+            return check(key, value[key])
         try:
             return check(key, None)
         except FieldValueError:
@@ -277,21 +277,29 @@ def url(field, value):
     return value
 
 
-def shell_args(bases, type=list, escapes=False):
+def shell_args(bases, none_ok=False, escapes=False):
     bases = list(bases) + ['absolute']
 
     def check_item(field, value):
         with ensure_field_error(field):
-            return auto_path_ensure(value, bases)
+            if isinstance(value, str):
+                return value
+            elif isinstance(value, PlaceholderString):
+                return value.unbox(simplify=True)
+            raise TypeError('expected a string')
 
     def check(field, value):
-        with ensure_field_error(field):
-            if isinstance(value, PlaceholderString):
-                stashed, placeholders = value.stash()
-                args = split_posix(stashed, type, escapes)
-                return [auto_path_ensure(
-                    PlaceholderString.unstash(i, placeholders), bases
-                ) for i in args]
-            return split_posix(string(field, value), type, escapes)
+        if value is None or value is Unset:
+            if none_ok:
+                return ShellArguments([])
+            raise FieldValueError('expected shell arguments', field)
 
-    return one_of(list_of(check_item), check, desc='shell arguments')
+        if iterutils.isiterable(value):
+            with wrap_field_error(field):
+                return ShellArguments(check_item(i, v) for i, v in
+                                      enumerate(value))
+
+        with ensure_field_error(field):
+            return split_posix(value, escapes=escapes)
+
+    return check

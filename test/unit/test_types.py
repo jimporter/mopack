@@ -6,6 +6,7 @@ from unittest import mock, TestCase
 
 from mopack.placeholder import placeholder
 from mopack.path import Path
+from mopack.shell import ShellArguments
 from mopack.types import *
 from mopack.yaml_tools import load_file, SafeLineLoader
 
@@ -309,57 +310,67 @@ class TestUrl(TypeTestCase):
 class TestShellArgs(TypeTestCase):
     bases = ['srcdir', 'builddir']
 
+    def assertShellArgs(self, value, expected, **kwargs):
+        self.assertEqual(shell_args(self.bases, **kwargs)('field', value),
+                         ShellArguments(expected))
+
+    def test_none(self):
+        self.assertShellArgs(None, [], none_ok=True)
+        self.assertShellArgs(Unset, [], none_ok=True)
+
+        with self.assertFieldError(('field',)):
+            shell_args(self.bases)('field', None)
+        with self.assertFieldError(('field',)):
+            shell_args(self.bases)('field', Unset)
+
     def test_empty(self):
-        self.assertEqual(shell_args(self.bases)('field', ''), [])
-        self.assertEqual(shell_args(self.bases)('field', []), [])
+        self.assertShellArgs('', [])
+        self.assertShellArgs([], [])
 
     def test_single(self):
-        self.assertEqual(shell_args(self.bases)('field', 'foo'), ['foo'])
+        self.assertShellArgs('foo', ['foo'])
 
     def test_multiple(self):
-        self.assertEqual(shell_args(self.bases)('field', 'foo bar baz'),
-                         ['foo', 'bar', 'baz'])
+        self.assertShellArgs('foo bar baz', ['foo', 'bar', 'baz'])
 
     def test_quote(self):
-        self.assertEqual(shell_args(self.bases)('field', 'foo "bar baz"'),
-                         ['foo', 'bar baz'])
-        self.assertEqual(shell_args(self.bases)('field', 'foo"bar baz"'),
-                         ['foobar baz'])
+        self.assertShellArgs('foo "bar baz"', ['foo', 'bar baz'])
+        self.assertShellArgs('foo"bar baz"', ['foobar baz'])
+
+    def test_list(self):
+        self.assertShellArgs(['foo', 'bar baz'], ['foo', 'bar baz'])
+
+    def test_escapes(self):
+        self.assertShellArgs('foo\\ bar', ['foo\\', 'bar'])
+        self.assertShellArgs('foo\\ bar', ['foo bar'], escapes=True)
 
     def test_placeholder_string(self):
         srcdir = Path('srcdir', '')
         srcdir_ph = placeholder(srcdir)
-        shell = shell_args(self.bases)
-        self.assertEqual(shell('field', srcdir_ph), [srcdir])
-        self.assertEqual(shell('field', srcdir_ph + ' foo'), [srcdir, 'foo'])
-        self.assertEqual(shell('field', 'foo ' + srcdir_ph + ' bar'),
-                         ['foo', srcdir, 'bar'])
-        self.assertEqual(shell('field', srcdir_ph + '/foo'), [srcdir + '/foo'])
-        self.assertEqual(shell('field', '"' + srcdir_ph + '/ foo"'),
-                         [srcdir + '/ foo'])
 
-        with self.assertFieldError(('field',)):
-            shell('field', 'foo' + srcdir_ph)
+        self.assertShellArgs(srcdir_ph, [srcdir])
+        self.assertShellArgs(srcdir_ph + ' foo', [srcdir, 'foo'])
+        self.assertShellArgs('foo ' + srcdir_ph + ' bar',
+                             ['foo', srcdir, 'bar'])
+        self.assertShellArgs(srcdir_ph + '/foo', [(srcdir, '/foo')])
+        self.assertShellArgs('"' + srcdir_ph + '/ foo"',
+                             [(srcdir, '/ foo')])
 
-    def test_list(self):
-        self.assertEqual(shell_args(self.bases)('field', ['foo', 'bar baz']),
-                         ['foo', 'bar baz'])
+    def test_placeholder_list(self):
+        srcdir = Path('srcdir', '')
+        srcdir_ph = placeholder(srcdir)
 
-    def test_type(self):
-        self.assertEqual(
-            shell_args(self.bases, type=tuple)('field', 'foo bar baz'),
-            ('foo', 'bar', 'baz')
-        )
-
-    def test_escapes(self):
-        s = 'foo\\ bar'
-        self.assertEqual(shell_args(self.bases)('field', s), ['foo\\', 'bar'])
-        self.assertEqual(shell_args(self.bases, escapes=True)('field', s),
-                         ['foo bar'])
+        self.assertShellArgs([srcdir_ph], [srcdir])
+        self.assertShellArgs(['foo', srcdir_ph, 'bar'],
+                             ['foo', srcdir, 'bar'])
+        self.assertShellArgs([srcdir_ph + '/foo'], [(srcdir, '/foo')])
+        self.assertShellArgs([srcdir_ph + '/ foo'], [(srcdir, '/ foo')])
 
     def test_invalid(self):
         with self.assertFieldError(('field',)):
             shell_args(self.bases)('field', 1)
+        with self.assertFieldError(('field', 0)):
+            shell_args(self.bases)('field', [1])
         with self.assertFieldError(('field',)):
             shell_args(self.bases)('field', '"foo')
 

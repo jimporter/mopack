@@ -1,4 +1,4 @@
-from .. import OptionsTest
+from .. import OptionsTest, through_json  # noqa: F401
 
 
 class UsageTest(OptionsTest):

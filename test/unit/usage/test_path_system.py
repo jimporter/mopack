@@ -2,12 +2,14 @@ import os
 from os.path import abspath
 from unittest import mock
 
-from . import UsageTest
+from . import through_json, UsageTest
 
 from mopack.iterutils import merge_dicts
 from mopack.options import Options
 from mopack.path import Path
+from mopack.shell import ShellArguments
 from mopack.types import FieldError
+from mopack.usage import Usage
 from mopack.usage.path_system import PathUsage, SystemUsage
 
 
@@ -44,8 +46,8 @@ class TestPath(UsageTest):
         self.assertEqual(usage.library_path, library_path)
         self.assertEqual(usage.headers, headers)
         self.assertEqual(usage.libraries, libraries)
-        self.assertEqual(usage.compile_flags, compile_flags)
-        self.assertEqual(usage.link_flags, link_flags)
+        self.assertEqual(usage.compile_flags, ShellArguments(compile_flags))
+        self.assertEqual(usage.link_flags, ShellArguments(link_flags))
 
     def test_basic(self):
         usage = self.make_usage('foo')
@@ -505,6 +507,34 @@ class TestPath(UsageTest):
             'library_path': [], 'headers': [], 'libraries': ['GL'],
             'compile_flags': [], 'link_flags': [],
         })
+
+    def test_rehydrate(self):
+        opts = self.make_options()
+        path_bases = {'srcdir', 'builddir'}
+        usage = self.usage_type('foo', submodules=None, _options=opts,
+                                _path_bases=path_bases)
+        data = usage.dehydrate()
+        self.assertEqual(usage, Usage.rehydrate(data, _options=opts))
+
+        usage = self.usage_type('foo', submodules=None,
+                                compile_flags=['compile'], link_flags=['link'],
+                                _options=opts, _path_bases=path_bases)
+        data = through_json(usage.dehydrate())
+        self.assertEqual(usage, Usage.rehydrate(data, _options=opts))
+
+        submodules = {'names': '*', 'required': False}
+        usage = self.usage_type('foo', submodules=submodules, submodule_map={
+            'foosub': {
+                'include_path': 'include',
+                'library_path': 'lib',
+            },
+            'barsub': {
+                'compile_flags': 'compile',
+                'link_flags': 'link',
+            },
+        }, _options=opts, _path_bases=path_bases)
+        data = through_json(usage.dehydrate())
+        self.assertEqual(usage, Usage.rehydrate(data, _options=opts))
 
     def test_invalid_usage(self):
         with self.assertRaises(FieldError):

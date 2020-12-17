@@ -94,6 +94,17 @@ class FreezeDried:
         return self.equal(rhs)
 
 
+class PrimitiveFreezeDryer:
+    @staticmethod
+    def dehydrate(value):
+        assert isinstance(value, (str, int, bool))
+        return value
+
+    @staticmethod
+    def rehydrate(value, **kwargs):
+        return value
+
+
 class ListFreezeDryer:
     def __init__(self, type):
         self.type = type
@@ -103,6 +114,22 @@ class ListFreezeDryer:
 
     def rehydrate(self, value, **kwargs):
         return [self.type.rehydrate(i, **kwargs) for i in value]
+
+
+class DictFreezeDryer:
+    def __init__(self, key_type=PrimitiveFreezeDryer,
+                 value_type=PrimitiveFreezeDryer):
+        self.key_type = key_type
+        self.value_type = value_type
+
+    def dehydrate(self, value):
+        return {self.key_type.dehydrate(k): self.value_type.dehydrate(v)
+                for k, v in value.items()}
+
+    def rehydrate(self, value, **kwargs):
+        return {self.key_type.rehydrate(k, **kwargs):
+                self.value_type.rehydrate(v, **kwargs)
+                for k, v in value.items()}
 
 
 class DictToListFreezeDryer:

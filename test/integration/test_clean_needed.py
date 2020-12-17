@@ -44,7 +44,7 @@ class TestCleanNeeded(IntegrationTest):
             'extra_args': extra_args,
             'usage': {
                 'type': 'pkg-config',
-                'path': ['builddir', 'pkgconfig'],
+                'path': {'base': 'builddir', 'path': 'pkgconfig'},
                 'pcfile': name,
                 'extra_args': [],
             },
@@ -76,7 +76,7 @@ class TestCleanNeeded(IntegrationTest):
                 'submodules': None,
                 'should_deploy': True,
                 'builder': self._builder('hello', ['--extra']),
-                'path': ['cfgdir', 'hello-bfg'],
+                'path': {'base': 'cfgdir', 'path': 'hello-bfg'},
             }, {
                 'name': 'greeter',
                 'config_file': config,
@@ -85,7 +85,7 @@ class TestCleanNeeded(IntegrationTest):
                 'submodules': None,
                 'should_deploy': True,
                 'builder': self._builder('greeter', ['--extra']),
-                'path': ['cfgdir', 'greeter-bfg'],
+                'path': {'base': 'cfgdir', 'path': 'greeter-bfg'},
             }],
         })
 
@@ -117,7 +117,8 @@ class TestCleanNeeded(IntegrationTest):
                 'should_deploy': True,
                 'builder': self._builder('hello'),
                 'url': None,
-                'path': ['cfgdir', os.path.join('..', 'hello-bfg.tar.gz')],
+                'path': {'base': 'cfgdir',
+                         'path': os.path.join('..', 'hello-bfg.tar.gz')},
                 'files': [],
                 'srcdir': None,
                 'guessed_srcdir': 'hello-bfg',
@@ -130,6 +131,6 @@ class TestCleanNeeded(IntegrationTest):
                 'submodules': None,
                 'should_deploy': True,
                 'builder': self._builder('greeter'),
-                'path': ['cfgdir', 'greeter-bfg'],
+                'path': {'base': 'cfgdir', 'path': 'greeter-bfg'},
             }],
         })

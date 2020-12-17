@@ -3,7 +3,7 @@ from unittest import mock
 
 from mopack.iterutils import iterate
 
-from .. import SourceTest
+from .. import SourceTest, through_json  # noqa: F401
 from ... import mock_open_log
 
 mock_bfgclean = 'mopack.builders.bfg9000.Bfg9000Builder.clean'

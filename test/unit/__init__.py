@@ -1,3 +1,4 @@
+import json
 import os
 import pkg_resources
 from contextlib import contextmanager
@@ -16,6 +17,10 @@ def mock_open_log(new=None, *args, **kwargs):
                     *args, **kwargs) as m, \
          mock.patch('os.makedirs'):
         yield m
+
+
+def through_json(data):
+    return json.loads(json.dumps(data))
 
 
 class OptionsTest(TestCase):

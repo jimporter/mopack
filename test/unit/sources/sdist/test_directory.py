@@ -398,7 +398,7 @@ class TestDirectory(SDistTestCase):
         opts = self.make_options()
         pkg = DirectoryPackage('foo', path=self.srcpath, build='bfg9000',
                                _options=opts, config_file=self.config_file)
-        data = pkg.dehydrate()
+        data = through_json(pkg.dehydrate())
         self.assertNotIn('pending_usage', data)
         self.assertEqual(pkg, Package.rehydrate(data, _options=opts))
 

@@ -47,29 +47,20 @@ class PlaceholderString:
                 last = i
         yield last
 
-    @classmethod
-    def make(self, *args, simplify=True):
-        s = PlaceholderString(*args)
-        return s.simplify() if simplify else s
-
     @property
     def bits(self):
         return self.__bits
 
-    @property
-    def unboxed_bits(self):
+    def unbox(self, simplify=False):
+        if simplify:
+            if len(self.bits) == 0:
+                return ''
+            elif len(self.bits) == 1:
+                if isinstance(self.bits[0], PlaceholderValue):
+                    return self.bits[0].value
+                return self.bits[0]
         return tuple(i.value if isinstance(i, PlaceholderValue) else i
                      for i in self.__bits)
-
-    def simplify(self, unbox_placeholder=True):
-        if len(self.bits) == 0:
-            return ''
-        elif len(self.bits) == 1:
-            if ( unbox_placeholder and
-                 isinstance(self.bits[0], PlaceholderValue) ):
-                return self.bits[0].value
-            return self.bits[0]
-        return self
 
     def stash(self):
         stashed = ''
@@ -83,7 +74,7 @@ class PlaceholderString:
         return stashed, placeholders
 
     @classmethod
-    def unstash(cls, string, placeholders, *, simplify=True):
+    def unstash(cls, string, placeholders):
         bits = []
         last = 0
         for m in re.finditer('\x11([^\x11]*)\x13', string):
@@ -97,7 +88,7 @@ class PlaceholderString:
         if last < len(string):
             bits.append(string[last:])
 
-        return PlaceholderString.make(*bits, simplify=simplify)
+        return PlaceholderString(*bits)
 
     def __add__(self, rhs):
         return PlaceholderString(self, rhs)

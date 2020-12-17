@@ -462,12 +462,12 @@ class TestTarball(SDistTestCase):
         opts = self.make_options()
         pkg = TarballPackage('foo', path=self.srcpath, build='bfg9000',
                              _options=opts, config_file=self.config_file)
-        data = pkg.dehydrate()
+        data = through_json(pkg.dehydrate())
         self.assertEqual(pkg, Package.rehydrate(data, _options=opts))
 
         pkg = TarballPackage('foo', url=self.srcurl, build='bfg9000',
                              _options=opts, config_file=self.config_file)
-        data = pkg.dehydrate()
+        data = through_json(pkg.dehydrate())
         self.assertEqual(pkg, Package.rehydrate(data, _options=opts))
 
         pkg = TarballPackage('foo', path=self.srcpath, _options=opts,

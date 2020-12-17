@@ -69,7 +69,7 @@ class TestSubmodules(IntegrationTest):
                     'extra_args': [],
                     'usage': {
                         'type': 'pkg-config',
-                        'path': ['builddir', 'pkgconfig'],
+                        'path': {'base': 'builddir', 'path': 'pkgconfig'},
                         'pcfile': None,
                         'extra_args': [],
                         'submodule_map': {
@@ -77,6 +77,6 @@ class TestSubmodules(IntegrationTest):
                         },
                     },
                 },
-                'path': ['cfgdir', 'hello-multi-bfg'],
+                'path': {'base': 'cfgdir', 'path': 'hello-multi-bfg'},
             }],
         })

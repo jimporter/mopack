@@ -2,12 +2,13 @@ import os
 import subprocess
 from unittest import mock
 
-from . import BuilderTest
+from . import through_json, BuilderTest
 from .. import mock_open_log
 
 from mopack.builders import Builder
 from mopack.builders.cmake import CMakeBuilder
 from mopack.iterutils import iterate
+from mopack.shell import ShellArguments
 from mopack.usage.pkg_config import PkgConfigUsage
 
 
@@ -50,7 +51,7 @@ class TestCMakeBuilder(BuilderTest):
     def test_basic(self):
         builder = self.make_builder('foo', usage='pkg-config')
         self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.extra_args, [])
+        self.assertEqual(builder.extra_args, ShellArguments())
         self.assertEqual(builder.usage, PkgConfigUsage(
             'foo', submodules=None, _options=self.make_options(),
             _path_bases=self.path_bases
@@ -75,7 +76,8 @@ class TestCMakeBuilder(BuilderTest):
         builder = self.make_builder('foo', extra_args='--extra args',
                                     usage='pkg-config')
         self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.extra_args, ['--extra', 'args'])
+        self.assertEqual(builder.extra_args,
+                         ShellArguments(['--extra', 'args']))
         self.assertEqual(builder.usage, PkgConfigUsage(
             'foo', submodules=None, _options=self.make_options(),
             _path_bases=self.path_bases
@@ -87,7 +89,7 @@ class TestCMakeBuilder(BuilderTest):
         usage = {'type': 'pkg-config', 'path': 'pkgconf'}
         builder = self.make_builder('foo', usage=usage)
         self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.extra_args, [])
+        self.assertEqual(builder.extra_args, ShellArguments())
         self.assertEqual(builder.usage, PkgConfigUsage(
             'foo', path='pkgconf', submodules=None,
             _options=self.make_options(), _path_bases=self.path_bases
@@ -136,7 +138,7 @@ class TestCMakeBuilder(BuilderTest):
         builder = self.make_builder('foo', usage='pkg-config',
                                     deploy_paths=deploy_paths)
         self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.extra_args, [])
+        self.assertEqual(builder.extra_args, ShellArguments())
         self.assertEqual(builder.usage, PkgConfigUsage(
             'foo', submodules=None, _options=self.make_options(),
             _path_bases=self.path_bases
@@ -160,5 +162,5 @@ class TestCMakeBuilder(BuilderTest):
                                submodules=None, _options=opts)
         builder.set_usage({'type': 'pkg-config', 'path': 'pkgconf'},
                           submodules=None)
-        data = builder.dehydrate()
+        data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(data, _options=opts))

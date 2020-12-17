@@ -1,7 +1,7 @@
 import os
 from unittest import mock
 
-from . import BuilderTest
+from . import BuilderTest, through_json
 
 from mopack.builders import Builder
 from mopack.builders.none import NoneBuilder
@@ -105,5 +105,5 @@ class TestNoneBuilder(BuilderTest):
         builder = NoneBuilder('foo', submodules=None, _options=opts)
         builder.set_usage({'type': 'pkg-config', 'path': 'pkgconf'},
                           submodules=None)
-        data = builder.dehydrate()
+        data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(data, _options=opts))

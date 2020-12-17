@@ -4,7 +4,7 @@ from io import StringIO
 from textwrap import dedent
 from unittest import mock, TestCase
 
-from . import SourceTest
+from . import SourceTest, through_json
 from .. import mock_open_log
 
 from mopack.iterutils import iterate
@@ -373,7 +373,7 @@ class TestConan(SourceTest):
         pkg = ConanPackage('foo', remote='foo/1.2.3@conan/stable',
                            options={'shared': True}, _options=opts,
                            config_file=self.config_file)
-        data = pkg.dehydrate()
+        data = through_json(pkg.dehydrate())
         self.assertEqual(pkg, Package.rehydrate(data, _options=opts))
 
 
@@ -393,5 +393,5 @@ class TestConanOptions(TestCase):
     def test_rehydrate(self):
         opts = ConanPackage.Options()
         opts(generator='cmake')
-        data = opts.dehydrate()
+        data = through_json(opts.dehydrate())
         self.assertEqual(opts, PackageOptions.rehydrate(data))

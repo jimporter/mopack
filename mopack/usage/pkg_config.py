@@ -4,6 +4,7 @@ from ..freezedried import FreezeDried
 from ..iterutils import listify
 from ..package_defaults import DefaultResolver
 from ..path import Path
+from ..shell import ShellArguments
 
 
 def _submodule_map(field, value):
@@ -20,7 +21,7 @@ def _submodule_map(field, value):
     )(field, value)
 
 
-@FreezeDried.fields(rehydrate={'path': Path})
+@FreezeDried.fields(rehydrate={'path': Path, 'extra_args': ShellArguments})
 class PkgConfigUsage(Usage):
     type = 'pkg-config'
 
@@ -42,7 +43,7 @@ class PkgConfigUsage(Usage):
         self.pcfile = types.default(types.string, default_pcfile)(
             'pcfile', pcfile
         )
-        self.extra_args = types.maybe(types.shell_args(bases), [])(
+        self.extra_args = types.shell_args(bases, none_ok=True)(
             'extra_args', extra_args
         )
 
@@ -62,6 +63,7 @@ class PkgConfigUsage(Usage):
 
     def get_usage(self, submodules, srcdir, builddir):
         pcpath = self.path.string(srcdir=srcdir, builddir=builddir)
+        extra_args = self.extra_args.fill(srcdir=srcdir, builddir=builddir)
 
         pcfiles = listify(self.pcfile)
         for i in submodules or []:
@@ -69,5 +71,4 @@ class PkgConfigUsage(Usage):
             if f:
                 pcfiles.append(f)
 
-        return self._usage(path=pcpath, pcfiles=pcfiles,
-                           extra_args=self.extra_args)
+        return self._usage(path=pcpath, pcfiles=pcfiles, extra_args=extra_args)

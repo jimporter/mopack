@@ -62,7 +62,7 @@ class TestLocal(IntegrationTest):
                 'options': {'shared': True},
                 'usage': {
                     'type': 'pkg-config',
-                    'path': ['builddir', ''],
+                    'path': {'base': 'builddir', 'path': ''},
                     'pcfile': 'zlib',
                     'extra_args': [],
                 },

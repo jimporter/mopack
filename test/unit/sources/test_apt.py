@@ -2,7 +2,7 @@ import os
 import subprocess
 from unittest import mock
 
-from . import SourceTest
+from . import SourceTest, through_json
 from .. import mock_open_log
 
 from mopack.iterutils import iterate
@@ -181,5 +181,5 @@ class TestApt(SourceTest):
         opts = self.make_options()
         pkg = AptPackage('foo', remote='libbar-dev', _options=opts,
                          config_file=self.config_file)
-        data = pkg.dehydrate()
+        data = through_json(pkg.dehydrate())
         self.assertEqual(pkg, Package.rehydrate(data, _options=opts))

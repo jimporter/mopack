@@ -2,21 +2,23 @@ import os.path
 
 from . import Builder
 from .. import types
+from ..freezedried import FreezeDried
 from ..log import LogFile
 from ..path import pushd
-from ..shell import get_cmd
+from ..shell import get_cmd, ShellArguments
 
 # XXX: Handle exec-prefix, which CMake doesn't work with directly.
 _known_install_types = ('prefix', 'bindir', 'libdir', 'includedir')
 
 
+@FreezeDried.fields(rehydrate={'extra_args': ShellArguments})
 class CMakeBuilder(Builder):
     type = 'cmake'
     _path_bases = ('srcdir', 'builddir')
 
     def __init__(self, name, *, extra_args=None, submodules, **kwargs):
         super().__init__(name, **kwargs)
-        self.extra_args = types.maybe(types.shell_args(self._path_bases), [])(
+        self.extra_args = types.shell_args(self._path_bases, none_ok=True)(
             'extra_args', extra_args
         )
 
@@ -38,7 +40,7 @@ class CMakeBuilder(Builder):
                 logfile.check_call(
                     cmake + [srcdir, '-G', 'Ninja'] +
                     self._install_args(self._common_options.deploy_paths) +
-                    self.extra_args
+                    self.extra_args.fill(srcdir=srcdir, builddir=builddir)
                 )
                 logfile.check_call(ninja)
 

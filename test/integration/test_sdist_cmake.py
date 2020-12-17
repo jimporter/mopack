@@ -78,15 +78,16 @@ class TestNestedCMake(IntegrationTest):
                     'usage': {
                         'type': 'path',
                         'auto_link': False,
-                        'include_path': [['srcdir', 'include']],
-                        'library_path': [['builddir', '']],
+                        'include_path': [{'base': 'srcdir',
+                                          'path': 'include'}],
+                        'library_path': [{'base': 'builddir', 'path': ''}],
                         'headers': [],
                         'libraries': [{'type': 'guess', 'name': 'hello'}],
                         'compile_flags': [],
                         'link_flags': [],
                     },
                 },
-                'path': ['cfgdir', 'hello-cmake'],
+                'path': {'base': 'cfgdir', 'path': 'hello-cmake'},
             }, {
                 'name': 'greeter',
                 'config_file': config,
@@ -100,12 +101,12 @@ class TestNestedCMake(IntegrationTest):
                     'extra_args': [],
                     'usage': {
                         'type': 'pkg-config',
-                        'path': ['builddir', 'pkgconfig'],
+                        'path': {'base': 'builddir', 'path': 'pkgconfig'},
                         'pcfile': 'greeter',
                         'extra_args': [],
                     },
                 },
-                'path': ['cfgdir', 'greeter-bfg'],
+                'path': {'base': 'cfgdir', 'path': 'greeter-bfg'},
             }],
         })
 
