@@ -7,18 +7,7 @@ from . import *
 
 
 class TestInterpolation(IntegrationTest):
-    def check_usage(self, name):
-        output = json.loads(self.assertPopen([
-            'mopack', 'usage', name, '--json'
-        ]))
-        self.assertEqual(output, {
-            'name': name,
-            'type': 'pkg-config',
-            'path': os.path.join(self.stage, 'mopack', 'build', name,
-                                 'pkgconfig'),
-            'pcfiles': [name],
-            'extra_args': [],
-        })
+    name = 'interpolation'
 
     def _options(self):
         return {
@@ -47,9 +36,6 @@ class TestInterpolation(IntegrationTest):
             },
         }
 
-    def setUp(self):
-        self.stage = stage_dir('interpolation')
-
     def test_resolve_enabled(self):
         config = os.path.join(test_data_dir, 'mopack-interpolation.yml')
         self.assertPopen(['mopack', 'resolve', config],
@@ -59,7 +45,7 @@ class TestInterpolation(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.check_usage('hello')
+        self.assertPkgConfigUsage('hello')
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -84,7 +70,7 @@ class TestInterpolation(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.check_usage('hello')
+        self.assertPkgConfigUsage('hello')
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {

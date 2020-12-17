@@ -37,9 +37,8 @@ class CommonTest(IntegrationTest):
 
 
 class TestBroken(CommonTest):
-    def setUp(self):
-        self.stage = stage_dir('broken')
-        self.prefix = stage_dir('broken-install', chdir=False)
+    name = 'broken'
+    deploy = True
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-broken.yml')
@@ -50,7 +49,7 @@ class TestBroken(CommonTest):
         self.assertExists('mopack/mopack.json')
         self.assertNotExists('mopack/build/hello/')
 
-        self.assertPopen(['mopack', 'usage', 'hello', '--json'], returncode=1)
+        self.assertUsage('hello', returncode=1)
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -81,9 +80,8 @@ class TestBroken(CommonTest):
 
 
 class TestBrokenPatch(CommonTest):
-    def setUp(self):
-        self.stage = stage_dir('broken-patch')
-        self.prefix = stage_dir('broken-patch-install', chdir=False)
+    name = 'broken-patch'
+    deploy = True
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-broken-patch.yml')
@@ -94,7 +92,7 @@ class TestBrokenPatch(CommonTest):
         self.assertNotExists('mopack/src/hello')
         self.assertNotExists('mopack/build/hello/')
 
-        self.assertPopen(['mopack', 'usage', 'hello', '--json'], returncode=1)
+        self.assertUsage('hello', returncode=1)
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {

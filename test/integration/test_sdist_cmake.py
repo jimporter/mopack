@@ -8,10 +8,8 @@ from . import *
 
 
 class TestNestedCMake(IntegrationTest):
-    def setUp(self):
-        self.stage = stage_dir('nested-cmake')
-        self.prefix = stage_dir('nested-cmake-install', chdir=False)
-        self.pkgbuilddir = os.path.join(self.stage, 'mopack', 'build')
+    name = 'nested-cmake'
+    deploy = True
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-nested-cmake.yml')
@@ -23,32 +21,12 @@ class TestNestedCMake(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        output = json.loads(self.assertPopen([
-            'mopack', 'usage', 'greeter', '--json'
-        ]))
-        self.assertEqual(output, {
-            'name': 'greeter',
-            'type': 'pkg-config',
-            'path': os.path.join(self.pkgbuilddir, 'greeter', 'pkgconfig'),
-            'pcfiles': ['greeter'],
-            'extra_args': [],
-        })
+        self.assertPkgConfigUsage('greeter')
 
-        output = json.loads(self.assertPopen([
-            'mopack', 'usage', 'hello', '--json'
-        ]))
-        self.assertEqual(output, {
-            'name': 'hello',
-            'type': 'path',
-            'auto_link': False,
-            'include_path': [os.path.join(test_data_dir, 'hello-cmake',
-                                          'include')],
-            'library_path': [os.path.join(self.pkgbuilddir, 'hello')],
-            'headers': [],
-            'libraries': ['hello'],
-            'compile_flags': [],
-            'link_flags': [],
-        })
+        include_path = [os.path.join(test_data_dir, 'hello-cmake', 'include')]
+        library_path = [os.path.join(self.pkgbuilddir, 'hello')]
+        self.assertPathUsage('hello', include_path=include_path,
+                             library_path=library_path)
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {

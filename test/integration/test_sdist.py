@@ -9,19 +9,6 @@ from . import *
 
 
 class SDistTest(IntegrationTest):
-    def check_usage(self, name):
-        output = json.loads(self.assertPopen([
-            'mopack', 'usage', name, '--json'
-        ]))
-        self.assertEqual(output, {
-            'name': name,
-            'type': 'pkg-config',
-            'path': os.path.join(self.stage, 'mopack', 'build', name,
-                                 'pkgconfig'),
-            'pcfiles': [name],
-            'extra_args': [],
-        })
-
     def check_list_files(self, files, implicit=[]):
         output = json.loads(self.assertPopen(['mopack', 'list-files',
                                               '--json']))
@@ -59,8 +46,7 @@ class SDistTest(IntegrationTest):
 
 
 class TestDirectory(SDistTest):
-    def setUp(self):
-        self.stage = stage_dir('directory')
+    name = 'directory'
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-directory-implicit.yml')
@@ -70,7 +56,7 @@ class TestDirectory(SDistTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.check_usage('hello')
+        self.assertPkgConfigUsage('hello')
         implicit_cfg = os.path.join(test_data_dir, 'hello-bfg', 'mopack.yml')
         self.check_list_files([config], [implicit_cfg])
 
@@ -91,9 +77,8 @@ class TestDirectory(SDistTest):
 
 
 class TestTarball(SDistTest):
-    def setUp(self):
-        self.stage = stage_dir('tarball')
-        self.prefix = stage_dir('tarball-install', chdir=False)
+    name = 'tarball'
+    deploy = True
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-tarball.yml')
@@ -104,7 +89,7 @@ class TestTarball(SDistTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.check_usage('hello')
+        self.assertPkgConfigUsage('hello')
         self.check_list_files([config])
 
         output = json.loads(slurp('mopack/mopack.json'))
@@ -136,9 +121,8 @@ class TestTarball(SDistTest):
 
 
 class TestTarballPatch(SDistTest):
-    def setUp(self):
-        self.stage = stage_dir('tarball-patch')
-        self.prefix = stage_dir('tarball-patch-install', chdir=False)
+    name = 'tarball-patch'
+    deploy = True
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-tarball-patch.yml')
@@ -149,7 +133,7 @@ class TestTarballPatch(SDistTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.check_usage('hello')
+        self.assertPkgConfigUsage('hello')
         self.check_list_files([config])
 
         output = json.loads(slurp('mopack/mopack.json'))
@@ -182,9 +166,8 @@ class TestTarballPatch(SDistTest):
 
 @skipIf('boost' not in test_features, 'skipping test requiring boost')
 class TestGit(SDistTest):
-    def setUp(self):
-        self.stage = stage_dir('git')
-        self.prefix = stage_dir('git-install', chdir=False)
+    name = 'git'
+    deploy = True
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-git.yml')
@@ -195,7 +178,7 @@ class TestGit(SDistTest):
         self.assertExists('mopack/logs/bencodehpp.log')
         self.assertExists('mopack/mopack.json')
 
-        self.check_usage('bencodehpp')
+        self.assertPkgConfigUsage('bencodehpp')
         self.check_list_files([config])
 
         output = json.loads(slurp('mopack/mopack.json'))

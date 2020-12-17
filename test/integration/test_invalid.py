@@ -4,8 +4,7 @@ from . import *
 
 
 class TestInvalid(IntegrationTest):
-    def setUp(self):
-        self.stage = stage_dir('invalid')
+    name = 'invalid'
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-invalid.yml')
@@ -18,8 +17,7 @@ class TestInvalid(IntegrationTest):
 
 
 class TestInvalidChild(IntegrationTest):
-    def setUp(self):
-        self.stage = stage_dir('invalid-child')
+    name = 'invalid-child'
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-invalid-child.yml')
@@ -33,8 +31,7 @@ class TestInvalidChild(IntegrationTest):
 
 
 class TestInvalidParent(IntegrationTest):
-    def setUp(self):
-        self.stage = stage_dir('invalid-parent')
+    name = 'invalid-parent'
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-invalid-parent.yml')
@@ -48,8 +45,7 @@ class TestInvalidParent(IntegrationTest):
 
 
 class TestInvalidListFiles(IntegrationTest):
-    def setUp(self):
-        self.stage = stage_dir('invalid-list-files')
+    name = 'invalid-list-files'
 
     def test_list_files(self):
         self.assertOutput(['mopack', 'list-files'], '')

@@ -1,7 +1,9 @@
+import json
 import os
 import subprocess
 import tempfile
 import unittest
+import yaml
 
 from .. import *
 
@@ -41,6 +43,14 @@ class SubprocessError(unittest.TestCase.failureException):
 
 
 class IntegrationTest(unittest.TestCase):
+    deploy = False
+
+    def setUp(self):
+        self.stage = stage_dir(self.name)
+        self.pkgbuilddir = os.path.join(self.stage, 'mopack', 'build')
+        if self.deploy:
+            self.prefix = stage_dir(self.name + '-install', chdir=False)
+
     def assertExistence(self, path, exists):
         if os.path.exists(path) != exists:
             msg = '{!r} does not exist' if exists else '{!r} exists'
@@ -73,3 +83,43 @@ class IntegrationTest(unittest.TestCase):
 
     def assertOutput(self, command, output, *args, **kwargs):
         self.assertEqual(self.assertPopen(command, *args, **kwargs), output)
+
+    def assertUsage(self, name, usage='', extra_args=[], *, format='json',
+                    submodules=[], returncode=0):
+        loader = {
+            'json': json.loads,
+            'yaml': yaml.safe_load,
+        }
+
+        output = self.assertPopen((
+            ['mopack', 'usage', name] +
+            (['--json'] if format == 'json' else []) +
+            ['-s' + i for i in submodules] +
+            extra_args
+        ), returncode=returncode)
+        if returncode == 0:
+            self.assertEqual(loader[format](output), usage)
+
+    def assertPkgConfigUsage(self, name, *, path=None, pcfiles=None,
+                             extra_args=[], submodules=[]):
+        if path is None or not os.path.isabs(path):
+            path = os.path.join(self.pkgbuilddir, name, path or 'pkgconfig')
+        if pcfiles is None:
+            pcfiles = [name]
+
+        self.assertUsage(name, {'name': name, 'type': 'pkg-config',
+                                'path': path, 'pcfiles': pcfiles,
+                                'extra_args': extra_args},
+                         submodules=submodules)
+
+    def assertPathUsage(self, name, *, auto_link=False, include_path=[],
+                        library_path=[], headers=[], libraries=None,
+                        compile_flags=[], link_flags=[], submodules=[]):
+        if libraries is None:
+            libraries = [name]
+        self.assertUsage(name, {
+            'name': name, 'type': 'path', 'auto_link': auto_link,
+            'include_path': include_path, 'library_path': library_path,
+            'headers': headers, 'libraries': libraries,
+            'compile_flags': compile_flags, 'link_flags': link_flags,
+        }, submodules=submodules)

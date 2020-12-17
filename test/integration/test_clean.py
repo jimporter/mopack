@@ -4,8 +4,7 @@ from . import *
 
 
 class TestClean(IntegrationTest):
-    def setUp(self):
-        self.stage = stage_dir('conan')
+    name = 'conan'
 
     def test_clean(self):
         config = os.path.join(test_data_dir, 'mopack-conan.yml')

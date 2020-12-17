@@ -8,8 +8,7 @@ from . import *
 
 
 class TestCustomBuilder(IntegrationTest):
-    def setUp(self):
-        self.stage = stage_dir('custom-builder')
+    name = 'custom-builder'
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-custom-builder.yml')
@@ -19,17 +18,7 @@ class TestCustomBuilder(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        output = json.loads(self.assertPopen([
-            'mopack', 'usage', 'hello', '--json'
-        ]))
-        self.assertEqual(output, {
-            'name': 'hello',
-            'type': 'pkg-config',
-            'path': os.path.join(self.stage, 'mopack', 'build', 'hello',
-                                 'pkgconfig'),
-            'pcfiles': ['hello'],
-            'extra_args': [],
-        })
+        self.assertPkgConfigUsage('hello')
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -79,9 +68,8 @@ class TestCustomBuilder(IntegrationTest):
 
 
 class TestCustomBuilderDeploy(IntegrationTest):
-    def setUp(self):
-        self.stage = stage_dir('custom-builder-deploy')
-        self.prefix = stage_dir('custom-builder-install', chdir=False)
+    name = 'custom-builder-deploy'
+    deploy = True
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-custom-builder.yml')
@@ -92,17 +80,7 @@ class TestCustomBuilderDeploy(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        output = json.loads(self.assertPopen([
-            'mopack', 'usage', 'hello', '--json'
-        ]))
-        self.assertEqual(output, {
-            'name': 'hello',
-            'type': 'pkg-config',
-            'path': os.path.join(self.stage, 'mopack', 'build', 'hello',
-                                 'pkgconfig'),
-            'pcfiles': ['hello'],
-            'extra_args': [],
-        })
+        self.assertPkgConfigUsage('hello')
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {

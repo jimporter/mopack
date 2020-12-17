@@ -7,8 +7,7 @@ from . import *
 
 
 class TestConan(IntegrationTest):
-    def setUp(self):
-        self.stage = stage_dir('conan')
+    name = 'conan'
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-conan.yml')
@@ -17,16 +16,9 @@ class TestConan(IntegrationTest):
         self.assertExists('mopack/logs/conan.log')
         self.assertExists('mopack/mopack.json')
 
-        output = json.loads(self.assertPopen([
-            'mopack', 'usage', 'zlib', '--json'
-        ]))
-        self.assertEqual(output, {
-            'name': 'zlib',
-            'type': 'pkg-config',
-            'path': os.path.join(self.stage, 'mopack', 'conan'),
-            'pcfiles': ['zlib'],
-            'extra_args': [],
-        })
+        self.assertPkgConfigUsage('zlib', path=os.path.join(
+            self.stage, 'mopack', 'conan'
+        ))
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {

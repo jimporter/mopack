@@ -10,8 +10,7 @@ from . import *
 @skipIf('apt' not in test_features,
         'skipping apt tests; add `apt` to `MOPACK_EXTRA_TESTS` to enable')
 class TestApt(IntegrationTest):
-    def setUp(self):
-        self.stage = stage_dir('apt')
+    name = 'apt'
 
     def _usage(self, name, headers=[], libraries=[]):
         return {
@@ -33,23 +32,8 @@ class TestApt(IntegrationTest):
         self.assertExists('mopack/logs/apt.log')
         self.assertExists('mopack/mopack.json')
 
-        output = json.loads(self.assertPopen([
-            'mopack', 'usage', 'ogg', '--json'
-        ]))
-        self.assertEqual(output, {
-            'name': 'ogg', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': ['ogg'], 'compile_flags': [], 'link_flags': [],
-        })
-
-        output = json.loads(self.assertPopen([
-            'mopack', 'usage', 'zlib', '--json'
-        ]))
-        self.assertEqual(output, {
-            'name': 'zlib', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': ['z'], 'compile_flags': [], 'link_flags': [],
-        })
+        self.assertPathUsage('ogg')
+        self.assertPathUsage('zlib', libraries=['z'])
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {

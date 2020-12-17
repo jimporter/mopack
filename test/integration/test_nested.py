@@ -8,22 +8,8 @@ from . import *
 
 
 class TestNested(IntegrationTest):
-    def setUp(self):
-        self.stage = stage_dir('nested')
-        self.prefix = stage_dir('nested-install', chdir=False)
-        self.pkgbuilddir = os.path.join(self.stage, 'mopack', 'build')
-
-    def check_usage(self, name):
-        output = json.loads(self.assertPopen([
-            'mopack', 'usage', name, '--json'
-        ]))
-        self.assertEqual(output, {
-            'name': name,
-            'type': 'pkg-config',
-            'path': os.path.join(self.pkgbuilddir, name, 'pkgconfig'),
-            'pcfiles': [name],
-            'extra_args': [],
-        })
+    name = 'nested'
+    deploy = True
 
     def _builder(self, name):
         return {
@@ -49,8 +35,8 @@ class TestNested(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.check_usage('greeter')
-        self.check_usage('hello')
+        self.assertPkgConfigUsage('greeter')
+        self.assertPkgConfigUsage('hello')
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
