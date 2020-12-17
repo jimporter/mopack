@@ -23,13 +23,14 @@ class Bfg9000Builder(Builder):
         def __call__(self, *, toolchain=types.Unset, config_file=None,
                      child_config=False):
             if not child_config and self.toolchain is types.Unset:
-                self.toolchain = toolchain
+                T = types.TypeCheck(locals())
+                T.toolchain(types.maybe_raw(types.string))
 
     def __init__(self, name, *, extra_args=None, submodules, **kwargs):
         super().__init__(name, **kwargs)
-        self.extra_args = types.shell_args(self._path_bases, none_ok=True)(
-            'extra_args', extra_args
-        )
+
+        T = types.TypeCheck(locals())
+        T.extra_args(types.shell_args(self._path_bases, none_ok=True))
 
     def set_usage(self, usage=None, **kwargs):
         if usage is None:

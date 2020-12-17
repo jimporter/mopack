@@ -2,8 +2,8 @@ import os
 import warnings
 
 from . import BinaryPackage, PackageOptions
-from .. import log
-from ..iterutils import iterate, uniques
+from .. import log, types
+from ..iterutils import uniques
 from ..shell import get_cmd
 
 
@@ -21,17 +21,24 @@ class ConanPackage(BinaryPackage):
 
         def __call__(self, *, build=None, generator=None, config_file=None,
                      child_config=False):
-            if generator and generator not in self.generator:
-                self.generator.append(generator)
+            T = types.TypeCheck(locals())
+            if generator:
+                T.generator(types.list_of(types.string, listify=True),
+                            extend=True)
+                self.generator = uniques(self.generator)
             if build:
-                self.build.extend(iterate(build))
+                T.build(types.list_of(types.string, listify=True), extend=True)
                 self.build = uniques(self.build)
 
     def __init__(self, name, remote, options=None, usage=None, **kwargs):
         usage = usage or usage or {'type': 'pkg-config', 'path': ''}
         super().__init__(name, usage=usage, _path_bases={'builddir'}, **kwargs)
-        self.remote = remote
-        self.options = options or {}
+
+        T = types.TypeCheck(locals())
+        T.remote(types.string)
+
+        value_type = types.one_of(types.string, types.boolean, desc='a value')
+        T.options(types.maybe(types.dict_of(types.string, value_type), {}))
 
     @staticmethod
     def _installdir(pkgdir):

@@ -124,7 +124,9 @@ class DirectoryPackage(SDistPackage):
 
     def __init__(self, name, *, path, **kwargs):
         super().__init__(name, **kwargs)
-        self.path = types.any_path('cfgdir')('path', path)
+
+        T = types.TypeCheck(locals())
+        T.path(types.any_path('cfgdir'))
 
     def _srcdir(self, pkgdir):
         return self.path.string(cfgdir=self.config_dir)
@@ -147,14 +149,15 @@ class TarballPackage(SDistPackage):
                  patch=None, **kwargs):
         super().__init__(name, **kwargs)
 
-        if (path is None) == (url is None):
-            raise TypeError('exactly one of `path` or `url` must be specified')
+        T = types.TypeCheck(locals())
+        T.path(types.maybe(types.any_path('cfgdir')))
+        T.url(types.maybe(types.url))
+        T.files(types.list_of(types.string, listify=True))
+        T.srcdir(types.maybe(types.path_fragment))
+        T.patch(types.maybe(types.any_path('cfgdir')))
 
-        self.path = types.maybe(types.any_path('cfgdir'))('path', path)
-        self.url = types.maybe(types.url)('url', url)
-        self.files = types.list_of(types.string, listify=True)('files', files)
-        self.srcdir = types.maybe(types.path_fragment)('srcdir', srcdir)
-        self.patch = types.maybe(types.any_path('cfgdir'))('patch', patch)
+        if (self.path is None) == (self.url is None):
+            raise TypeError('exactly one of `path` or `url` must be specified')
         self.guessed_srcdir = None  # Set in fetch().
 
     def _base_srcdir(self, pkgdir):
@@ -224,25 +227,29 @@ class GitPackage(SDistPackage):
     def __init__(self, name, *, repository, tag=None, branch=None, commit=None,
                  srcdir='.', **kwargs):
         super().__init__(name, **kwargs)
-        self.repository = types.one_of(
+
+        T = types.TypeCheck(locals())
+        T.repository(types.one_of(
             types.url, types.ssh_path, types.any_path('cfgdir'),
             desc='a repository'
-        )('repository', repository)
+        ))
+        T.srcdir(types.maybe(types.path_fragment))
+
+        rev = {}
+        T.tag(types.maybe(types.string), dest=rev)
+        T.branch(types.maybe(types.string), dest=rev)
+        T.commit(types.maybe(types.string), dest=rev)
 
         rev = {'tag': tag, 'branch': branch, 'commit': commit}
         if sum(0 if i is None else 1 for i in rev.values()) > 1:
             raise TypeError('only one of `tag`, `branch`, or `commit` may ' +
                             'be specified')
-        for k in rev:
-            rev[k] = types.maybe(types.string)(k, rev[k])
         for k, v in rev.items():
             if v is not None:
                 self.rev = [k, v]
                 break
         else:
             self.rev = ['branch', 'master']
-
-        self.srcdir = types.maybe(types.path_fragment)('srcdir', srcdir)
 
     def _base_srcdir(self, pkgdir):
         return os.path.join(pkgdir, 'src', self.name)

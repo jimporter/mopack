@@ -29,9 +29,7 @@ class PkgConfigUsage(Usage):
                  extra_args=None, submodule_map=types.Unset, submodules,
                  _options, _path_bases):
         package_default = DefaultResolver(self, _options.expr_symbols, name)
-
         bases = Path.Base.filter(['builddir', 'srcdir'], _path_bases)
-        self.path = types.abs_or_inner_path(*bases)('path', path)
         if submodules and submodules['required']:
             # If submodules are required, default to an empty .pc file, since
             # we should usually have .pc files for the submodules that handle
@@ -40,17 +38,14 @@ class PkgConfigUsage(Usage):
         else:
             default_pcfile = name
 
-        self.pcfile = types.default(types.string, default_pcfile)(
-            'pcfile', pcfile
-        )
-        self.extra_args = types.shell_args(bases, none_ok=True)(
-            'extra_args', extra_args
-        )
+        T = types.TypeCheck(locals())
+        T.path(types.abs_or_inner_path(*bases))
+        T.pcfile(types.maybe(types.string, default=default_pcfile))
+        T.extra_args(types.shell_args(bases, none_ok=True))
 
         if submodules:
-            self.submodule_map = package_default(
-                types.maybe(_submodule_map), default=name + '_{submodule}'
-            )('submodule_map', submodule_map)
+            T.submodule_map(package_default(types.maybe(_submodule_map),
+                                            default=name + '_{submodule}'))
 
     def _get_submodule_mapping(self, submodule):
         if self.submodule_map is None:

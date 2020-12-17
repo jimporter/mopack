@@ -40,22 +40,13 @@ class _SubmoduleMapping(FreezeDried):
     def __init__(self, *, include_path=None, library_path=None, headers=None,
                  libraries=None, compile_flags=None, link_flags=None,
                  _srcbases, _buildbases):
-        self.include_path = _list_of_paths(*_srcbases)(
-            'include_path', include_path
-        )
-        self.library_path = _list_of_paths(*_buildbases)(
-            'library_path', library_path
-        )
-
-        self.headers = _list_of_headers('headers', headers)
-        self.libraries = _list_of_libraries('libraries', libraries)
-
-        self.compile_flags = types.shell_args(_srcbases, none_ok=True)(
-            'compile_flags', compile_flags
-        )
-        self.link_flags = types.shell_args(_srcbases, none_ok=True)(
-            'link_flags', link_flags
-        )
+        T = types.TypeCheck(locals())
+        T.include_path(_list_of_paths(*_srcbases))
+        T.library_path(_list_of_paths(*_buildbases))
+        T.headers(_list_of_headers)
+        T.libraries(_list_of_libraries)
+        T.compile_flags(types.shell_args(_srcbases, none_ok=True))
+        T.link_flags(types.shell_args(_srcbases, none_ok=True))
 
     def fill(self, submodule_name):
         # XXX: Support filling submodule names in places other than
@@ -103,45 +94,35 @@ class PathUsage(Usage):
                  submodules, _options, _path_bases):
         super().__init__(_options=_options)
         package_default = DefaultResolver(self, _options.expr_symbols, name)
-
-        # XXX: This can probably be removed if/when we pull more package
-        # resolution logic into mopack.
-        self.auto_link = package_default(types.boolean, default=False)(
-            'auto_link', auto_link
-        )
-
         srcbases = Path.Base.filter(['srcdir', 'builddir'], _path_bases)
         buildbases = Path.Base.filter(['builddir', 'srcdir'], _path_bases)
 
-        self.include_path = package_default(
-            _list_of_paths(*srcbases)
-        )('include_path', include_path)
-        self.library_path = package_default(
-            _list_of_paths(*buildbases)
-        )('library_path', library_path)
-
-        self.headers = package_default(_list_of_headers)('headers', headers)
+        T = types.TypeCheck(locals())
+        # XXX: `auto_link` can probably be removed if/when we pull more package
+        # resolution logic into mopack.
+        T.auto_link(package_default(types.boolean, default=False))
+        T.include_path(package_default(_list_of_paths(*srcbases)))
+        T.library_path(package_default(_list_of_paths(*buildbases)))
+        T.headers(package_default(_list_of_headers))
 
         if submodules and submodules['required']:
             # If submodules are required, default to an empty list of
             # libraries, since we likely don't have a "base" library that
             # always needs linking to.
-            libs_checker = types.default(_list_of_libraries, [])
+            libs_checker = types.maybe(_list_of_libraries, default=[])
         else:
             libs_checker = package_default(
                 _list_of_libraries, default={'type': 'guess', 'name': name}
             )
-        self.libraries = libs_checker('libraries', libraries)
-
-        defaulted_flags = types.shell_args(srcbases, none_ok=True)
-        self.compile_flags = defaulted_flags('compile_flags', compile_flags)
-        self.link_flags = defaulted_flags('link_flags', link_flags)
+        T.libraries(libs_checker)
+        T.compile_flags(types.shell_args(srcbases, none_ok=True))
+        T.link_flags(types.shell_args(srcbases, none_ok=True))
 
         if submodules:
-            self.submodule_map = package_default(
+            T.submodule_map(package_default(
                 types.maybe(_submodule_map(srcbases, buildbases)),
                 default=name + '_{submodule}'
-            )('submodule_map', submodule_map)
+            ))
 
     def _get_submodule_mapping(self, submodule):
         try:

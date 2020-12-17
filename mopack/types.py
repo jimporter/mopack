@@ -125,19 +125,40 @@ def try_load_config(config, context, kind):
         raise MarkedYAMLError(context, config.mark, msg, mark)
 
 
-def maybe(other, default=None):
+class TypeCheck:
+    def __init__(self, context):
+        self.__context = context
+
+    def __call__(self, field, check, dest=None, extend=False):
+        if dest is None:
+            dest = self.__context['self']
+        value = check(field, self.__context[field])
+
+        if extend:
+            d = dest[field] if isinstance(dest, dict) else getattr(dest, field)
+            d.extend(value)
+        elif isinstance(dest, dict):
+            dest[field] = value
+        else:
+            setattr(dest, field, value)
+
+    def __getattr__(self, field):
+        return lambda *args, **kwargs: self(field, *args, **kwargs)
+
+
+def maybe(other, default=None, empty=(None, Unset)):
     def check(field, value):
-        if value is None:
+        if any(value is i for i in iterutils.iterate(empty)):
             return default
         return other(field, value)
 
     return check
 
 
-def default(other, default=None):
+def maybe_raw(other, empty=(None, Unset)):
     def check(field, value):
-        if value is Unset:
-            return default
+        if any(value is i for i in iterutils.iterate(empty)):
+            return value
         return other(field, value)
 
     return check

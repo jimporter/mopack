@@ -10,10 +10,10 @@ class AptPackage(BinaryPackage):
     def __init__(self, name, remote=None, repository=None, usage='system',
                  **kwargs):
         super().__init__(name, usage=usage, **kwargs)
-        self.remote = types.maybe(types.string, 'lib{}-dev'.format(name))(
-            'remote', remote
-        )
-        self.repository = types.maybe(types.string)('repository', repository)
+
+        T = types.TypeCheck(locals())
+        T.remote(types.maybe(types.string, default='lib{}-dev'.format(name)))
+        T.repository(types.maybe(types.string))
 
     @classmethod
     def resolve_all(cls, pkgdir, packages):

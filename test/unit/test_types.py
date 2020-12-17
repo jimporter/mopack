@@ -21,32 +21,105 @@ class TypeTestCase(TestCase):
         self.assertEqual(raised.exception.field, field)
 
 
+class TestTypeCheck(TypeTestCase):
+    def test_object(self):
+        class Thing:
+            def __init__(self, field):
+                T = TypeCheck(locals())
+                T.field(string)
+
+        self.assertEqual(Thing('foo').field, 'foo')
+        with self.assertFieldError(('field',)):
+            Thing(1)
+
+    def test_object_extend(self):
+        class Thing:
+            def __init__(self):
+                self.field = []
+
+            def __call__(self, field):
+                T = TypeCheck(locals())
+                T.field(list_of(string, listify=True), extend=True)
+
+        t = Thing()
+        t('foo')
+        t(['bar', 'baz'])
+        self.assertEqual(t.field, ['foo', 'bar', 'baz'])
+        with self.assertFieldError(('field',)):
+            t(1)
+
+    def test_dict(self):
+        class Thing:
+            def __init__(self, field):
+                self.data = {}
+                T = TypeCheck(locals())
+                T.field(string, dest=self.data)
+
+        self.assertEqual(Thing('foo').data['field'], 'foo')
+        with self.assertFieldError(('field',)):
+            Thing(1)
+
+    def test_dict_extend(self):
+        class Thing:
+            def __init__(self):
+                self.data = {'field': []}
+
+            def __call__(self, field):
+                T = TypeCheck(locals())
+                T.field(list_of(string, listify=True), extend=True,
+                        dest=self.data)
+
+        t = Thing()
+        t('foo')
+        t(['bar', 'baz'])
+        self.assertEqual(t.data['field'], ['foo', 'bar', 'baz'])
+        with self.assertFieldError(('field',)):
+            t(1)
+
+
 class TestMaybe(TypeTestCase):
     def test_basic(self):
         self.assertEqual(maybe(string)('field', None), None)
+        self.assertEqual(maybe(string)('field', Unset), None)
         self.assertEqual(maybe(string)('field', 'foo'), 'foo')
 
-    def test_default(self):
+    def test_maybe(self):
         self.assertEqual(maybe(string, 'default')('field', None), 'default')
+        self.assertEqual(maybe(string, 'default')('field', Unset), 'default')
         self.assertEqual(maybe(string, 'default')('field', 'foo'), 'foo')
+
+    def test_empty(self):
+        self.assertEqual(maybe(string, empty=1)('field', 'foo'), 'foo')
+        self.assertEqual(maybe(string, empty=1)('field', 1), None)
+
+        with self.assertFieldError(('field',)):
+            maybe(string, empty=1)('field', None)
+        with self.assertFieldError(('field',)):
+            maybe(string, empty=1)('field', Unset)
 
     def test_invalid(self):
         with self.assertFieldError(('field',)):
             maybe(string)('field', 1)
 
 
-class TestDefault(TypeTestCase):
+class TestMaybeRaw(TypeTestCase):
     def test_basic(self):
-        self.assertEqual(default(string)('field', Unset), None)
-        self.assertEqual(default(string)('field', 'foo'), 'foo')
+        self.assertEqual(maybe_raw(string)('field', None), None)
+        self.assertEqual(maybe_raw(string)('field', Unset), Unset)
+        self.assertEqual(maybe_raw(string)('field', 'foo'), 'foo')
 
-    def test_default(self):
-        self.assertEqual(default(string, 'default')('field', Unset), 'default')
-        self.assertEqual(default(string, 'default')('field', 'foo'), 'foo')
+    def test_empty(self):
+        self.assertEqual(maybe_raw(string, empty=1)('field', 'foo'), 'foo')
+        self.assertEqual(maybe_raw(string, empty=1)('field', 1), 1)
+
+        with self.assertFieldError(('field',)):
+            maybe_raw(string, empty=1)('field', None)
+        with self.assertFieldError(('field',)):
+            maybe_raw(string, empty=1)('field', Unset)
 
     def test_invalid(self):
         with self.assertFieldError(('field',)):
-            default(string)('field', 1)
+            maybe_raw(string)('field', 1)
 
 
 class TestOneOf(TypeTestCase):

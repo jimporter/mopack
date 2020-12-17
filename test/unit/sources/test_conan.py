@@ -381,6 +381,7 @@ class TestConanOptions(TestCase):
     def test_default(self):
         opts = ConanPackage.Options()
         self.assertEqual(opts.generator, ['pkg_config'])
+        self.assertEqual(opts.build, [])
 
     def test_generator(self):
         opts = ConanPackage.Options()
@@ -390,8 +391,19 @@ class TestConanOptions(TestCase):
         opts(generator='pkg_config')
         self.assertEqual(opts.generator, ['pkg_config', 'cmake'])
 
+        opts(generator=['txt', 'cmake'])
+        self.assertEqual(opts.generator, ['pkg_config', 'cmake', 'txt'])
+
+    def test_build(self):
+        opts = ConanPackage.Options()
+        opts(build='foo')
+        self.assertEqual(opts.build, ['foo'])
+
+        opts(build=['bar', 'foo', 'baz'])
+        self.assertEqual(opts.build, ['foo', 'bar', 'baz'])
+
     def test_rehydrate(self):
         opts = ConanPackage.Options()
-        opts(generator='cmake')
+        opts(generator='cmake', build='foo')
         data = through_json(opts.dehydrate())
         self.assertEqual(opts, PackageOptions.rehydrate(data))

@@ -21,11 +21,12 @@ class CustomBuilder(Builder):
                  submodules, **kwargs):
         super().__init__(name, **kwargs)
 
-        cmds_type = types.maybe(types.list_of(
-            types.shell_args(self._path_bases)
-        ), [])
-        self.build_commands = cmds_type('build_commands', build_commands)
-        self.deploy_commands = cmds_type('deploy_commands', deploy_commands)
+        line_type = types.shell_args(self._path_bases)
+        cmds_type = types.maybe(types.list_of(line_type), default=[])
+
+        T = types.TypeCheck(locals())
+        T.build_commands(cmds_type)
+        T.deploy_commands(cmds_type)
 
     def _execute(self, logfile, commands, **kwargs):
         for line in commands:
