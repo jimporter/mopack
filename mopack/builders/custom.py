@@ -21,10 +21,9 @@ class CustomBuilder(Builder):
                  submodules, **kwargs):
         super().__init__(name, **kwargs)
 
-        line_type = types.shell_args(self._path_bases)
-        cmds_type = types.maybe(types.list_of(line_type), default=[])
+        cmds_type = types.maybe(types.list_of(types.shell_args()), default=[])
 
-        T = types.TypeCheck(locals())
+        T = types.TypeCheck(locals(), self._expr_symbols)
         T.build_commands(cmds_type)
         T.deploy_commands(cmds_type)
 

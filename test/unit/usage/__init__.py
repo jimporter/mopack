@@ -3,7 +3,7 @@ from .. import OptionsTest, through_json  # noqa: F401
 
 class UsageTest(OptionsTest):
     def make_usage(self, *args, common_options=None, deploy_paths=None,
-                   submodules=None, _path_bases={'srcdir', 'builddir'},
+                   submodules=None, _path_bases=('srcdir', 'builddir'),
                    **kwargs):
         if len(args) == 1:
             usage_type = self.usage_type

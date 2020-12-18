@@ -16,7 +16,7 @@ class TestCMakeBuilder(BuilderTest):
     builder_type = CMakeBuilder
     srcdir = os.path.abspath('/path/to/src')
     pkgdir = os.path.abspath('/path/to/builddir/mopack')
-    path_bases = {'srcdir', 'builddir'}
+    path_bases = ('srcdir', 'builddir')
 
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         return os.path.join(self.pkgdir, 'build', name, pkgconfig)

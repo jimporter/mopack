@@ -21,16 +21,16 @@ class Bfg9000Builder(Builder):
             self.toolchain = types.Unset
 
         def __call__(self, *, toolchain=types.Unset, config_file=None,
-                     child_config=False):
-            if not child_config and self.toolchain is types.Unset:
-                T = types.TypeCheck(locals())
-                T.toolchain(types.maybe_raw(types.string))
+                     _child_config=False, _symbols):
+            if not _child_config and self.toolchain is types.Unset:
+                T = types.TypeCheck(locals(), _symbols)
+                T.toolchain(types.maybe_raw(types.path_fragment))
 
     def __init__(self, name, *, extra_args=None, submodules, **kwargs):
         super().__init__(name, **kwargs)
 
-        T = types.TypeCheck(locals())
-        T.extra_args(types.shell_args(self._path_bases, none_ok=True))
+        T = types.TypeCheck(locals(), self._expr_symbols)
+        T.extra_args(types.shell_args(none_ok=True))
 
     def set_usage(self, usage=None, **kwargs):
         if usage is None:

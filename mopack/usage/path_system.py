@@ -37,16 +37,16 @@ _PathListFD = ListFreezeDryer(Path)
     'compile_flags': ShellArguments, 'link_flags': ShellArguments
 })
 class _SubmoduleMapping(FreezeDried):
-    def __init__(self, *, include_path=None, library_path=None, headers=None,
-                 libraries=None, compile_flags=None, link_flags=None,
-                 _srcbases, _buildbases):
-        T = types.TypeCheck(locals())
-        T.include_path(_list_of_paths(*_srcbases))
-        T.library_path(_list_of_paths(*_buildbases))
+    def __init__(self, _symbols, _srcbase, _buildbase, *, include_path=None,
+                 library_path=None, headers=None, libraries=None,
+                 compile_flags=None, link_flags=None):
+        T = types.TypeCheck(locals(), _symbols)
+        T.include_path(_list_of_paths(_srcbase))
+        T.library_path(_list_of_paths(_buildbase))
         T.headers(_list_of_headers)
         T.libraries(_list_of_libraries)
-        T.compile_flags(types.shell_args(_srcbases, none_ok=True))
-        T.link_flags(types.shell_args(_srcbases, none_ok=True))
+        T.compile_flags(types.shell_args(none_ok=True))
+        T.link_flags(types.shell_args(none_ok=True))
 
     def fill(self, submodule_name):
         # XXX: Support filling submodule names in places other than
@@ -63,11 +63,10 @@ class _SubmoduleMapping(FreezeDried):
         return result
 
 
-def _submodule_map(srcbases, buildbases):
+def _submodule_map(symbols, srcbase, buildbase):
     def check_item(field, value):
         with types.ensure_field_error(field):
-            return _SubmoduleMapping(**value, _srcbases=srcbases,
-                                     _buildbases=buildbases)
+            return _SubmoduleMapping(symbols, srcbase, buildbase, **value)
 
     def check(field, value):
         try:
@@ -93,16 +92,17 @@ class PathUsage(Usage):
                  compile_flags=Unset, link_flags=Unset, submodule_map=Unset,
                  submodules, _options, _path_bases):
         super().__init__(_options=_options)
-        package_default = DefaultResolver(self, _options.expr_symbols, name)
-        srcbases = Path.Base.filter(['srcdir', 'builddir'], _path_bases)
-        buildbases = Path.Base.filter(['builddir', 'srcdir'], _path_bases)
+        symbols = self._expr_symbols(_path_bases)
+        package_default = DefaultResolver(self, symbols, name)
+        srcbase = self._preferred_base('srcdir', _path_bases)
+        buildbase = self._preferred_base('builddir', _path_bases)
 
-        T = types.TypeCheck(locals())
+        T = types.TypeCheck(locals(), symbols)
         # XXX: `auto_link` can probably be removed if/when we pull more package
         # resolution logic into mopack.
         T.auto_link(package_default(types.boolean, default=False))
-        T.include_path(package_default(_list_of_paths(*srcbases)))
-        T.library_path(package_default(_list_of_paths(*buildbases)))
+        T.include_path(package_default(_list_of_paths(srcbase)))
+        T.library_path(package_default(_list_of_paths(buildbase)))
         T.headers(package_default(_list_of_headers))
 
         if submodules and submodules['required']:
@@ -115,12 +115,12 @@ class PathUsage(Usage):
                 _list_of_libraries, default={'type': 'guess', 'name': name}
             )
         T.libraries(libs_checker)
-        T.compile_flags(types.shell_args(srcbases, none_ok=True))
-        T.link_flags(types.shell_args(srcbases, none_ok=True))
+        T.compile_flags(types.shell_args(none_ok=True))
+        T.link_flags(types.shell_args(none_ok=True))
 
         if submodules:
             T.submodule_map(package_default(
-                types.maybe(_submodule_map(srcbases, buildbases)),
+                types.maybe(_submodule_map(symbols, srcbase, buildbase)),
                 default=name + '_{submodule}'
             ))
 

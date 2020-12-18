@@ -125,7 +125,7 @@ class DirectoryPackage(SDistPackage):
     def __init__(self, name, *, path, **kwargs):
         super().__init__(name, **kwargs)
 
-        T = types.TypeCheck(locals())
+        T = types.TypeCheck(locals(), self._expr_symbols)
         T.path(types.any_path('cfgdir'))
 
     def _srcdir(self, pkgdir):
@@ -149,7 +149,7 @@ class TarballPackage(SDistPackage):
                  patch=None, **kwargs):
         super().__init__(name, **kwargs)
 
-        T = types.TypeCheck(locals())
+        T = types.TypeCheck(locals(), self._expr_symbols)
         T.path(types.maybe(types.any_path('cfgdir')))
         T.url(types.maybe(types.url))
         T.files(types.list_of(types.string, listify=True))
@@ -228,7 +228,7 @@ class GitPackage(SDistPackage):
                  srcdir='.', **kwargs):
         super().__init__(name, **kwargs)
 
-        T = types.TypeCheck(locals())
+        T = types.TypeCheck(locals(), self._expr_symbols)
         T.repository(types.one_of(
             types.url, types.ssh_path, types.any_path('cfgdir'),
             desc='a repository'

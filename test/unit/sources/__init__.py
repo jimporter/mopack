@@ -7,7 +7,9 @@ class SourceTest(OptionsTest):
         options = super().make_options(common_options, deploy_paths)
         if this_options:
             source = (pkg_type or self.pkg_type).source
-            options.sources[source].accumulate(this_options)
+            options.sources[source].accumulate(
+                this_options, _symbols=options.expr_symbols
+            )
         return options
 
     def make_package(self, *args, common_options=None, this_options=None,

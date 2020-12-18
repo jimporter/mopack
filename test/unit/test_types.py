@@ -25,7 +25,7 @@ class TestTypeCheck(TypeTestCase):
     def test_object(self):
         class Thing:
             def __init__(self, field):
-                T = TypeCheck(locals())
+                T = TypeCheck(locals(), {})
                 T.field(string)
 
         self.assertEqual(Thing('foo').field, 'foo')
@@ -38,7 +38,7 @@ class TestTypeCheck(TypeTestCase):
                 self.field = []
 
             def __call__(self, field):
-                T = TypeCheck(locals())
+                T = TypeCheck(locals(), {})
                 T.field(list_of(string, listify=True), extend=True)
 
         t = Thing()
@@ -52,7 +52,7 @@ class TestTypeCheck(TypeTestCase):
         class Thing:
             def __init__(self, field):
                 self.data = {}
-                T = TypeCheck(locals())
+                T = TypeCheck(locals(), {})
                 T.field(string, dest=self.data)
 
         self.assertEqual(Thing('foo').data['field'], 'foo')
@@ -65,7 +65,7 @@ class TestTypeCheck(TypeTestCase):
                 self.data = {'field': []}
 
             def __call__(self, field):
-                T = TypeCheck(locals())
+                T = TypeCheck(locals(), {})
                 T.field(list_of(string, listify=True), extend=True,
                         dest=self.data)
 
@@ -75,6 +75,48 @@ class TestTypeCheck(TypeTestCase):
         self.assertEqual(t.data['field'], ['foo', 'bar', 'baz'])
         with self.assertFieldError(('field',)):
             t(1)
+
+    def test_evaluate(self):
+        symbols = {'variable': 'value', 'bad': 1}
+
+        class Thing:
+            def __init__(self, field):
+                T = TypeCheck(locals(), symbols)
+                T.field(string)
+
+        self.assertEqual(Thing('$variable').field, 'value')
+        with self.assertFieldError(('field',)):
+            Thing('$bad')
+        with self.assertFieldError(('field',)):
+            Thing('$undef')
+
+    def test_evaluate_list(self):
+        symbols = {'variable': 'value', 'bad': 1}
+
+        class Thing:
+            def __init__(self, field):
+                T = TypeCheck(locals(), symbols)
+                T.field(list_of(string))
+
+        self.assertEqual(Thing(['foo', '$variable']).field, ['foo', 'value'])
+        with self.assertFieldError(('field', 0)):
+            Thing(['$bad'])
+        with self.assertFieldError(('field', 0)):
+            Thing(['$undef'])
+
+    def test_evaluate_dict(self):
+        symbols = {'variable': 'value', 'bad': 1}
+
+        class Thing:
+            def __init__(self, field):
+                T = TypeCheck(locals(), symbols)
+                T.field(dict_of(string, string))
+
+        self.assertEqual(Thing({'foo': '$variable'}).field, {'foo': 'value'})
+        with self.assertFieldError(('field', 'foo')):
+            Thing({'foo': '$bad'})
+        with self.assertFieldError(('field', 'foo')):
+            Thing({'foo': '$undef'})
 
 
 class TestMaybe(TypeTestCase):
@@ -302,25 +344,31 @@ class TestAbsOrInnerPath(TypeTestCase):
         with self.assertFieldError(('field',)):
             abs_or_inner_path('cfgdir')('field', 'path/../..')
 
-    def test_invalid_base(self):
-        with self.assertFieldError(('field',)):
-            abs_or_inner_path('cfgdir')('field', Path('srcdir', 'path'))
+    def test_other_base(self):
+        self.assertEqual(
+            abs_or_inner_path('cfgdir')('field', Path('srcdir', 'path')),
+            Path('srcdir', 'path')
+        )
 
     def test_absolute_posix(self):
         with mock.patch('os.path', posixpath):
-            self.assertEqual(abs_or_inner_path('cfgdir')('field', '/path'),
-                             Path('absolute', '/path'))
+            for i in ('cfgdir', None):
+                self.assertEqual(abs_or_inner_path(i)('field', '/path'),
+                                 Path('absolute', '/path'))
 
     def test_absolute_nt(self):
         fn = abs_or_inner_path('cfgdir')
         with mock.patch('os.path', ntpath):
-            self.assertEqual(fn('field', '/path'), Path('absolute', '\\path'))
-            self.assertEqual(fn('field', 'C:\\path'),
-                             Path('absolute', 'C:\\path'))
-            with self.assertFieldError(('field',)):
-                fn('field', 'C:')
-            with self.assertFieldError(('field',)):
-                fn('field', 'C:path')
+            for i in ('cfgdir', None):
+                fn = abs_or_inner_path('cfgdir')
+                self.assertEqual(fn('field', '/path'),
+                                 Path('absolute', '\\path'))
+                self.assertEqual(fn('field', 'C:\\path'),
+                                 Path('absolute', 'C:\\path'))
+                with self.assertFieldError(('field',)):
+                    fn('field', 'C:')
+                with self.assertFieldError(('field',)):
+                    fn('field', 'C:path')
 
 
 class TestAnyPath(TypeTestCase):
@@ -334,17 +382,18 @@ class TestAnyPath(TypeTestCase):
                          Path('cfgdir', 'path'))
 
     def test_absolute(self):
-        fn = any_path('cfgdir')
-        self.assertEqual(fn('field', '/path'),
-                         Path('absolute', os.sep + 'path'))
-        self.assertEqual(fn('field', '/path'),
-                         Path('absolute', os.sep + 'path'))
-        self.assertEqual(fn('field', Path('absolute', '/path')),
-                         Path('absolute', '/path'))
+        for i in ('cfgdir', None):
+            fn = any_path('cfgdir')
+            self.assertEqual(fn('field', '/path'),
+                             Path('absolute', os.sep + 'path'))
+            self.assertEqual(fn('field', '/path'),
+                             Path('absolute', os.sep + 'path'))
+            self.assertEqual(fn('field', Path('absolute', '/path')),
+                             Path('absolute', '/path'))
 
-    def test_invalid_base(self):
-        with self.assertFieldError(('field',)):
-            any_path('cfgdir')('field', Path('srcdir', 'path'))
+    def test_other_base(self):
+        self.assertEqual(any_path('cfgdir')('field', Path('srcdir', 'path')),
+                         Path('srcdir', 'path'))
 
 
 class TestSshPath(TypeTestCase):
@@ -381,10 +430,8 @@ class TestUrl(TypeTestCase):
 
 
 class TestShellArgs(TypeTestCase):
-    bases = ['srcdir', 'builddir']
-
     def assertShellArgs(self, value, expected, **kwargs):
-        self.assertEqual(shell_args(self.bases, **kwargs)('field', value),
+        self.assertEqual(shell_args(**kwargs)('field', value),
                          ShellArguments(expected))
 
     def test_none(self):
@@ -392,9 +439,9 @@ class TestShellArgs(TypeTestCase):
         self.assertShellArgs(Unset, [], none_ok=True)
 
         with self.assertFieldError(('field',)):
-            shell_args(self.bases)('field', None)
+            shell_args()('field', None)
         with self.assertFieldError(('field',)):
-            shell_args(self.bases)('field', Unset)
+            shell_args()('field', Unset)
 
     def test_empty(self):
         self.assertShellArgs('', [])
@@ -441,11 +488,11 @@ class TestShellArgs(TypeTestCase):
 
     def test_invalid(self):
         with self.assertFieldError(('field',)):
-            shell_args(self.bases)('field', 1)
+            shell_args()('field', 1)
         with self.assertFieldError(('field', 0)):
-            shell_args(self.bases)('field', [1])
+            shell_args()('field', [1])
         with self.assertFieldError(('field',)):
-            shell_args(self.bases)('field', '"foo')
+            shell_args()('field', '"foo')
 
 
 class TestWrapFieldError(TypeTestCase):

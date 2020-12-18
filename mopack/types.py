@@ -3,7 +3,7 @@ import re
 from contextlib import contextmanager
 from yaml.error import MarkedYAMLError
 
-from . import iterutils
+from . import expression as expr, iterutils
 from .exceptions import ConfigurationError
 from .path import Path
 from .placeholder import PlaceholderString
@@ -126,13 +126,30 @@ def try_load_config(config, context, kind):
 
 
 class TypeCheck:
-    def __init__(self, context):
+    def __init__(self, context, symbols):
         self.__context = context
+        self.__symbols = symbols
+
+    def __evaluate(self, field, data):
+        try:
+            with wrap_field_error(field):
+                if isinstance(data, str):
+                    return expr.evaluate(self.__symbols, data)
+                elif isinstance(data, (dict, list)):
+                    for k, v in iterutils.iteritems(data):
+                        data[k] = self.__evaluate(k, v)
+                    return data
+        except expr.ParseBaseException as e:
+            # XXX: This doesn't handle offsets within the original string, so
+            # the caret will probably be in the wrong spot.
+            raise FieldValueError(e.msg, field)
+
+        return data
 
     def __call__(self, field, check, dest=None, extend=False):
         if dest is None:
             dest = self.__context['self']
-        value = check(field, self.__context[field])
+        value = check(field, self.__evaluate(field, self.__context[field]))
 
         if extend:
             d = dest[field] if isinstance(dest, dict) else getattr(dest, field)
@@ -264,10 +281,10 @@ def path_fragment(field, value):
     return value
 
 
-def abs_or_inner_path(*bases):
+def abs_or_inner_path(base):
     def check(field, value):
         with ensure_field_error(field):
-            value = Path.ensure_path(value, bases + ('absolute',))
+            value = Path.ensure_path(value, base)
             if not value.is_abs() and not value.is_inner():
                 raise FieldValueError('expected an absolute or inner path',
                                       field)
@@ -276,10 +293,10 @@ def abs_or_inner_path(*bases):
     return check
 
 
-def any_path(*bases):
+def any_path(base):
     def check(field, value):
         with ensure_field_error(field):
-            return Path.ensure_path(value, bases + ('absolute',))
+            return Path.ensure_path(value, base)
 
     return check
 
@@ -298,9 +315,7 @@ def url(field, value):
     return value
 
 
-def shell_args(bases, none_ok=False, escapes=False):
-    bases = list(bases) + ['absolute']
-
+def shell_args(none_ok=False, escapes=False):
     def check_item(field, value):
         with ensure_field_error(field):
             if isinstance(value, str):

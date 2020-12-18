@@ -49,7 +49,6 @@ class Path(FreezeDried):
         self.path = os.path.normpath(path)
         if self.path == os.path.curdir:
             self.path = ''
-        base = self.Base.ensure_base(base)
 
         if os.path.isabs(self.path):
             self.base = self.Base.absolute
@@ -58,8 +57,10 @@ class Path(FreezeDried):
         elif ( hasattr(os.path, 'splitdrive') and
                os.path.splitdrive(self.path)[0] ):
             raise ValueError('relative paths with drives not supported')
+        elif base is None:
+            raise ValueError('absolute path required')
         else:
-            self.base = base
+            self.base = self.Base.ensure_base(base)
 
     def dehydrate(self):
         return {'base': self.base.name, 'path': self.path}
@@ -71,11 +72,7 @@ class Path(FreezeDried):
         return cls(cls.Base[config['base']], config['path'])
 
     @classmethod
-    def ensure_path(cls, path, bases):
-        if len(bases) == 0:
-            raise TypeError('no bases specified')
-        bases = [cls.Base.ensure_base(i) for i in bases]
-
+    def ensure_path(cls, path, base):
         if isinstance(path, PlaceholderString):
             bits = path.unbox()
             types = [type(i) for i in bits]
@@ -93,10 +90,8 @@ class Path(FreezeDried):
                 raise ValueError('invalid placeholder format')
 
         if isinstance(path, Path):
-            if path.base not in bases:
-                raise TypeError('invalid base {!r}'.format(path.base.name))
             return path
-        return cls(bases[0], path)
+        return cls(base, path)
 
     def is_abs(self):
         return self.base == self.Base.absolute

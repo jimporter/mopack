@@ -74,6 +74,12 @@ class TestPath(TestCase):
         self.assertEqual(p.is_abs(), True)
         self.assertEqual(p.is_inner(), True)
 
+        p = Path(None, '/foo')
+        self.assertEqual(p.base, Path.Base.absolute)
+        self.assertEqual(p.path, os.sep + 'foo')
+        self.assertEqual(p.is_abs(), True)
+        self.assertEqual(p.is_inner(), True)
+
         p = Path(Path.Base.cfgdir, '.')
         self.assertEqual(p.base, Path.Base.cfgdir)
         self.assertEqual(p.path, '')
@@ -93,43 +99,42 @@ class TestPath(TestCase):
             Path('goofy', 'foo')
         with self.assertRaises(ValueError):
             Path(Path.Base.absolute, 'foo')
+        with self.assertRaises(ValueError):
+            Path(None, 'foo')
 
         with mock.patch('os.path', ntpath), \
              self.assertRaises(ValueError):  # noqa
             Path(Path.Base.cfgdir, 'C:foo')
 
     def test_ensure_path(self):
-        self.assertEqual(Path.ensure_path('foo', ['srcdir', 'builddir']),
+        self.assertEqual(Path.ensure_path('foo', Path.Base.srcdir),
                          Path(Path.Base.srcdir, 'foo'))
         self.assertEqual(Path.ensure_path(Path(Path.Base.srcdir, 'foo'),
-                                          ['srcdir', 'builddir']),
+                                          Path.Base.srcdir),
                          Path(Path.Base.srcdir, 'foo'))
-
-        with self.assertRaises(TypeError):
-            Path.ensure_path(Path(Path.Base.srcdir, 'foo'), ['builddir'])
-        with self.assertRaises(TypeError):
-            Path.ensure_path('foo', [])
+        self.assertEqual(Path.ensure_path(Path(Path.Base.srcdir, 'foo'),
+                                          Path.Base.builddir),
+                         Path(Path.Base.srcdir, 'foo'))
 
     def test_ensure_path_placeholder(self):
-        bases = ['srcdir', 'builddir']
         srcdir = placeholder(Path(Path.Base.srcdir, ''))
-        self.assertEqual(Path.ensure_path(srcdir, bases),
+        self.assertEqual(Path.ensure_path(srcdir, Path.Base.srcdir),
                          Path(Path.Base.srcdir, ''))
-        self.assertEqual(Path.ensure_path(srcdir + '/foo', bases),
+        self.assertEqual(Path.ensure_path(srcdir + '/foo', Path.Base.srcdir),
                          Path(Path.Base.srcdir, 'foo'))
 
-        subsrcdir = placeholder(Path(Path.Base.srcdir, 'subdir'))
-        self.assertEqual(Path.ensure_path(subsrcdir, bases),
+        subsrc = placeholder(Path(Path.Base.srcdir, 'subdir'))
+        self.assertEqual(Path.ensure_path(subsrc, Path.Base.srcdir),
                          Path(Path.Base.srcdir, 'subdir'))
-        self.assertEqual(Path.ensure_path(subsrcdir + '/foo', bases),
+        self.assertEqual(Path.ensure_path(subsrc + '/foo', Path.Base.srcdir),
                          Path(Path.Base.srcdir, 'subdir/foo'))
-        self.assertEqual(Path.ensure_path(subsrcdir + 'foo', bases),
+        self.assertEqual(Path.ensure_path(subsrc + 'foo', Path.Base.srcdir),
                          Path(Path.Base.srcdir, 'subdirfoo'))
 
         with self.assertRaises(ValueError):
-            Path.ensure_path(srcdir + 'foo', bases)
+            Path.ensure_path(srcdir + 'foo', Path.Base.srcdir)
         with self.assertRaises(ValueError):
-            Path.ensure_path(srcdir + '/foo' + srcdir, bases)
+            Path.ensure_path(srcdir + '/foo' + srcdir, Path.Base.srcdir)
 
     def test_base_filter(self):
         bases = ['srcdir', 'builddir']

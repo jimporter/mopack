@@ -7,7 +7,7 @@ from mopack.usage.pkg_config import PkgConfigUsage
 
 
 class TestMakeUsage(UsageTest):
-    path_bases = {'srcdir', 'builddir'}
+    path_bases = ('srcdir', 'builddir')
 
     def test_make(self):
         usage = make_usage('pkg', {'type': 'pkg-config', 'path': 'path'},

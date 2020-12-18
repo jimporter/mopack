@@ -34,8 +34,6 @@ class CommonOptions(FreezeDried, BaseOptions):
     @property
     @memoize_method
     def expr_symbols(self):
-        path_vars = {i.name: placeholder(Path(i, '')) for i in Path.Base
-                     if i != Path.Base.absolute}
         deploy_vars = {k: placeholder(Path('absolute', v))
                        for k, v in self.deploy_paths.items()}
 
@@ -43,7 +41,6 @@ class CommonOptions(FreezeDried, BaseOptions):
             host_platform=platform_name(),
             target_platform=self.target_platform,
             env=self.env,
-            **path_vars,
             deploy_paths=deploy_vars,
         )
 

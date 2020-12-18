@@ -4,6 +4,8 @@ from pkg_resources import load_entry_point
 
 from ..base_options import BaseOptions, OptionsHolder
 from ..freezedried import FreezeDried
+from ..path import Path
+from ..placeholder import placeholder
 from ..types import FieldValueError, wrap_field_error
 from ..usage import make_usage, Usage
 
@@ -29,6 +31,11 @@ class Builder(OptionsHolder):
 
     def _builddir(self, pkgdir):
         return os.path.abspath(os.path.join(pkgdir, 'build', self.name))
+
+    @property
+    def _expr_symbols(self):
+        path_vars = {i: placeholder(Path(i, '')) for i in self._path_bases}
+        return dict(**self._options.expr_symbols, **path_vars)
 
     def clean(self, pkgdir):
         shutil.rmtree(self._builddir(pkgdir), ignore_errors=True)

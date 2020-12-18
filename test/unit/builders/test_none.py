@@ -13,7 +13,7 @@ class TestNoneBuilder(BuilderTest):
     builder_type = NoneBuilder
     srcdir = os.path.abspath('/path/to/src')
     pkgdir = os.path.abspath('/path/to/builddir/mopack')
-    path_bases = {'srcdir'}
+    path_bases = ('srcdir',)
 
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         return os.path.join(self.srcdir, pkgconfig)

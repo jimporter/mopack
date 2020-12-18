@@ -11,7 +11,7 @@ class AptPackage(BinaryPackage):
                  **kwargs):
         super().__init__(name, usage=usage, **kwargs)
 
-        T = types.TypeCheck(locals())
+        T = types.TypeCheck(locals(), self._expr_symbols)
         T.remote(types.maybe(types.string, default='lib{}-dev'.format(name)))
         T.repository(types.maybe(types.string))
 

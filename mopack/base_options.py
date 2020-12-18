@@ -3,10 +3,10 @@ from .types import try_load_config
 
 
 class BaseOptions:
-    def accumulate(self, config):
+    def accumulate(self, config, **kwargs):
         kind = getattr(self, self._type_field or 'type')
         with try_load_config(config, self._context, kind):
-            return self(**config)
+            return self(**config, **kwargs)
 
 
 @FreezeDried.fields(skip={'_options'}, skip_compare={'_options'})

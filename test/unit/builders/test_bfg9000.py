@@ -17,7 +17,7 @@ class TestBfg9000Builder(BuilderTest):
     builder_type = Bfg9000Builder
     srcdir = os.path.abspath('/path/to/src')
     pkgdir = os.path.abspath('/path/to/builddir/mopack')
-    path_bases = {'srcdir', 'builddir'}
+    path_bases = ('srcdir', 'builddir')
 
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         return os.path.join(self.pkgdir, 'build', name, pkgconfig)
@@ -188,33 +188,40 @@ class TestBfg9000Builder(BuilderTest):
 
 
 class TestBfg9000Options(TestCase):
+    symbols = {'variable': 'foo'}
+
     def test_default(self):
         opts = Bfg9000Builder.Options()
         self.assertIs(opts.toolchain, Unset)
 
     def test_toolchain(self):
         opts = Bfg9000Builder.Options()
-        opts(toolchain='toolchain.bfg')
+        opts(toolchain='toolchain.bfg', _symbols=self.symbols)
         self.assertEqual(opts.toolchain, 'toolchain.bfg')
-        opts(toolchain='bad.bfg')
+        opts(toolchain='bad.bfg', _symbols=self.symbols)
         self.assertEqual(opts.toolchain, 'toolchain.bfg')
 
         opts = Bfg9000Builder.Options()
-        opts(toolchain=None)
+        opts(toolchain='$variable/toolchain.bfg', _symbols=self.symbols)
+        self.assertEqual(opts.toolchain, os.path.join('foo', 'toolchain.bfg'))
+
+        opts = Bfg9000Builder.Options()
+        opts(toolchain=None, _symbols=self.symbols)
         self.assertEqual(opts.toolchain, None)
 
         opts = Bfg9000Builder.Options()
-        opts(toolchain='toolchain.bfg', child_config=True)
+        opts(toolchain='toolchain.bfg', _child_config=True,
+             _symbols=self.symbols)
         self.assertIs(opts.toolchain, Unset)
 
     def test_rehydrate(self):
         opts_toolchain = Bfg9000Builder.Options()
-        opts_toolchain(toolchain='toolchain.bfg')
+        opts_toolchain(toolchain='toolchain.bfg', _symbols=self.symbols)
         data = through_json(opts_toolchain.dehydrate())
         self.assertEqual(opts_toolchain, BuilderOptions.rehydrate(data))
 
         opts_none = Bfg9000Builder.Options()
-        opts_none(toolchain=None)
+        opts_none(toolchain=None, _symbols=self.symbols)
         data = through_json(opts_none.dehydrate())
         self.assertEqual(opts_none, BuilderOptions.rehydrate(data))
 

@@ -20,8 +20,8 @@ class ConanPackage(BinaryPackage):
             self.build = []
 
         def __call__(self, *, build=None, generator=None, config_file=None,
-                     child_config=False):
-            T = types.TypeCheck(locals())
+                     _child_config=False, _symbols):
+            T = types.TypeCheck(locals(), _symbols)
             if generator:
                 T.generator(types.list_of(types.string, listify=True),
                             extend=True)
@@ -31,10 +31,11 @@ class ConanPackage(BinaryPackage):
                 self.build = uniques(self.build)
 
     def __init__(self, name, remote, options=None, usage=None, **kwargs):
-        usage = usage or usage or {'type': 'pkg-config', 'path': ''}
-        super().__init__(name, usage=usage, _path_bases={'builddir'}, **kwargs)
+        usage = usage or {'type': 'pkg-config', 'path': ''}
+        super().__init__(name, usage=usage, _path_bases=('builddir',),
+                         **kwargs)
 
-        T = types.TypeCheck(locals())
+        T = types.TypeCheck(locals(), self._expr_symbols)
         T.remote(types.string)
 
         value_type = types.one_of(types.string, types.boolean, desc='a value')

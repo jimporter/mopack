@@ -22,12 +22,32 @@ class TestPkgConfig(UsageTest):
             'pcfiles': ['foo'], 'extra_args': [],
         })
 
-    def test_path(self):
+    def test_path_relative(self):
         usage = self.make_usage('foo', path='pkgconf')
         self.assertEqual(usage.path, Path('builddir', 'pkgconf'))
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.extra_args, ShellArguments())
-        self.assertEqual(usage.get_usage(None, None, '/builddir'), {
+        self.assertEqual(usage.get_usage(None, '/srcdir', '/builddir'), {
+            'type': 'pkg-config', 'path': abspath('/builddir/pkgconf'),
+            'pcfiles': ['foo'], 'extra_args': [],
+        })
+
+    def test_path_srcdir(self):
+        usage = self.make_usage('foo', path='$srcdir/pkgconf')
+        self.assertEqual(usage.path, Path('srcdir', 'pkgconf'))
+        self.assertEqual(usage.pcfile, 'foo')
+        self.assertEqual(usage.extra_args, ShellArguments())
+        self.assertEqual(usage.get_usage(None, '/srcdir', '/builddir'), {
+            'type': 'pkg-config', 'path': abspath('/srcdir/pkgconf'),
+            'pcfiles': ['foo'], 'extra_args': [],
+        })
+
+    def test_path_builddir(self):
+        usage = self.make_usage('foo', path='$builddir/pkgconf')
+        self.assertEqual(usage.path, Path('builddir', 'pkgconf'))
+        self.assertEqual(usage.pcfile, 'foo')
+        self.assertEqual(usage.extra_args, ShellArguments())
+        self.assertEqual(usage.get_usage(None, '/srcdir', '/builddir'), {
             'type': 'pkg-config', 'path': abspath('/builddir/pkgconf'),
             'pcfiles': ['foo'], 'extra_args': [],
         })
@@ -159,7 +179,7 @@ class TestPkgConfig(UsageTest):
 
     def test_rehydrate(self):
         opts = self.make_options()
-        path_bases = {'srcdir', 'builddir'}
+        path_bases = ('srcdir', 'builddir')
         usage = PkgConfigUsage('foo', submodules=None, _options=opts,
                                _path_bases=path_bases)
         data = through_json(usage.dehydrate())
@@ -172,12 +192,12 @@ class TestPkgConfig(UsageTest):
 
     def test_invalid_usage(self):
         with self.assertRaises(FieldError):
-            self.make_usage('foo', path=Path('srcdir', 'pkgconf'),
-                            _path_bases={'builddir'})
+            self.make_usage('foo', path='$srcdir/pkgconf',
+                            _path_bases=('builddir',))
 
         with self.assertRaises(FieldError):
-            self.make_usage('foo', path=Path('builddir', 'pkgconf'),
-                            _path_bases={'srcdir'})
+            self.make_usage('foo', path='$builddir/pkgconf',
+                            _path_bases=('srcdir',))
 
         with self.assertRaises(FieldError):
-            self.make_usage('foo', _path_bases={})
+            self.make_usage('foo', _path_bases=())

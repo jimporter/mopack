@@ -148,9 +148,12 @@ def evaluate(symbols, expression, if_context=False):
         return evaluate_tok(if_expr.parseString(expression, parseAll=True)[0])
     else:
         ast = str_expr.parseString(expression, parseAll=True)
-        if len(ast) == 1:
+        if len(ast) == 0:
+            return expression
+        elif len(ast) == 1:
             return evaluate_tok(ast[0])
-        return reduce(operator.add, (evaluate_tok(i) for i in ast))
+        else:
+            return reduce(operator.add, (evaluate_tok(i) for i in ast))
 
 
 def to_yaml_error(e, context_mark, mark):

@@ -3,7 +3,7 @@ from itertools import chain
 from yaml.error import MarkedYAMLError
 
 from . import expression as expr
-from .iterutils import isiterable, iteritems
+from .iterutils import isiterable
 from .options import Options
 from .sources import try_make_package
 from .yaml_tools import load_file, to_parse_error, MarkedDict, SafeLineLoader
@@ -96,7 +96,7 @@ class BaseConfig:
                 for k, v in data[kind].items():
                     if v is None:
                         v = MarkedDict(data[kind].marks[k])
-                    v.update(config_file=filename, child_config=self.child)
+                    v.update(config_file=filename, _child_config=self.child)
                     self._pending_options[kind].setdefault(k, []).append(v)
 
     def _finalize_packages(self, options):
@@ -109,7 +109,6 @@ class BaseConfig:
             for cfg in cfgs:
                 with to_parse_error(cfg['config_file']):
                     if self._if_evaluate(options.expr_symbols, cfg, 'if'):
-                        cfg = self._evaluate(options.expr_symbols, cfg)
                         self.packages[name] = try_make_package(
                             name, cfg, _options=options
                         )
@@ -126,17 +125,6 @@ class BaseConfig:
             return expr.evaluate(symbols, expression, if_context=True)
         except expr.ParseBaseException as e:
             raise expr.to_yaml_error(e, data.mark, mark)
-
-    @classmethod
-    def _evaluate(cls, symbols, data):
-        if isinstance(data, str):
-            return expr.evaluate(symbols, data)
-        elif isinstance(data, (dict, list)):
-            for k, v in iteritems(data):
-                data[k] = cls._evaluate(symbols, v)
-            return data
-        else:
-            return data
 
     def _in_parent(self, name):
         # We don't have a parent, so this is always false!
@@ -220,7 +208,9 @@ class Config(BaseConfig):
                 if name in getattr(self.options, kind):
                     for cfg in cfgs:
                         final = cfg.pop('final', False)
-                        getattr(self.options, kind)[name].accumulate(cfg)
+                        getattr(self.options, kind)[name].accumulate(
+                            cfg, _symbols=self.options.expr_symbols
+                        )
                         if final:
                             break
         del self._pending_options

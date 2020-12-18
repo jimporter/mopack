@@ -7,7 +7,9 @@ class BuilderTest(OptionsTest):
         options = super().make_options(common_options, deploy_paths)
         if this_options:
             type = (builder_type or self.builder_type).type
-            options.builders[type].accumulate(this_options)
+            options.builders[type].accumulate(
+                this_options, _symbols=options.expr_symbols
+            )
         return options
 
     def make_builder(self, *args, common_options=None, this_options=None,

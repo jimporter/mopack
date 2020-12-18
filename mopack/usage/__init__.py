@@ -1,6 +1,8 @@
 from pkg_resources import load_entry_point
 
 from ..base_options import OptionsHolder
+from ..path import Path
+from ..placeholder import placeholder
 from ..types import FieldValueError, wrap_field_error
 
 
@@ -18,6 +20,18 @@ class Usage(OptionsHolder):
 
     def __init__(self, *, _options):
         super().__init__(_options)
+
+    def _expr_symbols(self, path_bases):
+        path_vars = {i: placeholder(Path(i, '')) for i in path_bases}
+        return dict(**self._options.expr_symbols, **path_vars)
+
+    def _preferred_base(self, preferred, path_bases):
+        if preferred in path_bases:
+            return preferred
+        elif len(path_bases) > 0:
+            return path_bases[0]
+        else:
+            return None
 
     def _usage(self, *, type=None, **kwargs):
         if type is None:

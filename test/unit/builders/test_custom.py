@@ -17,7 +17,7 @@ class TestCustomBuilder(BuilderTest):
     builder_type = CustomBuilder
     srcdir = os.path.abspath('/path/to/src')
     pkgdir = os.path.abspath('/path/to/builddir/mopack')
-    path_bases = {'srcdir', 'builddir'}
+    path_bases = ('srcdir', 'builddir')
 
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         return os.path.join(self.pkgdir, 'build', name, pkgconfig)
@@ -83,11 +83,10 @@ class TestCustomBuilder(BuilderTest):
 
     def test_path_objects(self):
         opts = self.make_options()
-        symbols = opts.common.expr_symbols
 
         builder = self.make_builder('foo', build_commands=[
-            'configure ' + symbols['srcdir'] + '/build',
-            ['make', '-C', symbols['builddir']],
+            'configure $srcdir/build',
+            ['make', '-C', '$builddir'],
         ], usage='pkg-config')
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.build_commands, [

@@ -16,6 +16,18 @@ class TestEvaluate(TestCase):
         self.assertEqual(evaluate(self.symbols, braced, True), result)
         self.assertEqual(evaluate(self.symbols, expr, True), result)
 
+    def test_non_expression(self):
+        self.assertEqual(evaluate(self.symbols, ''), '')
+        self.assertEqual(evaluate(self.symbols, 'foo'), 'foo')
+
+        self.assertEqual(evaluate(self.symbols, '$$'), '$')
+        self.assertEqual(evaluate(self.symbols, '$$', True), '$')
+
+        with self.assertRaises(ParseException):
+            evaluate(self.symbols, '$!')
+        with self.assertRaises(ParseException):
+            evaluate(self.symbols, '$!', True)
+
     def test_index(self):
         self.assertEvaluate('bar["baz"]', 'Baz')
         self.assertEvaluate('(bar)["baz"]', 'Baz')
@@ -30,14 +42,6 @@ class TestEvaluate(TestCase):
         self.assertEqual(evaluate(self.symbols, "${{ '${{ foo }}' }}"),
                          '${{ foo }}')
         self.assertEqual(evaluate(self.symbols, "${{ 'foo }}' }}"), 'foo }}')
-
-        self.assertEqual(evaluate(self.symbols, '$$'), '$')
-        self.assertEqual(evaluate(self.symbols, '$$', True), '$')
-
-        with self.assertRaises(ParseException):
-            evaluate(self.symbols, '$!')
-        with self.assertRaises(ParseException):
-            evaluate(self.symbols, '$!', True)
 
     def test_bool_literal(self):
         self.assertEvaluate('true', True)

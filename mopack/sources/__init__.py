@@ -6,6 +6,8 @@ from ..base_options import BaseOptions, OptionsHolder
 from ..freezedried import FreezeDried
 from ..iterutils import listify
 from ..package_defaults import DefaultResolver
+from ..path import Path
+from ..placeholder import placeholder
 from ..types import FieldValueError, try_load_config
 from ..usage import Usage, make_usage
 
@@ -55,6 +57,11 @@ class Package(OptionsHolder):
     def config_dir(self):
         return os.path.dirname(self.config_file)
 
+    @property
+    def _expr_symbols(self):
+        return dict(**self._options.expr_symbols,
+                    cfgdir=placeholder(Path('cfgdir', '')))
+
     def _check_submodules(self, wanted_submodules):
         if self.submodules:
             if self.submodules['required'] and not wanted_submodules:
@@ -102,7 +109,7 @@ class Package(OptionsHolder):
 @FreezeDried.fields(rehydrate={'usage': Usage})
 class BinaryPackage(Package):
     def __init__(self, name, *, usage, submodules=types.Unset, _options,
-                 _path_bases={}, **kwargs):
+                 _path_bases=(), **kwargs):
         super().__init__(name, _options=_options, **kwargs)
         package_default = DefaultResolver(self, _options.expr_symbols, name)
 
