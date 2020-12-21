@@ -161,7 +161,7 @@ class TestSystemPackage(SourceTest):
     def test_deploy(self):
         pkg = self.make_package('foo')
         # This is a no-op; just make sure it executes ok.
-        AptPackage.deploy_all(self.pkgdir, [pkg])
+        pkg.deploy(self.pkgdir)
 
     def test_clean_pre(self):
         oldpkg = self.make_package('foo')
