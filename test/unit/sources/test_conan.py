@@ -49,6 +49,7 @@ class TestConan(SourceTest):
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable')
         self.assertEqual(pkg.remote, 'foo/1.2.3@conan/stable')
         self.assertEqual(pkg.options, {})
+        self.assertEqual(pkg.needs_dependencies, False)
         self.assertEqual(pkg.should_deploy, True)
 
         with mock_open_log(mock_open_write()) as mopen, \

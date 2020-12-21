@@ -35,6 +35,7 @@ class TestDirectory(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000')
         self.assertEqual(pkg.path, Path('absolute', self.srcpath))
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
         pkg.fetch(self.pkgdir, self.config)

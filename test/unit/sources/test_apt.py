@@ -63,6 +63,8 @@ class TestApt(SourceTest):
         pkg = self.make_package('foo')
         self.assertEqual(pkg.remote, 'libfoo-dev')
         self.assertEqual(pkg.repository, None)
+        self.assertEqual(pkg.needs_dependencies, False)
+        self.assertEqual(pkg.should_deploy, True)
         self.check_resolve_all([pkg], ['libfoo-dev'])
 
     def test_remote(self):

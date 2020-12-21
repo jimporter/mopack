@@ -150,7 +150,7 @@ def resolve(config, pkgdir):
     metadata = fetch(config, pkgdir)
 
     packages, batch_packages = [], {}
-    for pkg in config.packages.values():
+    for pkg in metadata.packages.values():
         if hasattr(pkg, 'resolve_all'):
             batch_packages.setdefault(type(pkg), []).append(pkg)
         else:
@@ -165,19 +165,18 @@ def resolve(config, pkgdir):
             metadata.save(pkgdir)
             raise
 
-    # Ensure metadata is up-to-date for each non-batch package so that they can
-    # find any dependencies they need. XXX: Technically, we're looking to do
-    # this for all *source* packages, but currently a package is non-batched
-    # iff it's a source package. Revisit this when we have a better idea of
-    # what the abstractions are.
-    metadata.save(pkgdir)
     for pkg in packages:
         try:
+            # Ensure metadata is up-to-date for packages that need it.
+            if pkg.needs_dependencies:
+                metadata.save(pkgdir)
             pkg.resolve(pkgdir)
-            metadata.save(pkgdir)
         except Exception:
             pkg.clean_post(pkgdir, None, quiet=True)
+            metadata.save(pkgdir)
             raise
+
+    metadata.save(pkgdir)
 
 
 def deploy(pkgdir):

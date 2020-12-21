@@ -40,6 +40,7 @@ class TestTarball(SDistTestCase):
         self.assertEqual(pkg.path, None)
         self.assertEqual(pkg.patch, None)
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
         self.check_fetch(pkg)
@@ -51,6 +52,7 @@ class TestTarball(SDistTestCase):
         self.assertEqual(pkg.path, Path('absolute', self.srcpath))
         self.assertEqual(pkg.patch, None)
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
         self.check_fetch(pkg)
@@ -62,6 +64,7 @@ class TestTarball(SDistTestCase):
         self.assertEqual(pkg.url, None)
         self.assertEqual(pkg.path, Path('absolute', srcpath))
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')

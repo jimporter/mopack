@@ -7,7 +7,7 @@ from ..shell import get_cmd
 class AptPackage(BinaryPackage):
     source = 'apt'
 
-    def __init__(self, name, remote=None, repository=None, usage='system',
+    def __init__(self, name, *, remote=None, repository=None, usage='system',
                  **kwargs):
         super().__init__(name, usage=usage, **kwargs)
 

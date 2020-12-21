@@ -39,6 +39,10 @@ class SDistPackage(Package):
             self.builder.set_usage(usage, submodules=self.submodules)
 
     @property
+    def needs_dependencies(self):
+        return True
+
+    @property
     def builder_types(self):
         if self.builder is None:
             raise types.ConfigurationError(
