@@ -100,6 +100,8 @@ def main():
     parser = argparse.ArgumentParser(prog='mopack')
     parser.add_argument('--version', action='version',
                         version='%(prog)s ' + version)
+    parser.add_argument('--verbose', action='store_true',
+                        help='show verbose output')
     parser.add_argument('--debug', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--color', metavar='WHEN',
                         choices=['always', 'never', 'auto'], default='auto',
@@ -180,7 +182,8 @@ def main():
                               help='return an error if package is not defined')
 
     args = parser.parse_args()
-    log.init(args.color, debug=args.debug, warn_once=args.warn_once)
+    log.init(args.color, debug=args.debug, verbose=args.verbose,
+             warn_once=args.warn_once)
 
     try:
         return args.func(parser, args.parser, args)

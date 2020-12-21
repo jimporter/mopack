@@ -75,6 +75,36 @@ class TestDirectory(SDistTest):
             }],
         })
 
+    def test_resolve_verbose(self):
+        config = os.path.join(test_data_dir, 'mopack-directory-implicit.yml')
+        output = self.assertPopen(['mopack', '--verbose', 'resolve', config])
+        cfg_line = r'(?m)^    \$ bfg9000 configure .+\bhello\b.*$'
+        self.assertRegex(output, cfg_line)
+
+        self.assertNotExists('mopack/src/hello/hello-bfg/build.bfg')
+        self.assertExists('mopack/build/hello/')
+        self.assertExists('mopack/logs/hello.log')
+        self.assertExists('mopack/mopack.json')
+
+        self.assertPkgConfigUsage('hello')
+        implicit_cfg = os.path.join(test_data_dir, 'hello-bfg', 'mopack.yml')
+        self.check_list_files([config], [implicit_cfg])
+
+        output = json.loads(slurp('mopack/mopack.json'))
+        self.assertEqual(output['metadata'], {
+            'options': self._options(),
+            'packages': [{
+                'name': 'hello',
+                'config_file': config,
+                'resolved': True,
+                'source': 'directory',
+                'submodules': None,
+                'should_deploy': True,
+                'builder': self._builder('hello'),
+                'path': {'base': 'cfgdir', 'path': 'hello-bfg'},
+            }],
+        })
+
 
 class TestTarball(SDistTest):
     name = 'tarball'

@@ -82,6 +82,45 @@ jobs:
       - name: Upload coverage
         run: |
           codecov
+  build-cygwin:
+    runs-on: windows-latest
+    env:
+      CYGROOT: C:\cygwin
+      CYGCACHE: C:\cygwin\var\cache\setup
+      CONAN_CMAKE_GENERATOR: Ninja
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Clone bfg9000
+        uses: actions/checkout@v2
+        with:
+          repository: jimporter/bfg9000
+          ref: mopack
+          path: bfg9000
+      - name: Install Cygwin
+        shell: cmd
+        run: >
+          curl -LO https://cygwin.com/setup-x86_64.exe
+
+          .\setup-x86_64.exe -qgnNdO -R %CYGROOT% -l %CYGCACHE%
+          -s http://mirrors.kernel.org/sourceware/cygwin/
+          -P cmake,gcc-g++,git,libboost-devel,make,ninja,pkg-config,python38
+          -P python38-pip,python38-setuptools
+      - name: Copy mopack to Cygwin
+        run: |
+          robocopy . ${env:CYGROOT}\home\runneradmin\bfg9000 /E
+          if(${LastExitCode} -le 7) { ${LastExitCode} = 0 }
+      - name: Install Python dependencies
+        run: >
+          C:\cygwin\bin\bash -lc
+          "cd bfg9000 && pip3.8 install ./bfg9000 && pip3.8 install codecov '.[test]'"
+      - name: Run tests
+        run: >
+          C:\cygwin\bin\bash -lc
+          "cd bfg9000 && python3.8 setup.py coverage -q"
+      - name: Upload coverage
+        run: >
+          C:\cygwin\bin\bash -lc "cd bfg9000 && codecov"
   lint:
     runs-on: ubuntu-latest
 

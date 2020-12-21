@@ -68,7 +68,8 @@ def _init_logging(logger, debug, stream=None):  # noqa: F811
     logger.addHandler(handler)
 
 
-def init(color='auto', debug=False, warn_once=False):  # noqa: F811
+def init(color='auto', debug=False, verbose=False,  # noqa: F811
+         warn_once=False):
     if color == 'always':
         colorama.init(strip=False)
     elif color == 'never':
@@ -81,6 +82,7 @@ def init(color='auto', debug=False, warn_once=False):  # noqa: F811
         warnings.filterwarnings('once')
 
     _init_logging(logging.root, debug)
+    LogFile.verbose = verbose
 
 
 def log_package(level, package, message=None):
@@ -98,12 +100,19 @@ warnings.showwarning = _showwarning
 
 
 class LogFile:
+    verbose = False
+
     def __init__(self, file):
         self.file = file
 
     @staticmethod
     def _logdir(pkgdir, kind=None):
         return os.path.join(pkgdir, 'logs', *listify(kind))
+
+    def _print_verbose(self, message, **kwargs):
+        print(message, file=self.file, **kwargs)
+        if self.verbose:
+            print(textwrap.indent(message, ' ' * 4), **kwargs)
 
     @classmethod
     def clean_logs(cls, pkgdir, kind=None):
@@ -129,13 +138,13 @@ class LogFile:
 
     def check_call(self, args, **kwargs):
         command = ' '.join(shlex.quote(i) for i in args)
-        print('$ ' + command, file=self.file, flush=True)
+        self._print_verbose('$ ' + command, flush=True)
         try:
             result = subprocess.run(
                 args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                 universal_newlines=True, check=True, **kwargs
             )
-            print(result.stdout, file=self.file)
+            self._print_verbose(result.stdout)
         except subprocess.CalledProcessError as e:
             print(e.stdout, file=self.file)
             msg = "Command '{}' returned non-zero exit status {}".format(
