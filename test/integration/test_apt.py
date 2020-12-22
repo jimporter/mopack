@@ -72,3 +72,5 @@ class TestApt(IntegrationTest):
                 ]),
             }],
         })
+
+        self.assertPopen(['mopack', 'deploy'])
