@@ -58,6 +58,7 @@ class TestCustomBuilder(BuilderTest):
             ShellArguments(['configure']),
             ShellArguments(['make']),
         ])
+        self.assertEqual(builder.deploy_commands, [])
         self.assertEqual(builder.usage, PkgConfigUsage(
             'foo', submodules=None, _options=self.make_options(),
             _path_bases=self.path_bases
@@ -74,6 +75,7 @@ class TestCustomBuilder(BuilderTest):
             ShellArguments(['configure', '--foo']),
             ShellArguments(['make', '-j2']),
         ])
+        self.assertEqual(builder.deploy_commands, [])
         self.assertEqual(builder.usage, PkgConfigUsage(
             'foo', submodules=None, _options=self.make_options(),
             _path_bases=self.path_bases
@@ -93,6 +95,7 @@ class TestCustomBuilder(BuilderTest):
             ShellArguments(['configure', (Path('srcdir', ''), '/build')]),
             ShellArguments(['make', '-C', Path('builddir', '')]),
         ])
+        self.assertEqual(builder.deploy_commands, [])
         self.assertEqual(builder.usage, PkgConfigUsage(
             'foo', submodules=None, _options=opts, _path_bases=self.path_bases
         ))
@@ -101,6 +104,73 @@ class TestCustomBuilder(BuilderTest):
             ['configure', self.srcdir + '/build'],
             ['make', '-C', os.path.join(self.pkgdir, 'build', 'foo')],
         ])
+
+    def test_deploy(self):
+        builder = self.make_builder('foo', build_commands=['make'],
+                                    deploy_commands=['make install'],
+                                    usage='pkg-config')
+        self.assertEqual(builder.name, 'foo')
+        self.assertEqual(builder.build_commands, [
+            ShellArguments(['make']),
+        ])
+        self.assertEqual(builder.deploy_commands, [
+            ShellArguments(['make', 'install']),
+        ])
+        self.assertEqual(builder.usage, PkgConfigUsage(
+            'foo', submodules=None, _options=self.make_options(),
+            _path_bases=self.path_bases
+        ))
+
+        self.check_build(builder)
+
+        with mock_open_log() as mopen, \
+             mock.patch('mopack.builders.custom.pushd'), \
+             mock.patch('subprocess.run') as mcall:  # noqa
+            builder.deploy(self.pkgdir, self.srcdir)
+            mopen.assert_called_with(os.path.join(
+                self.pkgdir, 'logs', 'deploy', 'foo.log'
+            ), 'a')
+            mcall.assert_called_with(
+                ['make', 'install'], stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT, universal_newlines=True,
+                check=True
+            )
+
+    def test_cd(self):
+        opts = self.make_options()
+
+        builder = self.make_builder('foo', build_commands=[
+            'configure $srcdir/build',
+            'cd $builddir',
+            'make',
+        ], usage='pkg-config')
+        self.assertEqual(builder.name, 'foo')
+        self.assertEqual(builder.build_commands, [
+            ShellArguments(['configure', (Path('srcdir', ''), '/build')]),
+            ShellArguments(['cd', Path('builddir', '')]),
+            ShellArguments(['make']),
+        ])
+        self.assertEqual(builder.usage, PkgConfigUsage(
+            'foo', submodules=None, _options=opts, _path_bases=self.path_bases
+        ))
+
+        with mock.patch('os.chdir') as mcd:
+            builddir = os.path.join(self.pkgdir, 'build', 'foo')
+            self.check_build(builder, build_commands=[
+                ['configure', self.srcdir + '/build'],
+                ['make'],
+            ])
+            mcd.assert_called_once_with(builddir)
+
+    def test_cd_invalid(self):
+        builder = self.make_builder('foo', build_commands=[
+            'cd foo bar',
+        ], usage='pkg-config')
+
+        with mock_open_log() as mopen, \
+             mock.patch('mopack.builders.custom.pushd'), \
+             self.assertRaises(RuntimeError):  # noqa
+            builder.build(self.pkgdir, self.srcdir)
 
     def test_usage_full(self):
         builder = self.make_builder(

@@ -182,3 +182,20 @@ class TestLogFile(TestCase):
                     logfile.check_call(['cmd', '--arg'])
                 output = ''.join(i[-2][0] for i in mopen().write.mock_calls)
                 self.assertEqual(output, '$ cmd --arg\nbad\n')
+
+    def test_synthetic_command(self):
+        with mock.patch('builtins.open', mock.mock_open()) as mopen:
+            with log.LogFile.open('pkgdir', 'package') as logfile:
+                with logfile.synthetic_command(['cmd', '--arg']):
+                    pass
+                output = ''.join(i[-2][0] for i in mopen().write.mock_calls)
+                self.assertEqual(output, '$ cmd --arg\n\n')
+
+    def test_synthetic_command_error(self):
+        with mock.patch('builtins.open', mock.mock_open()) as mopen:
+            with log.LogFile.open('pkgdir', 'package') as logfile, \
+                 self.assertRaises(RuntimeError):
+                with logfile.synthetic_command(['cmd', '--arg']):
+                    raise RuntimeError('bad')
+            output = ''.join(i[-2][0] for i in mopen().write.mock_calls)
+            self.assertEqual(output, '$ cmd --arg\nbad\n')

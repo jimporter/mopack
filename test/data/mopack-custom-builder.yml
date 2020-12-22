@@ -9,7 +9,8 @@ packages:
           bfg9000 configure $builddir ${{
             deploy_paths['prefix'] ? '--prefix=' + deploy_paths['prefix'] : ''
           }}
-        - ninja -C $builddir/.
+        - cd $builddir/.
+        - ninja
       deploy_commands:
         - ninja install
     usage: pkg-config

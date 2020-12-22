@@ -1,3 +1,5 @@
+import os
+
 from . import Builder
 from .. import types
 from ..freezedried import FreezeDried, ListFreezeDryer
@@ -29,7 +31,14 @@ class CustomBuilder(Builder):
 
     def _execute(self, logfile, commands, **kwargs):
         for line in commands:
-            logfile.check_call(line.fill(**kwargs))
+            line = line.fill(**kwargs)
+            if line[0] == 'cd':
+                with logfile.synthetic_command(line):
+                    if len(line) != 2:
+                        raise RuntimeError('invalid command format')
+                    os.chdir(line[1])
+            else:
+                logfile.check_call(line)
 
     def build(self, pkgdir, srcdir):
         builddir = self._builddir(pkgdir)

@@ -50,8 +50,8 @@ class TestCustomBuilder(IntegrationTest):
                     'build_commands': [
                         ['bfg9000', 'configure',
                          {'base': 'builddir', 'path': ''}],
-                        ['ninja', '-C',
-                         [{'base': 'builddir', 'path': ''}, '/.']],
+                        ['cd', [{'base': 'builddir', 'path': ''}, '/.']],
+                        ['ninja'],
                     ],
                     'deploy_commands': [
                         ['ninja', 'install'],
@@ -116,8 +116,8 @@ class TestCustomBuilderDeploy(IntegrationTest):
                          {'base': 'builddir', 'path': ''},
                          ['--prefix=', {'base': 'absolute',
                                         'path': self.prefix}]],
-                        ['ninja', '-C',
-                         [{'base': 'builddir', 'path': ''}, '/.']],
+                        ['cd', [{'base': 'builddir', 'path': ''}, '/.']],
+                        ['ninja'],
                     ],
                     'deploy_commands': [
                         ['ninja', 'install'],

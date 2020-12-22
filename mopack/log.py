@@ -5,6 +5,7 @@ import shlex
 import subprocess
 import textwrap
 import warnings
+from contextlib import contextmanager
 from logging import (getLogger, info, debug,  # noqa: F401
                      CRITICAL, ERROR, WARNING, INFO, DEBUG)
 
@@ -153,6 +154,19 @@ class LogFile:
             if e.stdout:
                 msg += ':\n' + textwrap.indent(e.stdout.rstrip(), '  ')
             raise subprocess.SubprocessError(msg)
+        except Exception as e:
+            print(str(e), file=self.file)
+            raise type(e)("Command '{}' failed:\n{}".format(
+                command, textwrap.indent(str(e), '  ')
+            ))
+
+    @contextmanager
+    def synthetic_command(self, args):
+        command = ' '.join(shlex.quote(i) for i in args)
+        self._print_verbose('$ ' + command)
+        try:
+            yield
+            self._print_verbose('')
         except Exception as e:
             print(str(e), file=self.file)
             raise type(e)("Command '{}' failed:\n{}".format(
