@@ -11,8 +11,7 @@ logger = log.getLogger(__name__)
 
 # This environment variable is set to the top builddir when `mopack resolve` is
 # executed so that nested invocations of `mopack` consistently point to the
-# same mopack directory. XXX: There might be a smarter way to do this, but this
-# should be ok for the time being at least...
+# same mopack directory.
 nested_invoke = 'MOPACK_NESTED_INVOCATION'
 
 
@@ -58,8 +57,8 @@ def resolve(parser, subparser, args):
     if os.environ.get(nested_invoke):
         return 3
 
-    os.environ[nested_invoke] = args.directory
     config_data = config.Config(args.file, args.options, args.deploy_paths)
+    os.environ[nested_invoke] = args.directory
     commands.resolve(config_data, commands.get_package_dir(args.directory))
 
 

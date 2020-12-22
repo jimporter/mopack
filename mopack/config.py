@@ -146,8 +146,6 @@ class BaseConfig:
     def add_children(self, children):
         self._validate_children(children)
 
-        # XXX: It might be nicer to put a child's deps immediately before the
-        # child, rather than at the beginning of the package list.
         new_packages = {}
         for i in children:
             self.implicit_files.extend(i.files)
