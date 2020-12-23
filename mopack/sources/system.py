@@ -8,13 +8,15 @@ class SystemPackage(BinaryPackage):
 
     def __init__(self, name, *, auto_link=Unset, include_path=Unset,
                  library_path=Unset, headers=Unset, libraries=Unset,
-                 compile_flags=Unset, link_flags=Unset, **kwargs):
+                 compile_flags=Unset, link_flags=Unset, submodule_map=Unset,
+                 **kwargs):
         super().__init__(name, usage={
             'type': 'system', 'auto_link': auto_link,
             'include_path': include_path, 'library_path': library_path,
             'headers': headers, 'libraries': libraries,
             'compile_flags': compile_flags, 'link_flags': link_flags,
-        }, **kwargs)
+            'submodule_map': submodule_map,
+        }, _usage_field=None, **kwargs)
 
     def resolve(self, pkgdir):
         log.pkg_resolve(self.name, 'from {}'.format(self.source))

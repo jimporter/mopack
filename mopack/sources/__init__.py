@@ -113,15 +113,16 @@ class Package(OptionsHolder):
 @FreezeDried.fields(rehydrate={'usage': Usage})
 class BinaryPackage(Package):
     def __init__(self, name, *, usage, submodules=types.Unset, _options,
-                 _path_bases=(), **kwargs):
+                 _path_bases=(), _usage_field='usage', **kwargs):
         super().__init__(name, _options=_options, **kwargs)
         package_default = DefaultResolver(self, _options.expr_symbols, name)
 
         self.submodules = package_default(submodules_type)(
             'submodules', submodules
         )
-        self.usage = make_usage(name, usage, submodules=self.submodules,
-                                _options=_options, _path_bases=_path_bases)
+        self.usage = make_usage(name, usage, field=_usage_field,
+                                submodules=self.submodules, _options=_options,
+                                _path_bases=_path_bases)
 
     def _get_usage(self, pkgdir, submodules):
         return self.usage.get_usage(submodules, None, None)
