@@ -37,12 +37,12 @@ _PathListFD = ListFreezeDryer(Path)
     'compile_flags': ShellArguments, 'link_flags': ShellArguments
 })
 class _SubmoduleMapping(FreezeDried):
-    def __init__(self, _symbols, _srcbase, _buildbase, *, include_path=None,
+    def __init__(self, srcbase, buildbase, *, include_path=None,
                  library_path=None, headers=None, libraries=None,
                  compile_flags=None, link_flags=None):
-        T = types.TypeCheck(locals(), _symbols)
-        T.include_path(_list_of_paths(_srcbase))
-        T.library_path(_list_of_paths(_buildbase))
+        T = types.TypeCheck(locals())
+        T.include_path(_list_of_paths(srcbase))
+        T.library_path(_list_of_paths(buildbase))
         T.headers(_list_of_headers)
         T.libraries(_list_of_libraries)
         T.compile_flags(types.shell_args(none_ok=True))
@@ -63,10 +63,10 @@ class _SubmoduleMapping(FreezeDried):
         return result
 
 
-def _submodule_map(symbols, srcbase, buildbase):
+def _submodule_map(srcbase, buildbase):
     def check_item(field, value):
         with types.ensure_field_error(field):
-            return _SubmoduleMapping(symbols, srcbase, buildbase, **value)
+            return _SubmoduleMapping(srcbase, buildbase, **value)
 
     def check(field, value):
         try:
@@ -120,7 +120,7 @@ class PathUsage(Usage):
 
         if submodules:
             T.submodule_map(package_default(
-                types.maybe(_submodule_map(symbols, srcbase, buildbase)),
+                types.maybe(_submodule_map(srcbase, buildbase)),
                 default=name + '_{submodule}'
             ))
 

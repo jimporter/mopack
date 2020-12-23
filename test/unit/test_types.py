@@ -118,6 +118,15 @@ class TestTypeCheck(TypeTestCase):
         with self.assertFieldError(('field', 'foo')):
             Thing({'foo': '$undef'})
 
+    def test_no_evaluate(self):
+        class Thing:
+            def __init__(self, field):
+                T = TypeCheck(locals())
+                T.field(string)
+
+        self.assertEqual(Thing('foo').field, 'foo')
+        self.assertEqual(Thing('$variable').field, '$variable')
+
 
 class TestMaybe(TypeTestCase):
     def test_basic(self):

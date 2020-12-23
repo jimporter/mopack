@@ -126,11 +126,14 @@ def try_load_config(config, context, kind):
 
 
 class TypeCheck:
-    def __init__(self, context, symbols):
+    def __init__(self, context, symbols=None):
         self.__context = context
         self.__symbols = symbols
 
     def __evaluate(self, field, data):
+        if self.__symbols is None:
+            return data
+
         try:
             with wrap_field_error(field):
                 if isinstance(data, str):
