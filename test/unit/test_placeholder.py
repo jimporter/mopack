@@ -40,6 +40,25 @@ class TestPlaceholder(TestCase):
         s = PlaceholderString('goat', ps, p2, 'panda')
         self.assertEqual(s.bits, ('goatfoo', p1, 'bar', p2, 'panda'))
 
+    def test_make(self):
+        p = PlaceholderValue(1)
+
+        self.assertEqual(PlaceholderString.make(), PlaceholderString())
+        self.assertEqual(PlaceholderString.make(simplify=True), '')
+
+        self.assertEqual(PlaceholderString.make('foo'),
+                         PlaceholderString('foo'))
+        self.assertEqual(PlaceholderString.make('foo', simplify=True), 'foo')
+
+        self.assertEqual(PlaceholderString.make(p), PlaceholderString(p))
+        self.assertEqual(PlaceholderString.make(p, simplify=True),
+                         PlaceholderString(p))
+
+        self.assertEqual(PlaceholderString.make('foo', p),
+                         PlaceholderString('foo', p))
+        self.assertEqual(PlaceholderString.make('foo', p, simplify=True),
+                         PlaceholderString('foo', p))
+
     def test_add(self):
         p = PlaceholderValue(1)
         s = PlaceholderString()
@@ -72,6 +91,35 @@ class TestPlaceholder(TestCase):
         s = PlaceholderString('foo', p, 'bar')
         self.assertEqual(s.unbox(), ('foo', 1, 'bar'))
         self.assertEqual(s.unbox(simplify=True), ('foo', 1, 'bar'))
+
+    def test_replace(self):
+        p1 = PlaceholderValue(1)
+        p2 = PlaceholderValue(2)
+
+        s = PlaceholderString()
+        self.assertEqual(s.replace(1, 'A'), s)
+        self.assertEqual(s.replace(1, 'A',  simplify=True), '')
+
+        s = PlaceholderString('foo')
+        self.assertEqual(s.replace(1, 'A'), s)
+        self.assertEqual(s.replace(1, 'A', simplify=True), 'foo')
+
+        s = PlaceholderString(p1)
+        self.assertEqual(s.replace(1, 'A'), PlaceholderString('A'))
+        self.assertEqual(s.replace(1, 'A', simplify=True), 'A')
+
+        s = PlaceholderString(p2)
+        self.assertEqual(s.replace(1, 'A'), s)
+        self.assertEqual(s.replace(1, 'A', simplify=True), s)
+
+        s = PlaceholderString('foo', p1, 'bar')
+        self.assertEqual(s.replace(1, 'A'), PlaceholderString('fooAbar'))
+        self.assertEqual(s.replace(1, 'A', simplify=True), 'fooAbar')
+
+        s = PlaceholderString('foo', p1, 'bar', p2)
+        self.assertEqual(s.replace(1, 'A'), PlaceholderString('fooAbar', p2))
+        self.assertEqual(s.replace(1, 'A', simplify=True),
+                         PlaceholderString('fooAbar', p2))
 
     def test_stash_empty(self):
         s = PlaceholderString()
@@ -118,3 +166,83 @@ class TestPlaceholder(TestCase):
     def test_placeholder(self):
         self.assertEqual(placeholder(1),
                          PlaceholderString(PlaceholderValue(1)))
+
+
+class TestMapRecursive(TestCase):
+    @staticmethod
+    def fn(value):
+        return value.replace(1, 'A', simplify=True)
+
+    def test_simple(self):
+        self.assertEqual(map_recursive(None, self.fn), None)
+        self.assertEqual(map_recursive(True, self.fn), True)
+        self.assertEqual(map_recursive(1, self.fn), 1)
+        self.assertEqual(map_recursive('foo', self.fn), 'foo')
+
+    def test_placeholder(self):
+        p = PlaceholderValue(1)
+        PS = PlaceholderString
+
+        self.assertEqual(map_recursive(PS(), self.fn), '')
+        self.assertEqual(map_recursive(PS('foo'), self.fn), 'foo')
+        self.assertEqual(map_recursive(PS('foo', p), self.fn), 'fooA')
+
+    def test_list(self):
+        s = PlaceholderString('foo', PlaceholderValue(1), 'bar')
+        self.assertEqual(map_recursive([], self.fn), [])
+        self.assertEqual(map_recursive(['foo'], self.fn), ['foo'])
+        self.assertEqual(map_recursive([s], self.fn), ['fooAbar'])
+        self.assertEqual(map_recursive(['foo', s], self.fn),
+                         ['foo', 'fooAbar'])
+
+    def test_dict(self):
+        s = PlaceholderString('foo', PlaceholderValue(1), 'bar')
+        self.assertEqual(map_recursive({}, self.fn), {})
+        self.assertEqual(map_recursive({'key': 'foo'}, self.fn),
+                         {'key': 'foo'})
+        self.assertEqual(map_recursive({'key': s}, self.fn),
+                         {'key': 'fooAbar'})
+        self.assertEqual(map_recursive({'key1': 'foo', 'key2': s}, self.fn),
+                         {'key1': 'foo', 'key2': 'fooAbar'})
+
+    def test_mixed(self):
+        s = PlaceholderString('foo', PlaceholderValue(1), 'bar')
+        self.assertEqual(map_recursive({'key': ['<', s, '>']}, self.fn),
+                         {'key': ['<', 'fooAbar', '>']})
+
+
+class TestPlaceholderFD(TestCase):
+    p1 = PlaceholderValue('FOO')
+    p2 = PlaceholderValue('BAR')
+
+    def setUp(self):
+        self.fd = PlaceholderFD(self.p1.value, self.p2.value)
+
+    def assertDehydrate(self, value, expected):
+        dehydrated = self.fd.dehydrate(value)
+        self.assertEqual(dehydrated, expected)
+        self.assertEqual(self.fd.rehydrate(dehydrated), value)
+
+    def test_dehydrate_simple(self):
+        self.assertDehydrate(None, None)
+        self.assertDehydrate(True, True)
+        self.assertDehydrate(1, 1)
+        self.assertDehydrate('foo', 'foo')
+
+    def test_dehydrate_placeholder(self):
+        PS = PlaceholderString
+
+        self.assertDehydrate(PS(), {'_phs': []})
+        self.assertDehydrate(PS('foo'), {'_phs': ['foo']})
+        self.assertDehydrate(PS('foo', self.p1), {'_phs': ['foo', 0]})
+        self.assertDehydrate(PS(self.p1, 'foo', self.p2, 'bar', self.p1),
+                             {'_phs': [0, 'foo', 1, 'bar', 0]})
+
+    def test_dehydrate_mixed(self):
+        s = PlaceholderString('foo', self.p1, 'bar')
+        self.assertDehydrate({'key': ['<', s, '>']},
+                             {'key': ['<', {'_phs': ['foo', 0, 'bar']}, '>']})
+
+    def test_dehydrate_unrecognized_placeholder(self):
+        with self.assertRaises(ValueError):
+            self.fd.dehydrate(PlaceholderString(PlaceholderValue('unknown')))

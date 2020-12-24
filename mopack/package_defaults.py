@@ -2,6 +2,8 @@ import os
 from types import FunctionType
 
 from . import types
+from .placeholder import placeholder
+from .usage import submodule_placeholder
 
 
 def _boost_auto_link(options):
@@ -30,7 +32,7 @@ def _boost_submodule_map(options):
             'link_flags': link_flags,
         },
         '*': {
-            'libraries': 'boost_{submodule}',
+            'libraries': 'boost_' + placeholder(submodule_placeholder),
         },
     }
 

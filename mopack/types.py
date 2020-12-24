@@ -6,7 +6,7 @@ from yaml.error import MarkedYAMLError
 from . import expression as expr, iterutils
 from .exceptions import ConfigurationError
 from .path import Path
-from .placeholder import PlaceholderString
+from .placeholder import map_recursive, PlaceholderString
 from .shell import ShellArguments, split_posix
 from .yaml_tools import MarkedDict
 
@@ -91,8 +91,8 @@ class _UnsetType:
         return None
 
     @classmethod
-    def rehydrate(self, config):
-        if config is not None:
+    def rehydrate(self, value, **kwargs):
+        if value is not None:
             raise ValueError('expected None')
         return Unset
 
@@ -126,21 +126,22 @@ def try_load_config(config, context, kind):
 
 
 class TypeCheck:
-    def __init__(self, context, symbols=None):
+    def __init__(self, context, symbols=None, *, dest=None):
         self.__context = context
         self.__symbols = symbols
+        self.__dest = context['self'] if dest is None else dest
 
-    def __evaluate(self, field, data):
-        if self.__symbols is None:
+    def __evaluate(self, field, data, symbols):
+        if symbols is None:
             return data
 
         try:
             with wrap_field_error(field):
                 if isinstance(data, str):
-                    return expr.evaluate(self.__symbols, data)
+                    return expr.evaluate(symbols, data)
                 elif isinstance(data, (dict, list)):
                     for k, v in iterutils.iteritems(data):
-                        data[k] = self.__evaluate(k, v)
+                        data[k] = self.__evaluate(k, v, symbols)
                     return data
         except expr.ParseBaseException as e:
             # XXX: This doesn't handle offsets within the original string, so
@@ -149,10 +150,20 @@ class TypeCheck:
 
         return data
 
-    def __call__(self, field, check, dest=None, extend=False):
+    def __call__(self, field, check, *, dest=None, extend=False,
+                 extra_symbols=None):
         if dest is None:
-            dest = self.__context['self']
-        value = check(field, self.__evaluate(field, self.__context[field]))
+            dest = self.__dest
+
+        if extra_symbols is None:
+            symbols = self.__symbols
+        elif self.__symbols is None:
+            symbols = extra_symbols
+        else:
+            symbols = dict(**self.__symbols, **extra_symbols)
+
+        value = check(field, self.__evaluate(field, self.__context[field],
+                                             symbols))
 
         if extend:
             d = dest[field] if isinstance(dest, dict) else getattr(dest, field)
@@ -267,6 +278,12 @@ def string(field, value):
     return value
 
 
+def placeholder_string(field, value):
+    if not isinstance(value, (str, PlaceholderString)):
+        raise FieldValueError('expected a string', field)
+    return value
+
+
 def boolean(field, value):
     if not isinstance(value, bool):
         raise FieldValueError('expected a boolean', field)
@@ -340,5 +357,26 @@ def shell_args(none_ok=False, escapes=False):
 
         with ensure_field_error(field):
             return split_posix(value, escapes=escapes)
+
+    return check
+
+
+def placeholder_check(other, placeholder, fill_value='VALUE'):
+    def check(field, value):
+        filled = map_recursive(value, lambda value: value.replace(
+            placeholder, fill_value, simplify=True
+        ))
+        other(field, filled)
+        return value
+
+    return check
+
+
+def placeholder_fill(other, placeholder, fill_value):
+    def check(field, value):
+        value = map_recursive(value, lambda value: value.replace(
+            placeholder, fill_value, simplify=True
+        ))
+        return other(field, value)
 
     return check

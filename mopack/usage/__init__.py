@@ -6,6 +6,13 @@ from ..placeholder import placeholder
 from ..types import FieldValueError, wrap_field_error
 
 
+class _SubmodulePlaceholder:
+    pass
+
+
+submodule_placeholder = _SubmodulePlaceholder()
+
+
 def _get_usage_type(type, field='type'):
     try:
         return load_entry_point('mopack', 'mopack.usage', type)

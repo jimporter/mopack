@@ -1,27 +1,52 @@
-from . import Usage
+from . import submodule_placeholder, Usage
 from .. import types
-from ..freezedried import FreezeDried
+from ..freezedried import DictFreezeDryer, FreezeDried
 from ..iterutils import listify
 from ..package_defaults import DefaultResolver
 from ..path import Path
+from ..placeholder import placeholder, PlaceholderFD
 from ..shell import ShellArguments
+
+_SubmoduleFD = PlaceholderFD(submodule_placeholder)
+
+
+@FreezeDried.fields(rehydrate={'pcfile': _SubmoduleFD})
+class _SubmoduleMapping(FreezeDried):
+    def __init__(self, *, pcfile=None):
+        def P(other):
+            return types.placeholder_check(other, submodule_placeholder)
+
+        T = types.TypeCheck(locals())
+        T.pcfile(P(types.string))
+
+    def fill(self, submodule_name):
+        def P(other):
+            return types.placeholder_fill(other, submodule_placeholder,
+                                          submodule_name)
+
+        result = type(self).__new__(type(self))
+        T = types.TypeCheck(self.__dict__, dest=result)
+        T.pcfile(P(types.string))
+        return result
 
 
 def _submodule_map(field, value):
+    def check_item(field, value):
+        with types.wrap_field_error(field):
+            return _SubmoduleMapping(**value)
+
     try:
-        value = {'*': {'pcfile': types.string(field, value)}}
+        value = {'*': {'pcfile': types.placeholder_string(field, value)}}
     except types.FieldError:
         pass
 
-    return types.dict_of(
-        types.string,
-        types.dict_shape({
-            'pcfile': types.string,
-        }, 'a submodule map')
-    )(field, value)
+    return types.dict_of(types.string, check_item)(field, value)
 
 
-@FreezeDried.fields(rehydrate={'path': Path, 'extra_args': ShellArguments})
+@FreezeDried.fields(rehydrate={
+    'path': Path, 'extra_args': ShellArguments,
+    'submodule_map': DictFreezeDryer(value_type=_SubmoduleMapping),
+})
 class PkgConfigUsage(Usage):
     type = 'pkg-config'
 
@@ -46,25 +71,30 @@ class PkgConfigUsage(Usage):
         T.extra_args(types.shell_args(none_ok=True))
 
         if submodules:
-            T.submodule_map(package_default(types.maybe(_submodule_map),
-                                            default=name + '_{submodule}'))
+            submodule_var = placeholder(submodule_placeholder)
+            T.submodule_map(package_default(
+                types.maybe(_submodule_map),
+                default=name + '_' + submodule_var
+            ), extra_symbols={'submodule': submodule_var})
 
     def _get_submodule_mapping(self, submodule):
-        if self.submodule_map is None:
-            return {}
         try:
-            return self.submodule_map[submodule]
+            return self.submodule_map[submodule].fill(submodule)
         except KeyError:
-            return {k: v.format(submodule=submodule)
-                    for k, v in self.submodule_map['*'].items()}
+            return self.submodule_map['*'].fill(submodule)
 
     def get_usage(self, submodules, srcdir, builddir):
         pcpath = self.path.string(srcdir=srcdir, builddir=builddir)
         extra_args = self.extra_args.fill(srcdir=srcdir, builddir=builddir)
 
+        if submodules and self.submodule_map:
+            mappings = [self._get_submodule_mapping(i) for i in submodules]
+        else:
+            mappings = []
+
         pcfiles = listify(self.pcfile)
-        for i in submodules or []:
-            f = self._get_submodule_mapping(i).get('pcfile')
+        for i in mappings:
+            f = i.pcfile
             if f:
                 pcfiles.append(f)
 

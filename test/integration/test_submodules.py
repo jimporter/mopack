@@ -8,6 +8,7 @@ from . import *
 
 class TestSubmodules(IntegrationTest):
     name = 'submodules'
+    maxDiff = None
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-submodules-implicit.yml')
@@ -57,7 +58,7 @@ class TestSubmodules(IntegrationTest):
                         'pcfile': None,
                         'extra_args': [],
                         'submodule_map': {
-                            '*': {'pcfile': 'hello_{submodule}'},
+                            '*': {'pcfile': {'_phs': ['hello_', 0]}},
                         },
                     },
                 },

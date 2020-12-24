@@ -368,7 +368,7 @@ class TestPath(UsageTest):
     def test_submodule_map(self):
         submodules_required = {'names': '*', 'required': True}
 
-        usage = self.make_usage('foo', submodule_map='{submodule}',
+        usage = self.make_usage('foo', submodule_map='$submodule',
                                 submodules=submodules_required)
         self.check_usage(usage, libraries=[])
         self.assertEqual(usage.get_usage(['sub'], None, None), {
@@ -378,7 +378,7 @@ class TestPath(UsageTest):
         })
 
         usage = self.make_usage('foo', submodule_map={
-            '*': {'libraries': '{submodule}'},
+            '*': {'libraries': '$submodule'},
         }, submodules=submodules_required)
         self.check_usage(usage, libraries=[])
         self.assertEqual(usage.get_usage(['sub'], None, None), {
@@ -394,7 +394,7 @@ class TestPath(UsageTest):
             'libraries': 'sublib',
             'compile_flags': '-Dsub',
             'link_flags': '-Wl,-sub',
-        }, '*': {'libraries': '{submodule}'}}, submodules=submodules_required)
+        }, '*': {'libraries': '$submodule'}}, submodules=submodules_required)
         self.check_usage(usage, libraries=[])
         self.assertEqual(usage.get_usage(['sub'], None, None), {
             'type': 'path', 'auto_link': False,
@@ -407,6 +407,40 @@ class TestPath(UsageTest):
             'type': 'path', 'auto_link': False, 'include_path': [],
             'library_path': [], 'headers': [], 'libraries': ['sub2'],
             'compile_flags': [], 'link_flags': [],
+        })
+
+        usage = self.make_usage('foo', submodule_map={
+            'sub': {
+                'include_path': '/incdir/$submodule',
+                'library_path': '/libdir/$submodule',
+                'headers': '$submodule/file.hpp',
+                'libraries': '$submodule',
+                'compile_flags': '-D$submodule',
+                'link_flags': '-Wl,-$submodule',
+            },
+            '*': {
+                'include_path': '/incdir/star/$submodule',
+                'library_path': '/libdir/star/$submodule',
+                'headers': 'star/$submodule/file.hpp',
+                'libraries': 'star$submodule',
+                'compile_flags': '-Dstar$submodule',
+                'link_flags': '-Wl,-star$submodule',
+            },
+        }, submodules=submodules_required)
+        self.check_usage(usage, libraries=[])
+        self.assertEqual(usage.get_usage(['sub'], None, None), {
+            'type': 'path', 'auto_link': False,
+            'include_path': [abspath('/incdir/sub')],
+            'library_path': [abspath('/libdir/sub')],
+            'headers': ['sub/file.hpp'], 'libraries': ['sub'],
+            'compile_flags': ['-Dsub'], 'link_flags': ['-Wl,-sub'],
+        })
+        self.assertEqual(usage.get_usage(['sub2'], None, None), {
+            'type': 'path', 'auto_link': False,
+            'include_path': [abspath('/incdir/star/sub2')],
+            'library_path': [abspath('/libdir/star/sub2')],
+            'headers': ['star/sub2/file.hpp'], 'libraries': ['starsub2'],
+            'compile_flags': ['-Dstarsub2'], 'link_flags': ['-Wl,-starsub2'],
         })
 
     def test_boost(self):

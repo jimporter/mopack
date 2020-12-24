@@ -1,23 +1,27 @@
 import subprocess
 
-from . import Usage
+from . import submodule_placeholder, Usage
 from .. import types
 from ..freezedried import DictFreezeDryer, FreezeDried, ListFreezeDryer
 from ..package_defaults import DefaultResolver
 from ..path import Path
+from ..placeholder import placeholder, PlaceholderFD
 from ..platforms import package_library_name
 from ..shell import get_cmd, ShellArguments
 from ..types import Unset
 
 
 def _library(field, value):
-    value = types.dict_shape({
-        'type': types.constant('library', 'guess', 'framework'),
-        'name': types.string
-    }, desc='library')(field, value)
-    if value['type'] == 'library':
-        return value['name']
-    return value
+    try:
+        return types.string(field, value)
+    except types.FieldError:
+        value = types.dict_shape({
+            'type': types.constant('library', 'guess', 'framework'),
+            'name': types.string
+        }, desc='library')(field, value)
+        if value['type'] == 'library':
+            return value['name']
+        return value
 
 
 def _list_of_paths(*bases):
@@ -25,52 +29,58 @@ def _list_of_paths(*bases):
 
 
 _list_of_headers = types.list_of(types.string, listify=True)
-_list_of_libraries = types.list_of(types.one_of(
-    types.string, _library, desc='library'
-), listify=True)
+_list_of_libraries = types.list_of(_library, listify=True)
 
+_SubmoduleFD = PlaceholderFD(submodule_placeholder)
 _PathListFD = ListFreezeDryer(Path)
 
 
 @FreezeDried.fields(rehydrate={
-    'include_path': _PathListFD, 'library_path': _PathListFD,
-    'compile_flags': ShellArguments, 'link_flags': ShellArguments
+    'include_path': _SubmoduleFD, 'library_path': _SubmoduleFD,
+    'headers': _SubmoduleFD, 'libraries': _SubmoduleFD,
+    'compile_flags': _SubmoduleFD, 'link_flags': _SubmoduleFD,
 })
 class _SubmoduleMapping(FreezeDried):
     def __init__(self, srcbase, buildbase, *, include_path=None,
                  library_path=None, headers=None, libraries=None,
                  compile_flags=None, link_flags=None):
-        T = types.TypeCheck(locals())
-        T.include_path(_list_of_paths(srcbase))
-        T.library_path(_list_of_paths(buildbase))
-        T.headers(_list_of_headers)
-        T.libraries(_list_of_libraries)
-        T.compile_flags(types.shell_args(none_ok=True))
-        T.link_flags(types.shell_args(none_ok=True))
+        def P(other):
+            return types.placeholder_check(other, submodule_placeholder)
 
-    def fill(self, submodule_name):
-        # XXX: Support filling submodule names in places other than
-        # `libraries`. We should convert this to use real variables instead of
-        # the hacky version with `format` here.
+        T = types.TypeCheck(locals())
+        T.include_path(P(_list_of_paths(srcbase)))
+        T.library_path(P(_list_of_paths(buildbase)))
+        T.headers(P(_list_of_headers))
+        T.libraries(P(_list_of_libraries))
+        T.compile_flags(P(types.shell_args(none_ok=True)))
+        T.link_flags(P(types.shell_args(none_ok=True)))
+
+    def fill(self, submodule_name, srcbase, buildbase):
+        def P(other):
+            return types.placeholder_fill(other, submodule_placeholder,
+                                          submodule_name)
+
         result = type(self).__new__(type(self))
-        result.include_path = self.include_path
-        result.library_path = self.library_path
-        result.headers = self.headers
-        result.libraries = [i.format(submodule=submodule_name)
-                            for i in self.libraries]
-        result.compile_flags = self.compile_flags
-        result.link_flags = self.link_flags
+        T = types.TypeCheck(self.__dict__, dest=result)
+        T.include_path(P(_list_of_paths(srcbase)))
+        T.library_path(P(_list_of_paths(buildbase)))
+        T.headers(P(_list_of_headers))
+        T.libraries(P(_list_of_libraries))
+        T.compile_flags(P(types.shell_args(none_ok=True)))
+        T.link_flags(P(types.shell_args(none_ok=True)))
         return result
 
 
 def _submodule_map(srcbase, buildbase):
     def check_item(field, value):
-        with types.ensure_field_error(field):
+        with types.wrap_field_error(field):
             return _SubmoduleMapping(srcbase, buildbase, **value)
 
     def check(field, value):
         try:
-            value = {'*': {'libraries': types.string(field, value)}}
+            value = {'*': {
+                'libraries': types.placeholder_string(field, value)
+            }}
         except types.FieldError:
             pass
 
@@ -119,16 +129,18 @@ class PathUsage(Usage):
         T.link_flags(types.shell_args(none_ok=True))
 
         if submodules:
+            submodule_var = placeholder(submodule_placeholder)
             T.submodule_map(package_default(
                 types.maybe(_submodule_map(srcbase, buildbase)),
-                default=name + '_{submodule}'
-            ))
+                default=name + '_' + submodule_var
+            ), extra_symbols={'submodule': submodule_var})
 
-    def _get_submodule_mapping(self, submodule):
+    def _get_submodule_mapping(self, submodule, srcbase, buildbase):
         try:
-            return self.submodule_map[submodule]
+            mapping = self.submodule_map[submodule]
         except KeyError:
-            return self.submodule_map['*'].fill(submodule)
+            mapping = self.submodule_map['*']
+        return mapping.fill(submodule, srcbase, buildbase)
 
     def _get_libraries(self, libraries):
         def make_library(lib):
@@ -141,8 +153,15 @@ class PathUsage(Usage):
         return [make_library(i) for i in libraries]
 
     def _get_usage(self, submodules, srcdir, builddir, **kwargs):
+        path_vars = {'srcdir': srcdir, 'builddir': builddir}
+
         if submodules and self.submodule_map:
-            mappings = [self._get_submodule_mapping(i) for i in submodules]
+            path_bases = tuple(k for k, v in path_vars.items()
+                               if v is not None)
+            srcbase = self._preferred_base('srcdir', path_bases)
+            buildbase = self._preferred_base('builddir', path_bases)
+            mappings = [self._get_submodule_mapping(i, srcbase, buildbase)
+                        for i in submodules]
         else:
             mappings = []
 
@@ -151,7 +170,6 @@ class PathUsage(Usage):
             for i in mappings:
                 yield from getattr(i, key)
 
-        path_vars = {'srcdir': srcdir, 'builddir': builddir}
         return self._usage(
             auto_link=self.auto_link,
             include_path=[i.string(**path_vars) for i in
