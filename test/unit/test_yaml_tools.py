@@ -58,25 +58,30 @@ class TestMarkedList(TestCase):
         self.assertEqual(m, [])
         self.assertEqual(m.mark, None)
         self.assertEqual(m.marks, [])
+        self.assertEqual(m.value_marks, [])
 
         m = MarkedList('mark')
         self.assertEqual(m, [])
         self.assertEqual(m.mark, 'mark')
         self.assertEqual(m.marks, [])
+        self.assertEqual(m.value_marks, [])
 
     def test_append(self):
         m = MarkedList()
         m.append(1, 'mark1')
         self.assertEqual(m, [1])
         self.assertEqual(m.marks, ['mark1'])
+        self.assertEqual(m.value_marks, ['mark1'])
 
         m[-1:] = [1, 2, 3]
         self.assertEqual(m, [1, 2, 3])
         self.assertEqual(m.marks, ['mark1'])
+        self.assertEqual(m.value_marks, ['mark1'])
 
         m.append(4, 'mark4')
         self.assertEqual(m, [1, 2, 3, 4])
         self.assertEqual(m.marks, ['mark1', None, None, 'mark4'])
+        self.assertEqual(m.value_marks, ['mark1', None, None, 'mark4'])
 
     def test_extend(self):
         m = MarkedList()
@@ -84,6 +89,7 @@ class TestMarkedList(TestCase):
         self.assertEqual(m, [1, 2, 3])
         self.assertEqual(m.mark, None)
         self.assertEqual(m.marks, [None, None, None])
+        self.assertEqual(m.value_marks, [None, None, None])
 
         m2 = MarkedList('mark')
         m2.append(4, 'mark4')
@@ -91,12 +97,14 @@ class TestMarkedList(TestCase):
         self.assertEqual(m, [1, 2, 3, 4])
         self.assertEqual(m.mark, 'mark')
         self.assertEqual(m.marks, [None, None, None, 'mark4'])
+        self.assertEqual(m.value_marks, [None, None, None, 'mark4'])
 
         m3 = MarkedList('badmark')
         m.extend(m3)
         self.assertEqual(m, [1, 2, 3, 4])
         self.assertEqual(m.mark, 'mark')
         self.assertEqual(m.marks, [None, None, None, 'mark4'])
+        self.assertEqual(m.value_marks, [None, None, None, 'mark4'])
 
     def test_copy(self):
         m = MarkedList('mark')
@@ -106,6 +114,7 @@ class TestMarkedList(TestCase):
         self.assertEqual(m2, [1])
         self.assertEqual(m2.mark, 'mark')
         self.assertEqual(m2.marks, ['mark1'])
+        self.assertEqual(m2.value_marks, ['mark1'])
 
 
 class TestMarkedDict(TestCase):

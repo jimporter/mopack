@@ -54,7 +54,7 @@ def dump(data):
     # much if we can't use it.
     try:
         return yaml.dump(data, sort_keys=False)
-    except TypeError:
+    except TypeError:  # pragma: no cover
         return yaml.dump(data)
 
 
