@@ -17,7 +17,7 @@ class _SubmoduleMapping(FreezeDried):
             return types.placeholder_check(other, submodule_placeholder)
 
         T = types.TypeCheck(locals())
-        T.pcfile(P(types.string))
+        T.pcfile(P(types.maybe(types.string)))
 
     def fill(self, submodule_name):
         def P(other):
@@ -26,7 +26,7 @@ class _SubmoduleMapping(FreezeDried):
 
         result = type(self).__new__(type(self))
         T = types.TypeCheck(self.__dict__, dest=result)
-        T.pcfile(P(types.string))
+        T.pcfile(P(types.maybe(types.string)))
         return result
 
 
@@ -96,8 +96,7 @@ class PkgConfigUsage(Usage):
 
         pcfiles = listify(self.pcfile)
         for i in mappings:
-            f = i.pcfile
-            if f:
-                pcfiles.append(f)
+            if i.pcfile:
+                pcfiles.append(i.pcfile)
 
         return self._usage(path=pcpath, pcfiles=pcfiles, extra_args=extra_args)

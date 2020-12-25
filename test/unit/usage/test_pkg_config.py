@@ -158,6 +158,23 @@ class TestPkgConfig(UsageTest):
             'pcfiles': ['starsubfoopc'], 'extra_args': [],
         })
 
+        submodules = {'names': '*', 'required': False}
+        usage = self.make_usage('foo', submodule_map={
+            'sub': {'pcfile': 'subpc'},
+            'sub2': {'pcfile': None},
+        }, submodules=submodules)
+        self.assertEqual(usage.path, Path('builddir', 'pkgconfig'))
+        self.assertEqual(usage.pcfile, 'foo')
+        self.assertEqual(usage.extra_args, ShellArguments())
+        self.assertEqual(usage.get_usage(['sub'], None, '/builddir'), {
+            'type': 'pkg-config', 'path': abspath('/builddir/pkgconfig'),
+            'pcfiles': ['foo', 'subpc'], 'extra_args': [],
+        })
+        self.assertEqual(usage.get_usage(['sub2'], None, '/builddir'), {
+            'type': 'pkg-config', 'path': abspath('/builddir/pkgconfig'),
+            'pcfiles': ['foo'], 'extra_args': [],
+        })
+
     def test_boost(self):
         submodules = {'names': '*', 'required': False}
         final_usage = {
