@@ -6,15 +6,19 @@ from yaml.error import Mark, MarkedYAMLError
 
 pp.ParserElement.enablePackrat()
 
-__all__ = ['evaluate', 'ParseBaseException', 'ParseException',
-           'SemanticException', 'to_yaml_error']
+__all__ = ['evaluate', 'evaluate_token', 'parse', 'ParseBaseException',
+           'ParseException', 'SemanticException', 'Token', 'to_yaml_error']
 
 
 class SemanticException(pp.ParseBaseException):
     pass
 
 
-class Literal:
+class Token:
+    pass
+
+
+class Literal(Token):
     def __init__(self, value):
         self.value = value
 
@@ -25,7 +29,7 @@ class Literal:
         return '<Literal({!r})>'.format(self.value)
 
 
-class Symbol:
+class Symbol(Token):
     def __init__(self, pstr, loc, symbol):
         self._pstr = pstr
         self.loc = loc
@@ -42,7 +46,7 @@ class Symbol:
         return '<Symbol({})>'.format(self.symbol)
 
 
-class UnaryOp:
+class UnaryOp(Token):
     def __init__(self, operator, operand):
         self.operator = operator
         self.operand = operand
@@ -56,7 +60,7 @@ class UnaryOp:
         return '({}{})'.format(self.operator, self.operand)
 
 
-class BinaryOp:
+class BinaryOp(Token):
     def __init__(self, left, operator, right):
         self.operator = operator
         self.operands = [left, right]
@@ -81,7 +85,7 @@ class BinaryOp:
                                    self.operands[1])
 
 
-class TernaryOp:
+class TernaryOp(Token):
     def __init__(self, left, first_operator, middle, second_operator, right):
         self.operator = first_operator + second_operator
         self.operands = [left, middle, right]
@@ -95,6 +99,16 @@ class TernaryOp:
     def __repr__(self):
         return '({} {} {}, {})'.format(self.operands[0], self.operator,
                                        *self.operands[1:])
+
+
+class StringOp(Token):
+    def __init__(self, ast):
+        self.ast = ast
+
+    def __call__(self, symbols):
+        return reduce(operator.add, (
+            evaluate_token(symbols, i) for i in self.ast
+        ))
 
 
 expr = pp.Forward()
@@ -138,22 +152,27 @@ if_expr = dollar_expr | expr
 str_expr = bare_string + (dollar_expr + bare_string)[...]
 
 
-def evaluate(symbols, expression, if_context=False):
-    def evaluate_tok(t):
-        if isinstance(t, str):
-            return t
-        return t(symbols)
+def evaluate_token(symbols, tok):
+    if isinstance(tok, Token):
+        return tok(symbols)
+    return tok
 
+
+def parse(expression, if_context=False):
     if if_context:
-        return evaluate_tok(if_expr.parseString(expression, parseAll=True)[0])
+        return if_expr.parseString(expression, parseAll=True)[0]
     else:
         ast = str_expr.parseString(expression, parseAll=True)
         if len(ast) == 0:
             return expression
         elif len(ast) == 1:
-            return evaluate_tok(ast[0])
+            return ast[0]
         else:
-            return reduce(operator.add, (evaluate_tok(i) for i in ast))
+            return StringOp(ast)
+
+
+def evaluate(symbols, expression, if_context=False):
+    return evaluate_token(symbols, parse(expression, if_context))
 
 
 def to_yaml_error(e, context_mark, mark):

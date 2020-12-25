@@ -108,6 +108,7 @@ setup(
     ],
 
     packages=find_packages(exclude=['test', 'test.*']),
+    package_data={'': ['defaults/*.yml']},
 
     install_requires=['colorama', 'pyparsing', 'pyyaml', 'setuptools'],
     extras_require={

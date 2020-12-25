@@ -72,10 +72,12 @@ class PkgConfigUsage(Usage):
 
         if submodules:
             submodule_var = placeholder(submodule_placeholder)
+            extra_symbols = {'submodule': submodule_var}
             T.submodule_map(package_default(
                 types.maybe(_submodule_map),
-                default=name + '_' + submodule_var
-            ), extra_symbols={'submodule': submodule_var})
+                default=name + '_' + submodule_var,
+                extra_symbols=extra_symbols
+            ), extra_symbols=extra_symbols)
 
     def _get_submodule_mapping(self, submodule):
         try:

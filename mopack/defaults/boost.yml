@@ -1,0 +1,34 @@
+source:
+  '*':
+    submodules:
+      names: '*'
+      required: false
+usage:
+  path: &path_system_usage
+    - &path_usage
+      if: target_platform == 'windows'
+      auto_link: true
+      include_path: >-
+        ${{ env['BOOST_INCLUDEDIR'] || (
+          env['BOOST_ROOT'] ? env['BOOST_ROOT'] + '/include' : null
+        ) }}
+      library_path: >-
+        ${{ env['BOOST_LIBRARYDIR'] || (
+          env['BOOST_ROOT'] ? env['BOOST_ROOT'] + '/lib' : null
+        ) }}
+      headers: [boost/version.hpp]
+      libraries: null
+      submodule_map: null
+    - <<: *path_usage
+      if: true
+      auto_link: false
+      submodule_map:
+        thread:
+          libraries: boost_thread
+          compile_flags: -pthread
+          link_flags: "${{ target_platform == 'darwin' ? '' : '-pthread' }}"
+        '*':
+          libraries: boost_$submodule
+  system: *path_system_usage
+  pkg-config:
+    submodule_map: null

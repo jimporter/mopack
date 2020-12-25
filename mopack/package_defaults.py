@@ -1,77 +1,111 @@
 import os
-from types import FunctionType
+import re
+from pkg_resources import resource_filename
+from yaml.error import MarkedYAMLError
 
-from . import types
-from .placeholder import placeholder
-from .usage import submodule_placeholder
-
-
-def _boost_auto_link(options):
-    return options['target_platform'] == 'windows'
+from . import expression as expr, iterutils, types
+from .objutils import memoize
+from .yaml_tools import load_file, SafeLineLoader
 
 
-def _boost_getdir(name, default):
-    def wrapper(options):
-        root = options['env'].get('BOOST_ROOT')
-        p = options['env'].get(name, (os.path.join(root, default)
-                                      if root else None))
-        return [os.path.abspath(p)] if p is not None else []
+class DefaultConfig:
+    _known_genera = {'source', 'usage'}
 
-    return wrapper
+    def __init__(self, filename):
+        with load_file(filename, Loader=SafeLineLoader) as cfg:
+            for genus, genus_cfg in cfg.items():
+                if genus not in self._known_genera:
+                    msg = 'unknown genus {!r}'.format(genus)
+                    raise MarkedYAMLError(None, None, msg, cfg.marks[genus])
+                self._process_genus(genus_cfg)
+        self._data = cfg
+
+    def _process_genus(self, data):
+        for species, cfgs in data.items():
+            if iterutils.isiterable(cfgs):
+                for i, cfg in enumerate(cfgs):
+                    if i < len(cfgs) - 1 and 'if' not in cfg:
+                        ctx = 'while parsing default for {!r}'.format(species)
+                        msg = ('default config has no `if` field, but is ' +
+                               'not last entry of list')
+                        raise MarkedYAMLError(ctx, cfgs.mark, msg, cfg.mark)
+                    cfgs[i] = self._parse_default_fields(cfg)
+            else:
+                data[species] = self._parse_default_fields(cfgs)
+
+    def _parse_default_fields(self, data):
+        def parse_recursive(data):
+            if isinstance(data, str):
+                return expr.parse(data)
+            elif isinstance(data, (dict, list)):
+                for k, v in iterutils.iteritems(data):
+                    data[k] = parse_recursive(v)
+                return data
+            return data
+
+        for k, v in data.items():
+            if k == 'if':
+                if isinstance(v, str):
+                    data[k] = expr.parse(v, if_context=True)
+            else:
+                data[k] = parse_recursive(v)
+        return data
+
+    @staticmethod
+    def _if_evaluate(symbols, expression):
+        if isinstance(expression, bool):
+            return expression
+        return expression(symbols)
+
+    @classmethod
+    def _evaluate_recursive(cls, symbols, data):
+        if isinstance(data, expr.Token):
+            return data(symbols)
+        elif isinstance(data, list):
+            return [cls._evaluate_recursive(symbols, i) for i in data]
+        elif isinstance(data, dict):
+            return {k: cls._evaluate_recursive(symbols, v)
+                    for k, v in data.items()}
+        return data
+
+    @classmethod
+    def _select_from_list(cls, symbols, data):
+        if isinstance(data, list):
+            for i in data:
+                if cls._if_evaluate(symbols, i.get('if', True)):
+                    return i
+        return data
+
+    def get(self, symbols, genus, species, field, default=None):
+        if genus not in self._known_genera:
+            raise ValueError('unknown genus {!r}'.format(genus))
+
+        defaults = self._data.get(genus, {})
+        if species in defaults:
+            fields = self._select_from_list(symbols, defaults[species])
+            if field in fields:
+                return self._evaluate_recursive(symbols, fields[field])
+
+        fields = self._select_from_list(symbols, defaults.get('*', {}))
+        return self._evaluate_recursive(symbols, fields.get(field, default))
 
 
-def _boost_submodule_map(options):
-    if options['target_platform'] == 'windows':
+@memoize
+def _get_default_config(package_name):
+    if re.search(r'\W', package_name):
         return None
 
-    link_flags = ('' if options['target_platform'] == 'darwin' else '-pthread')
-    return {
-        'thread': {
-            'libraries': 'boost_thread',
-            'compile_flags': '-pthread',
-            'link_flags': link_flags,
-        },
-        '*': {
-            'libraries': 'boost_' + placeholder(submodule_placeholder),
-        },
-    }
+    path = resource_filename('mopack', 'defaults/{}.yml'.format(package_name))
+    if os.path.exists(path):
+        return DefaultConfig(path)
+    return None
 
 
-_boost_path_usage = {
-    'auto_link': _boost_auto_link,
-    'include_path': _boost_getdir('BOOST_INCLUDEDIR', 'include'),
-    'library_path': _boost_getdir('BOOST_LIBRARYDIR', 'lib'),
-    'headers': ['boost/version.hpp'],
-    'libraries': None,
-    'submodule_map': _boost_submodule_map,
-}
-
-_defaults = {
-    'boost': {
-        'source': {
-            '*': {
-                'submodules': {
-                    'names': '*',
-                    'required': False,
-                },
-            },
-        },
-        'usage': {
-            'path': _boost_path_usage,
-            'system': _boost_path_usage,
-            'pkg-config': {
-                'submodule_map': None,
-            },
-        },
-    },
-}
-
-
-def get_default(package_name, genus, species, field, default=None):
-    defaults = _defaults.get(package_name, {}).get(genus, {})
-    if species in defaults and field in defaults[species]:
-        return defaults[species][field]
-    return defaults.get('*', {}).get(field, default)
+def get_default(symbols, package_name, genus, species, field, default=None):
+    default_cfg = _get_default_config(package_name)
+    if default_cfg is None:
+        return default
+    return default_cfg.get(symbols, genus, species, field, default)
 
 
 class DefaultResolver:
@@ -81,17 +115,16 @@ class DefaultResolver:
         self.species = getattr(obj, obj._type_field)
         self.symbols = symbols
 
-    def __call__(self, other, field=None, default=None):
+    def __call__(self, other, field=None, default=None, extra_symbols=None):
         forced_field = field
+        symbols = dict(**self.symbols, **(extra_symbols or {}))
 
         def check(field, value):
             if value is types.Unset:
                 value = get_default(
-                    self.package_name, self.genus, self.species,
+                    symbols, self.package_name, self.genus, self.species,
                     forced_field or field, default
                 )
-                if isinstance(value, FunctionType):
-                    value = value(self.symbols)
             return other(field, value)
 
         return check
