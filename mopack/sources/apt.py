@@ -20,9 +20,9 @@ class AptPackage(BinaryPackage):
         for i in packages:
             log.pkg_resolve(i.name, 'from {}'.format(cls.source))
 
-        apt = get_cmd(packages[0]._common_options.env, 'APT', 'sudo apt-get')
-        aptrepo = get_cmd(packages[0]._common_options.env,
-                          'ADD_APT_REPOSITORY', 'sudo add-apt-repository')
+        env = packages[0]._common_options.env
+        apt = get_cmd(env, 'APT_GET', 'sudo apt-get')
+        aptrepo = get_cmd(env, 'ADD_APT_REPOSITORY', 'sudo add-apt-repository')
 
         remotes = [i.remote for i in packages]
         repositories = uniques(i.repository for i in packages if i.repository)
