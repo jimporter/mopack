@@ -58,7 +58,7 @@ class TestSubmodules(IntegrationTest):
                         'pcfile': None,
                         'extra_args': [],
                         'submodule_map': {
-                            '*': {'pcfile': {'_phs': ['hello_', 0]}},
+                            '*': {'pcfile': {'#phs#': ['hello_', 0]}},
                         },
                     },
                 },

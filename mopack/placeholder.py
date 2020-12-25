@@ -159,15 +159,15 @@ class PlaceholderFD:
         return value
 
     def dehydrate(self, value):
-        return map_recursive(value, lambda value: {'_phs': [
+        return map_recursive(value, lambda value: {'#phs#': [
             self._dehydrate_placeholder(i) for i in value.bits
         ]})
 
     def rehydrate(self, value, **kwargs):
         if isinstance(value, dict):
-            if list(value.keys()) == ['_phs']:
+            if list(value.keys()) == ['#phs#']:
                 return PlaceholderString(*[self._rehydrate_placeholder(i)
-                                           for i in value['_phs']])
+                                           for i in value['#phs#']])
             return {k: self.rehydrate(v, **kwargs) for k, v in value.items()}
         elif isinstance(value, list):
             return [self.rehydrate(i, **kwargs) for i in value]

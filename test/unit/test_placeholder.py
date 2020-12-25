@@ -232,16 +232,16 @@ class TestPlaceholderFD(TestCase):
     def test_dehydrate_placeholder(self):
         PS = PlaceholderString
 
-        self.assertDehydrate(PS(), {'_phs': []})
-        self.assertDehydrate(PS('foo'), {'_phs': ['foo']})
-        self.assertDehydrate(PS('foo', self.p1), {'_phs': ['foo', 0]})
+        self.assertDehydrate(PS(), {'#phs#': []})
+        self.assertDehydrate(PS('foo'), {'#phs#': ['foo']})
+        self.assertDehydrate(PS('foo', self.p1), {'#phs#': ['foo', 0]})
         self.assertDehydrate(PS(self.p1, 'foo', self.p2, 'bar', self.p1),
-                             {'_phs': [0, 'foo', 1, 'bar', 0]})
+                             {'#phs#': [0, 'foo', 1, 'bar', 0]})
 
     def test_dehydrate_mixed(self):
         s = PlaceholderString('foo', self.p1, 'bar')
         self.assertDehydrate({'key': ['<', s, '>']},
-                             {'key': ['<', {'_phs': ['foo', 0, 'bar']}, '>']})
+                             {'key': ['<', {'#phs#': ['foo', 0, 'bar']}, '>']})
 
     def test_dehydrate_unrecognized_placeholder(self):
         with self.assertRaises(ValueError):
