@@ -24,7 +24,7 @@ class Bfg9000Builder(Builder):
                      _child_config=False, _symbols):
             if not _child_config and self.toolchain is types.Unset:
                 T = types.TypeCheck(locals(), _symbols)
-                T.toolchain(types.maybe_raw(types.path_fragment))
+                T.toolchain(types.maybe_raw(types.string))
 
     def __init__(self, name, *, extra_args=None, submodules, **kwargs):
         super().__init__(name, **kwargs)
