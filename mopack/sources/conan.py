@@ -19,8 +19,8 @@ class ConanPackage(BinaryPackage):
             self.generator = ['pkg_config']
             self.build = []
 
-        def __call__(self, *, build=None, generator=None, config_file=None,
-                     _child_config=False, _symbols):
+        def __call__(self, *, build=None, generator=None, config_file,
+                     _symbols, _child_config=False):
             T = types.TypeCheck(locals(), _symbols)
             if generator:
                 T.generator(types.list_of(types.string, listify=True),

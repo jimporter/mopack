@@ -209,7 +209,7 @@ class TestConfig(TestCase):
 
         opts = Options.default()
         opts.add('builders', 'bfg9000')
-        opts.builders['bfg9000'].toolchain = 'toolchain.bfg'
+        opts.builders['bfg9000'].toolchain = os.path.abspath('toolchain.bfg')
         self.assertEqual(cfg.options, opts)
 
         pkg1 = AptPackage('foo', _options=opts, config_file='mopack.yml')
@@ -235,7 +235,7 @@ class TestConfig(TestCase):
 
         opts = Options.default()
         opts.add('builders', 'bfg9000')
-        opts.builders['bfg9000'].toolchain = 'toolchain.bfg'
+        opts.builders['bfg9000'].toolchain = os.path.abspath('toolchain.bfg')
         self.assertEqual(cfg.options, opts)
 
         pkg1 = AptPackage('foo', _options=opts, config_file='mopack.yml')

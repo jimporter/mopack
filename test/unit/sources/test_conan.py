@@ -2,9 +2,9 @@ import os
 import subprocess
 from io import StringIO
 from textwrap import dedent
-from unittest import mock, TestCase
+from unittest import mock
 
-from . import SourceTest, through_json
+from . import OptionsTest, SourceTest, through_json
 from .. import mock_open_log
 
 from mopack.iterutils import iterate
@@ -378,7 +378,7 @@ class TestConan(SourceTest):
         self.assertEqual(pkg, Package.rehydrate(data, _options=opts))
 
 
-class TestConanOptions(TestCase):
+class TestConanOptions(OptionsTest):
     symbols = {'variable': 'value'}
 
     def test_default(self):
@@ -388,32 +388,39 @@ class TestConanOptions(TestCase):
 
     def test_generator(self):
         opts = ConanPackage.Options()
-        opts(generator='cmake', _symbols=self.symbols)
+        opts(generator='cmake', config_file=self.config_file,
+             _symbols=self.symbols)
         self.assertEqual(opts.generator, ['pkg_config', 'cmake'])
 
-        opts(generator='pkg_config', _symbols=self.symbols)
+        opts(generator='pkg_config', config_file=self.config_file,
+             _symbols=self.symbols)
         self.assertEqual(opts.generator, ['pkg_config', 'cmake'])
 
-        opts(generator=['txt', 'cmake'], _symbols=self.symbols)
+        opts(generator=['txt', 'cmake'], config_file=self.config_file,
+             _symbols=self.symbols)
         self.assertEqual(opts.generator, ['pkg_config', 'cmake', 'txt'])
 
-        opts(generator=['$variable'], _symbols=self.symbols)
+        opts(generator=['$variable'], config_file=self.config_file,
+             _symbols=self.symbols)
         self.assertEqual(opts.generator, ['pkg_config', 'cmake', 'txt',
                                           'value'])
 
     def test_build(self):
         opts = ConanPackage.Options()
-        opts(build='foo', _symbols=self.symbols)
+        opts(build='foo', config_file=self.config_file, _symbols=self.symbols)
         self.assertEqual(opts.build, ['foo'])
 
-        opts(build=['bar', 'foo', 'baz'], _symbols=self.symbols)
+        opts(build=['bar', 'foo', 'baz'], config_file=self.config_file,
+             _symbols=self.symbols)
         self.assertEqual(opts.build, ['foo', 'bar', 'baz'])
 
-        opts(build='$variable', _symbols=self.symbols)
+        opts(build='$variable', config_file=self.config_file,
+             _symbols=self.symbols)
         self.assertEqual(opts.build, ['foo', 'bar', 'baz', 'value'])
 
     def test_rehydrate(self):
         opts = ConanPackage.Options()
-        opts(generator='cmake', build='foo', _symbols=self.symbols)
+        opts(generator='cmake', build='foo', config_file=self.config_file,
+             _symbols=self.symbols)
         data = through_json(opts.dehydrate())
         self.assertEqual(opts, PackageOptions.rehydrate(data))

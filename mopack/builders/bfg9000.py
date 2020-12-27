@@ -1,3 +1,5 @@
+import os
+
 from . import Builder, BuilderOptions
 from .. import types
 from ..freezedried import FreezeDried
@@ -20,11 +22,12 @@ class Bfg9000Builder(Builder):
         def __init__(self):
             self.toolchain = types.Unset
 
-        def __call__(self, *, toolchain=types.Unset, config_file=None,
-                     _child_config=False, _symbols):
+        def __call__(self, *, toolchain=types.Unset, config_file,
+                     _symbols, _child_config=False):
             if not _child_config and self.toolchain is types.Unset:
                 T = types.TypeCheck(locals(), _symbols)
-                T.toolchain(types.maybe_raw(types.string))
+                config_dir = os.path.dirname(config_file)
+                T.toolchain(types.maybe_raw(types.path_string(config_dir)))
 
     def __init__(self, name, *, extra_args=None, submodules, **kwargs):
         super().__init__(name, **kwargs)

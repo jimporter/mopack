@@ -301,6 +301,13 @@ def path_fragment(field, value):
     return value
 
 
+def path_string(base):
+    def check(field, value):
+        return os.path.normpath(os.path.join(base, string(field, value)))
+
+    return check
+
+
 def abs_or_inner_path(base):
     def check(field, value):
         with ensure_field_error(field):

@@ -24,6 +24,12 @@ def through_json(data):
 
 
 class OptionsTest(TestCase):
+    config_file = os.path.abspath('/path/to/options.yml')
+
+    @property
+    def config_dir(self):
+        return os.path.dirname(self.config_file)
+
     def make_options(self, common_options=None, deploy_paths=None):
         options = Options(deploy_paths)
         if common_options:

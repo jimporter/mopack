@@ -1,8 +1,8 @@
 import os
 import subprocess
-from unittest import mock, TestCase
+from unittest import mock
 
-from . import BuilderTest, through_json
+from . import BuilderTest, OptionsTest, through_json
 from .. import mock_open_log
 
 from mopack.builders import Builder, BuilderOptions
@@ -155,7 +155,9 @@ class TestBfg9000Builder(BuilderTest):
             _path_bases=self.path_bases
         ))
 
-        self.check_build(builder, extra_args=['--toolchain', 'toolchain.bfg'])
+        self.check_build(builder, extra_args=[
+            '--toolchain', os.path.join(self.config_dir, 'toolchain.bfg')
+        ])
 
     def test_deploy_paths(self):
         deploy_paths = {'prefix': '/usr/local', 'goofy': '/foo/bar'}
@@ -187,7 +189,7 @@ class TestBfg9000Builder(BuilderTest):
         self.assertEqual(builder, Builder.rehydrate(data, _options=opts))
 
 
-class TestBfg9000Options(TestCase):
+class TestBfg9000Options(OptionsTest):
     symbols = {'variable': 'foo'}
 
     def test_default(self):
@@ -196,32 +198,41 @@ class TestBfg9000Options(TestCase):
 
     def test_toolchain(self):
         opts = Bfg9000Builder.Options()
-        opts(toolchain='toolchain.bfg', _symbols=self.symbols)
-        self.assertEqual(opts.toolchain, 'toolchain.bfg')
-        opts(toolchain='bad.bfg', _symbols=self.symbols)
-        self.assertEqual(opts.toolchain, 'toolchain.bfg')
+        opts(toolchain='toolchain.bfg', config_file=self.config_file,
+             _symbols=self.symbols)
+        self.assertEqual(opts.toolchain,
+                         os.path.join(self.config_dir, 'toolchain.bfg'))
+        opts(toolchain='bad.bfg', config_file=self.config_file,
+             _symbols=self.symbols)
+        self.assertEqual(opts.toolchain,
+                         os.path.join(self.config_dir, 'toolchain.bfg'))
 
         opts = Bfg9000Builder.Options()
-        opts(toolchain='$variable/toolchain.bfg', _symbols=self.symbols)
-        self.assertEqual(opts.toolchain, os.path.join('foo', 'toolchain.bfg'))
+        opts(toolchain='$variable/toolchain.bfg', config_file=self.config_file,
+             _symbols=self.symbols)
+        self.assertEqual(opts.toolchain,
+                         os.path.join(self.config_dir, 'foo', 'toolchain.bfg'))
 
         opts = Bfg9000Builder.Options()
-        opts(toolchain=None, _symbols=self.symbols)
+        opts(toolchain=None, config_file=self.config_file,
+             _symbols=self.symbols)
         self.assertEqual(opts.toolchain, None)
 
         opts = Bfg9000Builder.Options()
-        opts(toolchain='toolchain.bfg', _child_config=True,
-             _symbols=self.symbols)
+        opts(toolchain='toolchain.bfg', config_file=self.config_file,
+             _child_config=True, _symbols=self.symbols)
         self.assertIs(opts.toolchain, Unset)
 
     def test_rehydrate(self):
         opts_toolchain = Bfg9000Builder.Options()
-        opts_toolchain(toolchain='toolchain.bfg', _symbols=self.symbols)
+        opts_toolchain(toolchain='toolchain.bfg', config_file=self.config_file,
+                       _symbols=self.symbols)
         data = through_json(opts_toolchain.dehydrate())
         self.assertEqual(opts_toolchain, BuilderOptions.rehydrate(data))
 
         opts_none = Bfg9000Builder.Options()
-        opts_none(toolchain=None, _symbols=self.symbols)
+        opts_none(toolchain=None, config_file=self.config_file,
+                  _symbols=self.symbols)
         data = through_json(opts_none.dehydrate())
         self.assertEqual(opts_none, BuilderOptions.rehydrate(data))
 

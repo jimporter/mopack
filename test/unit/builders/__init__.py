@@ -3,12 +3,13 @@ from .. import OptionsTest, through_json  # noqa: F401
 
 class BuilderTest(OptionsTest):
     def make_options(self, builder_type=None, *, common_options=None,
-                     this_options=None, deploy_paths=None):
+                     this_options=None, deploy_paths=None, config_file=None):
         options = super().make_options(common_options, deploy_paths)
         if this_options:
             type = (builder_type or self.builder_type).type
             options.builders[type].accumulate(
-                this_options, _symbols=options.expr_symbols
+                this_options, _symbols=options.expr_symbols,
+                config_file=config_file or self.config_file
             )
         return options
 

@@ -378,6 +378,8 @@ class TestBoolean(TypeTestCase):
 class TestPathFragment(TypeTestCase):
     def test_valid(self):
         self.assertEqual(path_fragment('field', 'path'), 'path')
+        self.assertEqual(path_fragment('field', 'path/sub'),
+                         os.path.join('path', 'sub'))
         self.assertEqual(path_fragment('field', 'path/..'), '.')
         self.assertEqual(path_fragment('field', 'foo/../bar'), 'bar')
 
@@ -402,6 +404,28 @@ class TestPathFragment(TypeTestCase):
                 path_fragment('field', 'C:\\path')
             with self.assertFieldError(('field',)):
                 path_fragment('field', 'C:')
+
+    def test_invalid(self):
+        with self.assertFieldError(('field',)):
+            path_fragment('field', 1)
+        with self.assertFieldError(('field',)):
+            path_fragment('field', None)
+
+
+class TestPathString(TypeTestCase):
+    def test_valid(self):
+        self.assertEqual(path_string('/base')('field', 'path'),
+                         os.path.join(os.sep, 'base', 'path'))
+        self.assertEqual(path_string('/base')('field', 'path/sub'),
+                         os.path.join(os.sep, 'base', 'path', 'sub'))
+        self.assertEqual(path_string('/base')('field', '../path'),
+                         os.path.join(os.sep, 'path'))
+
+    def test_invalid(self):
+        with self.assertFieldError(('field',)):
+            path_string('/base')('field', 1)
+        with self.assertFieldError(('field',)):
+            path_string('/base')('field', None)
 
 
 class TestAbsOrInnerPath(TypeTestCase):
