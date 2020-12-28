@@ -2,12 +2,13 @@ import subprocess
 
 from . import submodule_placeholder, Usage
 from .. import types
+from ..environment import get_pkg_config
 from ..freezedried import DictFreezeDryer, FreezeDried, ListFreezeDryer
 from ..package_defaults import DefaultResolver
 from ..path import Path
 from ..placeholder import placeholder, PlaceholderFD
 from ..platforms import package_library_name
-from ..shell import get_cmd, ShellArguments
+from ..shell import ShellArguments
 from ..types import Unset
 
 
@@ -199,8 +200,7 @@ class SystemUsage(PathUsage):
         self.pcfile = name
 
     def get_usage(self, submodules, srcdir, builddir):
-        pkg_config = get_cmd(self._common_options.env, 'PKG_CONFIG',
-                             'pkg-config')
+        pkg_config = get_pkg_config(self._common_options.env)
         try:
             subprocess.run(pkg_config + [self.pcfile], check=True,
                            stdout=subprocess.DEVNULL,

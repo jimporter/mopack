@@ -7,12 +7,12 @@ from . import Package, submodules_type
 from .. import archive, log, types
 from ..builders import Builder, make_builder
 from ..config import ChildConfig
+from ..environment import get_cmd
 from ..freezedried import FreezeDried
 from ..glob import filter_glob
 from ..log import LogFile
 from ..package_defaults import DefaultResolver
 from ..path import Path, pushd
-from ..shell import get_cmd
 from ..yaml_tools import to_parse_error
 
 

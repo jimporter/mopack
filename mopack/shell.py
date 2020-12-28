@@ -148,7 +148,3 @@ def _wrap_placeholder(split_fn):
 split_posix = _wrap_placeholder(split_posix_str)
 split_windows = _wrap_placeholder(split_windows_str)
 split_native = _wrap_placeholder(split_native_str)
-
-
-def get_cmd(env, cmdvar, default):
-    return split_native_str(env.get(cmdvar, default))

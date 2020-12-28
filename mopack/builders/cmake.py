@@ -2,10 +2,11 @@ import os.path
 
 from . import Builder
 from .. import types
+from ..environment import get_cmd
 from ..freezedried import FreezeDried
 from ..log import LogFile
 from ..path import pushd
-from ..shell import get_cmd, ShellArguments
+from ..shell import ShellArguments
 
 # XXX: Handle exec-prefix, which CMake doesn't work with directly.
 _known_install_types = ('prefix', 'bindir', 'libdir', 'includedir')

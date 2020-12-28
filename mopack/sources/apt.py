@@ -1,7 +1,7 @@
 from . import BinaryPackage
 from .. import log, types
+from ..environment import get_cmd
 from ..iterutils import uniques
-from ..shell import get_cmd
 
 
 class AptPackage(BinaryPackage):

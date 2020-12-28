@@ -2,10 +2,11 @@ import os
 
 from . import Builder, BuilderOptions
 from .. import types
+from ..environment import get_cmd
 from ..freezedried import FreezeDried
 from ..log import LogFile
 from ..path import pushd
-from ..shell import get_cmd, ShellArguments
+from ..shell import ShellArguments
 
 _known_install_types = ('prefix', 'exec-prefix', 'bindir', 'libdir',
                         'includedir')
