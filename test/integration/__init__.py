@@ -10,7 +10,7 @@ from .. import *
 from mopack.iterutils import listify
 
 
-# Also supported: 'apt'
+# Also supported: 'apt', 'mingw-cross'
 test_features = {'boost'}
 for i in os.getenv('MOPACK_EXTRA_TESTS', '').split(' '):
     if i:

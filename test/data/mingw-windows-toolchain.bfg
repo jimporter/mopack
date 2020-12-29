@@ -1,0 +1,9 @@
+# -*- python -*-
+
+target_platform('winnt', 'x86_64')
+compiler(['x86_64-w64-mingw32-g++-win32',
+          'x86_64-w64-mingw32-g++'], 'c++')
+compile_options(['-Wall'], 'c++')
+
+environ['PKG_CONFIG'] = 'pkg-config'
+environ['LDFLAGS'] = '-static-libstdc++ -static-libgcc'

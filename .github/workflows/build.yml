@@ -16,7 +16,7 @@ jobs:
 
         include:
           - os: ubuntu-latest
-            extra-tests: [apt]
+            extra-tests: [apt, mingw-cross]
         exclude:
           - os: ubuntu-latest
             compiler: msvc
@@ -45,7 +45,7 @@ jobs:
       - name: Install Linux dependencies
         if: matrix.os == 'ubuntu-latest'
         run: |
-          sudo apt-get install ninja-build libboost-dev
+          sudo apt-get install mingw-w64 ninja-build libboost-dev
       - name: Install Windows dependencies
         if: matrix.os == 'windows-latest'
         run: |
