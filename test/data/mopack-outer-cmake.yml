@@ -1,0 +1,10 @@
+packages:
+  greeter:
+    source: directory
+    path: greeter-cmake
+    build: cmake
+    usage:
+      type: path
+      include_path: $srcdir/include
+      library_path: .
+
