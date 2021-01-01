@@ -30,13 +30,15 @@ class ConanPackage(BinaryPackage):
                 T.build(types.list_of(types.string, listify=True), extend=True)
                 self.build = uniques(self.build)
 
-    def __init__(self, name, remote, options=None, usage=None, **kwargs):
+    def __init__(self, name, remote, build=False, options=None, usage=None,
+                 **kwargs):
         usage = usage or {'type': 'pkg-config', 'path': ''}
         super().__init__(name, usage=usage, _path_bases=('builddir',),
                          **kwargs)
 
         T = types.TypeCheck(locals(), self._expr_symbols)
         T.remote(types.string)
+        T.build(types.boolean)
 
         value_type = types.one_of(types.string, types.boolean, desc='a value')
         T.options(types.maybe(types.dict_of(types.string, value_type), {}))
@@ -96,11 +98,14 @@ class ConanPackage(BinaryPackage):
             for i in options.generator:
                 print(i, file=conan)
 
+        build = [i.remote_name for i in packages if i.build]
+
         conan = get_cmd(packages[0]._common_options.env, 'CONAN', 'conan')
         with log.LogFile.open(pkgdir, 'conan') as logfile:
             logfile.check_call(
                 conan + ['install', '-if', cls._installdir(pkgdir)] +
-                cls._build_opts(options.build) + ['--', pkgdir]
+                cls._build_opts(uniques(options.build + build)) +
+                ['--', pkgdir]
             )
 
         for i in packages:

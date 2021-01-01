@@ -43,6 +43,7 @@ class TestConan(IntegrationTest):
                 'submodules': None,
                 'should_deploy': True,
                 'remote': 'zlib/1.2.11',
+                'build': False,
                 'options': {'shared': True},
                 'usage': {
                     'type': 'pkg-config',
