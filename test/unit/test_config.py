@@ -247,7 +247,7 @@ class TestConfig(TestCase):
         ])
 
     def test_source_options(self):
-        data = ('options:\n  sources:\n    conan:\n      generator: cmake\n' +
+        data = ('options:\n  sources:\n    conan:\n      extra_args: foo\n' +
                 '    goat:\n      sound: baah\n\n' +
                 'packages:\n  foo:\n    source: apt\n' +
                 '  bar:\n    source: conan\n    remote: bar/1.2.3\n')
@@ -258,7 +258,7 @@ class TestConfig(TestCase):
 
         opts = Options.default()
         opts.add('sources', 'conan')
-        opts.sources['conan'].generator.append('cmake')
+        opts.sources['conan'].extra_args.append('foo')
         self.assertEqual(cfg.options, opts)
 
         pkg1 = AptPackage('foo', _options=opts, config_file='mopack.yml')
@@ -269,22 +269,22 @@ class TestConfig(TestCase):
         ])
 
     def test_multiple_source_options(self):
-        data1 = ('options:\n  sources:\n    conan:\n      generator: cmake\n')
-        data2 = ('options:\n  sources:\n    conan:\n      generator: make\n' +
-                 '      final: true\n\n' +
+        data1 = ('options:\n  sources:\n    conan:\n      extra_args: B\n')
+        data2 = ('options:\n  sources:\n    conan:\n' +
+                 '      extra_args: C\n      final: true\n\n' +
                  'packages:\n  foo:\n    source: apt\n')
-        data3 = ('options:\n  sources:\n    conan:\n      generator: bad\n\n' +
+        data3 = ('options:\n  sources:\n    conan:\n      extra_args: D\n\n' +
                  'packages:\n  bar:\n    source: conan\n    remote: bar/1.2.3')
         files = {'mopack.yml': data1, 'mopack2.yml': data2,
                  'mopack3.yml': data3}
         with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack3.yml', 'mopack2.yml', 'mopack.yml'],
-                         {'sources': {'conan': {'generator': 'txt'}}})
+                         {'sources': {'conan': {'extra_args': 'A'}}})
         cfg.finalize()
 
         opts = Options.default()
         opts.add('sources', 'conan')
-        opts.sources['conan'].generator.extend(['txt', 'cmake', 'make'])
+        opts.sources['conan'].extra_args.extend(['A', 'B', 'C'])
         self.assertEqual(cfg.options, opts)
 
         pkg1 = AptPackage('foo', _options=opts, config_file='mopack.yml')
@@ -441,8 +441,8 @@ class TestChildConfig(TestCase):
         ])
 
     def test_source_options(self):
-        data1 = ('options:\n  sources:\n    conan:\n      generator: make\n')
-        data2 = ('options:\n  sources:\n    conan:\n      generator: cmake\n' +
+        data1 = ('options:\n  sources:\n    conan:\n      extra_args: foo\n')
+        data2 = ('options:\n  sources:\n    conan:\n      extra_args: bar\n' +
                  '    goat:\n      sound: baah\n\n' +
                  'packages:\n  foo:\n    source: apt\n' +
                  '  bar:\n    source: conan\n    remote: bar/1.2.3\n')
@@ -458,7 +458,7 @@ class TestChildConfig(TestCase):
 
         opts = Options.default()
         opts.add('sources', 'conan')
-        opts.sources['conan'].generator.extend(['make', 'cmake'])
+        opts.sources['conan'].extra_args.extend(['foo', 'bar'])
         self.assertEqual(parent.options, opts)
 
         pkg1 = AptPackage('foo', _options=opts, config_file='mopack.yml')

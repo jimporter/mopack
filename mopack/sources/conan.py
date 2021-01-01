@@ -4,31 +4,30 @@ import warnings
 from . import BinaryPackage, PackageOptions
 from .. import log, types
 from ..environment import get_cmd
+from ..freezedried import FreezeDried
 from ..iterutils import uniques
+from ..shell import ShellArguments
 
 
 class ConanPackage(BinaryPackage):
     source = 'conan'
 
+    @FreezeDried.fields(rehydrate={'extra_args': ShellArguments})
     class Options(PackageOptions):
         source = 'conan'
 
         def __init__(self):
-            # XXX: Don't always emit pkg_config files once we support other
-            # usage types.
-            self.generator = ['pkg_config']
             self.build = []
+            self.extra_args = ShellArguments()
 
-        def __call__(self, *, build=None, generator=None, config_file,
+        def __call__(self, *, build=None, extra_args=None, config_file,
                      _symbols, _child_config=False):
             T = types.TypeCheck(locals(), _symbols)
-            if generator:
-                T.generator(types.list_of(types.string, listify=True),
-                            extend=True)
-                self.generator = uniques(self.generator)
             if build:
                 T.build(types.list_of(types.string, listify=True), extend=True)
                 self.build = uniques(self.build)
+            if extra_args:
+                T.extra_args(types.shell_args(), extend=True)
 
     def __init__(self, name, remote, build=False, options=None, usage=None,
                  **kwargs):
@@ -61,18 +60,17 @@ class ConanPackage(BinaryPackage):
         return self.remote.split('/')[0]
 
     def clean_post(self, pkgdir, new_package, quiet=False):
-        if ( new_package and self.source == new_package.source and
-             self._this_options.generator ==
-             new_package._this_options.generator ):
+        if new_package and self.source == new_package.source:
             return False
 
         if not quiet:
             log.pkg_clean(self.name)
-        if 'pkg_config' in self._this_options.generator:
-            try:
-                os.remove(os.path.join(pkgdir, 'conan', self.name + '.pc'))
-            except FileNotFoundError:
-                pass
+
+        try:
+            # Remove generated pkg-config file.
+            os.remove(os.path.join(pkgdir, 'conan', self.name + '.pc'))
+        except FileNotFoundError:
+            pass
         return True
 
     @classmethod
@@ -95,8 +93,7 @@ class ConanPackage(BinaryPackage):
             print('', file=conan)
 
             print('[generators]', file=conan)
-            for i in options.generator:
-                print(i, file=conan)
+            print('pkg_config', file=conan)
 
         build = [i.remote_name for i in packages if i.build]
 
@@ -105,7 +102,7 @@ class ConanPackage(BinaryPackage):
             logfile.check_call(
                 conan + ['install', '-if', cls._installdir(pkgdir)] +
                 cls._build_opts(uniques(options.build + build)) +
-                ['--', pkgdir]
+                options.extra_args.fill() + ['--', pkgdir]
             )
 
         for i in packages:

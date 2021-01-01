@@ -3,7 +3,7 @@ from enum import Enum
 from shlex import shlex
 
 from .freezedried import auto_dehydrate
-from .iterutils import isiterable, listify
+from .iterutils import isiterable
 from .path import Path
 from .placeholder import PlaceholderString
 from .platforms import platform_name
@@ -79,13 +79,28 @@ def split_native_str(s, type=list):
     return split_posix_str(s, type)
 
 
-class ShellArguments:
-    def __init__(self, args=()):
-        self.args = listify(args, scalar_ok=False, type=tuple)
+class ShellArguments(MutableSequence):
+    def __init__(self, args=[]):
+        self._args = list(args)
+
+    def __getitem__(self, i):
+        return self._args[i]
+
+    def __setitem__(self, i, value):
+        self._args[i] = value
+
+    def __delitem__(self, i):
+        del self._args[i]
+
+    def __len__(self):
+        return len(self._args)
+
+    def insert(self, i, value):
+        return self._args.insert(i, value)
 
     def fill(self, **kwargs):
         result = []
-        for i in self.args:
+        for i in self._args:
             if isinstance(i, Path):
                 result.append(i.string(**kwargs))
             elif isiterable(i):
@@ -106,7 +121,7 @@ class ShellArguments:
                 return [auto_dehydrate(i) for i in value]
             return auto_dehydrate(value)
 
-        return [dehydrate_each(i) for i in self.args]
+        return [dehydrate_each(i) for i in self]
 
     @classmethod
     def rehydrate(self, value, **kwargs):
@@ -119,16 +134,13 @@ class ShellArguments:
 
         return ShellArguments(rehydrate_each(i) for i in value)
 
-    def __iter__(self):
-        return iter(self.args)
-
     def __eq__(self, rhs):
         if not isinstance(rhs, ShellArguments):
             return NotImplemented
-        return self.args == rhs.args
+        return self._args == rhs._args
 
     def __repr__(self):
-        return '<ShellArguments{!r}>'.format(self.args)
+        return '<ShellArguments{!r}>'.format(tuple(self._args))
 
 
 def _wrap_placeholder(split_fn):

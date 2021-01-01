@@ -96,9 +96,37 @@ class TestSplitPosix(TestCase):
 
 
 class TestShellArguments(TestCase):
+    def test_subscript(self):
+        s = ShellArguments(['foo', 'bar', 'baz'])
+        self.assertEqual(s[1], 'bar')
+
+        s[1] = 'goat'
+        self.assertEqual(list(s), ['foo', 'goat', 'baz'])
+
+        del s[1]
+        self.assertEqual(list(s), ['foo', 'baz'])
+
+    def test_len(self):
+        s = ShellArguments()
+        self.assertEqual(len(s), 0)
+
+        s = ShellArguments(['foo', 'bar', 'baz'])
+        self.assertEqual(len(s), 3)
+
     def test_iter(self):
         s = ShellArguments(['foo', 'bar', 'baz'])
         self.assertEqual(list(iter(s)), ['foo', 'bar', 'baz'])
+
+    def test_mutate(self):
+        s = ShellArguments()
+        s.append('foo')
+        self.assertEqual(list(s), ['foo'])
+
+        s.extend(['bar', 'baz'])
+        self.assertEqual(list(s), ['foo', 'bar', 'baz'])
+
+        s.insert(0, 'goat')
+        self.assertEqual(list(s), ['goat', 'foo', 'bar', 'baz'])
 
     def test_fill_empty(self):
         s = ShellArguments()

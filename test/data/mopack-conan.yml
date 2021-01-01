@@ -2,7 +2,6 @@ options:
   sources:
     conan:
       build: missing
-      generator: cmake
 packages:
   zlib:
     source: conan

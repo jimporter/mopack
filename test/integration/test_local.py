@@ -40,7 +40,7 @@ class TestLocal(IntegrationTest):
                 'sources': [{
                     'source': 'conan',
                     'build': ['missing'],
-                    'generator': ['pkg_config'],
+                    'extra_args': [],
                 }],
             },
             'packages': [{
