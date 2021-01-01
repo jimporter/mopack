@@ -1,4 +1,5 @@
 from os.path import normpath
+from textwrap import dedent
 from unittest import mock, TestCase
 
 from mopack.config import *
@@ -8,9 +9,25 @@ from mopack.sources.apt import AptPackage
 from mopack.sources.conan import ConanPackage
 from mopack.sources.sdist import DirectoryPackage
 
-foobar_cfg = 'packages:\n  foo:\n    source: apt\n\n  bar:\n    source: apt\n'
-foo_cfg = 'packages:\n  foo:\n    source: apt\n    remote: libfoo1-dev\n'
-bar_cfg = 'packages:\n  bar:\n    source: apt\n    remote: libbar1-dev\n'
+foobar_cfg = dedent("""
+  packages:
+    foo: {source: apt}
+    bar: {source: apt}
+""")
+
+foo_cfg = dedent("""
+  packages:
+    foo:
+      source: apt
+      remote: libfoo1-dev
+""")
+
+bar_cfg = dedent("""
+  packages:
+    bar:
+      source: apt
+      remote: libbar1-dev
+""")
 
 
 def mock_open_files(files):
@@ -106,7 +123,11 @@ class TestConfig(TestCase):
         self.assertEqual(list(cfg.packages.items()), [])
 
     def test_packages(self):
-        data = 'packages:\n  foo:\n    source: apt\n'
+        data = dedent("""
+          packages:
+            foo:
+              source: apt
+        """)
         files = {'mopack.yml': data}
         with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack.yml'])
@@ -119,8 +140,14 @@ class TestConfig(TestCase):
         self.assertEqual(list(cfg.packages.items()), [('foo', pkg)])
 
     def test_conditional_packages(self):
-        data = ('packages:\n  foo:\n    - if: false\n      source: apt\n' +
-                '    - source: conan\n      remote: foo/1.2.3\n')
+        data = dedent("""
+          packages:
+            foo:
+              - if: false
+                source: apt
+              - source: conan
+                remote: foo/1.2.3
+        """)
         files = {'mopack.yml': data}
         with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack.yml'])
@@ -135,8 +162,13 @@ class TestConfig(TestCase):
         self.assertEqual(list(cfg.packages.items()), [('foo', pkg)])
 
     def test_invalid_conditional_packages(self):
-        data = ('packages:\n  foo:\n    - source: apt\n' +
-                '    - source: conan\n      remote: foo/1.2.3\n')
+        data = dedent("""
+          packages:
+            foo:
+              - source: apt
+              - source: conan
+                remote: foo/1.2.3
+        """)
         files = {'mopack.yml': data}
         with self.assertRaises(YamlParseError), \
              mock.patch('builtins.open', mock_open_files(files)):  # noqa
@@ -154,9 +186,15 @@ class TestConfig(TestCase):
         self.assertEqual(list(cfg.packages.items()), [])
 
     def test_common_options(self):
-        data = ('options:\n  target_platform: linux\n' +
-                '  env:\n    FOO: foo\n\n' +
-                'packages:\n  foo:\n    source: apt\n')
+        data = dedent("""
+          options:
+            target_platform: linux
+            env:
+              FOO: foo
+          packages:
+            foo:
+              source: apt
+        """)
         files = {'mopack.yml': data}
         with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack.yml'])
@@ -172,12 +210,25 @@ class TestConfig(TestCase):
         self.assertEqual(list(cfg.packages.items()), [('foo', pkg)])
 
     def test_multiple_common_options(self):
-        data1 = ('options:\n  target_platform: linux\n' +
-                 '  env:\n    FOO: foo\n\n' +
-                 'packages:\n  foo:\n    source: apt\n')
-        data2 = ('options:\n  target_platform: windows\n' +
-                 '  env:\n    FOO: bad\n\n' +
-                 'packages:\n  bar:\n    source: apt\n')
+        data1 = dedent("""
+          options:
+            target_platform: linux
+            env:
+              FOO: foo
+          packages:
+            foo:
+              source: apt
+        """)
+        data2 = dedent("""
+          options:
+            target_platform: windows
+            env:
+              FOO: bad
+          packages:
+            bar:
+              source: apt
+        """)
+
         files = {'mopack.yml': data1, 'mopack2.yml': data2}
         with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack2.yml', 'mopack.yml'])
@@ -196,12 +247,21 @@ class TestConfig(TestCase):
         ])
 
     def test_builder_options(self):
-        data = ('options:\n  builders:\n' +
-                '    bfg9000:\n      toolchain: toolchain.bfg\n' +
-                '    goat:\n      sound: baah\n\n' +
-                'packages:\n  foo:\n    source: apt\n' +
-                '  bar:\n    source: directory\n    path: /path/to/src\n' +
-                '    build: bfg9000\n')
+        data = dedent("""
+          options:
+            builders:
+              bfg9000:
+                toolchain: toolchain.bfg
+              goat:
+                sound: baah
+          packages:
+            foo:
+              source: apt
+            bar:
+              source: directory
+              path: /path/to/src
+              build: bfg9000
+        """)
         files = {'mopack.yml': data}
         with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack.yml'])
@@ -221,13 +281,27 @@ class TestConfig(TestCase):
         ])
 
     def test_multiple_builder_options(self):
-        data1 = ('options:\n  builders:\n' +
-                 '    bfg9000:\n      toolchain: toolchain.bfg\n\n' +
-                 'packages:\n  foo:\n    source: apt\n')
-        data2 = ('options:\n  builders:\n' +
-                 '    bfg9000:\n      toolchain: bad.bfg\n\n' +
-                 'packages:\n  bar:\n    source: directory\n' +
-                 '    path: /path/to/src\n    build: bfg9000\n')
+        data1 = dedent("""
+          options:
+            builders:
+              bfg9000:
+                toolchain: toolchain.bfg
+          packages:
+            foo:
+              source: apt
+        """)
+        data2 = dedent("""
+          options:
+            builders:
+              bfg9000:
+                toolchain: bad.bfg
+          packages:
+            bar:
+              source: directory
+              path: /path/to/src
+              build: bfg9000
+        """)
+
         files = {'mopack.yml': data1, 'mopack2.yml': data2}
         with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack2.yml', 'mopack.yml'])
@@ -247,10 +321,20 @@ class TestConfig(TestCase):
         ])
 
     def test_source_options(self):
-        data = ('options:\n  sources:\n    conan:\n      extra_args: foo\n' +
-                '    goat:\n      sound: baah\n\n' +
-                'packages:\n  foo:\n    source: apt\n' +
-                '  bar:\n    source: conan\n    remote: bar/1.2.3\n')
+        data = dedent("""
+          options:
+            sources:
+              conan:
+                extra_args: foo
+              goat:
+                sound: baah
+          packages:
+            foo:
+              source: apt
+            bar:
+              source: conan
+              remote: bar/1.2.3
+        """)
         files = {'mopack.yml': data}
         with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack.yml'])
@@ -269,22 +353,43 @@ class TestConfig(TestCase):
         ])
 
     def test_multiple_source_options(self):
-        data1 = ('options:\n  sources:\n    conan:\n      extra_args: B\n')
-        data2 = ('options:\n  sources:\n    conan:\n' +
-                 '      extra_args: C\n      final: true\n\n' +
-                 'packages:\n  foo:\n    source: apt\n')
-        data3 = ('options:\n  sources:\n    conan:\n      extra_args: D\n\n' +
-                 'packages:\n  bar:\n    source: conan\n    remote: bar/1.2.3')
+        data1 = dedent("""
+          options:
+            sources:
+              conan:
+                extra_args: -B
+        """)
+        data2 = dedent("""
+          options:
+            sources:
+              conan:
+                extra_args: -C
+                final: true
+          packages:
+            foo:
+              source: apt
+        """)
+        data3 = dedent("""
+          options:
+            sources:
+              conan:
+                extra_args: -D
+          packages:
+            bar:
+              source: conan
+              remote: bar/1.2.3
+        """)
+
         files = {'mopack.yml': data1, 'mopack2.yml': data2,
                  'mopack3.yml': data3}
         with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack3.yml', 'mopack2.yml', 'mopack.yml'],
-                         {'sources': {'conan': {'extra_args': 'A'}}})
+                         {'sources': {'conan': {'extra_args': '-A'}}})
         cfg.finalize()
 
         opts = Options.default()
         opts.add('sources', 'conan')
-        opts.sources['conan'].extra_args.extend(['A', 'B', 'C'])
+        opts.sources['conan'].extra_args.extend(['-A', '-B', '-C'])
         self.assertEqual(cfg.options, opts)
 
         pkg1 = AptPackage('foo', _options=opts, config_file='mopack.yml')
@@ -314,7 +419,11 @@ class TestChildConfig(TestCase):
         self.assertEqual(list(parent.packages.items()), [])
 
     def test_export_config(self):
-        cfg = 'export:\n  build: bfg9000\n  usage: pkg-config\n' + bar_cfg
+        cfg = dedent("""
+        export:
+          build: bfg9000
+          usage: pkg-config
+        """) + bar_cfg
         files = {'mopack.yml': '', 'mopack-child.yml': cfg}
         with mock.patch('builtins.open', mock_open_files(files)):
             parent = Config(['mopack.yml'])
@@ -412,12 +521,21 @@ class TestChildConfig(TestCase):
             parent.add_children([child1, child2])
 
     def test_builder_options(self):
-        data = ('options:\n  builders:\n' +
-                '    bfg9000:\n      toolchain: toolchain.bfg\n' +
-                '    goat:\n      sound: baah\n\n' +
-                'packages:\n  foo:\n    source: apt\n' +
-                '  bar:\n    source: directory\n    path: /path/to/src\n' +
-                '    build: bfg9000\n')
+        data = dedent("""
+          options:
+            builders:
+              bfg9000:
+                toolchain: toolchain.bfg
+              goat:
+                sound: baah
+          packages:
+            foo:
+              source: apt
+            bar:
+              source: directory
+              path: /path/to/src
+              build: bfg9000
+        """)
         files = {'mopack.yml': '', 'mopack-child.yml': data}
 
         with mock.patch('builtins.open', mock_open_files(files)):
@@ -441,11 +559,27 @@ class TestChildConfig(TestCase):
         ])
 
     def test_source_options(self):
-        data1 = ('options:\n  sources:\n    conan:\n      extra_args: foo\n')
-        data2 = ('options:\n  sources:\n    conan:\n      extra_args: bar\n' +
-                 '    goat:\n      sound: baah\n\n' +
-                 'packages:\n  foo:\n    source: apt\n' +
-                 '  bar:\n    source: conan\n    remote: bar/1.2.3\n')
+        data1 = dedent("""
+          options:
+            sources:
+              conan:
+                extra_args: foo
+        """)
+        data2 = dedent("""
+          options:
+            sources:
+              conan:
+                extra_args: bar
+              goat:
+                sound: baah
+          packages:
+            foo:
+              source: apt
+            bar:
+              source: conan
+              remote: bar/1.2.3
+        """)
+
         files = {'mopack.yml': data1, 'mopack-child.yml': data2}
 
         with mock.patch('builtins.open', mock_open_files(files)):
