@@ -36,10 +36,10 @@ class TestInnerCMake(IntegrationTest):
                     'env': AlwaysEqual(),
                     'deploy_paths': {'prefix': self.prefix},
                 },
-                'builders': [{
-                    'type': 'bfg9000',
-                    'toolchain': None,
-                }],
+                'builders': [
+                    {'type': 'cmake', 'toolchain': None},
+                    {'type': 'bfg9000', 'toolchain': None},
+                ],
                 'sources': [],
             },
             'packages': [{
@@ -127,10 +127,10 @@ class TestOuterCMake(IntegrationTest):
                     'env': AlwaysEqual(),
                     'deploy_paths': {'prefix': self.prefix},
                 },
-                'builders': [{
-                    'type': 'bfg9000',
-                    'toolchain': None,
-                }],
+                'builders': [
+                    {'type': 'bfg9000', 'toolchain': None},
+                    {'type': 'cmake', 'toolchain': None},
+                ],
                 'sources': [],
             },
             'packages': [{

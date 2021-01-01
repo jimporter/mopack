@@ -1,6 +1,6 @@
 import os.path
 
-from . import Builder
+from . import Builder, BuilderOptions
 from .. import types
 from ..environment import get_cmd
 from ..freezedried import FreezeDried
@@ -17,11 +17,27 @@ class CMakeBuilder(Builder):
     type = 'cmake'
     _path_bases = ('srcdir', 'builddir')
 
+    class Options(BuilderOptions):
+        type = 'cmake'
+
+        def __init__(self):
+            self.toolchain = types.Unset
+
+        def __call__(self, *, toolchain=types.Unset, config_file,
+                     _symbols, _child_config=False):
+            if not _child_config and self.toolchain is types.Unset:
+                T = types.TypeCheck(locals(), _symbols)
+                config_dir = os.path.dirname(config_file)
+                T.toolchain(types.maybe_raw(types.path_string(config_dir)))
+
     def __init__(self, name, *, extra_args=None, submodules, **kwargs):
         super().__init__(name, **kwargs)
 
         T = types.TypeCheck(locals(), self._expr_symbols)
         T.extra_args(types.shell_args(none_ok=True))
+
+    def _toolchain_args(self, toolchain):
+        return ['-DCMAKE_TOOLCHAIN_FILE=' + toolchain] if toolchain else []
 
     def _install_args(self, deploy_paths):
         args = []
@@ -40,6 +56,7 @@ class CMakeBuilder(Builder):
             with pushd(builddir, makedirs=True, exist_ok=True):
                 logfile.check_call(
                     cmake + [srcdir, '-G', 'Ninja'] +
+                    self._toolchain_args(self._this_options.toolchain) +
                     self._install_args(self._common_options.deploy_paths) +
                     self.extra_args.fill(srcdir=srcdir, builddir=builddir)
                 )

@@ -2,14 +2,15 @@ import os
 import subprocess
 from unittest import mock
 
-from . import through_json, BuilderTest
+from . import BuilderTest, OptionsTest, through_json
 from .. import mock_open_log
 
-from mopack.builders import Builder
+from mopack.builders import Builder, BuilderOptions
 from mopack.builders.cmake import CMakeBuilder
 from mopack.iterutils import iterate
 from mopack.shell import ShellArguments
 from mopack.usage.pkg_config import PkgConfigUsage
+from mopack.types import Unset
 
 
 class TestCMakeBuilder(BuilderTest):
@@ -134,6 +135,23 @@ class TestCMakeBuilder(BuilderTest):
             'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
         })
 
+    def test_toolchain(self):
+        builder = self.make_builder(
+            'foo', usage={'type': 'pkg-config'},
+            this_options={'toolchain': 'toolchain.cmake'}
+        )
+        self.assertEqual(builder.name, 'foo')
+        self.assertEqual(builder.extra_args, ShellArguments())
+        self.assertEqual(builder.usage, PkgConfigUsage(
+            'foo', submodules=None, _options=self.make_options(),
+            _path_bases=self.path_bases
+        ))
+
+        self.check_build(builder, extra_args=[
+            '-DCMAKE_TOOLCHAIN_FILE=' +
+            os.path.join(self.config_dir, 'toolchain.cmake')
+        ])
+
     def test_deploy_paths(self):
         deploy_paths = {'prefix': '/usr/local', 'goofy': '/foo/bar'}
         builder = self.make_builder('foo', usage='pkg-config',
@@ -165,3 +183,60 @@ class TestCMakeBuilder(BuilderTest):
                           submodules=None)
         data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(data, _options=opts))
+
+
+class TestCMakeOptions(OptionsTest):
+    symbols = {'variable': 'foo'}
+
+    def test_default(self):
+        opts = CMakeBuilder.Options()
+        self.assertIs(opts.toolchain, Unset)
+
+    def test_toolchain(self):
+        opts = CMakeBuilder.Options()
+        opts(toolchain='toolchain.cmake', config_file=self.config_file,
+             _symbols=self.symbols)
+        self.assertEqual(opts.toolchain,
+                         os.path.join(self.config_dir, 'toolchain.cmake'))
+        opts(toolchain='bad.cmake', config_file=self.config_file,
+             _symbols=self.symbols)
+        self.assertEqual(opts.toolchain,
+                         os.path.join(self.config_dir, 'toolchain.cmake'))
+
+        opts = CMakeBuilder.Options()
+        opts(toolchain='$variable/toolchain.cmake',
+             config_file=self.config_file,
+             _symbols=self.symbols)
+        self.assertEqual(opts.toolchain, os.path.join(
+            self.config_dir, 'foo', 'toolchain.cmake'
+        ))
+
+        opts = CMakeBuilder.Options()
+        opts(toolchain=None, config_file=self.config_file,
+             _symbols=self.symbols)
+        self.assertEqual(opts.toolchain, None)
+
+        opts = CMakeBuilder.Options()
+        opts(toolchain='toolchain.cmake', config_file=self.config_file,
+             _child_config=True, _symbols=self.symbols)
+        self.assertIs(opts.toolchain, Unset)
+
+    def test_rehydrate(self):
+        opts_toolchain = CMakeBuilder.Options()
+        opts_toolchain(toolchain='toolchain.cmake',
+                       config_file=self.config_file,
+                       _symbols=self.symbols)
+        data = through_json(opts_toolchain.dehydrate())
+        self.assertEqual(opts_toolchain, BuilderOptions.rehydrate(data))
+
+        opts_none = CMakeBuilder.Options()
+        opts_none(toolchain=None, config_file=self.config_file,
+                  _symbols=self.symbols)
+        data = through_json(opts_none.dehydrate())
+        self.assertEqual(opts_none, BuilderOptions.rehydrate(data))
+
+        opts_default = CMakeBuilder.Options()
+        data = through_json(opts_default.dehydrate())
+        rehydrated = BuilderOptions.rehydrate(data)
+        self.assertEqual(opts_default, rehydrated)
+        self.assertEqual(opts_none, rehydrated)
