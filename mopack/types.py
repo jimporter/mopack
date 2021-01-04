@@ -122,7 +122,7 @@ def try_load_config(config, context, kind):
                      else x.marks)
             mark = marks[e.field[-1]]
 
-        raise MarkedYAMLError(context, config.mark, msg, mark)
+        raise MarkedYAMLError(context, config.mark.start, msg, mark.start)
 
 
 class TypeCheck:

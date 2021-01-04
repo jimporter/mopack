@@ -16,7 +16,8 @@ class DefaultConfig:
             for genus, genus_cfg in cfg.items():
                 if genus not in self._known_genera:
                     msg = 'unknown genus {!r}'.format(genus)
-                    raise MarkedYAMLError(None, None, msg, cfg.marks[genus])
+                    raise MarkedYAMLError(None, None, msg,
+                                          cfg.marks[genus].start)
                 self._process_genus(genus_cfg)
         self._data = cfg
 
@@ -28,7 +29,8 @@ class DefaultConfig:
                         ctx = 'while parsing default for {!r}'.format(species)
                         msg = ('default config has no `if` field, but is ' +
                                'not last entry of list')
-                        raise MarkedYAMLError(ctx, cfgs.mark, msg, cfg.mark)
+                        raise MarkedYAMLError(ctx, cfgs.mark.start, msg,
+                                              cfg.mark.start)
                     cfgs[i] = self._parse_default_fields(cfg)
             else:
                 data[species] = self._parse_default_fields(cfgs)

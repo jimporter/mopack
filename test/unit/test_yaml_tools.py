@@ -48,8 +48,8 @@ class TestLoadFile(TestCase):
         with mock.patch('builtins.open', mopen), \
              self.assertRaises(YamlParseError):  # noqa
             with load_file('file.yml', Loader=SafeLineLoader) as data:
-                raise MarkedYAMLError('context', data.mark, 'problem',
-                                      data.marks['zoo'])
+                raise MarkedYAMLError('context', data.mark.start, 'problem',
+                                      data.marks['zoo'].start)
 
 
 class TestMarkedList(TestCase):
@@ -199,6 +199,18 @@ class TestMarkedDict(TestCase):
 
 
 class TestSafeLineLoader(TestCase):
+    def assertMark(self, mark_range, start, end):
+        self.assertEqual([(i.line, i.column) for i in mark_range],
+                         [start, end])
+
+    def assertMarkDicts(self, marks, expected):
+        self.assertEqual({k: [(m.line, m.column) for m in v]
+                          for k, v in marks.items()}, expected)
+
+    def assertMarkLists(self, marks, expected):
+        self.assertEqual([[(m.line, m.column) for m in i] for i in marks],
+                         expected)
+
     def test_mapping(self):
         data = yaml.load(dedent("""
         house:
@@ -212,32 +224,29 @@ class TestSafeLineLoader(TestCase):
         self.assertEqual(data, {'house': {'cat': 1, 'dog': 2},
                                 'zoo': {'panda': 3, 'giraffe': 4}})
 
-        self.assertEqual(data.mark.line, 0)
-        self.assertEqual(data.mark.column, 0)
-        self.assertEqual({k: (v.line, v.column)
-                          for k, v in data.marks.items()},
-                         {'house': (0, 0), 'zoo': (3, 0)})
-        self.assertEqual({k: (v.line, v.column)
-                          for k, v in data.value_marks.items()},
-                         {'house': (1, 2), 'zoo': (4, 2)})
+        self.assertMark(data.mark, (0, 0), (5, 12))
+        self.assertMarkDicts(data.marks,
+                             {'house': [(0, 0), (0, 5)],
+                              'zoo':   [(3, 0), (3, 3)]})
+        self.assertMarkDicts(data.value_marks,
+                             {'house': [(1, 2), (3,  0)],
+                              'zoo':   [(4, 2), (5, 12)]})
 
-        self.assertEqual(data['house'].mark.line, 1)
-        self.assertEqual(data['house'].mark.column, 2)
-        self.assertEqual({k: (v.line, v.column)
-                          for k, v in data['house'].marks.items()},
-                         {'cat': (1, 2), 'dog': (2, 2)})
-        self.assertEqual({k: (v.line, v.column)
-                          for k, v in data['house'].value_marks.items()},
-                         {'cat': (1, 7), 'dog': (2, 7)})
+        self.assertMark(data['house'].mark, (1, 2), (3, 0))
+        self.assertMarkDicts(data['house'].marks,
+                             {'cat': [(1, 2), (1, 5)],
+                              'dog': [(2, 2), (2, 5)]})
+        self.assertMarkDicts(data['house'].value_marks,
+                             {'cat': [(1, 7), (1, 8)],
+                              'dog': [(2, 7), (2, 8)]})
 
-        self.assertEqual(data['zoo'].mark.line, 4)
-        self.assertEqual(data['zoo'].mark.column, 2)
-        self.assertEqual({k: (v.line, v.column)
-                          for k, v in data['zoo'].marks.items()},
-                         {'panda': (4, 2), 'giraffe': (5, 2)})
-        self.assertEqual({k: (v.line, v.column)
-                          for k, v in data['zoo'].value_marks.items()},
-                         {'panda': (4, 9), 'giraffe': (5, 11)})
+        self.assertMark(data['zoo'].mark, (4, 2), (5, 12))
+        self.assertMarkDicts(data['zoo'].marks,
+                             {'panda':   [(4, 2), (4, 7)],
+                              'giraffe': [(5, 2), (5, 9)]})
+        self.assertMarkDicts(data['zoo'].value_marks,
+                             {'panda':   [(4,  9), (4, 10)],
+                              'giraffe': [(5, 11), (5, 12)]})
 
     def test_sequence(self):
         data = yaml.load(dedent("""
@@ -249,17 +258,17 @@ class TestSafeLineLoader(TestCase):
 
         self.assertEqual(data, [['A1', 'A2'], ['B1', 'B2']])
 
-        self.assertEqual(data.mark.line, 0)
-        self.assertEqual(data.mark.column, 0)
-        self.assertEqual([(i.line, i.column) for i in data.marks],
-                         [(0, 2), (2, 2)])
+        self.assertMark(data.mark, (0, 0), (3, 6))
+        self.assertMarkLists(data.marks,
+                             [[(0, 2), (2, 0)],
+                              [(2, 2), (3, 6)]])
 
-        self.assertEqual(data[0].mark.line, 0)
-        self.assertEqual(data[0].mark.column, 2)
-        self.assertEqual([(i.line, i.column) for i in data[0].marks],
-                         [(0, 4), (1, 4)])
+        self.assertMark(data[0].mark, (0, 2), (2, 0))
+        self.assertMarkLists(data[0].marks,
+                             [[(0, 4), (0, 6)],
+                              [(1, 4), (1, 6)]])
 
-        self.assertEqual(data[1].mark.line, 2)
-        self.assertEqual(data[1].mark.column, 2)
-        self.assertEqual([(i.line, i.column) for i in data[1].marks],
-                         [(2, 4), (3, 4)])
+        self.assertMark(data[1].mark, (2, 2), (3, 6))
+        self.assertMarkLists(data[1].marks,
+                             [[(2, 4), (2, 6)],
+                              [(3, 4), (3, 6)]])

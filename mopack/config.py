@@ -81,7 +81,8 @@ class BaseConfig:
                         ctx = 'while constructing package {!r}'.format(name)
                         msg = ('package config has no `if` field, but is ' +
                                'not last entry of list')
-                        raise MarkedYAMLError(ctx, cfgs.mark, msg, cfg.mark)
+                        raise MarkedYAMLError(ctx, cfgs.mark.start, msg,
+                                              cfg.mark.start)
                     cfg['config_file'] = filename
                     self._pending_packages[name].append(cfg)
             else:
@@ -124,7 +125,7 @@ class BaseConfig:
                 return expression
             return expr.evaluate(symbols, expression, if_context=True)
         except expr.ParseBaseException as e:
-            raise expr.to_yaml_error(e, data.mark, mark)
+            raise expr.to_yaml_error(e, data.mark.start, mark.start)
 
     def _in_parent(self, name):
         # We don't have a parent, so this is always false!

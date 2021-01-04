@@ -1,5 +1,6 @@
 import collections.abc
 import yaml
+from collections import namedtuple
 from contextlib import contextmanager
 from yaml.error import MarkedYAMLError
 from yaml.loader import SafeLoader
@@ -56,6 +57,11 @@ def dump(data):
         return yaml.dump(data, sort_keys=False)
     except TypeError:  # pragma: no cover
         return yaml.dump(data)
+
+
+class MarkRange(namedtuple('MarkRange', ['start', 'end'])):
+    def __new__(self, node):
+        return super().__new__(self, node.start_mark, node.end_mark)
 
 
 class MarkedCollection:
@@ -151,10 +157,10 @@ class SafeLineLoader(SafeLoader):
                 None, None, 'expected a sequence node, but found %s' % node.id,
                 node.start_mark
             )
-        sequence = MarkedList(node.start_mark)
+        sequence = MarkedList(MarkRange(node))
         for child_node in node.value:
             sequence.append(self.construct_object(child_node, deep=deep),
-                            child_node.start_mark)
+                            MarkRange(child_node))
         return sequence
 
     def construct_mapping(self, node, deep=False):
@@ -164,7 +170,7 @@ class SafeLineLoader(SafeLoader):
                 node.start_mark
             )
         self.flatten_mapping(node)
-        mapping = MarkedDict(node.start_mark)
+        mapping = MarkedDict(MarkRange(node))
         for key_node, value_node in node.value:
             key = self.construct_object(key_node, deep=deep)
             if not isinstance(
@@ -175,7 +181,7 @@ class SafeLineLoader(SafeLoader):
                     'found unhashable key', key_node.start_mark
                 )
             value = self.construct_object(value_node, deep=deep)
-            mapping.add(key, value, key_node.start_mark, value_node.start_mark)
+            mapping.add(key, value, MarkRange(key_node), MarkRange(value_node))
         return mapping
 
 
