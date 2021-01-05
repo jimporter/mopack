@@ -2,6 +2,8 @@ from os.path import normpath
 from textwrap import dedent
 from unittest import mock, TestCase
 
+from . import mock_open_files
+
 from mopack.config import *
 from mopack.options import Options
 from mopack.yaml_tools import YamlParseError
@@ -28,15 +30,6 @@ bar_cfg = dedent("""
       source: apt
       remote: libbar1-dev
 """)
-
-
-def mock_open_files(files):
-    def wrapper(filename, *args, **kwargs):
-        return mock.mock_open(read_data=files[os.path.basename(filename)])(
-            filename, *args, **kwargs
-        )
-
-    return wrapper
 
 
 class TestConfig(TestCase):

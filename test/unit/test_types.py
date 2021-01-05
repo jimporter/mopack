@@ -4,6 +4,8 @@ import posixpath
 from contextlib import contextmanager
 from unittest import mock, TestCase
 
+from . import mock_open_data
+
 from mopack.placeholder import placeholder
 from mopack.path import Path
 from mopack.shell import ShellArguments
@@ -683,13 +685,13 @@ class TestWrapFieldError(TypeTestCase):
 
 class TestTryLoadConfig(TestCase):
     def load_data(self, data, Loader=SafeLineLoader):
-        with mock.patch('builtins.open', mock.mock_open(read_data=data)):
+        with mock.patch('builtins.open', mock_open_data(data)):
             with load_file('file.yml', Loader=Loader) as f:
                 return f
 
     def test_single_field(self):
         cfg = self.load_data('foo: Foo\nbar: Bar\n')
-        with self.assertRaisesRegex(MarkedYAMLError,
+        with self.assertRaisesRegex(MarkedYAMLOffsetError,
                                     '^context\n' +
                                     '  in ".*", line 1, column 1\n' +
                                     'expected a boolean\n' +
@@ -699,7 +701,7 @@ class TestTryLoadConfig(TestCase):
 
     def test_multiple_fields(self):
         cfg = self.load_data('foo:\n  bar: Bar\n')
-        with self.assertRaisesRegex(MarkedYAMLError,
+        with self.assertRaisesRegex(MarkedYAMLOffsetError,
                                     '^context\n' +
                                     '  in ".*", line 1, column 1\n' +
                                     'expected a boolean\n' +

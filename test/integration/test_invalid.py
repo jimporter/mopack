@@ -44,6 +44,20 @@ class TestInvalidParent(IntegrationTest):
                          r'              \^\n$')
 
 
+class TestInvalidConditional(IntegrationTest):
+    name = 'invalid-conditional'
+
+    def test_resolve(self):
+        config = os.path.join(test_data_dir, 'mopack-invalid-conditional.yml')
+        output = self.assertPopen(['mopack', 'resolve', config], returncode=1)
+        self.assertRegex(output,
+                         r"error: undefined symbol 'unknown'\n" +
+                         r'  in ".+mopack-invalid-conditional.yml", ' +
+                         r'line 3, column 11\n' +
+                         r'      - if: unknown\n' +
+                         r'            \^\n$')
+
+
 class TestInvalidListFiles(IntegrationTest):
     name = 'invalid-list-files'
 

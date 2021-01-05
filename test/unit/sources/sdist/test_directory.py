@@ -1,9 +1,11 @@
 import os
 import subprocess
 import yaml
+from io import StringIO
 from unittest import mock
 
 from . import *
+from ... import mock_open_data
 from .... import *
 
 from mopack.builders.bfg9000 import Bfg9000Builder
@@ -55,7 +57,7 @@ class TestDirectory(SDistTestCase):
         self.check_resolve(pkg)
 
     def test_infer_build(self):
-        mock_open = mock.mock_open(read_data='export:\n  build: bfg9000')
+        mock_open = mock_open_data('export:\n  build: bfg9000')
 
         pkg = self.make_package('foo', path=self.srcpath)
         self.assertEqual(pkg.builder, None)
@@ -90,7 +92,7 @@ class TestDirectory(SDistTestCase):
 
     def test_infer_submodules(self):
         data = 'export:\n  submodules: [french, english]\n  build: bfg9000'
-        mock_open = mock.mock_open(read_data=data)
+        mock_open = mock_open_data(data)
 
         srcpath = os.path.join(test_data_dir, 'hello-multi-bfg')
         pkg = self.make_package('foo', path=srcpath)
@@ -133,7 +135,7 @@ class TestDirectory(SDistTestCase):
         child = ''
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
-             mock.patch('builtins.open', mock.mock_open(read_data=child)), \
+             mock.patch('builtins.open', mock_open_data(child)), \
              self.assertRaises(ConfigurationError):  # noqa
             pkg.fetch(self.pkgdir, self.config)
 
@@ -141,7 +143,7 @@ class TestDirectory(SDistTestCase):
         loc = 'line 2, column 10'
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
-             mock.patch('builtins.open', mock.mock_open(read_data=child)), \
+             mock.patch('builtins.open', lambda *args, **kwargs: StringIO(child)), \
              self.assertRaisesRegex(YamlParseError, loc):  # noqa
             pkg.fetch(self.pkgdir, self.config)
 
@@ -149,7 +151,7 @@ class TestDirectory(SDistTestCase):
         loc = 'line 4, column 5'
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
-             mock.patch('builtins.open', mock.mock_open(read_data=child)), \
+             mock.patch('builtins.open', mock_open_data(child)), \
              self.assertRaisesRegex(YamlParseError, loc):  # noqa
             pkg.fetch(self.pkgdir, self.config)
 
@@ -157,7 +159,7 @@ class TestDirectory(SDistTestCase):
         loc = 'line 3, column 10'
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
-             mock.patch('builtins.open', mock.mock_open(read_data=child)), \
+             mock.patch('builtins.open', mock_open_data(child)), \
              self.assertRaises(YamlParseError):  # noqa
             pkg.fetch(self.pkgdir, self.config)
 
@@ -166,7 +168,7 @@ class TestDirectory(SDistTestCase):
         loc = 'line 5, column 5'
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
-             mock.patch('builtins.open', mock.mock_open(read_data=child)), \
+             mock.patch('builtins.open', mock_open_data(child)), \
              self.assertRaisesRegex(YamlParseError, loc):  # noqa
             pkg.fetch(self.pkgdir, self.config)
 
@@ -177,7 +179,7 @@ class TestDirectory(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, usage=usage)
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
-             mock.patch('builtins.open', mock.mock_open(read_data=child)), \
+             mock.patch('builtins.open', mock_open_data(child)), \
              self.assertRaises(FieldError):  # noqa
             pkg.fetch(self.pkgdir, self.config)
 
@@ -187,7 +189,7 @@ class TestDirectory(SDistTestCase):
         loc = 'line 2, column 1'
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
-             mock.patch('builtins.open', mock.mock_open(read_data=child)), \
+             mock.patch('builtins.open', mock_open_data(child)), \
              self.assertRaisesRegex(YamlParseError, loc):  # noqa
             pkg.fetch(self.pkgdir, self.config)
 

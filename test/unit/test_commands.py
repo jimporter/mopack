@@ -2,26 +2,19 @@ import os
 from unittest import mock, TestCase
 from textwrap import dedent
 
+from . import mock_open_data
+
 from mopack import commands
 from mopack.config import Config
 from mopack.sources.apt import AptPackage
 from mopack.sources.sdist import DirectoryPackage
 
 
-def mock_open_files(files):
-    def wrapper(filename, *args, **kwargs):
-        return mock.mock_open(read_data=files[os.path.basename(filename)])(
-            filename, *args, **kwargs
-        )
-
-    return wrapper
-
-
 class CommandsTestCase(TestCase):
     pkgdir = os.path.abspath('/path/to/builddir/mopack')
 
     def make_empty_config(self, files=[]):
-        with mock.patch('builtins.open', mock.mock_open(read_data='')):
+        with mock.patch('builtins.open', mock_open_data('')):
             return Config(files)
 
     def make_apt_config(self):
@@ -31,7 +24,7 @@ class CommandsTestCase(TestCase):
               source: apt
               remote: libfoo1-dev
         """)
-        with mock.patch('builtins.open', mock.mock_open(read_data=cfg_data)):
+        with mock.patch('builtins.open', mock_open_data(cfg_data)):
             return Config(['mopack.yml'])
 
 

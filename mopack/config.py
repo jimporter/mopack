@@ -6,7 +6,8 @@ from . import expression as expr
 from .iterutils import isiterable
 from .options import Options
 from .sources import try_make_package
-from .yaml_tools import load_file, to_parse_error, MarkedDict, SafeLineLoader
+from .yaml_tools import (load_file, to_parse_error, MarkedDict,
+                         MarkedYAMLOffsetError, SafeLineLoader)
 
 mopack_file = 'mopack.yml'
 mopack_local_file = 'mopack-local.yml'
@@ -125,7 +126,8 @@ class BaseConfig:
                 return expression
             return expr.evaluate(symbols, expression, if_context=True)
         except expr.ParseBaseException as e:
-            raise expr.to_yaml_error(e, data.mark.start, mark.start)
+            raise MarkedYAMLOffsetError('while parsing expression', data.mark,
+                                        e.msg, mark, offset=e.loc)
 
     def _in_parent(self, name):
         # We don't have a parent, so this is always false!

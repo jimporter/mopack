@@ -1,14 +1,13 @@
 import os
 import re
 from contextlib import contextmanager
-from yaml.error import MarkedYAMLError
 
 from . import expression as expr, iterutils
 from .exceptions import ConfigurationError
 from .path import Path
 from .placeholder import map_recursive, PlaceholderString
 from .shell import ShellArguments, split_posix
-from .yaml_tools import MarkedDict
+from .yaml_tools import MarkedDict, MarkedYAMLOffsetError
 
 
 _unexpected_kwarg_ex = re.compile(
@@ -35,9 +34,10 @@ _ssh_ex = re.compile(
 
 
 class FieldError(TypeError, ConfigurationError):
-    def __init__(self, message, field):
+    def __init__(self, message, field, offset=0):
         super().__init__(message)
         self.field = iterutils.listify(field, type=tuple)
+        self.offset = offset
 
 
 class FieldKeyError(FieldError):
@@ -67,7 +67,7 @@ def wrap_field_error(field, kind=None):
         if not isinstance(e, FieldError):
             raise e
         new_field = iterutils.listify(field, type=tuple) + e.field
-        raise type(e)(str(e), new_field)
+        raise type(e)(str(e), new_field, e.offset)
 
 
 @contextmanager
@@ -114,6 +114,7 @@ def try_load_config(config, context, kind):
         e = kwarg_error_to_field_error(e, kind)
         msg = str(e)
         mark = config.mark
+        offset = 0
         if isinstance(e, FieldError):
             x = config
             for f in e.field[:-1]:
@@ -121,8 +122,10 @@ def try_load_config(config, context, kind):
             marks = (x.value_marks if isinstance(e, FieldValueError)
                      else x.marks)
             mark = marks[e.field[-1]]
+            offset = e.offset
 
-        raise MarkedYAMLError(context, config.mark.start, msg, mark.start)
+        raise MarkedYAMLOffsetError(context, config.mark, msg, mark,
+                                    offset=offset)
 
 
 class TypeCheck:
@@ -144,9 +147,7 @@ class TypeCheck:
                         data[k] = self.__evaluate(k, v, symbols)
                     return data
         except expr.ParseBaseException as e:
-            # XXX: This doesn't handle offsets within the original string, so
-            # the caret will probably be in the wrong spot.
-            raise FieldValueError(e.msg, field)
+            raise FieldValueError(e.msg, field, e.loc)
 
         return data
 

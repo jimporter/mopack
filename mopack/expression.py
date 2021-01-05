@@ -2,12 +2,11 @@ import operator
 import pyparsing as pp
 from functools import reduce
 from pyparsing import ParseBaseException, ParseException
-from yaml.error import Mark, MarkedYAMLError
 
 pp.ParserElement.enablePackrat()
 
 __all__ = ['evaluate', 'evaluate_token', 'parse', 'ParseBaseException',
-           'ParseException', 'SemanticException', 'Token', 'to_yaml_error']
+           'ParseException', 'SemanticException', 'Token']
 
 
 class SemanticException(pp.ParseBaseException):
@@ -173,19 +172,3 @@ def parse(expression, if_context=False):
 
 def evaluate(symbols, expression, if_context=False):
     return evaluate_token(symbols, parse(expression, if_context))
-
-
-def to_yaml_error(e, context_mark, mark):
-    assert e.pstr
-
-    if isinstance(e, SemanticException):
-        found = ''
-    elif e.loc >= len(e.pstr):
-        found = ', found end of text'
-    else:
-        found = ', found {!r}'.format(e.pstr[e.loc:e.loc + 1])
-
-    newmark = Mark(mark.name, mark.index + e.loc, mark.line + e.lineno - 1,
-                   mark.column + e.column - 1, None, None)
-    return MarkedYAMLError('while parsing expression', context_mark,
-                           e.msg + found, newmark)

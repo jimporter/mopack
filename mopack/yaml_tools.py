@@ -1,8 +1,32 @@
+# Portions of this code (see below) are forked from PyYAML, available at
+# <https://pyyaml.org/>. The following license applies to those portions:
+#
+# Copyright (c) 2017-2020 Ingy döt Net
+# Copyright (c) 2006-2016 Kirill Simonov
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 import collections.abc
 import yaml
 from collections import namedtuple
 from contextlib import contextmanager
-from yaml.error import MarkedYAMLError
+from yaml.error import Mark, MarkedYAMLError
 from yaml.loader import SafeLoader
 from yaml.nodes import MappingNode, SequenceNode
 from yaml.constructor import ConstructorError
@@ -10,7 +34,27 @@ from yaml.constructor import ConstructorError
 from .exceptions import ConfigurationError
 
 __all__ = ['load_file', 'make_parse_error', 'to_parse_error', 'MarkedDict',
-           'MarkedList', 'SafeLineLoader', 'YamlParseError']
+           'MarkedList', 'MarkedYAMLOffsetError', 'SafeLineLoader',
+           'YamlParseError']
+
+
+class MarkedYAMLOffsetError(MarkedYAMLError):
+    def __init__(self, context=None, context_range=None, problem=None,
+                 problem_range=None, note=None, offset=0):
+        self.context = context
+        self.context_range = context_range
+        self.problem = problem
+        self.problem_range = problem_range
+        self.note = note
+        self.offset = offset
+
+    @property
+    def context_mark(self):
+        return self.context_range.start
+
+    @property
+    def problem_mark(self):
+        return self.problem_range.start
 
 
 class YamlParseError(ConfigurationError):
@@ -26,10 +70,56 @@ class YamlParseError(ConfigurationError):
                 ' ' * (self.mark.column + 2) + '^')
 
 
+def _read_line_for_mark(stream, mark):
+    stream.seek(mark.index - mark.column, 0)
+    return stream.readline()
+
+
+def _read_mark_range(stream, start, end):
+    stream.seek(start.index, 0)
+    return stream.read(end.index - start.index)
+
+
+def _get_indent_at_mark(stream, mark):
+    line = _read_line_for_mark(stream, mark)
+    for i, c in enumerate(line):
+        if c != ' ':
+            return i
+    assert False
+
+
+def _get_line_for_index(s, index):
+    newline = '\0\r\n\x85\u2028\u2029'
+    start = index
+    while start > 0 and s[start - 1] not in newline:
+        start -= 1
+    end = index
+    while end < len(s) and s[end] not in newline:
+        end += 1
+    return s[start:end]
+
+
 def make_parse_error(e, stream):
-    stream.seek(e.problem_mark.index - e.problem_mark.column, 0)
-    snippet = stream.readline().rstrip()
-    return YamlParseError(e.problem, e.problem_mark, snippet)
+    if isinstance(e, MarkedYAMLOffsetError) and e.offset != 0:
+        start_mark, end_mark = e.problem_range
+        indent = _get_indent_at_mark(stream, start_mark)
+        data = _read_mark_range(stream, start_mark, end_mark)
+
+        mark = _get_offset_mark(data, e.offset, indent)
+        if mark.line == 0:
+            snippet = _read_line_for_mark(stream, start_mark)
+            mark = Mark(start_mark.name, start_mark.index + mark.index,
+                        start_mark.line, start_mark.column + mark.column, None,
+                        None)
+        else:
+            snippet = _get_line_for_index(data, mark.index)
+            mark = Mark(start_mark.name, start_mark.index + mark.index,
+                        start_mark.line + mark.line, mark.column, None, None)
+    else:
+        mark = e.problem_mark
+        snippet = _read_line_for_mark(stream, mark)
+
+    return YamlParseError(e.problem, mark, snippet.rstrip())
 
 
 @contextmanager
@@ -189,3 +279,174 @@ SafeLineLoader.add_constructor('tag:yaml.org,2002:seq',
                                SafeLineLoader.construct_yaml_seq)
 SafeLineLoader.add_constructor('tag:yaml.org,2002:map',
                                SafeLineLoader.construct_yaml_map)
+
+
+# /!\ Hack Alert /!\
+#
+# This code is forked from PyYAML and allows us to read a YAML scalar up to a
+# particular offset in the parsed representation, and then return the Mark
+# object pointing to where that offset occurs in the raw YAML data. This makes
+# it possible to report syntax errors in mopack's mini-expression language with
+# the correct offsets.
+#
+# Starting here, the following code is dual-licensed under the BSD 3-clause
+# license and PyYAML's MIT license as described above.
+
+
+def _get_offset_mark(data, offset, indent=0, Loader=SafeLoader):
+    loader = Loader(data)
+    loader.indent = indent
+
+    ch = loader.peek()
+    if ch in ('|', '>'):
+        return _scan_block_scalar(loader, ch, offset)
+    if ch in ("'", '"'):
+        return _scan_flow_scalar(loader, ch, offset)
+    if loader.check_plain():
+        return _scan_plain(loader, offset)
+    assert False
+
+
+def _scan_block_scalar(loader, style, offset):
+    folded = bool(style == '>')
+    start_mark = loader.get_mark()
+
+    # Scan the header.
+    loader.forward()
+    chomping, increment = loader.scan_block_scalar_indicators(start_mark)
+    loader.scan_block_scalar_ignored_line(start_mark)
+
+    # Determine the indentation level and go to the first non-empty line.
+    min_indent = loader.indent + 1
+    if min_indent < 1:  # pragma: no cover
+        min_indent = 1
+    if increment is None:
+        breaks, max_indent, end_mark = loader.scan_block_scalar_indentation()
+        indent = max(min_indent, max_indent)
+    else:
+        indent = min_indent + increment - 1
+        breaks, end_mark = loader.scan_block_scalar_breaks(indent)
+    line_break = ''
+
+    # Scan the inner part of the block scalar.
+    while loader.column == indent and loader.peek() != '\0':
+        offset -= len(breaks)
+        if offset <= 0:
+            return loader.get_mark()
+
+        leading_non_space = loader.peek() not in ' \t'
+        length = 0
+        while loader.peek(length) not in '\0\r\n\x85\u2028\u2029':
+            length += 1
+            if offset - length <= 0:
+                loader.forward(length)
+                return loader.get_mark()
+        offset -= length
+        loader.forward(length)
+
+        line_break = loader.scan_line_break()
+        breaks, end_mark = loader.scan_block_scalar_breaks(indent)
+        if loader.column == indent and loader.peek() != '\0':
+            if ( folded and line_break == '\n' and leading_non_space and
+                 loader.peek() not in ' \t' ):
+                if not breaks:  # pragma: no branch
+                    offset -= 1
+            else:
+                offset -= len(line_break)
+        else:
+            break  # pragma: no cover
+
+    return end_mark
+
+
+def _scan_flow_scalar(loader, style, offset):
+    double = bool(style == '"')
+
+    start_mark = loader.get_mark()
+    quote = loader.peek()
+    loader.forward()
+
+    offset = _scan_flow_scalar_non_spaces(loader, double, start_mark, offset)
+    if offset <= 0:
+        return loader.get_mark()
+
+    while loader.peek() != quote:
+        offset -= len(loader.scan_flow_scalar_spaces(double, start_mark))
+        if offset <= 0:
+            return loader.get_mark()
+        offset = _scan_flow_scalar_non_spaces(loader, double, start_mark,
+                                              offset)
+        if offset <= 0:
+            return loader.get_mark()
+
+    loader.forward()
+    return loader.get_mark()
+
+
+def _scan_flow_scalar_non_spaces(loader, double, start_mark, offset):
+    while True:
+        if offset <= 0:
+            return 0
+
+        length = 0
+        while loader.peek(length) not in '\'\"\\\0 \t\r\n\x85\u2028\u2029':
+            length += 1
+            if offset - length <= 0:
+                loader.forward(length)
+                return 0
+        offset -= length
+        loader.forward(length)
+
+        ch = loader.peek()
+        if not double and ch == '\'' and loader.peek(1) == '\'':
+            offset -= 1
+            loader.forward(2)
+        elif (double and ch == '\'') or (not double and ch in '\"\\'):
+            offset -= 1
+            loader.forward()
+        elif double and ch == '\\':
+            offset -= 1
+            loader.forward()
+            ch = loader.peek()
+            if ch in loader.ESCAPE_REPLACEMENTS:
+                loader.forward()
+            elif ch in loader.ESCAPE_CODES:
+                length = loader.ESCAPE_CODES[ch]
+                loader.forward(length + 1)
+            elif ch in '\r\n\x85\u2028\u2029':
+                loader.scan_line_break()
+                offset -= len(loader.scan_flow_scalar_breaks(
+                    double, start_mark
+                ))
+            else:
+                assert False
+        else:
+            return offset
+
+
+def _scan_plain(loader, offset):
+    plain_ws = '\0 \t\r\n\x85\u2028\u2029'
+    start_mark = loader.get_mark()
+    indent = loader.indent + 1
+    spaces = []
+    while True:
+        length = 0
+        while True:
+            ch = loader.peek(length)
+            extra_ws = plain_ws + (',[]{}' if loader.flow_level else '')
+            if ( ch in plain_ws or
+                 (ch == ':' and loader.peek(length+1) in extra_ws) or
+                 (loader.flow_level and ch in ',?[]{}') ):
+                break  # pragma: no cover
+            length += 1
+
+        loader.allow_simple_key = False
+        offset -= len(''.join(spaces))
+        if length > offset:
+            loader.forward(offset)
+            break
+
+        offset -= length
+        loader.forward(length)
+        spaces = loader.scan_plain_spaces(indent, start_mark)
+    return loader.get_mark()

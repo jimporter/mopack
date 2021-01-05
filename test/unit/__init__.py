@@ -2,6 +2,7 @@ import json
 import os
 import pkg_resources
 from contextlib import contextmanager
+from io import StringIO
 from unittest import mock, TestCase
 
 from mopack.options import Options
@@ -17,6 +18,17 @@ def mock_open_log(new=None, *args, **kwargs):
                     *args, **kwargs) as m, \
          mock.patch('os.makedirs'):
         yield m
+
+
+def mock_open_data(read_data):
+    return lambda *args, **kwargs: StringIO(read_data)
+
+
+def mock_open_files(files):
+    def wrapper(filename, *args, **kwargs):
+        return StringIO(files[os.path.basename(filename)])
+
+    return wrapper
 
 
 def through_json(data):

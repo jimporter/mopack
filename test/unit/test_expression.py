@@ -1,5 +1,4 @@
 from unittest import TestCase
-from yaml.error import Mark
 
 from mopack.expression import *
 
@@ -116,57 +115,3 @@ class TestEvaluate(TestCase):
             evaluate(self.symbols, '${{ bad == "bad" }}', True)
         with self.assertRaises(SemanticException):
             evaluate(self.symbols, 'bad == "bad"', True)
-
-
-class TestToYamlError(TestCase):
-    def test_convert_parse_exc(self):
-        try:
-            evaluate({}, '${{ "Foo" == }}')
-        except ParseException as e:
-            err = to_yaml_error(e, None, Mark('name', 10, 1, 2, None, None))
-        self.assertEqual(err.context, 'while parsing expression')
-        self.assertEqual(err.context_mark, None)
-        self.assertEqual(err.problem, "Expected end of text, found '$'")
-        self.assertEqual(err.problem_mark.name, 'name')
-        self.assertEqual(err.problem_mark.index, 10)
-        self.assertEqual(err.problem_mark.line, 1)
-        self.assertEqual(err.problem_mark.column, 2)
-
-    def test_convert_parse_exc_if(self):
-        try:
-            evaluate({}, '"Foo" ==', True)
-        except ParseException as e:
-            err = to_yaml_error(e, None, Mark('name', 10, 1, 2, None, None))
-        self.assertEqual(err.context, 'while parsing expression')
-        self.assertEqual(err.context_mark, None)
-        self.assertEqual(err.problem, "Expected end of text, found '='")
-        self.assertEqual(err.problem_mark.name, 'name')
-        self.assertEqual(err.problem_mark.index, 16)
-        self.assertEqual(err.problem_mark.line, 1)
-        self.assertEqual(err.problem_mark.column, 8)
-
-    def test_convert_semantic_exc(self):
-        try:
-            evaluate({}, '${{ foo == "Foo" }}')
-        except SemanticException as e:
-            err = to_yaml_error(e, None, Mark('name', 10, 1, 2, None, None))
-        self.assertEqual(err.context, 'while parsing expression')
-        self.assertEqual(err.context_mark, None)
-        self.assertEqual(err.problem, "undefined symbol 'foo'")
-        self.assertEqual(err.problem_mark.name, 'name')
-        self.assertEqual(err.problem_mark.index, 14)
-        self.assertEqual(err.problem_mark.line, 1)
-        self.assertEqual(err.problem_mark.column, 6)
-
-    def test_convert_semantic_exc_if(self):
-        try:
-            evaluate({}, 'foo == "Foo"', True)
-        except SemanticException as e:
-            err = to_yaml_error(e, None, Mark('name', 10, 1, 2, None, None))
-        self.assertEqual(err.context, 'while parsing expression')
-        self.assertEqual(err.context_mark, None)
-        self.assertEqual(err.problem, "undefined symbol 'foo'")
-        self.assertEqual(err.problem_mark.name, 'name')
-        self.assertEqual(err.problem_mark.index, 10)
-        self.assertEqual(err.problem_mark.line, 1)
-        self.assertEqual(err.problem_mark.column, 2)
