@@ -128,6 +128,52 @@ class TestMakeParseError(TestCase):
         err = make_parse_error(e, data)
         self.assertError(err, (3, 4), '     meow', '       meow\n      ^')
 
+    def test_offset_anchor_alias(self):
+        data = StringIO(dedent("""
+          house:
+            cat: &anchor meow
+            dog: *anchor
+        """).strip())
+        cfg = yaml.load(data, Loader=SafeLineLoader)
+
+        # Error on anchor line.
+        e = MarkedYAMLOffsetError('context', cfg['house'].mark, 'problem',
+                                  cfg['house'].value_marks['cat'], offset=2)
+        err = make_parse_error(e, data)
+        self.assertError(err, (1, 17), '  cat: &anchor meow',
+                         '    cat: &anchor meow\n'
+                         '                   ^')
+
+        # Error on alias line.
+        e = MarkedYAMLOffsetError('context', cfg['house'].mark, 'problem',
+                                  cfg['house'].value_marks['dog'], offset=2)
+        err = make_parse_error(e, data)
+        self.assertError(err, (1, 17), '  cat: &anchor meow',
+                         '    cat: &anchor meow\n'
+                         '                   ^')
+
+    def test_offset_anchor_block(self):
+        data = StringIO(dedent("""
+          house:
+            cat: &anchor >
+              meow
+              meow
+            dog: *anchor
+        """).strip())
+        cfg = yaml.load(data, Loader=SafeLineLoader)
+
+        # Error on anchor line.
+        e = MarkedYAMLOffsetError('context', cfg['house'].mark, 'problem',
+                                  cfg['house'].value_marks['cat'], offset=2)
+        err = make_parse_error(e, data)
+        self.assertError(err, (2, 6), '    meow', '      meow\n        ^')
+
+        # Error on alias line.
+        e = MarkedYAMLOffsetError('context', cfg['house'].mark, 'problem',
+                                  cfg['house'].value_marks['dog'], offset=2)
+        err = make_parse_error(e, data)
+        self.assertError(err, (2, 6), '    meow', '      meow\n        ^')
+
 
 class TestLoadFile(TestCase):
     yaml_data = dedent("""
@@ -493,3 +539,21 @@ class TestGetOffsetMark(TestCase):
         """).strip()
         self.assertMark(_get_offset_mark(data, 0), (0, 1), 1)
         self.assertMark(_get_offset_mark(data, 1), (0, 1), 1)
+
+    def test_anchor(self):
+        data = '&anchor meow'
+        self.assertMark(_get_offset_mark(data, 0), (0, 8), 8)
+        self.assertMark(_get_offset_mark(data, 2), (0, 10), 10)
+
+    def test_anchor_block(self):
+        data = dedent("""
+          &anchor >
+            meow
+            meow
+        """).strip()
+        self.assertMark(_get_offset_mark(data, 0), (1, 2), 12)
+        self.assertMark(_get_offset_mark(data, 3), (1, 5), 15)
+        self.assertMark(_get_offset_mark(data, 4), (1, 6), 16)
+        self.assertMark(_get_offset_mark(data, 5), (2, 2), 19)
+        self.assertMark(_get_offset_mark(data, 8), (2, 5), 22)
+        self.assertMark(_get_offset_mark(data, 9), (2, 6), 23)

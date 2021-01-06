@@ -298,6 +298,11 @@ def _get_offset_mark(data, offset, indent=0, Loader=SafeLoader):
     loader.indent = indent
 
     ch = loader.peek()
+    if ch == '&':
+        loader.fetch_anchor()
+        loader.scan_to_next_token()
+        ch = loader.peek()
+
     if ch in ('|', '>'):
         return _scan_block_scalar(loader, ch, offset)
     if ch in ("'", '"'):
