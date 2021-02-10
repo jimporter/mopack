@@ -1,0 +1,28 @@
+site_name: mopack
+docs_dir: doc
+repo_url: https://github.com/jimporter/mopack/
+edit_uri: ""
+copyright: Copyright &copy; 2020-2021 Jim Porter
+
+theme:
+  name: yeti
+  hljs_languages: [yaml]
+extra_css:
+  - css/version-select.css
+extra_javascript:
+  - js/version-select.js
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - toc:
+      permalink: §
+
+nav:
+  - Home: index.md
+  - Reference:
+    - Sources: reference/sources.md
+    - Builders: reference/builders.md
+    - Usage: reference/usage.md
+  - About:
+    - License: about/license.md

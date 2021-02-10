@@ -1,5 +1,6 @@
 # mopack
 
+[![Documentation][documentation-image]][documentation-link]
 [![Build status][ci-image]][ci-link]
 [![Coverage status][codecov-image]][codecov-link]
 
@@ -25,31 +26,12 @@ who *build* the project may prefer to resolve packages differently (e.g. if a
 project defaults to resolving packages via Conan, someone building for `apt`
 would likely override the config to point to `apt` packages).
 
-## Initial Scope
-
-Sources:
-* conan
-* apt
-* tarball
-* directory
-* system
-
-Builders:
-* autotools
-* bfg9000
-* cmake
-* custom
-* none
-
-Usage:
-* pkg-config
-* path search
-* system (search platform-specific locations)
-
 ## License
 
 This project is licensed under the [BSD 3-clause license](LICENSE).
 
+[documentation-image]: https://img.shields.io/badge/docs-mopack-blue.svg
+[documentation-link]: https://jimporter.github.io/mopack/
 [ci-image]: https://github.com/jimporter/mopack/workflows/build/badge.svg
 [ci-link]: https://github.com/jimporter/mopack/actions?query=branch%3Amaster+workflow%3Abuild
 [codecov-image]: https://codecov.io/gh/jimporter/mopack/branch/master/graph/badge.svg

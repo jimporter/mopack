@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import subprocess
@@ -62,6 +63,66 @@ class Coverage(Command):
 custom_cmds = {
     'coverage': Coverage,
 }
+
+try:
+    from verspec.python import Version
+
+    class DocServe(Command):
+        description = 'serve the documentation locally'
+        user_options = [
+            ('working', 'w', 'use the documentation in the working directory'),
+            ('dev-addr=', None, 'address to host the documentation on'),
+        ]
+
+        def initialize_options(self):
+            self.working = False
+            self.dev_addr = '0.0.0.0:8000'
+
+        def finalize_options(self):
+            pass
+
+        def run(self):
+            cmd = 'mkdocs' if self.working else 'mike'
+            subprocess.check_call([
+                cmd, 'serve', '--dev-addr=' + self.dev_addr
+            ])
+
+    class DocDeploy(Command):
+        description = 'push the documentation to GitHub'
+        user_options = []
+
+        def initialize_options(self):
+            pass
+
+        def finalize_options(self):
+            pass
+
+        def run(self):
+            v = Version(version)
+            alias = 'dev' if v.is_devrelease else 'latest'
+            title = '{} ({})'.format(v.base_version, alias)
+            short_version = '{}.{}'.format(*v.release[:2])
+
+            try:
+                info = json.loads(subprocess.check_output(
+                    ['mike', 'list', '-j', alias],
+                    universal_newlines=True
+                ))
+            except subprocess.CalledProcessError:
+                info = None
+
+            if info and info['version'] != short_version:
+                t = re.sub(r' \({}\)$'.format(re.escape(alias)), '',
+                           info['title'])
+                subprocess.check_call(['mike', 'retitle', info['version'], t])
+
+            subprocess.check_call(['mike', 'deploy', '-ut', title,
+                                   short_version, alias])
+
+    custom_cmds['doc_serve'] = DocServe
+    custom_cmds['doc_deploy'] = DocDeploy
+except ImportError:
+    pass
 
 try:
     from flake8.main.setuptools_command import Flake8
