@@ -188,6 +188,16 @@ class TestBfg9000Builder(BuilderTest):
         data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(data, _options=opts))
 
+    def test_upgrade(self):
+        opts = self.make_options()
+        data = {'type': 'bfg9000', '_version': 0, 'name': 'foo',
+                'extra_args': [], 'usage': {'type': 'system', '_version': 0}}
+        with mock.patch.object(Bfg9000Builder, 'upgrade',
+                               side_effect=Bfg9000Builder.upgrade) as m:
+            pkg = Builder.rehydrate(data, _options=opts)
+            self.assertIsInstance(pkg, Bfg9000Builder)
+            m.assert_called_once()
+
 
 class TestBfg9000Options(OptionsTest):
     symbols = {'variable': 'foo'}
@@ -241,3 +251,11 @@ class TestBfg9000Options(OptionsTest):
         rehydrated = BuilderOptions.rehydrate(data)
         self.assertEqual(opts_default, rehydrated)
         self.assertEqual(opts_none, rehydrated)
+
+    def test_upgrade(self):
+        data = {'type': 'bfg9000', '_version': 0, 'toolchain': None}
+        o = Bfg9000Builder.Options
+        with mock.patch.object(o, 'upgrade', side_effect=o.upgrade) as m:
+            pkg = BuilderOptions.rehydrate(data)
+            self.assertIsInstance(pkg, o)
+            m.assert_called_once()

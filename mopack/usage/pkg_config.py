@@ -49,6 +49,11 @@ def _submodule_map(field, value):
 })
 class PkgConfigUsage(Usage):
     type = 'pkg-config'
+    _version = 1
+
+    @staticmethod
+    def upgrade(config, version):
+        return config
 
     def __init__(self, name, *, path='pkgconfig', pcfile=types.Unset,
                  extra_args=None, submodule_map=types.Unset, submodules,

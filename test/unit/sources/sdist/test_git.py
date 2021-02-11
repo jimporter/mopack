@@ -497,6 +497,19 @@ class TestGit(SDistTestCase):
         with self.assertRaises(ConfigurationError):
             data = pkg.dehydrate()
 
+    def test_upgrade(self):
+        opts = self.make_options()
+        data = {'source': 'git', '_version': 0, 'name': 'foo',
+                'repository': 'repo', 'tag': None, 'branch': None,
+                'commit': None, 'srcdir': '.',
+                'build': {'type': 'none', '_version': 0},
+                'usage': {'type': 'system', '_version': 0}}
+        with mock.patch.object(GitPackage, 'upgrade',
+                               side_effect=GitPackage.upgrade) as m:
+            pkg = Package.rehydrate(data, _options=opts)
+            self.assertIsInstance(pkg, GitPackage)
+            m.assert_called_once()
+
     def test_builder_types(self):
         pkg = GitPackage('foo', repository=self.srcssh, build='bfg9000',
                          _options=self.make_options(),

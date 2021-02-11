@@ -1,6 +1,56 @@
-from unittest import TestCase
+from unittest import mock, TestCase
 
 from mopack.freezedried import FreezeDried
+
+
+def _get_type(type):
+    if type == 'derived':
+        return Derived
+    raise TypeError()
+
+
+class Base(FreezeDried):
+    _type_field = 'type'
+    _get_type = _get_type
+
+
+class Derived(Base):
+    type = 'derived'
+
+
+class TestFreezeDriedType(TestCase):
+    def test_dehydrate(self):
+        config = Derived().dehydrate()
+        self.assertEqual(config, {'type': 'derived'})
+        self.assertIsInstance(Base.rehydrate(config), Derived)
+
+
+class TestFreezeDriedVersion(TestCase):
+    class C(FreezeDried):
+        _version = 2
+
+        @staticmethod
+        def upgrade(config, version):
+            return config
+
+    def test_dehydrate(self):
+        config = self.C().dehydrate()
+        self.assertEqual(config, {'_version': 2})
+
+    def test_rehydrate_same_version(self):
+        with mock.patch.object(self.C, 'upgrade') as m:
+            self.C.rehydrate({'_version': 2})
+            m.assert_not_called()
+
+    def test_rehydrate_upgrade(self):
+        with mock.patch.object(self.C, 'upgrade',
+                               side_effect=self.C.upgrade) as m:
+            self.C.rehydrate({'_version': 1})
+            m.assert_called_once()
+
+    def test_rehydrate_invalid_version(self):
+        with self.assertRaises(TypeError):
+            self.C.rehydrate({'_version': 3})
 
 
 class TestFreezeDriedFields(TestCase):

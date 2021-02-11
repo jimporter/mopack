@@ -20,12 +20,14 @@ class SDistTest(IntegrationTest):
     def _options(self, deploy_paths={}):
         return {
             'common': {
+                '_version': 1,
                 'target_platform': platform_name(),
                 'env': AlwaysEqual(),
                 'deploy_paths': deploy_paths,
             },
             'builders': [{
                 'type': 'bfg9000',
+                '_version': 1,
                 'toolchain': None,
             }],
             'sources': [],
@@ -34,10 +36,12 @@ class SDistTest(IntegrationTest):
     def _builder(self, name):
         return {
             'type': 'bfg9000',
+            '_version': 1,
             'name': name,
             'extra_args': [],
             'usage': {
                 'type': 'pkg-config',
+                '_version': 1,
                 'path': {'base': 'builddir', 'path': 'pkgconfig'},
                 'pcfile': name,
                 'extra_args': [],
@@ -68,6 +72,7 @@ class TestDirectory(SDistTest):
                 'config_file': config,
                 'resolved': True,
                 'source': 'directory',
+                '_version': 1,
                 'submodules': None,
                 'should_deploy': True,
                 'builder': self._builder('hello'),
@@ -98,6 +103,7 @@ class TestDirectory(SDistTest):
                 'config_file': config,
                 'resolved': True,
                 'source': 'directory',
+                '_version': 1,
                 'submodules': None,
                 'should_deploy': True,
                 'builder': self._builder('hello'),
@@ -130,6 +136,7 @@ class TestTarball(SDistTest):
                 'config_file': config,
                 'resolved': True,
                 'source': 'tarball',
+                '_version': 1,
                 'submodules': None,
                 'should_deploy': True,
                 'builder': self._builder('hello'),
@@ -174,6 +181,7 @@ class TestTarballPatch(SDistTest):
                 'config_file': config,
                 'resolved': True,
                 'source': 'tarball',
+                '_version': 1,
                 'submodules': None,
                 'should_deploy': True,
                 'builder': self._builder('hello'),
@@ -219,6 +227,7 @@ class TestGit(SDistTest):
                 'config_file': config,
                 'resolved': True,
                 'source': 'git',
+                '_version': 1,
                 'submodules': None,
                 'should_deploy': True,
                 'builder': self._builder('bencodehpp'),

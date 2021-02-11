@@ -478,6 +478,19 @@ class TestTarball(SDistTestCase):
         with self.assertRaises(ConfigurationError):
             data = pkg.dehydrate()
 
+    def test_upgrade(self):
+        opts = self.make_options()
+        data = {'source': 'tarball', '_version': 0, 'name': 'foo',
+                'path': {'base': 'cfgdir', 'path': 'foo.tar.gz'}, 'url': None,
+                'files': [], 'srcdir': '.',
+                'patch': None, 'build': {'type': 'none', '_version': 0},
+                'usage': {'type': 'system', '_version': 0}}
+        with mock.patch.object(TarballPackage, 'upgrade',
+                               side_effect=TarballPackage.upgrade) as m:
+            pkg = Package.rehydrate(data, _options=opts)
+            self.assertIsInstance(pkg, TarballPackage)
+            m.assert_called_once()
+
     def test_builder_types(self):
         pkg = TarballPackage('foo', path=self.srcpath, build='bfg9000',
                              _options=self.make_options(),

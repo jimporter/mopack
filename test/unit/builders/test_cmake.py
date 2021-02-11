@@ -184,6 +184,16 @@ class TestCMakeBuilder(BuilderTest):
         data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(data, _options=opts))
 
+    def test_upgrade(self):
+        opts = self.make_options()
+        data = {'type': 'cmake', '_version': 0, 'name': 'foo',
+                'extra_args': [], 'usage': {'type': 'system', '_version': 0}}
+        with mock.patch.object(CMakeBuilder, 'upgrade',
+                               side_effect=CMakeBuilder.upgrade) as m:
+            pkg = Builder.rehydrate(data, _options=opts)
+            self.assertIsInstance(pkg, CMakeBuilder)
+            m.assert_called_once()
+
 
 class TestCMakeOptions(OptionsTest):
     symbols = {'variable': 'foo'}
@@ -240,3 +250,11 @@ class TestCMakeOptions(OptionsTest):
         rehydrated = BuilderOptions.rehydrate(data)
         self.assertEqual(opts_default, rehydrated)
         self.assertEqual(opts_none, rehydrated)
+
+    def test_upgrade(self):
+        data = {'type': 'cmake', '_version': 0, 'toolchain': None}
+        o = CMakeBuilder.Options
+        with mock.patch.object(o, 'upgrade', side_effect=o.upgrade) as m:
+            pkg = BuilderOptions.rehydrate(data)
+            self.assertIsInstance(pkg, o)
+            m.assert_called_once()

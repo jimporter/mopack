@@ -8,7 +8,6 @@ from . import *
 
 class TestSubmodules(IntegrationTest):
     name = 'submodules'
-    maxDiff = None
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-submodules-implicit.yml')
@@ -28,12 +27,14 @@ class TestSubmodules(IntegrationTest):
         self.assertEqual(output['metadata'], {
             'options': {
                 'common': {
+                    '_version': 1,
                     'target_platform': platform_name(),
                     'env': AlwaysEqual(),
                     'deploy_paths': {},
                 },
                 'builders': [{
                     'type': 'bfg9000',
+                    '_version': 1,
                     'toolchain': None,
                 }],
                 'sources': [],
@@ -43,6 +44,7 @@ class TestSubmodules(IntegrationTest):
                 'config_file': config,
                 'resolved': True,
                 'source': 'directory',
+                '_version': 1,
                 'submodules': {
                     'names': ['french', 'english'],
                     'required': True,
@@ -50,10 +52,12 @@ class TestSubmodules(IntegrationTest):
                 'should_deploy': True,
                 'builder': {
                     'type': 'bfg9000',
+                    '_version': 1,
                     'name': 'hello',
                     'extra_args': [],
                     'usage': {
                         'type': 'pkg-config',
+                        '_version': 1,
                         'path': {'base': 'builddir', 'path': 'pkgconfig'},
                         'pcfile': None,
                         'extra_args': [],

@@ -15,10 +15,16 @@ _known_install_types = ('prefix', 'exec-prefix', 'bindir', 'libdir',
 @FreezeDried.fields(rehydrate={'extra_args': ShellArguments})
 class Bfg9000Builder(Builder):
     type = 'bfg9000'
+    _version = 1
     _path_bases = ('srcdir', 'builddir')
 
     class Options(BuilderOptions):
         type = 'bfg9000'
+        _version = 1
+
+        @staticmethod
+        def upgrade(config, version):
+            return config
 
         def __init__(self):
             self.toolchain = types.Unset
@@ -29,6 +35,10 @@ class Bfg9000Builder(Builder):
                 T = types.TypeCheck(locals(), _symbols)
                 config_dir = os.path.dirname(config_file)
                 T.toolchain(types.maybe_raw(types.path_string(config_dir)))
+
+    @staticmethod
+    def upgrade(config, version):
+        return config
 
     def __init__(self, name, *, extra_args=None, submodules, **kwargs):
         super().__init__(name, **kwargs)

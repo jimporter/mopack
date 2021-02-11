@@ -422,6 +422,17 @@ class TestConan(SourceTest):
         data = through_json(pkg.dehydrate())
         self.assertEqual(pkg, Package.rehydrate(data, _options=opts))
 
+    def test_upgrade(self):
+        opts = self.make_options()
+        data = {'source': 'conan', '_version': 0, 'name': 'foo',
+                'remote': 'foo', 'build': False, 'options': None,
+                'usage': {'type': 'system', '_version': 0}}
+        with mock.patch.object(ConanPackage, 'upgrade',
+                               side_effect=ConanPackage.upgrade) as m:
+            pkg = Package.rehydrate(data, _options=opts)
+            self.assertIsInstance(pkg, ConanPackage)
+            m.assert_called_once()
+
 
 class TestConanOptions(OptionsTest):
     symbols = {'variable': 'value'}
@@ -474,3 +485,12 @@ class TestConanOptions(OptionsTest):
              _symbols=self.symbols)
         data = through_json(opts.dehydrate())
         self.assertEqual(opts, PackageOptions.rehydrate(data))
+
+    def test_upgrade(self):
+        data = {'source': 'conan', '_version': 0, 'build': [],
+                'extra_args': []}
+        with mock.patch.object(ConanPackage.Options, 'upgrade',
+                               side_effect=ConanPackage.Options.upgrade) as m:
+            pkg = PackageOptions.rehydrate(data)
+            self.assertIsInstance(pkg, ConanPackage.Options)
+            m.assert_called_once()

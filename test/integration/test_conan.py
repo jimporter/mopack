@@ -25,6 +25,7 @@ class TestConan(IntegrationTest):
         self.assertEqual(output['metadata'], {
             'options': {
                 'common': {
+                    '_version': 1,
                     'target_platform': platform_name(),
                     'env': AlwaysEqual(),
                     'deploy_paths': {},
@@ -32,6 +33,7 @@ class TestConan(IntegrationTest):
                 'builders': [],
                 'sources': [{
                     'source': 'conan',
+                    '_version': 1,
                     'build': ['missing'],
                     'extra_args': ['-gtxt'],
                 }],
@@ -41,6 +43,7 @@ class TestConan(IntegrationTest):
                 'config_file': config,
                 'resolved': True,
                 'source': 'conan',
+                '_version': 1,
                 'submodules': None,
                 'should_deploy': True,
                 'remote': 'zlib/1.2.11',
@@ -48,6 +51,7 @@ class TestConan(IntegrationTest):
                 'options': {'shared': True},
                 'usage': {
                     'type': 'pkg-config',
+                    '_version': 1,
                     'path': {'base': 'builddir', 'path': ''},
                     'pcfile': 'zlib',
                     'extra_args': [],

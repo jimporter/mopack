@@ -185,3 +185,14 @@ class TestApt(SourceTest):
                          config_file=self.config_file)
         data = through_json(pkg.dehydrate())
         self.assertEqual(pkg, Package.rehydrate(data, _options=opts))
+
+    def test_upgrade(self):
+        opts = self.make_options()
+        data = {'source': 'apt', '_version': 0, 'name': 'foo',
+                'remote': 'libfoo-dev', 'repository': None,
+                'usage': {'type': 'system', '_version': 0}}
+        with mock.patch.object(AptPackage, 'upgrade',
+                               side_effect=AptPackage.upgrade) as m:
+            pkg = Package.rehydrate(data, _options=opts)
+            self.assertIsInstance(pkg, AptPackage)
+            m.assert_called_once()

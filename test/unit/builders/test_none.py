@@ -107,3 +107,13 @@ class TestNoneBuilder(BuilderTest):
                           submodules=None)
         data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(data, _options=opts))
+
+    def test_upgrade(self):
+        opts = self.make_options()
+        data = {'type': 'none', '_version': 0, 'name': 'foo',
+                'usage': {'type': 'system', '_version': 0}}
+        with mock.patch.object(NoneBuilder, 'upgrade',
+                               side_effect=NoneBuilder.upgrade) as m:
+            pkg = Builder.rehydrate(data, _options=opts)
+            self.assertIsInstance(pkg, NoneBuilder)
+            m.assert_called_once()

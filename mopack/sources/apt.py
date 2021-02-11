@@ -6,6 +6,11 @@ from ..iterutils import uniques
 
 class AptPackage(BinaryPackage):
     source = 'apt'
+    _version = 1
+
+    @staticmethod
+    def upgrade(config, version):
+        return config
 
     def __init__(self, name, *, remote=None, repository=None, usage='system',
                  **kwargs):

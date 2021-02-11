@@ -410,6 +410,18 @@ class TestDirectory(SDistTestCase):
         with self.assertRaises(ConfigurationError):
             data = pkg.dehydrate()
 
+    def test_upgrade(self):
+        opts = self.make_options()
+        data = {'source': 'directory', '_version': 0, 'name': 'foo',
+                'path': {'base': 'cfgdir', 'path': '.'},
+                'build': {'type': None, '_version': 0},
+                'usage': {'type': 'system', '_version': 0}}
+        with mock.patch.object(DirectoryPackage, 'upgrade',
+                               side_effect=DirectoryPackage.upgrade) as m:
+            pkg = Package.rehydrate(data, _options=opts)
+            self.assertIsInstance(pkg, DirectoryPackage)
+            m.assert_called_once()
+
     def test_builder_types(self):
         pkg = DirectoryPackage('foo', path=self.srcpath, build='bfg9000',
                                _options=self.make_options(),

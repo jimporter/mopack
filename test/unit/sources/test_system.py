@@ -208,3 +208,13 @@ class TestSystemPackage(SourceTest):
         pkg = SystemPackage('foo', _options=opts, config_file=self.config_file)
         data = pkg.dehydrate()
         self.assertEqual(pkg, Package.rehydrate(data, _options=opts))
+
+    def test_upgrade(self):
+        opts = self.make_options()
+        data = {'source': 'system', '_version': 0, 'name': 'foo',
+                'usage': {'type': 'system', '_version': 0}}
+        with mock.patch.object(SystemPackage, 'upgrade',
+                               side_effect=SystemPackage.upgrade) as m:
+            pkg = Package.rehydrate(data, _options=opts)
+            self.assertIsInstance(pkg, SystemPackage)
+            m.assert_called_once()

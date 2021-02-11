@@ -32,13 +32,14 @@ class TestInnerCMake(IntegrationTest):
         self.assertEqual(output['metadata'], {
             'options': {
                 'common': {
+                    '_version': 1,
                     'target_platform': platform_name(),
                     'env': AlwaysEqual(),
                     'deploy_paths': {'prefix': self.prefix},
                 },
                 'builders': [
-                    {'type': 'cmake', 'toolchain': None},
-                    {'type': 'bfg9000', 'toolchain': None},
+                    {'type': 'cmake', '_version': 1, 'toolchain': None},
+                    {'type': 'bfg9000', '_version': 1, 'toolchain': None},
                 ],
                 'sources': [],
             },
@@ -47,14 +48,17 @@ class TestInnerCMake(IntegrationTest):
                 'config_file': config,
                 'resolved': True,
                 'source': 'directory',
+                '_version': 1,
                 'submodules': None,
                 'should_deploy': True,
                 'builder': {
                     'type': 'cmake',
+                    '_version': 1,
                     'name': 'hello',
                     'extra_args': [],
                     'usage': {
                         'type': 'path',
+                        '_version': 1,
                         'auto_link': False,
                         'include_path': [{'base': 'srcdir',
                                           'path': 'include'}],
@@ -71,14 +75,17 @@ class TestInnerCMake(IntegrationTest):
                 'config_file': config,
                 'resolved': True,
                 'source': 'directory',
+                '_version': 1,
                 'submodules': None,
                 'should_deploy': True,
                 'builder': {
                     'type': 'bfg9000',
+                    '_version': 1,
                     'name': 'greeter',
                     'extra_args': [],
                     'usage': {
                         'type': 'pkg-config',
+                        '_version': 1,
                         'path': {'base': 'builddir', 'path': 'pkgconfig'},
                         'pcfile': 'greeter',
                         'extra_args': [],
@@ -123,13 +130,14 @@ class TestOuterCMake(IntegrationTest):
         self.assertEqual(output['metadata'], {
             'options': {
                 'common': {
+                    '_version': 1,
                     'target_platform': platform_name(),
                     'env': AlwaysEqual(),
                     'deploy_paths': {'prefix': self.prefix},
                 },
                 'builders': [
-                    {'type': 'bfg9000', 'toolchain': None},
-                    {'type': 'cmake', 'toolchain': None},
+                    {'type': 'bfg9000', '_version': 1, 'toolchain': None},
+                    {'type': 'cmake', '_version': 1, 'toolchain': None},
                 ],
                 'sources': [],
             },
@@ -139,14 +147,17 @@ class TestOuterCMake(IntegrationTest):
                                             'mopack.yml'),
                 'resolved': True,
                 'source': 'tarball',
+                '_version': 1,
                 'submodules': None,
                 'should_deploy': True,
                 'builder': {
                     'type': 'bfg9000',
+                    '_version': 1,
                     'name': 'hello',
                     'extra_args': [],
                     'usage': {
                         'type': 'pkg-config',
+                        '_version': 1,
                         'path': {'base': 'builddir', 'path': 'pkgconfig'},
                         'pcfile': 'hello',
                         'extra_args': [],
@@ -164,14 +175,17 @@ class TestOuterCMake(IntegrationTest):
                 'config_file': config,
                 'resolved': True,
                 'source': 'directory',
+                '_version': 1,
                 'submodules': None,
                 'should_deploy': True,
                 'builder': {
                     'type': 'cmake',
+                    '_version': 1,
                     'name': 'greeter',
                     'extra_args': [],
                     'usage': {
                         'type': 'path',
+                        '_version': 1,
                         'auto_link': False,
                         'include_path': [{'base': 'srcdir',
                                           'path': 'include'}],

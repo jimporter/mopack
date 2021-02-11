@@ -24,6 +24,7 @@ class TestCustomBuilder(IntegrationTest):
         self.assertEqual(output['metadata'], {
             'options': {
                 'common': {
+                    '_version': 1,
                     'target_platform': platform_name(),
                     'env': AlwaysEqual(),
                     'deploy_paths': {},
@@ -36,6 +37,7 @@ class TestCustomBuilder(IntegrationTest):
                 'config_file': config,
                 'resolved': True,
                 'source': 'tarball',
+                '_version': 1,
                 'url': None,
                 'path': {'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
                 'files': [],
@@ -46,6 +48,7 @@ class TestCustomBuilder(IntegrationTest):
                 'should_deploy': True,
                 'builder': {
                     'type': 'custom',
+                    '_version': 1,
                     'name': 'hello',
                     'build_commands': [
                         ['bfg9000', 'configure',
@@ -58,6 +61,7 @@ class TestCustomBuilder(IntegrationTest):
                     ],
                     'usage': {
                         'type': 'pkg-config',
+                        '_version': 1,
                         'path': {'base': 'builddir', 'path': 'pkgconfig'},
                         'pcfile': 'hello',
                         'extra_args': [],
@@ -86,6 +90,7 @@ class TestCustomBuilderDeploy(IntegrationTest):
         self.assertEqual(output['metadata'], {
             'options': {
                 'common': {
+                    '_version': 1,
                     'target_platform': platform_name(),
                     'env': AlwaysEqual(),
                     'deploy_paths': {
@@ -100,6 +105,7 @@ class TestCustomBuilderDeploy(IntegrationTest):
                 'config_file': config,
                 'resolved': True,
                 'source': 'tarball',
+                '_version': 1,
                 'url': None,
                 'path': {'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
                 'files': [],
@@ -110,6 +116,7 @@ class TestCustomBuilderDeploy(IntegrationTest):
                 'should_deploy': True,
                 'builder': {
                     'type': 'custom',
+                    '_version': 1,
                     'name': 'hello',
                     'build_commands': [
                         ['bfg9000', 'configure',
@@ -124,6 +131,7 @@ class TestCustomBuilderDeploy(IntegrationTest):
                     ],
                     'usage': {
                         'type': 'pkg-config',
+                        '_version': 1,
                         'path': {'base': 'builddir', 'path': 'pkgconfig'},
                         'pcfile': 'hello',
                         'extra_args': [],

@@ -97,6 +97,11 @@ def _submodule_map(srcbase, buildbase):
 })
 class PathUsage(Usage):
     type = 'path'
+    _version = 1
+
+    @staticmethod
+    def upgrade(config, version):
+        return config
 
     def __init__(self, name, *, auto_link=Unset, include_path=Unset,
                  library_path=Unset, headers=Unset, libraries=Unset,

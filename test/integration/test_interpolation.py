@@ -12,12 +12,14 @@ class TestInterpolation(IntegrationTest):
     def _options(self):
         return {
             'common': {
+                '_version': 1,
                 'target_platform': platform_name(),
                 'env': AlwaysEqual(),
                 'deploy_paths': {},
             },
             'builders': [{
                 'type': 'bfg9000',
+                '_version': 1,
                 'toolchain': None,
             }],
             'sources': [],
@@ -26,10 +28,12 @@ class TestInterpolation(IntegrationTest):
     def _builder(self, name, extra_args=[]):
         return {
             'type': 'bfg9000',
+            '_version': 1,
             'name': name,
             'extra_args': extra_args,
             'usage': {
                 'type': 'pkg-config',
+                '_version': 1,
                 'path': {'base': 'builddir', 'path': 'pkgconfig'},
                 'pcfile': name,
                 'extra_args': [],
@@ -55,6 +59,7 @@ class TestInterpolation(IntegrationTest):
                 'config_file': config,
                 'resolved': True,
                 'source': 'directory',
+                '_version': 1,
                 'submodules': None,
                 'should_deploy': True,
                 'builder': self._builder('hello', extra_args=['--extra']),
@@ -80,6 +85,7 @@ class TestInterpolation(IntegrationTest):
                 'config_file': config,
                 'resolved': True,
                 'source': 'directory',
+                '_version': 1,
                 'submodules': None,
                 'should_deploy': True,
                 'builder': self._builder('hello'),

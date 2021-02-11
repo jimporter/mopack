@@ -14,6 +14,11 @@ from .types import Unset
 class CommonOptions(FreezeDried, BaseOptions):
     _context = 'while adding common options'
     type = 'common'
+    _version = 1
+
+    @staticmethod
+    def upgrade(config, version):
+        return config
 
     def __init__(self, deploy_paths=None):
         self.target_platform = Unset

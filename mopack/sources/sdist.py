@@ -19,6 +19,10 @@ from ..yaml_tools import to_parse_error
 @FreezeDried.fields(rehydrate={'builder': Builder},
                     skip_compare={'pending_usage'})
 class SDistPackage(Package):
+    @staticmethod
+    def upgrade(config, version):
+        return config
+
     def __init__(self, name, *, build=None, usage=None, submodules=types.Unset,
                  _options, **kwargs):
         super().__init__(name, _options=_options, **kwargs)
@@ -125,6 +129,7 @@ class SDistPackage(Package):
 @FreezeDried.fields(rehydrate={'path': Path})
 class DirectoryPackage(SDistPackage):
     source = 'directory'
+    _version = 1
 
     def __init__(self, name, *, path, **kwargs):
         super().__init__(name, **kwargs)
@@ -148,6 +153,7 @@ class DirectoryPackage(SDistPackage):
 @FreezeDried.fields(rehydrate={'path': Path}, skip_compare={'guessed_srcdir'})
 class TarballPackage(SDistPackage):
     source = 'tarball'
+    _version = 1
 
     def __init__(self, name, *, path=None, url=None, files=None, srcdir=None,
                  patch=None, **kwargs):
@@ -227,6 +233,7 @@ class TarballPackage(SDistPackage):
 
 class GitPackage(SDistPackage):
     source = 'git'
+    _version = 1
 
     def __init__(self, name, *, repository, tag=None, branch=None, commit=None,
                  srcdir='.', **kwargs):

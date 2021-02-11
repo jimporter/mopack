@@ -17,7 +17,12 @@ CommandsFD = ListFreezeDryer(ShellArguments)
                                'deploy_commands': CommandsFD})
 class CustomBuilder(Builder):
     type = 'custom'
+    _version = 1
     _path_bases = ('srcdir', 'builddir')
+
+    @staticmethod
+    def upgrade(config, version):
+        return config
 
     def __init__(self, name, *, build_commands, deploy_commands=None,
                  submodules, **kwargs):

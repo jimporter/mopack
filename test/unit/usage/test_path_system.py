@@ -606,6 +606,16 @@ class TestPath(UsageTest):
         data = through_json(usage.dehydrate())
         self.assertEqual(usage, Usage.rehydrate(data, _options=opts))
 
+    def test_upgrade(self):
+        opts = self.make_options()
+        data = {'type': self.type, '_version': 0, 'include_path': [],
+                'library_path': [], 'compile_flags': [], 'link_flags': []}
+        with mock.patch.object(self.usage_type, 'upgrade',
+                               side_effect=self.usage_type.upgrade) as m:
+            pkg = Usage.rehydrate(data, _options=opts)
+            self.assertIsInstance(pkg, self.usage_type)
+            m.assert_called_once()
+
     def test_invalid_usage(self):
         with self.assertRaises(FieldError):
             self.make_usage('foo', include_path='$builddir/include',

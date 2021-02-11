@@ -15,6 +15,7 @@ class TestApt(IntegrationTest):
     def _usage(self, name, headers=[], libraries=[]):
         return {
             'type': 'system',
+            '_version': 1,
             'pcfile': name,
             'auto_link': False,
             'include_path': [],
@@ -39,6 +40,7 @@ class TestApt(IntegrationTest):
         self.assertEqual(output['metadata'], {
             'options': {
                 'common': {
+                    '_version': 1,
                     'target_platform': platform_name(),
                     'env': AlwaysEqual(),
                     'deploy_paths': {},
@@ -51,6 +53,7 @@ class TestApt(IntegrationTest):
                 'config_file': config,
                 'resolved': True,
                 'source': 'apt',
+                '_version': 1,
                 'submodules': None,
                 'should_deploy': True,
                 'remote': 'libogg-dev',
@@ -61,8 +64,9 @@ class TestApt(IntegrationTest):
             }, {
                 'name': 'zlib',
                 'config_file': config,
-                'source': 'apt',
                 'resolved': True,
+                'source': 'apt',
+                '_version': 1,
                 'submodules': None,
                 'should_deploy': True,
                 'remote': 'zlib1g-dev',

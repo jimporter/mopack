@@ -16,10 +16,12 @@ class TestCross(IntegrationTest):
     def _builder(self, name):
         return {
             'type': 'bfg9000',
+            '_version': 1,
             'name': name,
             'extra_args': [],
             'usage': {
                 'type': 'pkg-config',
+                '_version': 1,
                 'path': {'base': 'builddir', 'path': 'pkgconfig'},
                 'pcfile': name,
                 'extra_args': [],
@@ -49,12 +51,14 @@ class TestCross(IntegrationTest):
         self.assertEqual(output['metadata'], {
             'options': {
                 'common': {
+                    '_version': 1,
                     'target_platform': platform_name(),
                     'env': AlwaysEqual(),
                     'deploy_paths': {},
                 },
                 'builders': [{
                     'type': 'bfg9000',
+                    '_version': 1,
                     'toolchain': toolchain,
                 }],
                 'sources': [],
@@ -65,6 +69,7 @@ class TestCross(IntegrationTest):
                                             'mopack.yml'),
                 'resolved': True,
                 'source': 'tarball',
+                '_version': 1,
                 'submodules': None,
                 'should_deploy': True,
                 'builder': self._builder('hello'),
@@ -80,6 +85,7 @@ class TestCross(IntegrationTest):
                 'config_file': config,
                 'resolved': True,
                 'source': 'directory',
+                '_version': 1,
                 'submodules': None,
                 'should_deploy': True,
                 'builder': self._builder('greeter'),

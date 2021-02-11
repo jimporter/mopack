@@ -59,6 +59,9 @@ class FreezeDried:
         else:
             result = {self._type_field: getattr(self, self._type_field)}
 
+        if hasattr(self, '_version'):
+            result['_version'] = self._version
+
         for k, v in vars(self).items():
             if self._skipped_field(k):
                 continue
@@ -74,6 +77,14 @@ class FreezeDried:
         else:
             typename = config.pop(cls._type_field)
             this_type = cls._get_type(typename)
+
+        if '_version' in config:
+            version = config.pop('_version')
+            if version < this_type._version:
+                config = this_type.upgrade(config, version)
+            elif version > this_type._version:
+                raise TypeError('saved version exceeds expected version')
+
         result = this_type.__new__(this_type)
 
         for k, v in config.items():

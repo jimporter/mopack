@@ -11,10 +11,16 @@ from ..shell import ShellArguments
 
 class ConanPackage(BinaryPackage):
     source = 'conan'
+    _version = 1
 
     @FreezeDried.fields(rehydrate={'extra_args': ShellArguments})
     class Options(PackageOptions):
         source = 'conan'
+        _version = 1
+
+        @staticmethod
+        def upgrade(config, version):
+            return config
 
         def __init__(self):
             self.build = []
@@ -28,6 +34,10 @@ class ConanPackage(BinaryPackage):
                 self.build = uniques(self.build)
             if extra_args:
                 T.extra_args(types.shell_args(), extend=True)
+
+    @staticmethod
+    def upgrade(config, version):
+        return config
 
     def __init__(self, name, remote, build=False, options=None, usage=None,
                  **kwargs):

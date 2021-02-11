@@ -1,4 +1,5 @@
 from os.path import abspath
+from unittest import mock
 
 from . import through_json, UsageTest
 
@@ -211,6 +212,16 @@ class TestPkgConfig(UsageTest):
                                _options=opts, _path_bases=path_bases)
         data = through_json(usage.dehydrate())
         self.assertEqual(usage, Usage.rehydrate(data, _options=opts))
+
+    def test_upgrade(self):
+        opts = self.make_options()
+        data = {'type': 'pkg-config', '_version': 0, 'pcfile': 'foo',
+                'extra_args': []}
+        with mock.patch.object(PkgConfigUsage, 'upgrade',
+                               side_effect=PkgConfigUsage.upgrade) as m:
+            pkg = Usage.rehydrate(data, _options=opts)
+            self.assertIsInstance(pkg, PkgConfigUsage)
+            m.assert_called_once()
 
     def test_invalid_usage(self):
         with self.assertRaises(FieldError):

@@ -5,6 +5,11 @@ from ..types import Unset
 
 class SystemPackage(BinaryPackage):
     source = 'system'
+    _version = 1
+
+    @staticmethod
+    def upgrade(config, version):
+        return config
 
     def __init__(self, name, *, auto_link=Unset, include_path=Unset,
                  library_path=Unset, headers=Unset, libraries=Unset,
