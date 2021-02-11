@@ -2,8 +2,6 @@ import json
 import os
 from unittest import skipIf
 
-from mopack.platforms import platform_name
-
 from . import *
 
 
@@ -11,20 +9,6 @@ from . import *
         'skipping apt tests; add `apt` to `MOPACK_EXTRA_TESTS` to enable')
 class TestApt(IntegrationTest):
     name = 'apt'
-
-    def _usage(self, name, headers=[], libraries=[]):
-        return {
-            'type': 'system',
-            '_version': 1,
-            'pcfile': name,
-            'auto_link': False,
-            'include_path': [],
-            'library_path': [],
-            'headers': headers,
-            'libraries': libraries,
-            'compile_flags': [],
-            'link_flags': [],
-        }
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-apt.yml')
@@ -38,43 +22,25 @@ class TestApt(IntegrationTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'options': {
-                'common': {
-                    '_version': 1,
-                    'target_platform': platform_name(),
-                    'env': AlwaysEqual(),
-                    'deploy_paths': {},
-                },
-                'builders': [],
-                'sources': [],
-            },
-            'packages': [{
-                'name': 'ogg',
-                'config_file': config,
-                'resolved': True,
-                'source': 'apt',
-                '_version': 1,
-                'submodules': None,
-                'should_deploy': True,
-                'remote': 'libogg-dev',
-                'repository': None,
-                'usage': self._usage('ogg', libraries=[
-                    {'name': 'ogg', 'type': 'guess'},
-                ]),
-            }, {
-                'name': 'zlib',
-                'config_file': config,
-                'resolved': True,
-                'source': 'apt',
-                '_version': 1,
-                'submodules': None,
-                'should_deploy': True,
-                'remote': 'zlib1g-dev',
-                'repository': None,
-                'usage': self._usage('zlib', libraries=[
-                    {'name': 'zlib', 'type': 'guess'},
-                ]),
-            }],
+            'options': cfg_options(),
+            'packages': [
+                cfg_apt_pkg(
+                    'ogg', config,
+                    remote='libogg-dev',
+                    usage=cfg_system_usage(
+                        pcfile='ogg',
+                        libraries=[{'name': 'ogg', 'type': 'guess'}]
+                    )
+                ),
+                cfg_apt_pkg(
+                    'zlib', config,
+                    remote='zlib1g-dev',
+                    usage=cfg_system_usage(
+                        pcfile='zlib',
+                        libraries=[{'name': 'zlib', 'type': 'guess'}]
+                    )
+                ),
+            ],
         })
 
         self.assertPopen(['mopack', 'deploy'])

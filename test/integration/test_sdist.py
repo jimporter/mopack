@@ -17,22 +17,6 @@ class SDistTest(IntegrationTest):
                                               '--json']))
         self.assertEqual(output, files + implicit)
 
-    def _options(self, deploy_paths={}):
-        return {
-            'common': {
-                '_version': 1,
-                'target_platform': platform_name(),
-                'env': AlwaysEqual(),
-                'deploy_paths': deploy_paths,
-            },
-            'builders': [{
-                'type': 'bfg9000',
-                '_version': 1,
-                'toolchain': None,
-            }],
-            'sources': [],
-        }
-
     def _builder(self, name):
         return {
             'type': 'bfg9000',
@@ -66,18 +50,14 @@ class TestDirectory(SDistTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'options': self._options(),
-            'packages': [{
-                'name': 'hello',
-                'config_file': config,
-                'resolved': True,
-                'source': 'directory',
-                '_version': 1,
-                'submodules': None,
-                'should_deploy': True,
-                'builder': self._builder('hello'),
-                'path': {'base': 'cfgdir', 'path': 'hello-bfg'},
-            }],
+            'options': cfg_options(bfg9000={}),
+            'packages': [
+                cfg_directory_pkg(
+                    'hello', config,
+                    path={'base': 'cfgdir', 'path': 'hello-bfg'},
+                    builder=cfg_bfg9000_builder('hello')
+                ),
+            ],
         })
 
     def test_resolve_verbose(self):
@@ -97,18 +77,14 @@ class TestDirectory(SDistTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'options': self._options(),
-            'packages': [{
-                'name': 'hello',
-                'config_file': config,
-                'resolved': True,
-                'source': 'directory',
-                '_version': 1,
-                'submodules': None,
-                'should_deploy': True,
-                'builder': self._builder('hello'),
-                'path': {'base': 'cfgdir', 'path': 'hello-bfg'},
-            }],
+            'options': cfg_options(bfg9000={}),
+            'packages': [
+                cfg_directory_pkg(
+                    'hello', config,
+                    path={'base': 'cfgdir', 'path': 'hello-bfg'},
+                    builder=cfg_bfg9000_builder('hello')
+                ),
+            ],
         })
 
 
@@ -130,23 +106,18 @@ class TestTarball(SDistTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'options': self._options({'prefix': self.prefix}),
-            'packages': [{
-                'name': 'hello',
-                'config_file': config,
-                'resolved': True,
-                'source': 'tarball',
-                '_version': 1,
-                'submodules': None,
-                'should_deploy': True,
-                'builder': self._builder('hello'),
-                'url': None,
-                'path': {'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
-                'files': [],
-                'srcdir': None,
-                'guessed_srcdir': 'hello-bfg',
-                'patch': None,
-            }],
+            'options': cfg_options(
+                common={'deploy_paths': {'prefix': self.prefix}},
+                bfg9000={}
+            ),
+            'packages': [
+                cfg_tarball_pkg(
+                    'hello', config,
+                    path={'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
+                    guessed_srcdir='hello-bfg',
+                    builder=cfg_bfg9000_builder('hello')
+                ),
+            ],
         })
 
         self.assertPopen(['mopack', 'deploy'])
@@ -175,23 +146,19 @@ class TestTarballPatch(SDistTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'options': self._options({'prefix': self.prefix}),
-            'packages': [{
-                'name': 'hello',
-                'config_file': config,
-                'resolved': True,
-                'source': 'tarball',
-                '_version': 1,
-                'submodules': None,
-                'should_deploy': True,
-                'builder': self._builder('hello'),
-                'url': None,
-                'path': {'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
-                'files': [],
-                'srcdir': None,
-                'guessed_srcdir': 'hello-bfg',
-                'patch': {'base': 'cfgdir', 'path': 'hello-bfg.patch'},
-            }],
+            'options': cfg_options(
+                common={'deploy_paths': {'prefix': self.prefix}},
+                bfg9000={}
+            ),
+            'packages': [
+                cfg_tarball_pkg(
+                    'hello', config,
+                    path={'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
+                    guessed_srcdir='hello-bfg',
+                    patch={'base': 'cfgdir', 'path': 'hello-bfg.patch'},
+                    builder=cfg_bfg9000_builder('hello')
+                ),
+            ],
         })
 
         self.assertPopen(['mopack', 'deploy'])
@@ -221,20 +188,18 @@ class TestGit(SDistTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'options': self._options({'prefix': self.prefix}),
-            'packages': [{
-                'name': 'bencodehpp',
-                'config_file': config,
-                'resolved': True,
-                'source': 'git',
-                '_version': 1,
-                'submodules': None,
-                'should_deploy': True,
-                'builder': self._builder('bencodehpp'),
-                'repository': 'https://github.com/jimporter/bencode.hpp.git',
-                'rev': ['tag', 'v0.2.1'],
-                'srcdir': '.',
-            }],
+            'options': cfg_options(
+                common={'deploy_paths': {'prefix': self.prefix}},
+                bfg9000={}
+            ),
+            'packages': [
+                cfg_git_pkg(
+                    'bencodehpp', config,
+                    repository='https://github.com/jimporter/bencode.hpp.git',
+                    rev=['tag', 'v0.2.1'],
+                    builder=cfg_bfg9000_builder('bencodehpp'),
+                ),
+            ],
         })
 
         self.assertPopen(['mopack', 'deploy'])

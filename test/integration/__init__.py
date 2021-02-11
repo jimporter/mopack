@@ -8,6 +8,7 @@ import yaml
 from .. import *
 
 from mopack.iterutils import listify
+from mopack.platforms import platform_name
 
 
 # Also supported: 'apt', 'mingw-cross'
@@ -30,6 +31,189 @@ def stage_dir(name, chdir=True):
 def slurp(filename):
     with open(filename) as f:
         return f.read()
+
+
+def cfg_common_options(target_platform=platform_name(), env=AlwaysEqual(),
+                       deploy_paths={}):
+    return {'_version': 1, 'target_platform': target_platform,
+            'env': env, 'deploy_paths': deploy_paths}
+
+
+def cfg_bfg9000_options(toolchain=None):
+    return {'type': 'bfg9000', '_version': 1, 'toolchain': toolchain}
+
+
+def cfg_cmake_options(toolchain=None):
+    return {'type': 'cmake', '_version': 1, 'toolchain': toolchain}
+
+
+def cfg_conan_options(build=[], extra_args=[]):
+    return {'source': 'conan', '_version': 1, 'build': build,
+            'extra_args': extra_args}
+
+
+def cfg_options(**kwargs):
+    result = {'common': cfg_common_options(**kwargs.pop('common', {})),
+              'builders': [],
+              'sources': []}
+    for k, v in kwargs.items():
+        opts = globals()['cfg_{}_options'.format(k)](**v)
+        if k in ('bfg9000', 'cmake'):
+            result['builders'].append(opts)
+        else:
+            result['sources'].append(opts)
+    return result
+
+
+def _cfg_package(source, version, name, config_file, resolved=True,
+                 submodules=None, should_deploy=True):
+    return {
+        'source': source,
+        '_version': version,
+        'name': name,
+        'config_file': config_file,
+        'resolved': resolved,
+        'submodules': submodules,
+        'should_deploy': should_deploy,
+    }
+
+
+def cfg_directory_pkg(name, config_file, *, resolved=True, submodules=None,
+                      should_deploy=True, path, builder):
+    result = _cfg_package('directory', 1, name, config_file, resolved,
+                          submodules, should_deploy)
+    result.update({
+        'path': path,
+        'builder': builder,
+    })
+    return result
+
+
+def cfg_tarball_pkg(name, config_file, *, resolved=True, submodules=None,
+                    should_deploy=True, path=None, url=None, files=[],
+                    srcdir=None, guessed_srcdir=None, patch=None, builder):
+    result = _cfg_package('tarball', 1, name, config_file, resolved,
+                          submodules, should_deploy)
+    result.update({
+        'path': path,
+        'url': url,
+        'files': files,
+        'srcdir': srcdir,
+        'guessed_srcdir': guessed_srcdir,
+        'patch': patch,
+        'builder': builder,
+    })
+    return result
+
+
+def cfg_git_pkg(name, config_file, *, resolved=True, submodules=None,
+                should_deploy=True, repository, rev, srcdir='.', builder):
+    result = _cfg_package('git', 1, name, config_file, resolved, submodules,
+                          should_deploy)
+    result.update({
+        'repository': repository,
+        'rev': rev,
+        'srcdir': srcdir,
+        'builder': builder,
+    })
+    return result
+
+
+def cfg_apt_pkg(name, config_file, *, resolved=True, submodules=None,
+                should_deploy=True, remote, repository=None, usage):
+    result = _cfg_package('apt', 1, name, config_file, resolved,
+                          submodules, should_deploy)
+    result.update({
+        'remote': remote,
+        'repository': repository,
+        'usage': usage,
+    })
+    return result
+
+
+def cfg_conan_pkg(name, config_file, *, resolved=True, submodules=None,
+                  should_deploy=True, remote, build=False, options={}, usage):
+    result = _cfg_package('conan', 1, name, config_file, resolved,
+                          submodules, should_deploy)
+    result.update({
+        'remote': remote,
+        'build': build,
+        'options': options,
+        'usage': usage,
+    })
+    return result
+
+
+def cfg_bfg9000_builder(name, *, extra_args=[], usage=None):
+    if usage is None:
+        usage = cfg_pkg_config_usage(pcfile=name)
+    return {
+        'type': 'bfg9000',
+        '_version': 1,
+        'name': name,
+        'extra_args': extra_args,
+        'usage': usage
+    }
+
+
+def cfg_cmake_builder(name, *, extra_args=[], usage):
+    return {
+        'type': 'cmake',
+        '_version': 1,
+        'name': name,
+        'extra_args': extra_args,
+        'usage': usage
+    }
+
+
+def cfg_custom_builder(name, *, build_commands=[], deploy_commands=[],
+                       usage):
+    return {
+        'type': 'custom',
+        '_version': 1,
+        'name': name,
+        'build_commands': build_commands,
+        'deploy_commands': deploy_commands,
+        'usage': usage
+    }
+
+
+def cfg_pkg_config_usage(*, path={'base': 'builddir', 'path': 'pkgconfig'},
+                         pcfile, extra_args=[], **kwargs):
+    return {
+        'type': 'pkg-config',
+        '_version': 1,
+        'path': path,
+        'pcfile': pcfile,
+        'extra_args': extra_args,
+        **kwargs
+    }
+
+
+def cfg_path_usage(*, auto_link=False, include_path=[], library_path=[],
+                   headers=[], libraries=[], compile_flags=[], link_flags=[],
+                   **kwargs):
+    return {
+        'type': 'path',
+        '_version': 1,
+        'auto_link': auto_link,
+        'include_path': include_path,
+        'library_path': library_path,
+        'headers': headers,
+        'libraries': libraries,
+        'compile_flags': compile_flags,
+        'link_flags': link_flags,
+        **kwargs
+    }
+
+
+def cfg_system_usage(*, pcfile=None, **kwargs):
+    result = cfg_path_usage(**kwargs)
+    result.update({
+        'type': 'system',
+        'pcfile': pcfile
+    })
+    return result
 
 
 class SubprocessError(unittest.TestCase.failureException):

@@ -30,69 +30,30 @@ class TestInnerCMake(IntegrationTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'options': {
-                'common': {
-                    '_version': 1,
-                    'target_platform': platform_name(),
-                    'env': AlwaysEqual(),
-                    'deploy_paths': {'prefix': self.prefix},
-                },
-                'builders': [
-                    {'type': 'cmake', '_version': 1, 'toolchain': None},
-                    {'type': 'bfg9000', '_version': 1, 'toolchain': None},
-                ],
-                'sources': [],
-            },
-            'packages': [{
-                'name': 'hello',
-                'config_file': config,
-                'resolved': True,
-                'source': 'directory',
-                '_version': 1,
-                'submodules': None,
-                'should_deploy': True,
-                'builder': {
-                    'type': 'cmake',
-                    '_version': 1,
-                    'name': 'hello',
-                    'extra_args': [],
-                    'usage': {
-                        'type': 'path',
-                        '_version': 1,
-                        'auto_link': False,
-                        'include_path': [{'base': 'srcdir',
-                                          'path': 'include'}],
-                        'library_path': [{'base': 'builddir', 'path': ''}],
-                        'headers': [],
-                        'libraries': [{'type': 'guess', 'name': 'hello'}],
-                        'compile_flags': [],
-                        'link_flags': [],
-                    },
-                },
-                'path': {'base': 'cfgdir', 'path': 'hello-cmake'},
-            }, {
-                'name': 'greeter',
-                'config_file': config,
-                'resolved': True,
-                'source': 'directory',
-                '_version': 1,
-                'submodules': None,
-                'should_deploy': True,
-                'builder': {
-                    'type': 'bfg9000',
-                    '_version': 1,
-                    'name': 'greeter',
-                    'extra_args': [],
-                    'usage': {
-                        'type': 'pkg-config',
-                        '_version': 1,
-                        'path': {'base': 'builddir', 'path': 'pkgconfig'},
-                        'pcfile': 'greeter',
-                        'extra_args': [],
-                    },
-                },
-                'path': {'base': 'cfgdir', 'path': 'greeter-bfg'},
-            }],
+            'options': cfg_options(
+                common={'deploy_paths': {'prefix': self.prefix}},
+                cmake={}, bfg9000={}
+            ),
+            'packages': [
+                cfg_directory_pkg(
+                    'hello', config,
+                    path={'base': 'cfgdir', 'path': 'hello-cmake'},
+                    builder=cfg_cmake_builder(
+                        'hello',
+                        usage=cfg_path_usage(
+                            include_path=[{'base': 'srcdir',
+                                           'path': 'include'}],
+                            library_path=[{'base': 'builddir', 'path': ''}],
+                            libraries=[{'type': 'guess', 'name': 'hello'}]
+                        )
+                    )
+                ),
+                cfg_directory_pkg(
+                    'greeter', config,
+                    path={'base': 'cfgdir', 'path': 'greeter-bfg'},
+                    builder=cfg_bfg9000_builder('greeter'),
+                ),
+            ],
         })
 
         self.assertPopen(['mopack', 'deploy'])
@@ -128,76 +89,33 @@ class TestOuterCMake(IntegrationTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'options': {
-                'common': {
-                    '_version': 1,
-                    'target_platform': platform_name(),
-                    'env': AlwaysEqual(),
-                    'deploy_paths': {'prefix': self.prefix},
-                },
-                'builders': [
-                    {'type': 'bfg9000', '_version': 1, 'toolchain': None},
-                    {'type': 'cmake', '_version': 1, 'toolchain': None},
-                ],
-                'sources': [],
-            },
-            'packages': [{
-                'name': 'hello',
-                'config_file': os.path.join(test_data_dir, 'greeter-cmake',
-                                            'mopack.yml'),
-                'resolved': True,
-                'source': 'tarball',
-                '_version': 1,
-                'submodules': None,
-                'should_deploy': True,
-                'builder': {
-                    'type': 'bfg9000',
-                    '_version': 1,
-                    'name': 'hello',
-                    'extra_args': [],
-                    'usage': {
-                        'type': 'pkg-config',
-                        '_version': 1,
-                        'path': {'base': 'builddir', 'path': 'pkgconfig'},
-                        'pcfile': 'hello',
-                        'extra_args': [],
-                    },
-                },
-                'url': None,
-                'path': {'base': 'cfgdir',
-                         'path': os.path.join('..', 'hello-bfg.tar.gz')},
-                'files': [],
-                'srcdir': None,
-                'guessed_srcdir': 'hello-bfg',
-                'patch': None,
-            }, {
-                'name': 'greeter',
-                'config_file': config,
-                'resolved': True,
-                'source': 'directory',
-                '_version': 1,
-                'submodules': None,
-                'should_deploy': True,
-                'builder': {
-                    'type': 'cmake',
-                    '_version': 1,
-                    'name': 'greeter',
-                    'extra_args': [],
-                    'usage': {
-                        'type': 'path',
-                        '_version': 1,
-                        'auto_link': False,
-                        'include_path': [{'base': 'srcdir',
-                                          'path': 'include'}],
-                        'library_path': [{'base': 'builddir', 'path': ''}],
-                        'headers': [],
-                        'libraries': [{'type': 'guess', 'name': 'greeter'}],
-                        'compile_flags': [],
-                        'link_flags': [],
-                    },
-                },
-                'path': {'base': 'cfgdir', 'path': 'greeter-cmake'},
-            }],
+            'options': cfg_options(
+                common={'deploy_paths': {'prefix': self.prefix}},
+                bfg9000={}, cmake={}
+            ),
+            'packages': [
+                cfg_tarball_pkg(
+                    'hello',
+                    os.path.join(test_data_dir, 'greeter-cmake', 'mopack.yml'),
+                    path={'base': 'cfgdir',
+                          'path': os.path.join('..', 'hello-bfg.tar.gz')},
+                    guessed_srcdir='hello-bfg',
+                    builder=cfg_bfg9000_builder('hello'),
+                ),
+                cfg_directory_pkg(
+                    'greeter', config,
+                    path={'base': 'cfgdir', 'path': 'greeter-cmake'},
+                    builder=cfg_cmake_builder(
+                        'greeter',
+                        usage=cfg_path_usage(
+                            include_path=[{'base': 'srcdir',
+                                           'path': 'include'}],
+                            library_path=[{'base': 'builddir', 'path': ''}],
+                            libraries=[{'type': 'guess', 'name': 'greeter'}],
+                        )
+                    )
+                ),
+            ],
         })
 
         self.assertPopen(['mopack', 'deploy'])

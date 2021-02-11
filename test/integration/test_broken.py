@@ -8,22 +8,6 @@ from . import *
 
 
 class CommonTest(IntegrationTest):
-    def _options(self, deploy_paths={}):
-        return {
-            'common': {
-                '_version': 1,
-                'target_platform': platform_name(),
-                'env': AlwaysEqual(),
-                'deploy_paths': deploy_paths,
-            },
-            'builders': [{
-                'type': 'bfg9000',
-                '_version': 1,
-                'toolchain': None,
-            }],
-            'sources': [],
-        }
-
     def _builder(self, name):
         return {
             'type': 'bfg9000',
@@ -57,23 +41,19 @@ class TestBroken(CommonTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'options': self._options({'prefix': self.prefix}),
-            'packages': [{
-                'name': 'hello',
-                'config_file': config,
-                'resolved': False,
-                'source': 'tarball',
-                '_version': 1,
-                'submodules': None,
-                'should_deploy': True,
-                'builder': self._builder('hello'),
-                'url': None,
-                'path': {'base': 'cfgdir', 'path': 'broken-bfg.tar.gz'},
-                'files': [],
-                'srcdir': None,
-                'guessed_srcdir': 'hello-bfg',
-                'patch': None,
-            }],
+            'options': cfg_options(
+                common={'deploy_paths': {'prefix': self.prefix}},
+                bfg9000={}
+            ),
+            'packages': [
+                cfg_tarball_pkg(
+                    'hello', config,
+                    resolved=False,
+                    path={'base': 'cfgdir', 'path': 'broken-bfg.tar.gz'},
+                    guessed_srcdir='hello-bfg',
+                    builder=cfg_bfg9000_builder('hello'),
+                ),
+            ],
         })
 
         self.assertPopen(['mopack', 'deploy'], returncode=1)
@@ -101,23 +81,20 @@ class TestBrokenPatch(CommonTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'options': self._options({'prefix': self.prefix}),
-            'packages': [{
-                'name': 'hello',
-                'config_file': config,
-                'resolved': False,
-                'source': 'tarball',
-                '_version': 1,
-                'submodules': None,
-                'should_deploy': True,
-                'builder': self._builder('hello'),
-                'url': None,
-                'path': {'base': 'cfgdir', 'path': 'broken-bfg.tar.gz'},
-                'files': [],
-                'srcdir': None,
-                'guessed_srcdir': 'hello-bfg',
-                'patch': {'base': 'cfgdir', 'path': 'hello-bfg.patch'},
-            }],
+            'options': cfg_options(
+                common={'deploy_paths': {'prefix': self.prefix}},
+                bfg9000={}
+            ),
+            'packages': [
+                cfg_tarball_pkg(
+                    'hello', config,
+                    resolved=False,
+                    path={'base': 'cfgdir', 'path': 'broken-bfg.tar.gz'},
+                    guessed_srcdir='hello-bfg',
+                    patch={'base': 'cfgdir', 'path': 'hello-bfg.patch'},
+                    builder=cfg_bfg9000_builder('hello'),
+                ),
+            ],
         })
 
         self.assertPopen(['mopack', 'deploy'], returncode=1)

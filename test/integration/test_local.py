@@ -1,8 +1,6 @@
 import json
 import os
 
-from mopack.platforms import platform_name
-
 from . import *
 
 
@@ -30,38 +28,18 @@ class TestLocal(IntegrationTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'options': {
-                'common': {
-                    '_version': 1,
-                    'target_platform': platform_name(),
-                    'env': AlwaysEqual(),
-                    'deploy_paths': {},
-                },
-                'builders': [],
-                'sources': [{
-                    'source': 'conan',
-                    '_version': 1,
-                    'build': ['missing'],
-                    'extra_args': [],
-                }],
-            },
-            'packages': [{
-                'name': 'zlib',
-                'config_file': os.path.join(config, 'mopack-local.yml'),
-                'resolved': True,
-                'source': 'conan',
-                '_version': 1,
-                'submodules': None,
-                'should_deploy': True,
-                'remote': 'zlib/1.2.11',
-                'build': False,
-                'options': {'shared': True},
-                'usage': {
-                    'type': 'pkg-config',
-                    '_version': 1,
-                    'path': {'base': 'builddir', 'path': ''},
-                    'pcfile': 'zlib',
-                    'extra_args': [],
-                },
-            }],
+            'options': cfg_options(
+                conan={'build': ['missing']}
+            ),
+            'packages': [
+                cfg_conan_pkg(
+                    'zlib', os.path.join(config, 'mopack-local.yml'),
+                    remote='zlib/1.2.11',
+                    options={'shared': True},
+                    usage=cfg_pkg_config_usage(
+                        path={'base': 'builddir', 'path': ''},
+                        pcfile='zlib'
+                    )
+                )
+            ],
         })

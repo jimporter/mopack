@@ -22,57 +22,33 @@ class TestCustomBuilder(IntegrationTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'options': {
-                'common': {
-                    '_version': 1,
-                    'target_platform': platform_name(),
-                    'env': AlwaysEqual(),
-                    'deploy_paths': {},
-                },
-                'builders': [],
-                'sources': [],
-            },
-            'packages': [{
-                'name': 'hello',
-                'config_file': config,
-                'resolved': True,
-                'source': 'tarball',
-                '_version': 1,
-                'url': None,
-                'path': {'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
-                'files': [],
-                'srcdir': None,
-                'guessed_srcdir': 'hello-bfg',
-                'patch': None,
-                'submodules': None,
-                'should_deploy': True,
-                'builder': {
-                    'type': 'custom',
-                    '_version': 1,
-                    'name': 'hello',
-                    'build_commands': [
-                        ['bfg9000', 'configure',
-                         {'base': 'builddir', 'path': ''}],
-                        ['cd', [{'base': 'builddir', 'path': ''}, '/.']],
-                        ['ninja'],
-                    ],
-                    'deploy_commands': [
-                        ['ninja', 'install'],
-                    ],
-                    'usage': {
-                        'type': 'pkg-config',
-                        '_version': 1,
-                        'path': {'base': 'builddir', 'path': 'pkgconfig'},
-                        'pcfile': 'hello',
-                        'extra_args': [],
-                    },
-                },
-            }],
+            'options': cfg_options(),
+            'packages': [
+                cfg_tarball_pkg(
+                    'hello', config,
+                    path={'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
+                    guessed_srcdir='hello-bfg',
+                    builder=cfg_custom_builder(
+                        'hello',
+                        build_commands=[
+                            ['bfg9000', 'configure',
+                             {'base': 'builddir', 'path': ''}],
+                            ['cd', [{'base': 'builddir', 'path': ''}, '/.']],
+                            ['ninja'],
+                        ],
+                        deploy_commands=[
+                            ['ninja', 'install'],
+                        ],
+                        usage=cfg_pkg_config_usage(pcfile='hello')
+                    )
+                ),
+            ],
         })
 
 
 class TestCustomBuilderDeploy(IntegrationTest):
     name = 'custom-builder-deploy'
+    maxDiff = None
     deploy = True
 
     def test_resolve(self):
@@ -88,56 +64,31 @@ class TestCustomBuilderDeploy(IntegrationTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'options': {
-                'common': {
-                    '_version': 1,
-                    'target_platform': platform_name(),
-                    'env': AlwaysEqual(),
-                    'deploy_paths': {
-                        'prefix': self.prefix
-                    },
-                },
-                'builders': [],
-                'sources': [],
-            },
-            'packages': [{
-                'name': 'hello',
-                'config_file': config,
-                'resolved': True,
-                'source': 'tarball',
-                '_version': 1,
-                'url': None,
-                'path': {'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
-                'files': [],
-                'srcdir': None,
-                'guessed_srcdir': 'hello-bfg',
-                'patch': None,
-                'submodules': None,
-                'should_deploy': True,
-                'builder': {
-                    'type': 'custom',
-                    '_version': 1,
-                    'name': 'hello',
-                    'build_commands': [
-                        ['bfg9000', 'configure',
-                         {'base': 'builddir', 'path': ''},
-                         ['--prefix=', {'base': 'absolute',
-                                        'path': self.prefix}]],
-                        ['cd', [{'base': 'builddir', 'path': ''}, '/.']],
-                        ['ninja'],
-                    ],
-                    'deploy_commands': [
-                        ['ninja', 'install'],
-                    ],
-                    'usage': {
-                        'type': 'pkg-config',
-                        '_version': 1,
-                        'path': {'base': 'builddir', 'path': 'pkgconfig'},
-                        'pcfile': 'hello',
-                        'extra_args': [],
-                    },
-                },
-            }],
+            'options': cfg_options(
+                common={'deploy_paths': {'prefix': self.prefix}}
+            ),
+            'packages': [
+                cfg_tarball_pkg(
+                    'hello', config,
+                    path={'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
+                    guessed_srcdir='hello-bfg',
+                    builder=cfg_custom_builder(
+                        'hello',
+                        build_commands=[
+                            ['bfg9000', 'configure',
+                             {'base': 'builddir', 'path': ''},
+                             ['--prefix=', {'base': 'absolute',
+                                            'path': self.prefix}]],
+                            ['cd', [{'base': 'builddir', 'path': ''}, '/.']],
+                            ['ninja'],
+                        ],
+                        deploy_commands=[
+                            ['ninja', 'install'],
+                        ],
+                        usage=cfg_pkg_config_usage(pcfile='hello')
+                    )
+                ),
+            ],
         })
 
         self.assertPopen(['mopack', '--debug', 'deploy'])

@@ -1,8 +1,6 @@
 import json
 import os
 
-from mopack.platforms import platform_name
-
 from . import *
 
 
@@ -25,47 +23,24 @@ class TestSubmodules(IntegrationTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
-            'options': {
-                'common': {
-                    '_version': 1,
-                    'target_platform': platform_name(),
-                    'env': AlwaysEqual(),
-                    'deploy_paths': {},
-                },
-                'builders': [{
-                    'type': 'bfg9000',
-                    '_version': 1,
-                    'toolchain': None,
-                }],
-                'sources': [],
-            },
-            'packages': [{
-                'name': 'hello',
-                'config_file': config,
-                'resolved': True,
-                'source': 'directory',
-                '_version': 1,
-                'submodules': {
-                    'names': ['french', 'english'],
-                    'required': True,
-                },
-                'should_deploy': True,
-                'builder': {
-                    'type': 'bfg9000',
-                    '_version': 1,
-                    'name': 'hello',
-                    'extra_args': [],
-                    'usage': {
-                        'type': 'pkg-config',
-                        '_version': 1,
-                        'path': {'base': 'builddir', 'path': 'pkgconfig'},
-                        'pcfile': None,
-                        'extra_args': [],
-                        'submodule_map': {
-                            '*': {'pcfile': {'#phs#': ['hello_', 0]}},
-                        },
+            'options': cfg_options(bfg9000={}),
+            'packages': [
+                cfg_directory_pkg(
+                    'hello', config,
+                    submodules={
+                        'names': ['french', 'english'],
+                        'required': True,
                     },
-                },
-                'path': {'base': 'cfgdir', 'path': 'hello-multi-bfg'},
-            }],
+                    path={'base': 'cfgdir', 'path': 'hello-multi-bfg'},
+                    builder=cfg_bfg9000_builder(
+                        'hello',
+                        usage=cfg_pkg_config_usage(
+                            pcfile=None,
+                            submodule_map={
+                                '*': {'pcfile': {'#phs#': ['hello_', 0]}},
+                            }
+                        )
+                    )
+                ),
+            ],
         })

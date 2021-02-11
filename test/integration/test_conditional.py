@@ -9,22 +9,6 @@ from . import *
 class TestConditional(IntegrationTest):
     name = 'conditional'
 
-    def _options(self):
-        return {
-            'common': {
-                '_version': 1,
-                'target_platform': platform_name(),
-                'env': AlwaysEqual(),
-                'deploy_paths': {},
-            },
-            'builders': [{
-                'type': 'bfg9000',
-                '_version': 1,
-                'toolchain': None,
-            }],
-            'sources': [],
-        }
-
     def _builder(self, name):
         return {
             'type': 'bfg9000',
@@ -84,6 +68,6 @@ class TestConditional(IntegrationTest):
                 'path': {'base': 'cfgdir', 'path': 'hello-bfg'},
             }
         self.assertEqual(output['metadata'], {
-            'options': self._options(),
+            'options': cfg_options(bfg9000={}),
             'packages': [hellopkg],
         })
