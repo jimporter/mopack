@@ -5,4 +5,5 @@
 /dist/
 /htmlcov/
 /mopack.egg-info/
+/site/
 /test/stage/
