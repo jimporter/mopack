@@ -60,6 +60,14 @@ PKG_RESOLVE, pkg_resolve = _make_log_level('resolve', '1;32')
 PKG_DEPLOY,  pkg_deploy  = _make_log_level('deploy',  '1;32')
 
 
+def _clicolor(environ):
+    if environ.get('CLICOLOR_FORCE', '0') != '0':
+        return 'always'
+    if 'CLICOLOR' in environ:
+        return 'never' if environ['CLICOLOR'] == '0' else 'auto'
+    return None
+
+
 def _init_logging(logger, debug, stream=None):  # noqa: F811
     logger.setLevel(DEBUG if debug else INFO)
 
@@ -70,7 +78,8 @@ def _init_logging(logger, debug, stream=None):  # noqa: F811
 
 
 def init(color='auto', debug=False, verbose=False,  # noqa: F811
-         warn_once=False):
+         warn_once=False, environ=os.environ):
+    color = _clicolor(environ) or color
     if color == 'always':
         colorama.init(strip=False)
     elif color == 'never':
