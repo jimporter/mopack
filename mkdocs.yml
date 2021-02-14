@@ -8,6 +8,7 @@ theme:
   name: yeti
   hljs_languages: [yaml]
 extra_css:
+  - css/extra.css
   - css/version-select.css
 extra_javascript:
   - js/version-select.js
@@ -24,5 +25,6 @@ nav:
     - Sources: reference/sources.md
     - Builders: reference/builders.md
     - Usage: reference/usage.md
+    - Environment Variables: reference/environment-vars.md
   - About:
     - License: about/license.md
