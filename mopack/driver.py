@@ -127,11 +127,16 @@ def main():
                            dest='deploy_paths', metavar='TYPE=PATH',
                            help='directories to deploy packages to')
     resolve_p.add_argument('-o', '--option', action=ConfigOptionAction,
-                           dest='options')
+                           dest='options', metavar='OPTION=VALUE',
+                           help='additional common options')
     resolve_p.add_argument('-S', '--source-option', action=ConfigOptionAction,
-                           key=['sources'], dest='options')
+                           key=['sources'], dest='options',
+                           metavar='OPTION=VALUE',
+                           help='additional source options')
     resolve_p.add_argument('-B', '--builder-option', action=ConfigOptionAction,
-                           key=['builders'], dest='options')
+                           key=['builders'], dest='options',
+                           metavar='OPTION=VALUE',
+                           help='additional builder options')
     resolve_p.add_argument('file', nargs='+',
                            help='the mopack configuration files')
 
@@ -140,7 +145,8 @@ def main():
     )
     usage_p.set_defaults(func=usage, parser=usage_p)
     usage_p.add_argument('-s', '--submodule', action='append',
-                         dest='submodules')
+                         dest='submodules',
+                         help='the name of the submodule to use')
     usage_p.add_argument('--directory', default='.', type=os.path.abspath,
                          metavar='PATH',
                          help='directory storing local package data')

@@ -70,7 +70,7 @@ Default: *none*
 {: .subtitle}
 
 If set to non-zero, enable colors in the terminal output regardless of whether
-the destination is a tty. This overrides [*CLICOLOR*](#CLICOLOR).
+the destination is a tty. This overrides [*CLICOLOR*](#clicolor).
 
 [bfg9000]: https://jimporter.github.io/bfg9000/
 [conan]: https://conan.io/
