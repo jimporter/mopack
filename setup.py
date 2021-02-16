@@ -196,8 +196,8 @@ setup(
             'none=mopack.builders.none:NoneBuilder',
         ],
         'mopack.usage': [
-            'pkg-config=mopack.usage.pkg_config:PkgConfigUsage',
             'path=mopack.usage.path_system:PathUsage',
+            'pkg_config=mopack.usage.pkg_config:PkgConfigUsage',
             'system=mopack.usage.path_system:SystemUsage',
         ],
     },

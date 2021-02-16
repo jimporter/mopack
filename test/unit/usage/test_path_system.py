@@ -647,6 +647,6 @@ class TestSystem(TestPath):
         self.check_usage(usage)
         with mock.patch('subprocess.run'):
             self.assertEqual(usage.get_usage(None, None, None), {
-                'type': 'pkg-config', 'path': None, 'pcfiles': ['foo'],
+                'type': 'pkg_config', 'path': None, 'pcfiles': ['foo'],
                 'extra_args': [],
             })

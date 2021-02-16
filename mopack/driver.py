@@ -14,6 +14,10 @@ logger = log.getLogger(__name__)
 # same mopack directory.
 nested_invoke = 'MOPACK_NESTED_INVOCATION'
 
+description = """
+mopack ("multiple-origin packager
+"""
+
 
 class KeyValueAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):

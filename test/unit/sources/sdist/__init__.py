@@ -21,7 +21,7 @@ class SDistTestCase(SourceTest):
             pcfiles = ([] if pkg.submodules and pkg.submodules['required'] else
                        ['foo'])
             pcfiles.extend('foo_{}'.format(i) for i in iterate(submodules))
-            usage = {'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
+            usage = {'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
                      'pcfiles': pcfiles, 'extra_args': []}
 
         with mock_open_log() as mopen, \

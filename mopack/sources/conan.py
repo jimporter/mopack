@@ -41,7 +41,7 @@ class ConanPackage(BinaryPackage):
 
     def __init__(self, name, remote, build=False, options=None, usage=None,
                  **kwargs):
-        usage = usage or {'type': 'pkg-config', 'path': ''}
+        usage = usage or {'type': 'pkg_config', 'path': ''}
         super().__init__(name, usage=usage, _path_bases=('builddir',),
                          **kwargs)
 

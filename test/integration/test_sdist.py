@@ -17,21 +17,6 @@ class SDistTest(IntegrationTest):
                                               '--json']))
         self.assertEqual(output, files + implicit)
 
-    def _builder(self, name):
-        return {
-            'type': 'bfg9000',
-            '_version': 1,
-            'name': name,
-            'extra_args': [],
-            'usage': {
-                'type': 'pkg-config',
-                '_version': 1,
-                'path': {'base': 'builddir', 'path': 'pkgconfig'},
-                'pcfile': name,
-                'extra_args': [],
-            },
-        }
-
 
 class TestDirectory(SDistTest):
     name = 'directory'

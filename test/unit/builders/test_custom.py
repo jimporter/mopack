@@ -27,7 +27,7 @@ class TestCustomBuilder(BuilderTest):
         if usage is None:
             pcfiles = ['foo']
             pcfiles.extend('foo_{}'.format(i) for i in iterate(submodules))
-            usage = {'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
+            usage = {'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
                      'pcfiles': pcfiles, 'extra_args': []}
         if build_commands is None:
             builddir = os.path.join(self.pkgdir, 'build', builder.name)
@@ -52,7 +52,7 @@ class TestCustomBuilder(BuilderTest):
     def test_basic(self):
         builder = self.make_builder('foo', build_commands=[
             'configure', 'make'
-        ], usage='pkg-config')
+        ], usage='pkg_config')
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.build_commands, [
             ShellArguments(['configure']),
@@ -69,7 +69,7 @@ class TestCustomBuilder(BuilderTest):
     def test_build_list(self):
         builder = self.make_builder('foo', build_commands=[
             ['configure', '--foo'], ['make', '-j2']
-        ], usage='pkg-config')
+        ], usage='pkg_config')
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.build_commands, [
             ShellArguments(['configure', '--foo']),
@@ -89,7 +89,7 @@ class TestCustomBuilder(BuilderTest):
         builder = self.make_builder('foo', build_commands=[
             'configure $srcdir/build',
             ['make', '-C', '$builddir'],
-        ], usage='pkg-config')
+        ], usage='pkg_config')
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.build_commands, [
             ShellArguments(['configure', (Path('srcdir', ''), '/build')]),
@@ -108,7 +108,7 @@ class TestCustomBuilder(BuilderTest):
     def test_deploy(self):
         builder = self.make_builder('foo', build_commands=['make'],
                                     deploy_commands=['make install'],
-                                    usage='pkg-config')
+                                    usage='pkg_config')
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.build_commands, [
             ShellArguments(['make']),
@@ -143,7 +143,7 @@ class TestCustomBuilder(BuilderTest):
             'configure $srcdir/build',
             'cd $builddir',
             'make',
-        ], usage='pkg-config')
+        ], usage='pkg_config')
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.build_commands, [
             ShellArguments(['configure', (Path('srcdir', ''), '/build')]),
@@ -165,7 +165,7 @@ class TestCustomBuilder(BuilderTest):
     def test_cd_invalid(self):
         builder = self.make_builder('foo', build_commands=[
             'cd foo bar',
-        ], usage='pkg-config')
+        ], usage='pkg_config')
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.custom.pushd'), \
@@ -175,7 +175,7 @@ class TestCustomBuilder(BuilderTest):
     def test_usage_full(self):
         builder = self.make_builder(
             'foo', build_commands=['make'],
-            usage={'type': 'pkg-config', 'path': 'pkgconf'}
+            usage={'type': 'pkg_config', 'path': 'pkgconf'}
         )
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.build_commands, [
@@ -187,7 +187,7 @@ class TestCustomBuilder(BuilderTest):
         ))
 
         self.check_build(builder, usage={
-            'type': 'pkg-config', 'path': self.pkgconfdir('foo', 'pkgconf'),
+            'type': 'pkg_config', 'path': self.pkgconfdir('foo', 'pkgconf'),
             'pcfiles': ['foo'], 'extra_args': [],
         })
 
@@ -196,43 +196,43 @@ class TestCustomBuilder(BuilderTest):
         submodules_optional = {'names': '*', 'required': False}
 
         builder = self.make_builder(
-            'foo', build_commands=['make'], usage='pkg-config',
+            'foo', build_commands=['make'], usage='pkg_config',
             submodules=submodules_required
         )
         self.check_build(builder, submodules=['sub'], usage={
-            'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
+            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
             'pcfiles': ['foo_sub'], 'extra_args': [],
         })
 
         builder = self.make_builder(
             'foo', build_commands=['make'],
-            usage={'type': 'pkg-config', 'pcfile': 'bar'},
+            usage={'type': 'pkg_config', 'pcfile': 'bar'},
             submodules=submodules_required
         )
         self.check_build(builder, submodules=['sub'], usage={
-            'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
+            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
             'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
         })
 
         builder = self.make_builder(
-            'foo', build_commands=['make'], usage='pkg-config',
+            'foo', build_commands=['make'], usage='pkg_config',
             submodules=submodules_optional
         )
         self.check_build(builder, submodules=['sub'])
 
         builder = self.make_builder(
             'foo', build_commands=['make'],
-            usage={'type': 'pkg-config', 'pcfile': 'bar'},
+            usage={'type': 'pkg_config', 'pcfile': 'bar'},
             submodules=submodules_optional
         )
         self.check_build(builder, submodules=['sub'], usage={
-            'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
+            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
             'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
         })
 
     def test_clean(self):
         builder = self.make_builder('foo', build_commands=['make'],
-                                    usage='pkg-config')
+                                    usage='pkg_config')
         srcdir = os.path.join(self.pkgdir, 'build', 'foo')
 
         with mock.patch('shutil.rmtree') as mrmtree:
@@ -243,7 +243,7 @@ class TestCustomBuilder(BuilderTest):
         opts = self.make_options()
         builder = CustomBuilder('foo', build_commands=['make'],
                                 submodules=None, _options=opts)
-        builder.set_usage({'type': 'pkg-config', 'path': 'pkgconf'},
+        builder.set_usage({'type': 'pkg_config', 'path': 'pkgconf'},
                           submodules=None)
         data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(data, _options=opts))

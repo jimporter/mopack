@@ -10,14 +10,14 @@ class TestMakeUsage(UsageTest):
     path_bases = ('srcdir', 'builddir')
 
     def test_make(self):
-        usage = make_usage('pkg', {'type': 'pkg-config', 'path': 'path'},
+        usage = make_usage('pkg', {'type': 'pkg_config', 'path': 'path'},
                            submodules=None, _options=self.make_options(),
                            _path_bases=self.path_bases)
         self.assertIsInstance(usage, PkgConfigUsage)
         self.assertEqual(usage.path, Path('builddir', 'path'))
 
     def test_make_string(self):
-        usage = make_usage('pkg', 'pkg-config', submodules=None,
+        usage = make_usage('pkg', 'pkg_config', submodules=None,
                            _options=self.make_options(),
                            _path_bases=self.path_bases)
         self.assertIsInstance(usage, PkgConfigUsage)
@@ -37,12 +37,12 @@ class TestMakeUsage(UsageTest):
 
     def test_invalid_keys(self):
         with self.assertRaises(TypeError):
-            make_usage('pkg', {'type': 'pkg-config', 'unknown': 'blah'},
+            make_usage('pkg', {'type': 'pkg_config', 'unknown': 'blah'},
                        submodules=None, _options=self.make_options(),
                        _path_bases=self.path_bases)
 
     def test_invalid_values(self):
         with self.assertRaises(FieldError):
-            make_usage('pkg', {'type': 'pkg-config', 'path': '..'},
+            make_usage('pkg', {'type': 'pkg_config', 'path': '..'},
                        submodules=None, _options=self.make_options(),
                        _path_bases=self.path_bases)

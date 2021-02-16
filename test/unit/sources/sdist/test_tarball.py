@@ -127,7 +127,7 @@ class TestTarball(SDistTestCase):
     def test_build(self):
         build = {'type': 'bfg9000', 'extra_args': '--extra'}
         pkg = self.make_package('foo', path=self.srcpath, build=build,
-                                usage='pkg-config')
+                                usage='pkg_config')
         self.assertEqual(pkg.path, Path('absolute', self.srcpath))
         self.assertEqual(pkg.builder, self.make_builder(
             Bfg9000Builder, 'foo', extra_args='--extra'
@@ -177,16 +177,16 @@ class TestTarball(SDistTestCase):
 
     def test_usage(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
-                                usage='pkg-config')
+                                usage='pkg_config')
         self.assertEqual(pkg.path, Path('absolute', self.srcpath))
         self.assertEqual(pkg.builder, self.make_builder(
-            Bfg9000Builder, 'foo', usage='pkg-config'
+            Bfg9000Builder, 'foo', usage='pkg_config'
         ))
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
 
-        usage = {'type': 'pkg-config', 'path': 'pkgconf'}
+        usage = {'type': 'pkg_config', 'path': 'pkgconf'}
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 usage=usage)
         self.assertEqual(pkg.path, Path('absolute', self.srcpath))
@@ -196,7 +196,7 @@ class TestTarball(SDistTestCase):
 
         self.check_fetch(pkg)
         self.check_resolve(pkg, usage={
-            'type': 'pkg-config', 'path': self.pkgconfdir('foo', 'pkgconf'),
+            'type': 'pkg_config', 'path': self.pkgconfdir('foo', 'pkgconf'),
             'pcfiles': ['foo'], 'extra_args': [],
         })
 
@@ -210,11 +210,11 @@ class TestTarball(SDistTestCase):
         self.check_resolve(pkg, submodules=['sub'])
 
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
-                                usage={'type': 'pkg-config', 'pcfile': 'bar'},
+                                usage={'type': 'pkg_config', 'pcfile': 'bar'},
                                 submodules=submodules_required)
         self.check_fetch(pkg)
         self.check_resolve(pkg, submodules=['sub'], usage={
-            'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
+            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
             'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
         })
 
@@ -224,11 +224,11 @@ class TestTarball(SDistTestCase):
         self.check_resolve(pkg, submodules=['sub'])
 
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
-                                usage={'type': 'pkg-config', 'pcfile': 'bar'},
+                                usage={'type': 'pkg_config', 'pcfile': 'bar'},
                                 submodules=submodules_optional)
         self.check_fetch(pkg)
         self.check_resolve(pkg, submodules=['sub'], usage={
-            'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
+            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
             'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
         })
 
@@ -246,7 +246,7 @@ class TestTarball(SDistTestCase):
 
         build = {'type': 'bfg9000', 'extra_args': '--extra'}
         pkg = self.make_package('foo', path=self.srcpath, srcdir='srcdir',
-                                build=build, usage='pkg-config')
+                                build=build, usage='pkg_config')
         with mock.patch('os.path.exists', mock_exists), \
              mock.patch('tarfile.TarFile.extractall') as mtar, \
              mock.patch('os.path.isdir', return_value=True):  # noqa

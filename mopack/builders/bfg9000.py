@@ -48,7 +48,7 @@ class Bfg9000Builder(Builder):
 
     def set_usage(self, usage=None, **kwargs):
         if usage is None:
-            usage = 'pkg-config'
+            usage = 'pkg_config'
         super().set_usage(usage, **kwargs)
 
     def _toolchain_args(self, toolchain):

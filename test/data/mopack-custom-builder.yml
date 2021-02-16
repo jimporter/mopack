@@ -13,4 +13,4 @@ packages:
         - ninja
       deploy_commands:
         - ninja install
-    usage: pkg-config
+    usage: pkg_config

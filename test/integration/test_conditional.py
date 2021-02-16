@@ -9,21 +9,6 @@ from . import *
 class TestConditional(IntegrationTest):
     name = 'conditional'
 
-    def _builder(self, name):
-        return {
-            'type': 'bfg9000',
-            '_version': 1,
-            'name': name,
-            'extra_args': [],
-            'usage': {
-                'type': 'pkg-config',
-                '_version': 1,
-                'path': {'base': 'builddir', 'path': 'pkgconfig'},
-                'pcfile': name,
-                'extra_args': [],
-            },
-        }
-
     def test_resolve(self):
         want_tarball = platform_name() == 'windows'
 
@@ -47,7 +32,7 @@ class TestConditional(IntegrationTest):
                 '_version': 1,
                 'submodules': None,
                 'should_deploy': True,
-                'builder': self._builder('hello'),
+                'builder': cfg_bfg9000_builder('hello'),
                 'url': None,
                 'path': {'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
                 'files': [],
@@ -64,7 +49,7 @@ class TestConditional(IntegrationTest):
                 '_version': 1,
                 'submodules': None,
                 'should_deploy': True,
-                'builder': self._builder('hello'),
+                'builder': cfg_bfg9000_builder('hello'),
                 'path': {'base': 'cfgdir', 'path': 'hello-bfg'},
             }
         self.assertEqual(output['metadata'], {

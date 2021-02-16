@@ -17,7 +17,7 @@ class TestUsage(IntegrationTest):
         # Usage for `hello`.
         expected_output_hello = {
             'name': 'hello',
-            'type': 'pkg-config',
+            'type': 'pkg_config',
             'path': os.path.join(self.stage, 'mopack', 'build', 'hello',
                                  'pkgconfig'),
             'pcfiles': ['hello'],

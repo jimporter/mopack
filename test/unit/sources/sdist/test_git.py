@@ -132,7 +132,7 @@ class TestGit(SDistTestCase):
     def test_build(self):
         build = {'type': 'bfg9000', 'extra_args': '--extra'}
         pkg = self.make_package('foo', repository=self.srcssh, build=build,
-                                usage='pkg-config')
+                                usage='pkg_config')
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
@@ -186,18 +186,18 @@ class TestGit(SDistTestCase):
 
     def test_usage(self):
         pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000',
-                                usage='pkg-config')
+                                usage='pkg_config')
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
         self.assertEqual(pkg.builder, self.make_builder(
-            Bfg9000Builder, 'foo', usage='pkg-config'
+            Bfg9000Builder, 'foo', usage='pkg_config'
         ))
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
 
-        usage = {'type': 'pkg-config', 'path': 'pkgconf'}
+        usage = {'type': 'pkg_config', 'path': 'pkgconf'}
         pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000',
                                 usage=usage)
         self.assertEqual(pkg.repository, self.srcssh)
@@ -209,7 +209,7 @@ class TestGit(SDistTestCase):
 
         self.check_fetch(pkg)
         self.check_resolve(pkg, usage={
-            'type': 'pkg-config', 'path': self.pkgconfdir('foo', 'pkgconf'),
+            'type': 'pkg_config', 'path': self.pkgconfdir('foo', 'pkgconf'),
             'pcfiles': ['foo'], 'extra_args': [],
         })
 
@@ -223,11 +223,11 @@ class TestGit(SDistTestCase):
         self.check_resolve(pkg, submodules=['sub'])
 
         pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000',
-                                usage={'type': 'pkg-config', 'pcfile': 'bar'},
+                                usage={'type': 'pkg_config', 'pcfile': 'bar'},
                                 submodules=submodules_required)
         self.check_fetch(pkg)
         self.check_resolve(pkg, submodules=['sub'], usage={
-            'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
+            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
             'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
         })
 
@@ -237,11 +237,11 @@ class TestGit(SDistTestCase):
         self.check_resolve(pkg, submodules=['sub'])
 
         pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000',
-                                usage={'type': 'pkg-config', 'pcfile': 'bar'},
+                                usage={'type': 'pkg_config', 'pcfile': 'bar'},
                                 submodules=submodules_optional)
         self.check_fetch(pkg)
         self.check_resolve(pkg, submodules=['sub'], usage={
-            'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
+            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
             'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
         })
 

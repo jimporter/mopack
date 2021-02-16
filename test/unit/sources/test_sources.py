@@ -34,7 +34,7 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.builder.type, 'bfg9000')
 
         self.assertEqual(pkg.get_usage(self.pkgdir, None), {
-            'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
+            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
             'pcfiles': ['foo'], 'extra_args': [],
         })
         with self.assertRaises(ValueError):
@@ -54,7 +54,7 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.builder.type, 'bfg9000')
 
         self.assertEqual(pkg.get_usage(self.pkgdir, None), {
-            'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
+            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
             'pcfiles': ['foo'], 'extra_args': [],
         })
         with self.assertRaises(ValueError):
@@ -285,7 +285,7 @@ class TestMakePackage(SourceTest):
         data = yaml.load(dedent("""
           source: apt
           usage:
-            type: pkg-config
+            type: pkg_config
             unknown: blah
           config_file: /path/to/mopack.yml
         """), Loader=SafeLineLoader)
@@ -299,7 +299,7 @@ class TestMakePackage(SourceTest):
         data = yaml.load(dedent("""
           source: apt
           usage:
-            type: pkg-config
+            type: pkg_config
             path: ..
           config_file: /path/to/mopack.yml
         """), Loader=SafeLineLoader)

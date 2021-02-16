@@ -22,14 +22,14 @@ packages:
         '*': <submodule-map>
 ```
 
-## pkg-config
+## pkg_config
 
 ```yaml
 packages:
   my_pkg:
     # ...
     usage:
-      type: pkg-config
+      type: pkg_config
       path: <path>
       extra_args: <shell-args>
       submodule_map: <submodule-map>  # or...

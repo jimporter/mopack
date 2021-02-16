@@ -181,7 +181,7 @@ def cfg_custom_builder(name, *, build_commands=[], deploy_commands=[],
 def cfg_pkg_config_usage(*, path={'base': 'builddir', 'path': 'pkgconfig'},
                          pcfile, extra_args=[], **kwargs):
     return {
-        'type': 'pkg-config',
+        'type': 'pkg_config',
         '_version': 1,
         'path': path,
         'pcfile': pcfile,
@@ -291,7 +291,7 @@ class IntegrationTest(unittest.TestCase):
         if pcfiles is None:
             pcfiles = [name]
 
-        self.assertUsage(name, {'name': name, 'type': 'pkg-config',
+        self.assertUsage(name, {'name': name, 'type': 'pkg_config',
                                 'path': path, 'pcfiles': pcfiles,
                                 'extra_args': extra_args},
                          submodules=submodules)

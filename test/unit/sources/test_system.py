@@ -28,7 +28,7 @@ class TestSystemPackage(SourceTest):
         pkg.resolve(self.pkgdir)
         with mock.patch('subprocess.run'):
             self.assertEqual(pkg.get_usage(self.pkgdir, None), {
-                'type': 'pkg-config', 'path': None, 'pcfiles': ['foo'],
+                'type': 'pkg_config', 'path': None, 'pcfiles': ['foo'],
                 'extra_args': [],
             })
 

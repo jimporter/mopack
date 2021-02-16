@@ -46,7 +46,7 @@ class TestDirectory(SDistTestCase):
     def test_build(self):
         build = {'type': 'bfg9000', 'extra_args': '--extra'}
         pkg = self.make_package('foo', path=self.srcpath, build=build,
-                                usage='pkg-config')
+                                usage='pkg_config')
         self.assertEqual(pkg.path, Path('absolute', self.srcpath))
         self.assertEqual(pkg.builder, self.make_builder(
             Bfg9000Builder, 'foo', extra_args='--extra'
@@ -164,7 +164,7 @@ class TestDirectory(SDistTestCase):
             pkg.fetch(self.pkgdir, self.config)
 
         child = ('export:\n  build: bfg9000\n  usage:\n' +
-                 '    type: pkg-config\n    unknown: blah')
+                 '    type: pkg_config\n    unknown: blah')
         loc = 'line 5, column 5'
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
@@ -183,7 +183,7 @@ class TestDirectory(SDistTestCase):
              self.assertRaises(FieldError):  # noqa
             pkg.fetch(self.pkgdir, self.config)
 
-        usage = yaml.load('type: pkg-config\nunknown: blah',
+        usage = yaml.load('type: pkg_config\nunknown: blah',
                           Loader=SafeLineLoader)
         pkg = self.make_package('foo', path=self.srcpath, usage=usage)
         loc = 'line 2, column 1'
@@ -195,16 +195,16 @@ class TestDirectory(SDistTestCase):
 
     def test_usage(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
-                                usage='pkg-config')
+                                usage='pkg_config')
         self.assertEqual(pkg.path, Path('absolute', self.srcpath))
         self.assertEqual(pkg.builder, self.make_builder(
-            Bfg9000Builder, 'foo', usage='pkg-config'
+            Bfg9000Builder, 'foo', usage='pkg_config'
         ))
 
         pkg.fetch(self.pkgdir, self.config)
         self.check_resolve(pkg)
 
-        usage = {'type': 'pkg-config', 'path': 'pkgconf'}
+        usage = {'type': 'pkg_config', 'path': 'pkgconf'}
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 usage=usage)
         self.assertEqual(pkg.path, Path('absolute', self.srcpath))
@@ -214,7 +214,7 @@ class TestDirectory(SDistTestCase):
 
         pkg.fetch(self.pkgdir, self.config)
         self.check_resolve(pkg, usage={
-            'type': 'pkg-config', 'path': self.pkgconfdir('foo', 'pkgconf'),
+            'type': 'pkg_config', 'path': self.pkgconfdir('foo', 'pkgconf'),
             'pcfiles': ['foo'], 'extra_args': [],
         })
 
@@ -227,10 +227,10 @@ class TestDirectory(SDistTestCase):
         self.check_resolve(pkg, submodules=['sub'])
 
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
-                                usage={'type': 'pkg-config', 'pcfile': 'bar'},
+                                usage={'type': 'pkg_config', 'pcfile': 'bar'},
                                 submodules=submodules_required)
         self.check_resolve(pkg, submodules=['sub'], usage={
-            'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
+            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
             'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
         })
 
@@ -239,10 +239,10 @@ class TestDirectory(SDistTestCase):
         self.check_resolve(pkg, submodules=['sub'])
 
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
-                                usage={'type': 'pkg-config', 'pcfile': 'bar'},
+                                usage={'type': 'pkg_config', 'pcfile': 'bar'},
                                 submodules=submodules_optional)
         self.check_resolve(pkg, submodules=['sub'], usage={
-            'type': 'pkg-config', 'path': self.pkgconfdir('foo'),
+            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
             'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
         })
 

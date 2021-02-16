@@ -30,5 +30,5 @@ usage:
         '*':
           libraries: boost_$submodule
   system: *path_system_usage
-  pkg-config:
+  pkg_config:
     submodule_map: null

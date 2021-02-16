@@ -415,7 +415,7 @@ class TestChildConfig(TestCase):
         cfg = dedent("""
         export:
           build: bfg9000
-          usage: pkg-config
+          usage: pkg_config
         """) + bar_cfg
         files = {'mopack.yml': '', 'mopack-child.yml': cfg}
         with mock.patch('builtins.open', mock_open_files(files)):
@@ -424,7 +424,7 @@ class TestChildConfig(TestCase):
         with mock.patch('builtins.open', mock_open_files(files)):
             child = ChildConfig(['mopack-child.yml'], parent=parent)
         self.assertEqual(child.export.build, 'bfg9000')
-        self.assertEqual(child.export.usage, 'pkg-config')
+        self.assertEqual(child.export.usage, 'pkg_config')
 
     def test_child_in_parent(self):
         files = {'mopack.yml': foobar_cfg, 'mopack-child.yml': foo_cfg}

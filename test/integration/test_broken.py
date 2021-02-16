@@ -7,24 +7,7 @@ from mopack.platforms import platform_name
 from . import *
 
 
-class CommonTest(IntegrationTest):
-    def _builder(self, name):
-        return {
-            'type': 'bfg9000',
-            '_version': 1,
-            'name': name,
-            'extra_args': [],
-            'usage': {
-                'type': 'pkg-config',
-                '_version': 1,
-                'path': {'base': 'builddir', 'path': 'pkgconfig'},
-                'pcfile': name,
-                'extra_args': [],
-            },
-        }
-
-
-class TestBroken(CommonTest):
+class TestBroken(IntegrationTest):
     name = 'broken'
     deploy = True
 
@@ -64,7 +47,7 @@ class TestBroken(CommonTest):
             self.assertNotExists(lib_prefix + 'pkgconfig/hello.pc')
 
 
-class TestBrokenPatch(CommonTest):
+class TestBrokenPatch(IntegrationTest):
     name = 'broken-patch'
     deploy = True
 

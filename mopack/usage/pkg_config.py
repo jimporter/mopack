@@ -48,7 +48,7 @@ def _submodule_map(field, value):
     'submodule_map': DictFreezeDryer(value_type=_SubmoduleMapping),
 })
 class PkgConfigUsage(Usage):
-    type = 'pkg-config'
+    type = 'pkg_config'
     _version = 1
 
     @staticmethod

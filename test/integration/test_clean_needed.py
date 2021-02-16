@@ -7,21 +7,6 @@ from . import *
 class TestCleanNeeded(IntegrationTest):
     name = 'clean-needed'
 
-    def _builder(self, name, extra_args=[]):
-        return {
-            'type': 'bfg9000',
-            '_version': 1,
-            'name': name,
-            'extra_args': extra_args,
-            'usage': {
-                'type': 'pkg-config',
-                '_version': 1,
-                'path': {'base': 'builddir', 'path': 'pkgconfig'},
-                'pcfile': name,
-                'extra_args': [],
-            },
-        }
-
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-nested-extra.yml')
         self.assertPopen(['mopack', 'resolve', config])

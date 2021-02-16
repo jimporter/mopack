@@ -210,7 +210,7 @@ class SystemUsage(PathUsage):
             subprocess.run(pkg_config + [self.pcfile], check=True,
                            stdout=subprocess.DEVNULL,
                            stderr=subprocess.DEVNULL)
-            return self._usage(type='pkg-config', path=None,
+            return self._usage(type='pkg_config', path=None,
                                pcfiles=[self.pcfile], extra_args=[])
         except (OSError, subprocess.CalledProcessError):
             return self._get_usage(submodules, srcdir, builddir, type='path')
