@@ -1,5 +1,6 @@
 # mopack
 
+[![PyPi version][pypi-image]][pypi-link]
 [![Documentation][documentation-image]][documentation-link]
 [![Build status][ci-image]][ci-link]
 [![Coverage status][codecov-image]][codecov-link]
@@ -30,6 +31,8 @@ would likely override the config to point to `apt` packages).
 
 This project is licensed under the [BSD 3-clause license](LICENSE).
 
+[pypi-image]: https://img.shields.io/pypi/v/mopack.svg
+[pypi-link]: https://pypi.python.org/pypi/mopack
 [documentation-image]: https://img.shields.io/badge/docs-mopack-blue.svg
 [documentation-link]: https://jimporter.github.io/mopack/
 [ci-image]: https://github.com/jimporter/mopack/workflows/build/badge.svg
