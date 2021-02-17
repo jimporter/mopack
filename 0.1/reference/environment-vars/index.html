@@ -113,6 +113,7 @@
     <ul class="nav bs-sidenav">
         <li class="main active"><a href="#environment-variables">Environment Variables</a></li>
             <li><a href="#command-variables">Command variables</a></li>
+            <li><a href="#package-variables">Package variables</a></li>
             <li><a href="#system-variables">System variables</a></li>
     </ul>
 </div></div>
@@ -147,6 +148,20 @@ the environment variables mopack recognizes.</p>
 <h3 id="patch"><em>PATCH</em><a class="headerlink" href="#patch" title="Permanent link">§</a></h3>
 <p class="subtitle">Default: <code>patch</code></p>
 <p>The command to use when applying a patch file.</p>
+<h2 id="package-variables">Package variables<a class="headerlink" href="#package-variables" title="Permanent link">§</a></h2>
+<hr />
+<h4 id="boost_root"><em>BOOST_ROOT</em><a class="headerlink" href="#boost_root" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>The root directory where Boost headers and libraries are stored (as
+<code>$BOOST_ROOT/include</code> and <code>$BOOST_ROOT/lib</code>, respectively).</p>
+<h4 id="boost_includedir"><em>BOOST_INCLUDEDIR</em><a class="headerlink" href="#boost_includedir" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>The root directory where Boost headers are stored. This takes precedence over
+<a href="#boost_root"><em>BOOST_ROOT</em></a>.</p>
+<h4 id="boost_librarydir"><em>BOOST_LIBRARYDIR</em><a class="headerlink" href="#boost_librarydir" title="Permanent link">§</a></h4>
+<p class="subtitle">Default: <em>none</em></p>
+<p>The root directory where Boost libraries are stored. This takes precedence over
+<a href="#boost_root"><em>BOOST_ROOT</em></a>.</p>
 <h2 id="system-variables">System variables<a class="headerlink" href="#system-variables" title="Permanent link">§</a></h2>
 <hr />
 <h3 id="clicolor"><em>CLICOLOR</em><a class="headerlink" href="#clicolor" title="Permanent link">§</a></h3>
