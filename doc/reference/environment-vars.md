@@ -54,6 +54,30 @@ Default: `patch`
 
 The command to use when applying a patch file.
 
+## Package variables
+---
+
+#### *BOOST_ROOT*
+Default: *none*
+{: .subtitle}
+
+The root directory where Boost headers and libraries are stored (as
+`$BOOST_ROOT/include` and `$BOOST_ROOT/lib`, respectively).
+
+#### *BOOST_INCLUDEDIR*
+Default: *none*
+{: .subtitle}
+
+The root directory where Boost headers are stored. This takes precedence over
+[*BOOST_ROOT*](#boost_root).
+
+#### *BOOST_LIBRARYDIR*
+Default: *none*
+{: .subtitle}
+
+The root directory where Boost libraries are stored. This takes precedence over
+[*BOOST_ROOT*](#boost_root).
+
 ## System variables
 ---
 
