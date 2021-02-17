@@ -134,7 +134,8 @@ class DictFreezeDryer:
         self.value_type = value_type
 
     def dehydrate(self, value):
-        return {self.key_type.dehydrate(k): self.value_type.dehydrate(v)
+        return {auto_dehydrate(k, self.key_type):
+                auto_dehydrate(v, self.value_type)
                 for k, v in value.items()}
 
     def rehydrate(self, value, **kwargs):
