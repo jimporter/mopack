@@ -40,7 +40,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: jimporter/bfg9000
-          ref: mopack
           path: bfg9000
       - name: Install Python dependencies
         run: |
@@ -97,7 +96,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: jimporter/bfg9000
-          ref: mopack
           path: bfg9000
       - name: Install Cygwin
         shell: cmd
