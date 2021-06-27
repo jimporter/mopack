@@ -6,49 +6,49 @@ the environment variables mopack recognizes.
 ## Command variables
 ---
 
-### *ADD_APT_REPOSITORY*
+#### *ADD_APT_REPOSITORY*
 Default: `sudo add-apt-repository`
 {: .subtitle}
 
 The command to use when adding an apt repository.
 
-### *APT_GET*
+#### *APT_GET*
 Default: `sudo apt-get`
 {: .subtitle}
 
 The command to use when installing an apt package.
 
-### *BFG9000*
+#### *BFG9000*
 Default: `bfg9000`
 {: .subtitle}
 
 The command to use when configuring a [bfg9000][bfg9000]-based project.
 
-### *CONAN*
+#### *CONAN*
 Default: `conan`
 {: .subtitle}
 
 The command to use when installing a [conan][conan] package.
 
-### *CMAKE*
+#### *CMAKE*
 Default: `cmake`
 {: .subtitle}
 
 The command to use when configuring a [CMake][cmake]-based project.
 
-### *GIT*
+#### *GIT*
 Default: `git`
 {: .subtitle}
 
 The command to use when working with a [git][git] repository.
 
-### *NINJA*
+#### *NINJA*
 Default: `ninja`
 {: .subtitle}
 
 The command to use when building via the [Ninja][ninja] build system.
 
-### *PATCH*
+#### *PATCH*
 Default: `patch`
 {: .subtitle}
 
@@ -81,7 +81,7 @@ The root directory where Boost libraries are stored. This takes precedence over
 ## System variables
 ---
 
-### *CLICOLOR*
+#### *CLICOLOR*
 Default: *none*
 {: .subtitle}
 
@@ -89,7 +89,7 @@ If set to `0`, disable colors in terminal output, overriding the `--color`
 option and tty detection. If set to non-zero, enable colors if outputting to a
 tty.
 
-### *CLICOLOR_FORCE*
+#### *CLICOLOR_FORCE*
 Default: *none*
 {: .subtitle}
 
