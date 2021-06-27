@@ -101,7 +101,7 @@ class BaseConfig:
                     v.update(config_file=filename, _child_config=self.child)
                     self._pending_options[kind].setdefault(k, []).append(v)
 
-    def _finalize_packages(self, options):
+    def _finalize_packages(self, options, parent_package=None):
         self.packages = {}
         for name, cfgs in self._pending_packages.items():
             if cfgs is PlaceholderPackage:
@@ -112,7 +112,7 @@ class BaseConfig:
                 with to_parse_error(cfg['config_file']):
                     if self._if_evaluate(options.expr_symbols, cfg, 'if'):
                         self.packages[name] = try_make_package(
-                            name, cfg, _options=options
+                            name, cfg, parent=parent_package, _options=options
                         )
                         break
         del self._pending_packages
@@ -237,12 +237,12 @@ class ChildConfig(BaseConfig):
         def usage(self):
             return self.data.get('usage')
 
-    def __init__(self, filenames, parent):
+    def __init__(self, filenames, parent_config, parent_package):
         super().__init__()
-        self.parent = parent
+        self.parent = parent_config
         self.export = None
         self._load_configs(filenames)
-        self._finalize_packages(self._root_config.options)
+        self._finalize_packages(self._root_config.options, parent_package)
 
     @property
     def _root_config(self):

@@ -24,34 +24,18 @@ class TestConditional(IntegrationTest):
 
         output = json.loads(slurp('mopack/mopack.json'))
         if want_tarball:
-            hellopkg = {
-                'name': 'hello',
-                'config_file': config,
-                'resolved': True,
-                'source': 'tarball',
-                '_version': 1,
-                'submodules': None,
-                'should_deploy': True,
-                'builder': cfg_bfg9000_builder('hello'),
-                'url': None,
-                'path': {'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
-                'files': [],
-                'srcdir': None,
-                'guessed_srcdir': 'hello-bfg',
-                'patch': None,
-            }
+            hellopkg = cfg_tarball_pkg(
+                'hello', config,
+                path={'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
+                guessed_srcdir='hello-bfg',
+                builder=cfg_bfg9000_builder('hello')
+            )
         else:
-            hellopkg = {
-                'name': 'hello',
-                'config_file': config,
-                'resolved': True,
-                'source': 'directory',
-                '_version': 1,
-                'submodules': None,
-                'should_deploy': True,
-                'builder': cfg_bfg9000_builder('hello'),
-                'path': {'base': 'cfgdir', 'path': 'hello-bfg'},
-            }
+            hellopkg = cfg_directory_pkg(
+                'hello', config,
+                path={'base': 'cfgdir', 'path': 'hello-bfg'},
+                builder=cfg_bfg9000_builder('hello')
+            )
         self.assertEqual(output['metadata'], {
             'options': cfg_options(bfg9000={}),
             'packages': [hellopkg],

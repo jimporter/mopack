@@ -78,6 +78,12 @@ class Metadata:
             return Metadata()
 
 
+class PackageTreeItem:
+    def __init__(self, package, children=None):
+        self.package = package
+        self.children = children or []
+
+
 def clean(pkgdir):
     shutil.rmtree(pkgdir)
 
@@ -231,3 +237,20 @@ def list_files(pkgdir, implicit=False, strict=False):
         if strict:
             raise
         return []
+
+
+def list_packages(pkgdir, flat=False):
+    metadata = Metadata.load(pkgdir)
+
+    if flat:
+        return list(metadata.packages.values())
+
+    packages = []
+    pending = {}
+    for pkg in metadata.packages.values():
+        item = PackageTreeItem(pkg, pending.pop(pkg.name, None))
+        if pkg.parent:
+            pending.setdefault(pkg.parent, []).append(item)
+        else:
+            packages.append(item)
+    return packages

@@ -65,23 +65,22 @@ def cfg_options(**kwargs):
     return result
 
 
-def _cfg_package(source, version, name, config_file, resolved=True,
-                 submodules=None, should_deploy=True):
+def _cfg_package(source, version, name, config_file, parent=None,
+                 resolved=True, submodules=None, should_deploy=True):
     return {
         'source': source,
         '_version': version,
         'name': name,
         'config_file': config_file,
+        'parent': parent,
         'resolved': resolved,
         'submodules': submodules,
         'should_deploy': should_deploy,
     }
 
 
-def cfg_directory_pkg(name, config_file, *, resolved=True, submodules=None,
-                      should_deploy=True, path, builder):
-    result = _cfg_package('directory', 1, name, config_file, resolved,
-                          submodules, should_deploy)
+def cfg_directory_pkg(name, config_file, *, path, builder, **kwargs):
+    result = _cfg_package('directory', 1, name, config_file, **kwargs)
     result.update({
         'path': path,
         'builder': builder,
@@ -89,11 +88,10 @@ def cfg_directory_pkg(name, config_file, *, resolved=True, submodules=None,
     return result
 
 
-def cfg_tarball_pkg(name, config_file, *, resolved=True, submodules=None,
-                    should_deploy=True, path=None, url=None, files=[],
-                    srcdir=None, guessed_srcdir=None, patch=None, builder):
-    result = _cfg_package('tarball', 1, name, config_file, resolved,
-                          submodules, should_deploy)
+def cfg_tarball_pkg(name, config_file, *, path=None, url=None, files=[],
+                    srcdir=None, guessed_srcdir=None, patch=None, builder,
+                    **kwargs):
+    result = _cfg_package('tarball', 1, name, config_file, **kwargs)
     result.update({
         'path': path,
         'url': url,
@@ -106,10 +104,9 @@ def cfg_tarball_pkg(name, config_file, *, resolved=True, submodules=None,
     return result
 
 
-def cfg_git_pkg(name, config_file, *, resolved=True, submodules=None,
-                should_deploy=True, repository, rev, srcdir='.', builder):
-    result = _cfg_package('git', 1, name, config_file, resolved, submodules,
-                          should_deploy)
+def cfg_git_pkg(name, config_file, *, repository, rev, srcdir='.', builder,
+                **kwargs):
+    result = _cfg_package('git', 1, name, config_file, **kwargs)
     result.update({
         'repository': repository,
         'rev': rev,
@@ -119,10 +116,9 @@ def cfg_git_pkg(name, config_file, *, resolved=True, submodules=None,
     return result
 
 
-def cfg_apt_pkg(name, config_file, *, resolved=True, submodules=None,
-                should_deploy=True, remote, repository=None, usage):
-    result = _cfg_package('apt', 1, name, config_file, resolved,
-                          submodules, should_deploy)
+def cfg_apt_pkg(name, config_file, *, remote, repository=None, usage,
+                **kwargs):
+    result = _cfg_package('apt', 1, name, config_file, **kwargs)
     result.update({
         'remote': remote,
         'repository': repository,
@@ -131,10 +127,9 @@ def cfg_apt_pkg(name, config_file, *, resolved=True, submodules=None,
     return result
 
 
-def cfg_conan_pkg(name, config_file, *, resolved=True, submodules=None,
-                  should_deploy=True, remote, build=False, options={}, usage):
-    result = _cfg_package('conan', 1, name, config_file, resolved,
-                          submodules, should_deploy)
+def cfg_conan_pkg(name, config_file, *, remote, build=False, options={}, usage,
+                  **kwargs):
+    result = _cfg_package('conan', 1, name, config_file, **kwargs)
     result.update({
         'remote': remote,
         'build': build,

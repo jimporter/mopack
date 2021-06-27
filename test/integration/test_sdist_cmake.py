@@ -97,6 +97,7 @@ class TestOuterCMake(IntegrationTest):
                 cfg_tarball_pkg(
                     'hello',
                     os.path.join(test_data_dir, 'greeter-cmake', 'mopack.yml'),
+                    parent='greeter',
                     path={'base': 'cfgdir',
                           'path': os.path.join('..', 'hello-bfg.tar.gz')},
                     guessed_srcdir='hello-bfg',

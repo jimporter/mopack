@@ -1,6 +1,7 @@
 import argparse
 import os
 import json
+import sys
 import yaml
 
 from . import commands, config, log, yaml_tools
@@ -99,6 +100,34 @@ def list_files(parser, subparser, args):
             print(i)
 
 
+def list_packages(parser, subparser, args):
+    pkg_fmt = ('\033[1;34m{package.name}\033[0m ' +
+               '(\033[33m{package.source}\033[0m)')
+    try:
+        # Try to encode a Unicode box drawing character; if we fail, use ASCII.
+        '┼'.encode(sys.stdout.encoding)
+        lines = ('│  ', '├─ ')
+        lines_last = ('   ', '└─ ')
+    except UnicodeEncodeError:
+        lines = ('|  ', '+- ')
+        lines_last = ('   ', '+- ')
+
+    def list_level(pkgs, prefix=''):
+        for i, p in enumerate(pkgs):
+            next_prefix, hline = lines if i < len(pkgs) - 1 else lines_last
+            print(('{prefix}{hline}' + pkg_fmt)
+                  .format(prefix=prefix, hline=hline, package=p.package))
+            list_level(p.children, prefix + next_prefix)
+
+    packages = commands.list_packages(commands.get_package_dir(args.directory),
+                                      args.flat)
+    if args.flat:
+        for p in packages:
+            print(pkg_fmt.format(package=p))
+    else:
+        list_level(packages)
+
+
 def main():
     parser = argparse.ArgumentParser(prog='mopack')
     parser.add_argument('--version', action='version',
@@ -189,6 +218,16 @@ def main():
                               help='display results as JSON')
     list_files_p.add_argument('--strict', action='store_true',
                               help='return an error if package is not defined')
+
+    list_packages_p = subparsers.add_parser(
+        'list-packages', help='list packages'
+    )
+    list_packages_p.set_defaults(func=list_packages, parser=list_packages_p)
+    list_packages_p.add_argument('--directory', default='.',
+                                 type=os.path.abspath, metavar='PATH',
+                                 help='directory storing local package data')
+    list_packages_p.add_argument('--flat', action='store_true',
+                                 help='list packages without hierarchy')
 
     args = parser.parse_args()
     log.init(args.color, debug=args.debug, verbose=args.verbose,

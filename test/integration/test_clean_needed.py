@@ -65,6 +65,7 @@ class TestCleanNeeded(IntegrationTest):
                 cfg_tarball_pkg(
                     'hello',
                     os.path.join(test_data_dir, 'greeter-bfg', 'mopack.yml'),
+                    parent='greeter',
                     path={'base': 'cfgdir',
                           'path': os.path.join('..', 'hello-bfg.tar.gz')},
                     guessed_srcdir='hello-bfg',

@@ -62,7 +62,9 @@ class SDistPackage(Package):
         return super().dehydrate()
 
     def _find_mopack(self, srcdir, parent_config):
-        config = ChildConfig([srcdir], parent=parent_config)
+        config = ChildConfig([srcdir], parent_config=parent_config,
+                             parent_package=self)
+
         if self.builder:
             return config
 

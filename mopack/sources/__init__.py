@@ -37,7 +37,7 @@ def submodules_type(field, value):
     return _submodule_dict(field, value)
 
 
-@FreezeDried.fields(skip_compare={'config_file', 'resolved'})
+@FreezeDried.fields(skip_compare={'parent', 'config_file', 'resolved'})
 class Package(OptionsHolder):
     _options_type = 'sources'
     _default_genus = 'source'
@@ -46,12 +46,14 @@ class Package(OptionsHolder):
 
     Options = None
 
-    def __init__(self, name, *, deploy=True, _options, config_file):
+    def __init__(self, name, *, deploy=True, parent=None, _options,
+                 config_file):
         super().__init__(_options)
         self.name = name
         self.should_deploy = types.boolean('deploy', deploy)
         self.config_file = config_file
         self.resolved = False
+        self.parent = parent.name if parent else None
 
     @property
     def config_dir(self):
