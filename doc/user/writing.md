@@ -195,7 +195,7 @@ arguments to bfg9000:
 
 ```yaml
 packages:
-  hello:
+  foo_pkg:
     source: tarball
     url: https://phobos.uac/foo_pkg-1.0.tar.gz
     build:
