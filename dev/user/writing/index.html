@@ -130,6 +130,7 @@
             <li><a href="#other-package-sources">Other package sources</a></li>
             <li><a href="#project-wide-options">Project-wide options</a></li>
             <li><a href="#nested-dependencies">Nested dependencies</a></li>
+            <li><a href="#variable-interpolation">Variable interpolation</a></li>
             <li><a href="#submodules">Submodules</a></li>
     </ul>
 </div></div>
@@ -163,12 +164,18 @@ options for the build:</p>
     build:
       type: bfg9000
       extra_args: --extra
+    usage:
+      type: pkg_config
+      pcfile: foobar
 </code></pre>
 
 <p>Here, instead of a string for <code>build</code>, we specify a dictionary indicating the
 type of the build and some extra arguments to be passed to it. Below, we'll show
 a more complex example taking advantage of <a href="#variable-interpolation">variable
 interpolation</a>.</p>
+<p>We also explicitly specify a <a href="../../reference/usage/"><em>usage</em></a>. A usage, as the
+name implies, describes how a package should be <em>used</em>, e.g. where to find
+header files, what libraries to link to, etc.</p>
 <h2 id="other-package-sources">Other package sources<a class="headerlink" href="#other-package-sources" title="Permanent link">§</a></h2>
 <p>One of the primary benefits of mopack is that packages can come from multiple
 different origins, or sources. These include other source distributions similar
@@ -262,6 +269,71 @@ relying on mopack to fill in the blanks:</p>
 <p>Of course, the parent configuration can still <em>override</em> the values set by a
 dependency simply by including the appropriate configuration setting, as in our
 <a href="#your-first-configuration">first example</a>.</p>
+<h2 id="variable-interpolation">Variable interpolation<a class="headerlink" href="#variable-interpolation" title="Permanent link">§</a></h2>
+<p>For more advanced scenarios, you can take advantage of variable interpolation to
+programmatically specify package configurations. For example, suppose we wanted
+to (partially) rewrite our <a href="#your-first-configuration">first configuration</a>
+using a <a href="../../reference/builders/#custom"><code>custom</code></a> builder:</p>
+<pre><code class="yaml">packages:
+  foo_pkg:
+    source: tarball
+    url: https://phobos.uac/foo_pkg-1.0.tar.gz
+    build:
+      type: custom
+      build_commands:
+        - bfg9000 configure $builddir
+        - cd $builddir
+        - ninja
+    usage: pkg_config
+</code></pre>
+
+<p>Here, <code>$builddir</code> represents a unique path for the current project that it can
+use as a build directory. You can also spell this variable as <code>${{builddir}}</code>,
+which can be useful if you need to append some alphanumeric characters to the
+variable's value.</p>
+<h3 id="interpolating-expressions">Interpolating expressions<a class="headerlink" href="#interpolating-expressions" title="Permanent link">§</a></h3>
+<p>The above configuration works for building a package, but not for deploying it:
+we haven't told the build system where to copy <code>foo_pkg</code>'s files. Here, we can
+take advantage of expression interpolation to conditionally pass command line
+arguments to bfg9000:</p>
+<pre><code class="yaml">packages:
+  hello:
+    source: tarball
+    url: https://phobos.uac/foo_pkg-1.0.tar.gz
+    build:
+      type: custom
+      build_commands:
+        - &gt;-
+          bfg9000 configure $builddir ${{
+            deploy_paths['prefix'] ? '--prefix=' + deploy_paths['prefix'] : ''
+          }}
+        - cd $builddir/.
+        - ninja
+      deploy_commands:
+        - ninja install
+    usage: pkg_config
+</code></pre>
+
+<h3 id="conditional-package-specification">Conditional package specification<a class="headerlink" href="#conditional-package-specification" title="Permanent link">§</a></h3>
+<p>In some cases, a package's configuration should be <em>much</em> different depending on
+the state of a variable, and the variable interpolation described above isn't
+flexible enough to support this easily. To support this, a package's
+configuration can be specified as a <em>list</em> of configurations with an added <code>if</code>
+key to describe the conditions to use a particular configuration. Note that,
+since <code>if</code> always takes an expression, the <code>$</code>/<code>${{ }}</code> sigil is not required:</p>
+<pre><code class="yaml">packages:
+  foo_pkg:
+    - if: host_platform == 'linux'
+      source: apt
+    - source: tarball
+      url: https://phobos.uac/foo_pkg-1.0.tar.gz
+      build: bfg9000
+</code></pre>
+
+<p>The conditional for each configuration is evaluated in turn, selecting the first
+configuration where its conditional is true. If the last configuration has no
+<code>if</code> key, it will always be selected as a last resort; otherwise, if no
+conditional is satisfied, the package will be undefined.</p>
 <h2 id="submodules">Submodules<a class="headerlink" href="#submodules" title="Permanent link">§</a></h2>
 <p>In mopack, a "package" represents a single unit distributed in its most-typical
 form. Thus Boost, despite containing a wide variety of libraries, is still a
