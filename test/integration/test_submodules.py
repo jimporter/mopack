@@ -7,8 +7,8 @@ from . import *
 class TestSubmodules(IntegrationTest):
     name = 'submodules'
 
-    def test_resolve(self):
-        config = os.path.join(test_data_dir, 'mopack-submodules-implicit.yml')
+    def _check_resolve(self, config_file):
+        config = os.path.join(test_data_dir, config_file)
         self.assertPopen(['mopack', 'resolve', config])
         self.assertNotExists('mopack/src/hello/hello-bfg/build.bfg')
         self.assertExists('mopack/build/hello/')
@@ -44,3 +44,9 @@ class TestSubmodules(IntegrationTest):
                 ),
             ],
         })
+
+    def test_resolve_explicit(self):
+        self._check_resolve('mopack-submodules.yml')
+
+    def test_resolve_implicit(self):
+        self._check_resolve('mopack-submodules-implicit.yml')
