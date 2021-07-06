@@ -34,12 +34,19 @@ packages:
     build:
       type: bfg9000
       extra_args: --extra
+    usage:
+      type: pkg_config
+      pcfile: foobar
 ```
 
 Here, instead of a string for `build`, we specify a dictionary indicating the
 type of the build and some extra arguments to be passed to it. Below, we'll show
 a more complex example taking advantage of [variable
 interpolation](#variable-interpolation).
+
+We also explicitly specify a [*usage*](../reference/usage.md). A usage, as the
+name implies, describes how a package should be *used*, e.g. where to find
+header files, what libraries to link to, etc.
 
 ## Other package sources
 
@@ -152,6 +159,82 @@ packages:
 Of course, the parent configuration can still *override* the values set by a
 dependency simply by including the appropriate configuration setting, as in our
 [first example](#your-first-configuration).
+
+## Variable interpolation
+
+For more advanced scenarios, you can take advantage of variable interpolation to
+programmatically specify package configurations. For example, suppose we wanted
+to (partially) rewrite our [first configuration](#your-first-configuration)
+using a [`custom`](../reference/builders.md#custom) builder:
+
+```yaml
+packages:
+  foo_pkg:
+    source: tarball
+    url: https://phobos.uac/foo_pkg-1.0.tar.gz
+    build:
+      type: custom
+      build_commands:
+        - bfg9000 configure $builddir
+        - cd $builddir
+        - ninja
+    usage: pkg_config
+```
+
+Here, `$builddir` represents a unique path for the current project that it can
+use as a build directory. You can also spell this variable as `${{builddir}}`,
+which can be useful if you need to append some alphanumeric characters to the
+variable's value.
+
+### Interpolating expressions
+
+The above configuration works for building a package, but not for deploying it:
+we haven't told the build system where to copy `foo_pkg`'s files. Here, we can
+take advantage of expression interpolation to conditionally pass command line
+arguments to bfg9000:
+
+```yaml
+packages:
+  hello:
+    source: tarball
+    url: https://phobos.uac/foo_pkg-1.0.tar.gz
+    build:
+      type: custom
+      build_commands:
+        - >-
+          bfg9000 configure $builddir ${{
+            deploy_paths['prefix'] ? '--prefix=' + deploy_paths['prefix'] : ''
+          }}
+        - cd $builddir/.
+        - ninja
+      deploy_commands:
+        - ninja install
+    usage: pkg_config
+```
+
+### Conditional package specification
+
+In some cases, a package's configuration should be *much* different depending on
+the state of a variable, and the variable interpolation described above isn't
+flexible enough to support this easily. To support this, a package's
+configuration can be specified as a *list* of configurations with an added `if`
+key to describe the conditions to use a particular configuration. Note that,
+since `if` always takes an expression, the `$`/`${{ }}` sigil is not required:
+
+```yaml
+packages:
+  foo_pkg:
+    - if: host_platform == 'linux'
+      source: apt
+    - source: tarball
+      url: https://phobos.uac/foo_pkg-1.0.tar.gz
+      build: bfg9000
+```
+
+The conditional for each configuration is evaluated in turn, selecting the first
+configuration where its conditional is true. If the last configuration has no
+`if` key, it will always be selected as a last resort; otherwise, if no
+conditional is satisfied, the package will be undefined.
 
 ## Submodules
 
