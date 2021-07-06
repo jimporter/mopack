@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="../../img/favicon.ico">
-        <title>Sources - mopack</title>
+        <title>Writing mopack.yml Configurations - mopack</title>
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome.min.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
@@ -52,37 +52,37 @@
                             <li >
                                 <a href="../..">Home</a>
                             </li>
-                            <li class="dropdown">
+                            <li class="dropdown active">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
                                     
 <li >
-    <a href="../../user/resolving/">Resolving Packages With mopack</a>
+    <a href="../resolving/">Resolving Packages With mopack</a>
 </li>
                                     
-<li >
-    <a href="../../user/writing/">Writing mopack.yml Configurations</a>
+<li class="active">
+    <a href="./">Writing mopack.yml Configurations</a>
 </li>
                                 </ul>
                             </li>
-                            <li class="dropdown active">
+                            <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reference <b class="caret"></b></a>
                                 <ul class="dropdown-menu">
                                     
-<li class="active">
-    <a href="./">Sources</a>
+<li >
+    <a href="../../reference/sources/">Sources</a>
 </li>
                                     
 <li >
-    <a href="../builders/">Builders</a>
+    <a href="../../reference/builders/">Builders</a>
 </li>
                                     
 <li >
-    <a href="../usage/">Usage</a>
+    <a href="../../reference/usage/">Usage</a>
 </li>
                                     
 <li >
-    <a href="../environment-vars/">Environment Variables</a>
+    <a href="../../reference/environment-vars/">Environment Variables</a>
 </li>
                                 </ul>
                             </li>
@@ -104,12 +104,12 @@
                             </a>
                         </li>
                             <li >
-                                <a rel="next" href="../../user/writing/">
+                                <a rel="next" href="../resolving/">
                                     <i class="fa fa-arrow-left"></i> Previous
                                 </a>
                             </li>
                             <li >
-                                <a rel="prev" href="../builders/">
+                                <a rel="prev" href="../../reference/sources/">
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
@@ -124,89 +124,163 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#package-sources">Package Sources</a></li>
-            <li><a href="#source-distributions">Source distributions</a></li>
-            <li><a href="#other-sources">Other sources</a></li>
+        <li class="main active"><a href="#writing-mopackyml-configurations">Writing mopack.yml Configurations</a></li>
+            <li><a href="#your-first-configuration">Your first configuration</a></li>
+            <li><a href="#configuring-buildsusage">Configuring builds/usage</a></li>
+            <li><a href="#other-package-sources">Other package sources</a></li>
+            <li><a href="#project-wide-options">Project-wide options</a></li>
+            <li><a href="#nested-dependencies">Nested dependencies</a></li>
+            <li><a href="#submodules">Submodules</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h1 id="package-sources">Package Sources<a class="headerlink" href="#package-sources" title="Permanent link">§</a></h1>
-<h2 id="source-distributions">Source distributions<a class="headerlink" href="#source-distributions" title="Permanent link">§</a></h2>
-<h3 id="directory">directory<a class="headerlink" href="#directory" title="Permanent link">§</a></h3>
+<h1 id="writing-mopackyml-configurations">Writing mopack.yml Configurations<a class="headerlink" href="#writing-mopackyml-configurations" title="Permanent link">§</a></h1>
+<h2 id="your-first-configuration">Your first configuration<a class="headerlink" href="#your-first-configuration" title="Permanent link">§</a></h2>
+<p>The absolute simplest mopack configuration is an empty file, in which any
+requested dependencies are assumed to be <a href="../../reference/sources/#system">system
+dependencies</a>. However, that's not very
+interesting. Instead, let's look at a basic <code>mopack.yml</code> configuration that
+specifies a dependent package fetched and built from a tarball:</p>
 <pre><code class="yaml">packages:
-  my_pkg:
-    source: directory
-    path: &lt;path&gt;
-    build: &lt;build&gt;
-    usage: &lt;usage&gt;
-</code></pre>
-
-<h3 id="git">git<a class="headerlink" href="#git" title="Permanent link">§</a></h3>
-<pre><code class="yaml">packages:
-  my_pkg:
-    source: repository
-    tag: &lt;tag-name&gt;  # or...
-    branch: &lt;branch-name&gt;  # or...
-    commit: &lt;commit-sha&gt;
-    srcdir: &lt;inner-path&gt;
-    build: &lt;build&gt;
-    usage: &lt;usage&gt;
-</code></pre>
-
-<h3 id="tarball">tarball<a class="headerlink" href="#tarball" title="Permanent link">§</a></h3>
-<pre><code class="yaml">packages:
-  my_pkg:
+  foo_pkg:
     source: tarball
-    path: &lt;path&gt;  # or...
-    url: &lt;url&gt;
-    files: &lt;glob-list&gt;
-    srcdir: &lt;inner-path&gt;
-    patch: &lt;path&gt;
-    build: &lt;build&gt;
-    usage: &lt;usage&gt;
+    url: https://phobos.uac/foo_pkg-1.0.tar.gz
+    build: bfg9000
 </code></pre>
 
-<h2 id="other-sources">Other sources<a class="headerlink" href="#other-sources" title="Permanent link">§</a></h2>
-<h3 id="apt">apt<a class="headerlink" href="#apt" title="Permanent link">§</a></h3>
+<p>This informs mopack that it should fetch a
+<a href="../../reference/sources/#tarball">tarball</a> from the specified URL and then build
+it using the <a href="../../reference/builders/#bfg9000">bfg9000</a> builder.</p>
+<h2 id="configuring-buildsusage">Configuring builds/usage<a class="headerlink" href="#configuring-buildsusage" title="Permanent link">§</a></h2>
+<p>In the above example, mopack builds <code>foo_pkg</code> using the default settings for
+bfg9000. However, sometimes you may need to provide additional configuration
+options for the build:</p>
 <pre><code class="yaml">packages:
-  my_pkg:
-    source: apt
-    name: &lt;apt-name&gt;
-    remote: &lt;apt-repo&gt;
-    usage: &lt;usage&gt;
+  foo_pkg:
+    source: tarball
+    url: https://phobos.uac/foo_pkg-1.0.tar.gz
+    build:
+      type: bfg9000
+      extra_args: --extra
 </code></pre>
 
-<h3 id="conan">conan<a class="headerlink" href="#conan" title="Permanent link">§</a></h3>
+<p>Here, instead of a string for <code>build</code>, we specify a dictionary indicating the
+type of the build and some extra arguments to be passed to it. Below, we'll show
+a more complex example taking advantage of <a href="#variable-interpolation">variable
+interpolation</a>.</p>
+<h2 id="other-package-sources">Other package sources<a class="headerlink" href="#other-package-sources" title="Permanent link">§</a></h2>
+<p>One of the primary benefits of mopack is that packages can come from multiple
+different origins, or sources. These include other source distributions similar
+to <a href="../../reference/sources/#tarball"><code>tarball</code></a>, such as
+<a href="../../reference/sources/#directory"><code>directory</code></a> or
+<a href="../../reference/sources/#git"><code>git</code></a>, as well as full-fledged package managers
+like <a href="../../reference/sources/#apt"><code>apt</code></a> or
+<a href="../../reference/sources/#conan"><code>conan</code></a>:</p>
+<pre><code class="yaml">packages:
+  zlib:
+    source: conan
+    remote: zlib/1.2.11
+</code></pre>
+
+<h2 id="project-wide-options">Project-wide options<a class="headerlink" href="#project-wide-options" title="Permanent link">§</a></h2>
+<p>In addition to specifying configuration options for a particular package, you
+can also specify options for <em>all</em> packages, or all those of a particular type:</p>
 <pre><code class="yaml">options:
+  target_platform: linux
+
+  builders:
+    bfg9000:
+      toolchain: /path/to/toolchain.bfg
   sources:
     conan:
-      build: &lt;string-list&gt;
-      extra_args: &lt;shell-args&gt;
+      build: missing
+
 packages:
-  my_pkg:
-    source: conan
-    name: &lt;conan-name&gt;
-    remote: &lt;conan-repo&gt;
-    usage: &lt;usage&gt;
+  # ...
 </code></pre>
 
-<h3 id="system">system<a class="headerlink" href="#system" title="Permanent link">§</a></h3>
+<p>This is especially useful for build system integration, e.g. for passing a
+toolchain file set during configuration of the root project on to package
+dependencies.</p>
+<h2 id="nested-dependencies">Nested dependencies<a class="headerlink" href="#nested-dependencies" title="Permanent link">§</a></h2>
+<p>When your project depends on a source distribution, that dependency might depend
+on other packages in turn. mopack handles this automatically, and will add
+nested dependencies to the list of packages to resolve. For example, if
+<code>foo_pkg</code> <a href="#your-first-configuration">above</a> contains a <code>mopack.yml</code> as follows,
+then when we resolve our main <code>mopack.yml</code> configuration, <code>bar_pkg</code> will be
+fetched and built so that <code>foo_pkg</code> can use it during its build:</p>
 <pre><code class="yaml">packages:
-  my_pkg:
-    source: system
-    auto_link: &lt;boolean&gt;
-    include_path: &lt;path-list&gt;
-    library_path: &lt;path-list&gt;
-    headers: &lt;header-list&gt;
-    libraries: &lt;library-list&gt;
-    compile_flags: &lt;shell-args&gt;
-    link_flags: &lt;shell-args&gt;
-    submodule_map: &lt;submodule-map&gt;  # or...
-    submodule_map:
-      my_submodule: &lt;submodule-map&gt;
-      '*': &lt;submodule-map&gt;
-</code></pre></div>
+  bar_pkg:
+    source: tarball
+    url: https://phobos.uac/bar_pkg-2.0.tar.gz
+    build: bfg9000
+</code></pre>
+
+<h3 id="overriding-nested-dependencies">Overriding nested dependencies<a class="headerlink" href="#overriding-nested-dependencies" title="Permanent link">§</a></h3>
+<p>Sometimes, you may not want to use the nested dependencies as-is from other
+packages. In this case, you can simply provide your own configuration in the
+parent <code>mopack.yml</code>:</p>
+<pre><code class="yaml">packages:
+  foo_pkg:
+    source: tarball
+    url: https://phobos.uac/foo_pkg-1.0.tar.gz
+    build: bfg9000
+  bar_pkg:
+    source: tarball
+    url: https://phobos.uac/bar_pkg-2.1.tar.gz
+    build: bfg9000
+</code></pre>
+
+<p>When doing so, mopack will automatically determine the appropriate order to
+build dependencies so that each package has all of its build requirements met.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In situations where one package depends on another, but the former package
+does <em>not</em> specify any mopack dependencies, you can ensure the correct build
+order by putting the inner dependency first in your <code>mopack.yml</code> file. Then,
+mopack will fetch and build that package first before proceeding to the next
+one.</p>
+</div>
+<h3 id="exporting-package-configuration">Exporting package configuration<a class="headerlink" href="#exporting-package-configuration" title="Permanent link">§</a></h3>
+<p>When creating a source distribution package, you can make it easier to use this
+package by exporting its configuration. This allows users of your package to
+omit the details about how to build and use the package. For example, you can
+include the following in your package's <code>mopack.yml</code> file:</p>
+<pre><code class="yaml">export:
+  build: bfg9000
+</code></pre>
+
+<p>Then, users of your package can omit those fields from their configuration,
+relying on mopack to fill in the blanks:</p>
+<pre><code class="yaml">packages:
+  foo_pkg:
+    source: tarball
+    url: https://phobos.uac/foo_pkg-1.0.tar.gz
+</code></pre>
+
+<p>Of course, the parent configuration can still <em>override</em> the values set by a
+dependency simply by including the appropriate configuration setting, as in our
+<a href="#your-first-configuration">first example</a>.</p>
+<h2 id="submodules">Submodules<a class="headerlink" href="#submodules" title="Permanent link">§</a></h2>
+<p>In mopack, a "package" represents a single unit distributed in its most-typical
+form. Thus Boost, despite containing a wide variety of libraries, is still a
+single package. However, for a package like Boost, users rarely need to use the
+<em>entirety</em> of the package. In this case, a package can be divided into
+submodules. A submodule represents the smallest <em>usable</em> unit of a package; in
+Boost's case, a single Boost library.</p>
+<p>At its simplest, defining submodules for a package consists of listing the
+available submodule names:</p>
+<pre><code class="yaml">packages:
+  hello:
+    source: tarball
+    path: greeter-1.0.tar.gz
+    build: bfg9000
+    submodules: ['french', 'english']
+</code></pre>
+
+<p>This specifies a package with two submodules, <em>requiring</em> at least one to be
+specified whenever <a href="../resolving/#usage"><code>mopack usage</code></a> is invoked.</p></div>
         </div>
 
         <footer class="col-md-12">

@@ -59,6 +59,10 @@
 <li >
     <a href="../../user/resolving/">Resolving Packages With mopack</a>
 </li>
+                                    
+<li >
+    <a href="../../user/writing/">Writing mopack.yml Configurations</a>
+</li>
                                 </ul>
                             </li>
                             <li class="dropdown active">
@@ -166,11 +170,11 @@ the environment variables mopack recognizes.</p>
 <h4 id="boost_includedir"><em>BOOST_INCLUDEDIR</em><a class="headerlink" href="#boost_includedir" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>The root directory where Boost headers are stored. This takes precedence over
-<a href="#boost_root"><em>BOOST_ROOT</em></a>.</p>
+<a href="#boost_root"><code>$BOOST_ROOT</code></a>.</p>
 <h4 id="boost_librarydir"><em>BOOST_LIBRARYDIR</em><a class="headerlink" href="#boost_librarydir" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>The root directory where Boost libraries are stored. This takes precedence over
-<a href="#boost_root"><em>BOOST_ROOT</em></a>.</p>
+<a href="#boost_root"><code>$BOOST_ROOT</code></a>.</p>
 <h2 id="system-variables">System variables<a class="headerlink" href="#system-variables" title="Permanent link">§</a></h2>
 <hr />
 <h4 id="clicolor"><em>CLICOLOR</em><a class="headerlink" href="#clicolor" title="Permanent link">§</a></h4>
@@ -181,7 +185,7 @@ tty.</p>
 <h4 id="clicolor_force"><em>CLICOLOR_FORCE</em><a class="headerlink" href="#clicolor_force" title="Permanent link">§</a></h4>
 <p class="subtitle">Default: <em>none</em></p>
 <p>If set to non-zero, enable colors in the terminal output regardless of whether
-the destination is a tty. This overrides <a href="#clicolor"><em>CLICOLOR</em></a>.</p></div>
+the destination is a tty. This overrides <a href="#clicolor"><code>$CLICOLOR</code></a>.</p></div>
         </div>
 
         <footer class="col-md-12">
