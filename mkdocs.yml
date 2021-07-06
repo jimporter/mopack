@@ -23,6 +23,7 @@ nav:
   - Home: index.md
   - User Guide:
     - Resolving Packages With mopack: user/resolving.md
+    - Writing mopack.yml Configurations: user/writing.md
   - Reference:
     - Sources: reference/sources.md
     - Builders: reference/builders.md

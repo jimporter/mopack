@@ -69,14 +69,14 @@ Default: *none*
 {: .subtitle}
 
 The root directory where Boost headers are stored. This takes precedence over
-[*BOOST_ROOT*](#boost_root).
+[`$BOOST_ROOT`](#boost_root).
 
 #### *BOOST_LIBRARYDIR*
 Default: *none*
 {: .subtitle}
 
 The root directory where Boost libraries are stored. This takes precedence over
-[*BOOST_ROOT*](#boost_root).
+[`$BOOST_ROOT`](#boost_root).
 
 ## System variables
 ---
@@ -94,7 +94,7 @@ Default: *none*
 {: .subtitle}
 
 If set to non-zero, enable colors in the terminal output regardless of whether
-the destination is a tty. This overrides [*CLICOLOR*](#clicolor).
+the destination is a tty. This overrides [`$CLICOLOR`](#clicolor).
 
 [bfg9000]: https://jimporter.github.io/bfg9000/
 [conan]: https://conan.io/
