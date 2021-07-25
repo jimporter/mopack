@@ -127,7 +127,7 @@ class BinaryPackage(Package):
                                 _path_bases=_path_bases)
 
     def _get_usage(self, submodules, pkgdir):
-        return self.usage.get_usage(self, submodules, None, None)
+        return self.usage.get_usage(self, submodules, pkgdir, None, None)
 
 
 class PackageOptions(FreezeDried, BaseOptions):

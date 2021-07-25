@@ -160,7 +160,7 @@ class PathUsage(Usage):
 
         return [make_library(i) for i in libraries]
 
-    def _get_usage(self, pkg, submodules, srcdir, builddir, **kwargs):
+    def _get_usage(self, pkg, submodules, pkgdir, srcdir, builddir, **kwargs):
         path_vars = {'srcdir': srcdir, 'builddir': builddir}
 
         if submodules and self.submodule_map:
@@ -194,8 +194,8 @@ class PathUsage(Usage):
             **kwargs
         )
 
-    def get_usage(self, pkg, submodules, srcdir, builddir):
-        return self._get_usage(pkg, submodules, srcdir, builddir)
+    def get_usage(self, pkg, submodules, pkgdir, srcdir, builddir):
+        return self._get_usage(pkg, submodules, pkgdir, srcdir, builddir)
 
 
 class SystemUsage(PathUsage):
@@ -205,7 +205,7 @@ class SystemUsage(PathUsage):
         super().__init__(name, **kwargs)
         self.pcfile = name
 
-    def get_usage(self, pkg, submodules, srcdir, builddir):
+    def get_usage(self, pkg, submodules, pkgdir, srcdir, builddir):
         pkg_config = get_pkg_config(self._common_options.env)
         try:
             subprocess.run(pkg_config + [self.pcfile], check=True,
@@ -214,5 +214,5 @@ class SystemUsage(PathUsage):
             return self._usage(pkg, type='pkg_config', path=None,
                                pcfiles=[self.pcfile], extra_args=[])
         except (OSError, subprocess.CalledProcessError):
-            return self._get_usage(pkg, submodules, srcdir, builddir,
+            return self._get_usage(pkg, submodules, pkgdir, srcdir, builddir,
                                    type='path')

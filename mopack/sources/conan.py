@@ -120,7 +120,7 @@ class ConanPackage(BinaryPackage):
 
     def _get_usage(self, submodules, pkgdir):
         return self.usage.get_usage(
-            self, submodules, None, self._installdir(pkgdir)
+            self, submodules, pkgdir, None, self._installdir(pkgdir)
         )
 
     @staticmethod

@@ -52,17 +52,21 @@ class TestPath(UsageTest):
     def test_basic(self):
         usage = self.make_usage('foo')
         self.check_usage(usage)
-        self.assertEqual(usage.get_usage(MockPackage(), None, None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': ['foo'], 'compile_flags': [], 'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['foo'], 'compile_flags': [], 'link_flags': [],
+            }
+        )
 
     def test_auto_link(self):
         usage = self.make_usage('foo', auto_link=True)
         self.check_usage(usage, auto_link=True)
         self.assertEqual(
-            usage.get_usage(MockPackage(), None, '/srcdir', '/builddir'),
+            usage.get_usage(MockPackage(), None, self.pkgdir, '/srcdir',
+                            '/builddir'),
             {
                 'name': 'foo', 'type': 'path', 'auto_link': True,
                 'include_path': [], 'library_path': [], 'headers': [],
@@ -74,7 +78,8 @@ class TestPath(UsageTest):
         usage = self.make_usage('foo', include_path='include')
         self.check_usage(usage, include_path=[srcpathobj('include')])
         self.assertEqual(
-            usage.get_usage(MockPackage(), None, '/srcdir', '/builddir'),
+            usage.get_usage(MockPackage(), None, self.pkgdir, '/srcdir',
+                            '/builddir'),
             {
                 'name': 'foo', 'type': 'path', 'auto_link': False,
                 'include_path': [abspath('/srcdir/include')],
@@ -86,7 +91,8 @@ class TestPath(UsageTest):
         usage = self.make_usage('foo', include_path=['include'])
         self.check_usage(usage, include_path=[srcpathobj('include')])
         self.assertEqual(
-            usage.get_usage(MockPackage(), None, '/srcdir', '/builddir'),
+            usage.get_usage(MockPackage(), None, self.pkgdir, '/srcdir',
+                            '/builddir'),
             {
                 'name': 'foo', 'type': 'path', 'auto_link': False,
                 'include_path': [abspath('/srcdir/include')],
@@ -99,7 +105,8 @@ class TestPath(UsageTest):
         usage = self.make_usage('foo', include_path='$srcdir/include')
         self.check_usage(usage, include_path=[srcpathobj('include')])
         self.assertEqual(
-            usage.get_usage(MockPackage(), None, '/srcdir', '/builddir'),
+            usage.get_usage(MockPackage(), None, self.pkgdir, '/srcdir',
+                            '/builddir'),
             {
                 'name': 'foo', 'type': 'path', 'auto_link': False,
                 'include_path': [abspath('/srcdir/include')],
@@ -111,7 +118,8 @@ class TestPath(UsageTest):
         usage = self.make_usage('foo', include_path=['$srcdir/include'])
         self.check_usage(usage, include_path=[srcpathobj('include')])
         self.assertEqual(
-            usage.get_usage(MockPackage(), None, '/srcdir', '/builddir'),
+            usage.get_usage(MockPackage(), None, self.pkgdir, '/srcdir',
+                            '/builddir'),
             {
                 'name': 'foo', 'type': 'path', 'auto_link': False,
                 'include_path': [abspath('/srcdir/include')],
@@ -124,7 +132,8 @@ class TestPath(UsageTest):
         usage = self.make_usage('foo', include_path='$builddir/include')
         self.check_usage(usage, include_path=[buildpathobj('include')])
         self.assertEqual(
-            usage.get_usage(MockPackage(), None, '/srcdir', '/builddir'),
+            usage.get_usage(MockPackage(), None, self.pkgdir, '/srcdir',
+                            '/builddir'),
             {
                 'name': 'foo', 'type': 'path', 'auto_link': False,
                 'include_path': [abspath('/builddir/include')],
@@ -136,7 +145,8 @@ class TestPath(UsageTest):
         usage = self.make_usage('foo', include_path=['$builddir/include'])
         self.check_usage(usage, include_path=[buildpathobj('include')])
         self.assertEqual(
-            usage.get_usage(MockPackage(), None, '/srcdir', '/builddir'),
+            usage.get_usage(MockPackage(), None, self.pkgdir, '/srcdir',
+                            '/builddir'),
             {
                 'name': 'foo', 'type': 'path', 'auto_link': False,
                 'include_path': [abspath('/builddir/include')],
@@ -149,7 +159,8 @@ class TestPath(UsageTest):
         usage = self.make_usage('foo', include_path='/path/to/include')
         self.check_usage(usage, include_path=[abspathobj('/path/to/include')])
         self.assertEqual(
-            usage.get_usage(MockPackage(), None, '/srcdir', '/builddir'),
+            usage.get_usage(MockPackage(), None, self.pkgdir, '/srcdir',
+                            '/builddir'),
             {
                 'name': 'foo', 'type': 'path', 'auto_link': False,
                 'include_path': [abspath('/path/to/include')],
@@ -160,12 +171,15 @@ class TestPath(UsageTest):
 
         usage = self.make_usage('foo', include_path='/path/to/include')
         self.check_usage(usage, include_path=[abspathobj('/path/to/include')])
-        self.assertEqual(usage.get_usage(MockPackage(), None, None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [abspath('/path/to/include')], 'library_path': [],
-            'headers': [], 'libraries': ['foo'], 'compile_flags': [],
-            'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [abspath('/path/to/include')],
+                'library_path': [], 'headers': [], 'libraries': ['foo'],
+                'compile_flags': [], 'link_flags': [],
+            }
+        )
 
     def test_invalid_include_path(self):
         with self.assertRaises(FieldError):
@@ -175,7 +189,8 @@ class TestPath(UsageTest):
         usage = self.make_usage('foo', library_path='lib')
         self.check_usage(usage, library_path=[buildpathobj('lib')])
         self.assertEqual(
-            usage.get_usage(MockPackage(), None, '/srcdir', '/builddir'),
+            usage.get_usage(MockPackage(), None, self.pkgdir, '/srcdir',
+                            '/builddir'),
             {
                 'name': 'foo', 'type': 'path', 'auto_link': False,
                 'include_path': [], 'library_path': [abspath('/builddir/lib')],
@@ -187,7 +202,8 @@ class TestPath(UsageTest):
         usage = self.make_usage('foo', library_path=['lib'])
         self.check_usage(usage, library_path=[buildpathobj('lib')])
         self.assertEqual(
-            usage.get_usage(MockPackage(), None, '/srcdir', '/builddir'),
+            usage.get_usage(MockPackage(), None, self.pkgdir, '/srcdir',
+                            '/builddir'),
             {
                 'name': 'foo', 'type': 'path', 'auto_link': False,
                 'include_path': [], 'library_path': [abspath('/builddir/lib')],
@@ -200,7 +216,8 @@ class TestPath(UsageTest):
         usage = self.make_usage('foo', library_path='$srcdir/lib')
         self.check_usage(usage, library_path=[srcpathobj('lib')])
         self.assertEqual(
-            usage.get_usage(MockPackage(), None, '/srcdir', '/builddir'),
+            usage.get_usage(MockPackage(), None, self.pkgdir, '/srcdir',
+                            '/builddir'),
             {
                 'name': 'foo', 'type': 'path', 'auto_link': False,
                 'include_path': [], 'library_path': [abspath('/srcdir/lib')],
@@ -212,7 +229,8 @@ class TestPath(UsageTest):
         usage = self.make_usage('foo', library_path=['$srcdir/lib'])
         self.check_usage(usage, library_path=[srcpathobj('lib')])
         self.assertEqual(
-            usage.get_usage(MockPackage(), None, '/srcdir', '/builddir'),
+            usage.get_usage(MockPackage(), None, self.pkgdir, '/srcdir',
+                            '/builddir'),
             {
                 'name': 'foo', 'type': 'path', 'auto_link': False,
                 'include_path': [], 'library_path': [abspath('/srcdir/lib')],
@@ -225,7 +243,8 @@ class TestPath(UsageTest):
         usage = self.make_usage('foo', library_path='$builddir/lib')
         self.check_usage(usage, library_path=[buildpathobj('lib')])
         self.assertEqual(
-            usage.get_usage(MockPackage(), None, '/srcdir', '/builddir'),
+            usage.get_usage(MockPackage(), None, self.pkgdir, '/srcdir',
+                            '/builddir'),
             {
                 'name': 'foo', 'type': 'path', 'auto_link': False,
                 'include_path': [], 'library_path': [abspath('/builddir/lib')],
@@ -237,7 +256,8 @@ class TestPath(UsageTest):
         usage = self.make_usage('foo', library_path=['$builddir/lib'])
         self.check_usage(usage, library_path=[buildpathobj('lib')])
         self.assertEqual(
-            usage.get_usage(MockPackage(), None, '/srcdir', '/builddir'),
+            usage.get_usage(MockPackage(), None, self.pkgdir, '/srcdir',
+                            '/builddir'),
             {
                 'name': 'foo', 'type': 'path', 'auto_link': False,
                 'include_path': [], 'library_path': [abspath('/builddir/lib')],
@@ -250,7 +270,8 @@ class TestPath(UsageTest):
         usage = self.make_usage('foo', library_path='/path/to/lib')
         self.check_usage(usage, library_path=[abspathobj('/path/to/lib')])
         self.assertEqual(
-            usage.get_usage(MockPackage(), None, '/srcdir', '/builddir'),
+            usage.get_usage(MockPackage(), None, self.pkgdir, '/srcdir',
+                            '/builddir'),
             {
                 'name': 'foo', 'type': 'path', 'auto_link': False,
                 'include_path': [], 'library_path': [abspath('/path/to/lib')],
@@ -261,12 +282,15 @@ class TestPath(UsageTest):
 
         usage = self.make_usage('foo', library_path='/path/to/lib')
         self.check_usage(usage, library_path=[abspathobj('/path/to/lib')])
-        self.assertEqual(usage.get_usage(MockPackage(), None, None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [abspath('/path/to/lib')],
-            'headers': [], 'libraries': ['foo'], 'compile_flags': [],
-            'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [abspath('/path/to/lib')],
+                'headers': [], 'libraries': ['foo'], 'compile_flags': [],
+                'link_flags': [],
+            }
+        )
 
     def test_invalid_library_path(self):
         with self.assertRaises(FieldError):
@@ -275,114 +299,150 @@ class TestPath(UsageTest):
     def test_headers(self):
         usage = self.make_usage('foo', headers='foo.hpp')
         self.check_usage(usage, headers=['foo.hpp'])
-        self.assertEqual(usage.get_usage(MockPackage(), None, None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': ['foo.hpp'],
-            'libraries': ['foo'], 'compile_flags': [], 'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': ['foo.hpp'],
+                'libraries': ['foo'], 'compile_flags': [], 'link_flags': [],
+            }
+        )
 
         usage = self.make_usage('foo', headers=['foo.hpp'])
         self.check_usage(usage, headers=['foo.hpp'])
-        self.assertEqual(usage.get_usage(MockPackage(), None, None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': ['foo.hpp'],
-            'libraries': ['foo'], 'compile_flags': [], 'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': ['foo.hpp'],
+                'libraries': ['foo'], 'compile_flags': [], 'link_flags': [],
+            }
+        )
 
     def test_libraries(self):
         usage = self.make_usage('foo', libraries='bar')
         self.check_usage(usage, libraries=['bar'])
-        self.assertEqual(usage.get_usage(MockPackage(), None, None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': ['bar'], 'compile_flags': [], 'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['bar'], 'compile_flags': [], 'link_flags': [],
+            }
+        )
 
         usage = self.make_usage('foo', libraries=['bar'])
         self.check_usage(usage, libraries=['bar'])
-        self.assertEqual(usage.get_usage(MockPackage(), None, None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': ['bar'], 'compile_flags': [], 'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['bar'], 'compile_flags': [], 'link_flags': [],
+            }
+        )
 
         usage = self.make_usage('foo', libraries=None)
         self.check_usage(usage, libraries=[])
-        self.assertEqual(usage.get_usage(MockPackage(), None, None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': [], 'compile_flags': [], 'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': [], 'compile_flags': [], 'link_flags': [],
+            }
+        )
 
         usage = self.make_usage('foo', libraries=[
             {'type': 'library', 'name': 'bar'},
         ])
         self.check_usage(usage, libraries=['bar'])
-        self.assertEqual(usage.get_usage(MockPackage(), None, None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': ['bar'], 'compile_flags': [], 'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['bar'], 'compile_flags': [], 'link_flags': [],
+            }
+        )
 
         usage = self.make_usage('foo', libraries=[
             {'type': 'guess', 'name': 'bar'},
         ])
         self.check_usage(usage, libraries=[{'type': 'guess', 'name': 'bar'}])
-        self.assertEqual(usage.get_usage(MockPackage(), None, None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': ['bar'], 'compile_flags': [], 'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['bar'], 'compile_flags': [], 'link_flags': [],
+            }
+        )
 
         usage = self.make_usage('foo', libraries=[
             {'type': 'framework', 'name': 'bar'},
         ])
         self.check_usage(usage, libraries=[{'type': 'framework',
                                             'name': 'bar'}])
-        self.assertEqual(usage.get_usage(MockPackage(), None, None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': [{'type': 'framework', 'name': 'bar'}],
-            'compile_flags': [], 'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': [{'type': 'framework', 'name': 'bar'}],
+                'compile_flags': [], 'link_flags': [],
+            }
+        )
 
     def test_compile_flags(self):
         usage = self.make_usage('foo', compile_flags='-pthread -fPIC')
         self.check_usage(usage, compile_flags=['-pthread', '-fPIC'])
-        self.assertEqual(usage.get_usage(MockPackage(), None, None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': ['foo'], 'compile_flags': ['-pthread', '-fPIC'],
-            'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['foo'], 'compile_flags': ['-pthread', '-fPIC'],
+                'link_flags': [],
+            }
+        )
 
         usage = self.make_usage('foo', compile_flags=['-pthread', '-fPIC'])
         self.check_usage(usage, compile_flags=['-pthread', '-fPIC'])
-        self.assertEqual(usage.get_usage(MockPackage(), None, None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': ['foo'], 'compile_flags': ['-pthread', '-fPIC'],
-            'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['foo'], 'compile_flags': ['-pthread', '-fPIC'],
+                'link_flags': [],
+            }
+        )
 
     def test_link_flags(self):
         usage = self.make_usage('foo', link_flags='-pthread -fPIC')
         self.check_usage(usage, link_flags=['-pthread', '-fPIC'])
-        self.assertEqual(usage.get_usage(MockPackage(), None, None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': ['foo'], 'compile_flags': [],
-            'link_flags': ['-pthread', '-fPIC'],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['foo'], 'compile_flags': [],
+                'link_flags': ['-pthread', '-fPIC'],
+            }
+        )
 
         usage = self.make_usage('foo', link_flags=['-pthread', '-fPIC'])
         self.check_usage(usage, link_flags=['-pthread', '-fPIC'])
-        self.assertEqual(usage.get_usage(MockPackage(), None, None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': ['foo'], 'compile_flags': [],
-            'link_flags': ['-pthread', '-fPIC'],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['foo'], 'compile_flags': [],
+                'link_flags': ['-pthread', '-fPIC'],
+            }
+        )
 
     def test_submodules(self):
         submodules_required = {'names': '*', 'required': True}
@@ -390,40 +450,53 @@ class TestPath(UsageTest):
 
         usage = self.make_usage('foo', submodules=submodules_required)
         self.check_usage(usage, libraries=[])
-        self.assertEqual(usage.get_usage(MockPackage(), ['sub'], None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': ['foo_sub'], 'compile_flags': [], 'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), ['sub'], self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['foo_sub'], 'compile_flags': [],
+                'link_flags': [],
+            }
+        )
 
         usage = self.make_usage('foo', libraries=['bar'],
                                 submodules=submodules_required)
         self.check_usage(usage, libraries=['bar'])
-        self.assertEqual(usage.get_usage(MockPackage(), ['sub'], None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': ['bar', 'foo_sub'], 'compile_flags': [],
-            'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), ['sub'], self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['bar', 'foo_sub'], 'compile_flags': [],
+                'link_flags': [],
+            }
+        )
 
         usage = self.make_usage('foo', submodules=submodules_optional)
         self.check_usage(usage, libraries=[{'type': 'guess', 'name': 'foo'}])
-        self.assertEqual(usage.get_usage(MockPackage(), ['sub'], None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': ['foo', 'foo_sub'], 'compile_flags': [],
-            'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), ['sub'], self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['foo', 'foo_sub'], 'compile_flags': [],
+                'link_flags': [],
+            }
+        )
 
         usage = self.make_usage('foo', libraries=['bar'],
                                 submodules=submodules_optional)
         self.check_usage(usage, libraries=['bar'])
-        self.assertEqual(usage.get_usage(MockPackage(), ['sub'], None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': ['bar', 'foo_sub'], 'compile_flags': [],
-            'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), ['sub'], self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['bar', 'foo_sub'], 'compile_flags': [],
+                'link_flags': [],
+            }
+        )
 
     def test_submodule_map(self):
         submodules_required = {'names': '*', 'required': True}
@@ -431,21 +504,27 @@ class TestPath(UsageTest):
         usage = self.make_usage('foo', submodule_map='$submodule',
                                 submodules=submodules_required)
         self.check_usage(usage, libraries=[])
-        self.assertEqual(usage.get_usage(MockPackage(), ['sub'], None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': ['sub'], 'compile_flags': [], 'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), ['sub'], self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['sub'], 'compile_flags': [], 'link_flags': [],
+            }
+        )
 
         usage = self.make_usage('foo', submodule_map={
             '*': {'libraries': '$submodule'},
         }, submodules=submodules_required)
         self.check_usage(usage, libraries=[])
-        self.assertEqual(usage.get_usage(MockPackage(), ['sub'], None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': ['sub'], 'compile_flags': [], 'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), ['sub'], self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['sub'], 'compile_flags': [], 'link_flags': [],
+            }
+        )
 
         usage = self.make_usage('foo', submodule_map={'sub': {
             'include_path': '/sub/incdir',
@@ -456,15 +535,18 @@ class TestPath(UsageTest):
             'link_flags': '-Wl,-sub',
         }, '*': {'libraries': '$submodule'}}, submodules=submodules_required)
         self.check_usage(usage, libraries=[])
-        self.assertEqual(usage.get_usage(MockPackage(), ['sub'], None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [abspath('/sub/incdir')],
-            'library_path': [abspath('/sub/libdir')], 'headers': ['sub.hpp'],
-            'libraries': ['sublib'], 'compile_flags': ['-Dsub'],
-            'link_flags': ['-Wl,-sub'],
-        })
         self.assertEqual(
-            usage.get_usage(MockPackage(), ['sub2'], None, None),
+            usage.get_usage(MockPackage(), ['sub'], self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [abspath('/sub/incdir')],
+                'library_path': [abspath('/sub/libdir')],
+                'headers': ['sub.hpp'], 'libraries': ['sublib'],
+                'compile_flags': ['-Dsub'], 'link_flags': ['-Wl,-sub'],
+            }
+        )
+        self.assertEqual(
+            usage.get_usage(MockPackage(), ['sub2'], self.pkgdir, None, None),
             {
                 'name': 'foo', 'type': 'path', 'auto_link': False,
                 'include_path': [], 'library_path': [], 'headers': [],
@@ -491,15 +573,18 @@ class TestPath(UsageTest):
             },
         }, submodules=submodules_required)
         self.check_usage(usage, libraries=[])
-        self.assertEqual(usage.get_usage(MockPackage(), ['sub'], None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [abspath('/incdir/sub')],
-            'library_path': [abspath('/libdir/sub')],
-            'headers': ['sub/file.hpp'], 'libraries': ['sub'],
-            'compile_flags': ['-Dsub'], 'link_flags': ['-Wl,-sub'],
-        })
         self.assertEqual(
-            usage.get_usage(MockPackage(), ['sub2'], None, None),
+            usage.get_usage(MockPackage(), ['sub'], self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [abspath('/incdir/sub')],
+                'library_path': [abspath('/libdir/sub')],
+                'headers': ['sub/file.hpp'], 'libraries': ['sub'],
+                'compile_flags': ['-Dsub'], 'link_flags': ['-Wl,-sub'],
+            }
+        )
+        self.assertEqual(
+            usage.get_usage(MockPackage(), ['sub2'], self.pkgdir, None, None),
             {
                 'name': 'foo', 'type': 'path', 'auto_link': False,
                 'include_path': [abspath('/incdir/star/sub2')],
@@ -520,7 +605,7 @@ class TestPath(UsageTest):
                              headers=['boost/version.hpp'], libraries=[],
                              include_path=[], library_path=[])
             self.assertEqual(
-                usage.get_usage(MockPackage(), None, None, None),
+                usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
                 {
                     'name': 'foo', 'type': 'path',
                     'auto_link': plat == 'windows',
@@ -530,7 +615,8 @@ class TestPath(UsageTest):
                 }
             )
             self.assertEqual(
-                usage.get_usage(MockPackage(), ['thread'], None, None),
+                usage.get_usage(MockPackage(), ['thread'], self.pkgdir, None,
+                                None),
                 {
                     'name': 'foo', 'type': 'path',
                     'auto_link': plat == 'windows',
@@ -549,7 +635,7 @@ class TestPath(UsageTest):
                              libraries=['boost'], include_path=[],
                              library_path=[])
             self.assertEqual(
-                usage.get_usage(MockPackage(), None, None, None),
+                usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
                 {
                     'name': 'foo', 'type': 'path',
                     'auto_link': plat == 'windows',
@@ -560,7 +646,8 @@ class TestPath(UsageTest):
             )
             extra_libs = ['boost_regex'] if plat != 'windows' else []
             self.assertEqual(
-                usage.get_usage(MockPackage(), ['regex'], None, None),
+                usage.get_usage(MockPackage(), ['regex'], self.pkgdir, None,
+                                None),
                 {
                     'name': 'foo', 'type': 'path',
                     'auto_link': plat == 'windows',
@@ -589,7 +676,7 @@ class TestPath(UsageTest):
                          headers=['boost/version.hpp'], libraries=[],
                          **pathobjs)
         self.assertEqual(
-            usage.get_usage(MockPackage(), None, None, None),
+            usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
             merge_dicts({
                 'name': 'foo', 'type': 'path', 'auto_link': False,
                 'headers': ['boost/version.hpp'], 'libraries': [],
@@ -597,7 +684,8 @@ class TestPath(UsageTest):
             }, paths)
         )
         self.assertEqual(
-            usage.get_usage(MockPackage(), ['thread'], None, None),
+            usage.get_usage(MockPackage(), ['thread'], self.pkgdir, None,
+                            None),
             merge_dicts({
                 'name': 'foo', 'type': 'path', 'auto_link': False,
                 'headers': ['boost/version.hpp'],
@@ -612,7 +700,7 @@ class TestPath(UsageTest):
                          headers=['boost/version.hpp'], libraries=['boost'],
                          **pathobjs)
         self.assertEqual(
-            usage.get_usage(MockPackage(), None, None, None),
+            usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
             merge_dicts({
                 'name': 'foo', 'type': 'path', 'auto_link': False,
                 'headers': ['boost/version.hpp'], 'libraries': ['boost'],
@@ -620,7 +708,7 @@ class TestPath(UsageTest):
             }, paths)
         )
         self.assertEqual(
-            usage.get_usage(MockPackage(), ['regex'], None, None),
+            usage.get_usage(MockPackage(), ['regex'], self.pkgdir, None, None),
             merge_dicts({
                 'name': 'foo', 'type': 'path', 'auto_link': False,
                 'headers': ['boost/version.hpp'],
@@ -635,7 +723,7 @@ class TestPath(UsageTest):
         })
         self.check_usage(usage, libraries=[{'type': 'guess', 'name': 'gl'}])
         self.assertEqual(
-            usage.get_usage(MockPackage(), None, None, None), {
+            usage.get_usage(MockPackage(), None, self.pkgdir, None, None), {
                 'name': 'foo', 'type': 'path', 'auto_link': False,
                 'include_path': [], 'library_path': [], 'headers': [],
                 'libraries': ['GL'], 'compile_flags': [], 'link_flags': [],
@@ -646,33 +734,42 @@ class TestPath(UsageTest):
             'target_platform': 'darwin',
         })
         self.check_usage(usage, libraries=[{'type': 'guess', 'name': 'gl'}])
-        self.assertEqual(usage.get_usage(MockPackage(), None, None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': [{'type': 'framework', 'name': 'OpenGL'}],
-            'compile_flags': [], 'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': [{'type': 'framework', 'name': 'OpenGL'}],
+                'compile_flags': [], 'link_flags': [],
+            }
+        )
 
         usage = self.make_usage('gl', libraries=['gl'], common_options={
             'target_platform': 'linux',
         })
         self.check_usage(usage, libraries=['gl'])
-        self.assertEqual(usage.get_usage(MockPackage(), None, None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': ['gl'], 'compile_flags': [], 'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['gl'], 'compile_flags': [], 'link_flags': [],
+            }
+        )
 
         usage = self.make_usage(
             'foo', libraries=[{'type': 'guess', 'name': 'gl'}],
             common_options={'target_platform': 'linux'}
         )
         self.check_usage(usage, libraries=[{'type': 'guess', 'name': 'gl'}])
-        self.assertEqual(usage.get_usage(MockPackage(), None, None, None), {
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': ['GL'], 'compile_flags': [], 'link_flags': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
+            {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['GL'], 'compile_flags': [], 'link_flags': [],
+            }
+        )
 
     def test_rehydrate(self):
         opts = self.make_options()
@@ -743,7 +840,7 @@ class TestSystem(TestPath):
         self.check_usage(usage)
         with mock.patch('subprocess.run'):
             self.assertEqual(
-                usage.get_usage(MockPackage(), None, None, None),
+                usage.get_usage(MockPackage(), None, self.pkgdir, None, None),
                 {
                     'name': 'foo', 'type': 'pkg_config', 'path': None,
                     'pcfiles': ['foo'], 'extra_args': [],

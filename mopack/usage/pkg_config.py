@@ -90,7 +90,7 @@ class PkgConfigUsage(Usage):
         except KeyError:
             return self.submodule_map['*'].fill(submodule)
 
-    def get_usage(self, pkg, submodules, srcdir, builddir):
+    def get_usage(self, pkg, submodules, pkgdir, srcdir, builddir):
         pcpath = self.path.string(srcdir=srcdir, builddir=builddir)
         extra_args = self.extra_args.fill(srcdir=srcdir, builddir=builddir)
 

@@ -50,7 +50,7 @@ class Builder(OptionsHolder):
 
     def get_usage(self, pkg, submodules, pkgdir, srcdir):
         return self.usage.get_usage(
-            pkg, submodules, srcdir, self._builddir(pkgdir)
+            pkg, submodules, pkgdir, srcdir, self._builddir(pkgdir)
         )
 
     def __repr__(self):
