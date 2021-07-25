@@ -61,7 +61,7 @@ class SDistPackage(Package):
             )
         return super().dehydrate()
 
-    def _find_mopack(self, srcdir, parent_config):
+    def _find_mopack(self, parent_config, srcdir):
         config = ChildConfig([srcdir], parent_config=parent_config,
                              parent_package=self)
 
@@ -108,7 +108,7 @@ class SDistPackage(Package):
         del self.pending_usage
         return config
 
-    def clean_post(self, pkgdir, new_package, quiet=False):
+    def clean_post(self, new_package, pkgdir, quiet=False):
         if self == new_package:
             return False
 
@@ -142,14 +142,14 @@ class DirectoryPackage(SDistPackage):
     def _srcdir(self, pkgdir):
         return self.path.string(cfgdir=self.config_dir)
 
-    def fetch(self, pkgdir, parent_config):
+    def fetch(self, parent_config, pkgdir):
         path = self.path.string(cfgdir=self.config_dir)
         log.pkg_fetch(self.name, 'from {}'.format(path))
-        return self._find_mopack(path, parent_config)
+        return self._find_mopack(parent_config, path)
 
-    def _get_usage(self, pkgdir, submodules):
+    def _get_usage(self, submodules, pkgdir):
         path = self.path.string(cfgdir=self.config_dir)
-        return self.builder.get_usage(pkgdir, submodules, path)
+        return self.builder.get_usage(self, submodules, pkgdir, path)
 
 
 @FreezeDried.fields(rehydrate={'path': Path}, skip_compare={'guessed_srcdir'})
@@ -183,7 +183,7 @@ class TarballPackage(SDistPackage):
         with urlopen(url) as f:
             return BytesIO(f.read())
 
-    def clean_pre(self, pkgdir, new_package, quiet=False):
+    def clean_pre(self, new_package, pkgdir, quiet=False):
         if self.equal(new_package, skip_fields={'builder'}):
             # Since both package objects have the same configuration, pass the
             # guessed srcdir on to the new package instance. That way, we don't
@@ -196,7 +196,7 @@ class TarballPackage(SDistPackage):
         shutil.rmtree(self._base_srcdir(pkgdir), ignore_errors=True)
         return True
 
-    def fetch(self, pkgdir, parent_config):
+    def fetch(self, parent_config, pkgdir):
         base_srcdir = self._base_srcdir(pkgdir)
         if os.path.exists(base_srcdir):
             log.pkg_fetch(self.name, 'already fetched')
@@ -227,10 +227,12 @@ class TarballPackage(SDistPackage):
                      pushd(self._srcdir(pkgdir)):  # noqa
                     logfile.check_call(patch_cmd + ['-p1'], stdin=f)
 
-        return self._find_mopack(self._srcdir(pkgdir), parent_config)
+        return self._find_mopack(parent_config, self._srcdir(pkgdir))
 
-    def _get_usage(self, pkgdir, submodules):
-        return self.builder.get_usage(pkgdir, submodules, self._srcdir(pkgdir))
+    def _get_usage(self, submodules, pkgdir):
+        return self.builder.get_usage(
+            self, submodules, pkgdir, self._srcdir(pkgdir)
+        )
 
 
 class GitPackage(SDistPackage):
@@ -270,7 +272,7 @@ class GitPackage(SDistPackage):
     def _srcdir(self, pkgdir):
         return os.path.join(self._base_srcdir(pkgdir), self.srcdir)
 
-    def clean_pre(self, pkgdir, new_package, quiet=False):
+    def clean_pre(self, new_package, pkgdir, quiet=False):
         if self.equal(new_package, skip_fields={'builder'}):
             return False
 
@@ -279,7 +281,7 @@ class GitPackage(SDistPackage):
         shutil.rmtree(self._base_srcdir(pkgdir), ignore_errors=True)
         return True
 
-    def fetch(self, pkgdir, parent_config):
+    def fetch(self, parent_config, pkgdir):
         base_srcdir = self._base_srcdir(pkgdir)
         git = get_cmd(self._common_options.env, 'GIT', 'git')
 
@@ -302,7 +304,9 @@ class GitPackage(SDistPackage):
                     raise ValueError('unknown revision type {!r}'
                                      .format(self.rev[0]))
 
-        return self._find_mopack(self._srcdir(pkgdir), parent_config)
+        return self._find_mopack(parent_config, self._srcdir(pkgdir))
 
-    def _get_usage(self, pkgdir, submodules):
-        return self.builder.get_usage(pkgdir, submodules, self._srcdir(pkgdir))
+    def _get_usage(self, submodules, pkgdir):
+        return self.builder.get_usage(
+            self, submodules, pkgdir, self._srcdir(pkgdir)
+        )

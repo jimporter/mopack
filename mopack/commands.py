@@ -98,13 +98,13 @@ def _do_fetch(config, old_metadata, pkgdir):
 
         # Clean out the old package sources if needed.
         if pkg.name in old_metadata.packages:
-            old_metadata.packages[pkg.name].clean_pre(pkgdir, pkg)
+            old_metadata.packages[pkg.name].clean_pre(pkg, pkgdir)
 
         # Fetch the new package and check for child mopack configs.
         try:
-            child_config = pkg.fetch(pkgdir, parent_config=config)
+            child_config = pkg.fetch(config, pkgdir)
         except Exception:
-            pkg.clean_pre(pkgdir, None, quiet=True)
+            pkg.clean_pre(None, pkgdir, quiet=True)
             raise
 
         if child_config:
@@ -139,11 +139,11 @@ def fetch(config, pkgdir):
     for pkg in config.packages.values():
         old = old_metadata.packages.pop(pkg.name, None)
         if old:
-            old.clean_post(pkgdir, pkg)
+            old.clean_post(pkg, pkgdir)
 
     # Clean removed packages.
     for pkg in old_metadata.packages.values():
-        pkg.clean_all(pkgdir, None)
+        pkg.clean_all(None, pkgdir)
 
     return metadata
 
@@ -164,10 +164,10 @@ def resolve(config, pkgdir):
 
     for t, pkgs in batch_packages.items():
         try:
-            t.resolve_all(pkgdir, pkgs)
+            t.resolve_all(pkgs, pkgdir)
         except Exception:
             for i in pkgs:
-                i.clean_post(pkgdir, None, quiet=True)
+                i.clean_post(None, pkgdir, quiet=True)
             metadata.save(pkgdir)
             raise
 
@@ -178,7 +178,7 @@ def resolve(config, pkgdir):
                 metadata.save(pkgdir)
             pkg.resolve(pkgdir)
         except Exception:
-            pkg.clean_post(pkgdir, None, quiet=True)
+            pkg.clean_post(None, pkgdir, quiet=True)
             metadata.save(pkgdir)
             raise
 
@@ -200,7 +200,7 @@ def deploy(pkgdir):
             packages.append(pkg)
 
     for t, pkgs in batch_packages.items():
-        t.deploy_all(pkgdir, pkgs)
+        t.deploy_all(pkgs, pkgdir)
     for pkg in packages:
         pkg.deploy(pkgdir)
 
@@ -224,7 +224,7 @@ def usage(pkgdir, name, submodules=None, strict=False):
     if not package.resolved:
         raise ValueError('package {!r} has not been resolved successfully'
                          .format(name))
-    return dict(name=name, **package.get_usage(pkgdir, submodules))
+    return package.get_usage(submodules, pkgdir)
 
 
 def list_files(pkgdir, implicit=False, strict=False):

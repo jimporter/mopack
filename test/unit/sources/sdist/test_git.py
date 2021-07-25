@@ -32,7 +32,7 @@ class TestGit(SDistTestCase):
         with mock_open_log() as mopen, \
              mock.patch('mopack.sources.sdist.pushd'), \
              mock.patch('subprocess.run') as mrun:  # noqa
-            pkg.fetch(self.pkgdir, self.config)
+            pkg.fetch(self.config, self.pkgdir)
             mrun.assert_has_calls([
                 mock.call(i, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                           universal_newlines=True, check=True)
@@ -156,7 +156,7 @@ class TestGit(SDistTestCase):
                  read_data='export:\n  build: bfg9000'
              )), \
              mock.patch('subprocess.run') as mrun:  # noqa
-            config = pkg.fetch(self.pkgdir, self.config)
+            config = pkg.fetch(self.config, self.pkgdir)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(
                 Bfg9000Builder, 'foo'
@@ -172,16 +172,16 @@ class TestGit(SDistTestCase):
                  read_data='export:\n  build: bfg9000'
              )), \
              mock.patch('subprocess.run') as mrun:  # noqa
-            config = pkg.fetch(self.pkgdir, self.config)
+            config = pkg.fetch(self.config, self.pkgdir)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(
                 Bfg9000Builder, 'foo', usage={'type': 'system'}
             ))
         with mock.patch('subprocess.run', side_effect=OSError()):
             self.check_resolve(pkg, usage={
-                'type': 'path', 'auto_link': False, 'include_path': [],
-                'library_path': [], 'headers': [], 'libraries': ['foo'],
-                'compile_flags': [], 'link_flags': [],
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['foo'], 'compile_flags': [], 'link_flags': [],
             })
 
     def test_usage(self):
@@ -209,8 +209,9 @@ class TestGit(SDistTestCase):
 
         self.check_fetch(pkg)
         self.check_resolve(pkg, usage={
-            'type': 'pkg_config', 'path': self.pkgconfdir('foo', 'pkgconf'),
-            'pcfiles': ['foo'], 'extra_args': [],
+            'name': 'foo', 'type': 'pkg_config',
+            'path': self.pkgconfdir('foo', 'pkgconf'), 'pcfiles': ['foo'],
+            'extra_args': [],
         })
 
     def test_submodules(self):
@@ -227,8 +228,9 @@ class TestGit(SDistTestCase):
                                 submodules=submodules_required)
         self.check_fetch(pkg)
         self.check_resolve(pkg, submodules=['sub'], usage={
-            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
+            'name': 'foo', 'type': 'pkg_config',
+            'path': self.pkgconfdir('foo'), 'pcfiles': ['bar', 'foo_sub'],
+            'extra_args': [],
         })
 
         pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000',
@@ -241,8 +243,9 @@ class TestGit(SDistTestCase):
                                 submodules=submodules_optional)
         self.check_fetch(pkg)
         self.check_resolve(pkg, submodules=['sub'], usage={
-            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
+            'name': 'foo', 'type': 'pkg_config',
+            'path': self.pkgconfdir('foo'), 'pcfiles': ['bar', 'foo_sub'],
+            'extra_args': [],
         })
 
     def test_invalid_submodule(self):
@@ -262,7 +265,7 @@ class TestGit(SDistTestCase):
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('mopack.sources.sdist.pushd'), \
              mock.patch('subprocess.run') as mrun:  # noqa
-            pkg.fetch(self.pkgdir, self.config)
+            pkg.fetch(self.config, self.pkgdir)
             mrun.assert_called_once_with(
                 ['git', 'pull'], stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT, universal_newlines=True, check=True
@@ -279,7 +282,7 @@ class TestGit(SDistTestCase):
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('mopack.sources.sdist.pushd'), \
              mock.patch('subprocess.run') as mrun:  # noqa
-            pkg.fetch(self.pkgdir, self.config)
+            pkg.fetch(self.config, self.pkgdir)
             mrun.assert_not_called()
         self.check_resolve(pkg)
 
@@ -293,7 +296,7 @@ class TestGit(SDistTestCase):
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('mopack.sources.sdist.pushd'), \
              mock.patch('subprocess.run') as mrun:  # noqa
-            pkg.fetch(self.pkgdir, self.config)
+            pkg.fetch(self.config, self.pkgdir)
             mrun.assert_not_called()
         self.check_resolve(pkg)
 
@@ -347,35 +350,35 @@ class TestGit(SDistTestCase):
         # Git -> Git (same)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
-            self.assertEqual(oldpkg.clean_pre(self.pkgdir, oldpkg), False)
+            self.assertEqual(oldpkg.clean_pre(oldpkg, self.pkgdir), False)
             mlog.assert_not_called()
             mrmtree.assert_not_called()
 
         # Git -> Git (different)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
-            self.assertEqual(oldpkg.clean_pre(self.pkgdir, newpkg1), True)
+            self.assertEqual(oldpkg.clean_pre(newpkg1, self.pkgdir), True)
             mlog.assert_called_once()
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
         # Git -> Apt
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
-            self.assertEqual(oldpkg.clean_pre(self.pkgdir, newpkg2), True)
+            self.assertEqual(oldpkg.clean_pre(newpkg2, self.pkgdir), True)
             mlog.assert_called_once()
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
         # Git -> nothing
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
-            self.assertEqual(oldpkg.clean_pre(self.pkgdir, None), True)
+            self.assertEqual(oldpkg.clean_pre(None, self.pkgdir), True)
             mlog.assert_called_once()
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
         # Git -> nothing (quiet)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
-            self.assertEqual(oldpkg.clean_pre(self.pkgdir, None, True), True)
+            self.assertEqual(oldpkg.clean_pre(None, self.pkgdir, True), True)
             mlog.assert_not_called()
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
@@ -391,28 +394,28 @@ class TestGit(SDistTestCase):
         # Git -> Git (same)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
-            self.assertEqual(oldpkg.clean_post(self.pkgdir, oldpkg), False)
+            self.assertEqual(oldpkg.clean_post(oldpkg, self.pkgdir), False)
             mlog.assert_not_called()
             mclean.assert_not_called()
 
         # Git -> Git (different)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
-            self.assertEqual(oldpkg.clean_post(self.pkgdir, newpkg1), True)
+            self.assertEqual(oldpkg.clean_post(newpkg1, self.pkgdir), True)
             mlog.assert_called_once()
             mclean.assert_called_once_with(self.pkgdir)
 
         # Git -> Apt
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
-            self.assertEqual(oldpkg.clean_post(self.pkgdir, newpkg2), True)
+            self.assertEqual(oldpkg.clean_post(newpkg2, self.pkgdir), True)
             mlog.assert_called_once()
             mclean.assert_called_once_with(self.pkgdir)
 
         # Git -> nothing
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
-            self.assertEqual(oldpkg.clean_post(self.pkgdir, None), True)
+            self.assertEqual(oldpkg.clean_post(None, self.pkgdir), True)
             mlog.assert_called_once()
             mclean.assert_called_once_with(self.pkgdir)
 
@@ -431,7 +434,7 @@ class TestGit(SDistTestCase):
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
-            self.assertEqual(oldpkg.clean_all(self.pkgdir, oldpkg),
+            self.assertEqual(oldpkg.clean_all(oldpkg, self.pkgdir),
                              (False, False))
             mlog.assert_not_called()
             mclean.assert_not_called()
@@ -441,7 +444,7 @@ class TestGit(SDistTestCase):
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
-            self.assertEqual(oldpkg.clean_all(self.pkgdir, newpkg1),
+            self.assertEqual(oldpkg.clean_all(newpkg1, self.pkgdir),
                              (True, True))
             self.assertEqual(mlog.call_count, 2)
             mclean.assert_called_once_with(self.pkgdir)
@@ -451,7 +454,7 @@ class TestGit(SDistTestCase):
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
-            self.assertEqual(oldpkg.clean_all(self.pkgdir, newpkg2),
+            self.assertEqual(oldpkg.clean_all(newpkg2, self.pkgdir),
                              (True, True))
             self.assertEqual(mlog.call_count, 2)
             mclean.assert_called_once_with(self.pkgdir)
@@ -461,7 +464,7 @@ class TestGit(SDistTestCase):
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
-            self.assertEqual(oldpkg.clean_all(self.pkgdir, None),
+            self.assertEqual(oldpkg.clean_all(None, self.pkgdir),
                              (True, True))
             self.assertEqual(mlog.call_count, 2)
             mclean.assert_called_once_with(self.pkgdir)

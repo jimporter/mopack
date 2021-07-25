@@ -31,7 +31,7 @@ class TestTarball(SDistTestCase):
              mock.patch('tarfile.TarFile.extractall') as mtar, \
              mock.patch('os.path.isdir', return_value=True), \
              mock.patch('os.path.exists', return_value=False):  # noqa
-            pkg.fetch(self.pkgdir, self.config)
+            pkg.fetch(self.config, self.pkgdir)
             mtar.assert_called_once_with(srcdir, None)
 
     def test_url(self):
@@ -72,7 +72,7 @@ class TestTarball(SDistTestCase):
              mock.patch('zipfile.ZipFile.extractall') as mtar, \
              mock.patch('os.path.isdir', return_value=True), \
              mock.patch('os.path.exists', return_value=False):  # noqa
-            pkg.fetch(self.pkgdir, self.config)
+            pkg.fetch(self.config, self.pkgdir)
             mtar.assert_called_once_with(srcdir, None)
         self.check_resolve(pkg)
 
@@ -93,7 +93,7 @@ class TestTarball(SDistTestCase):
              mock.patch('tarfile.TarFile.extract') as mtar, \
              mock.patch('os.path.isdir', return_value=True), \
              mock.patch('os.path.exists', return_value=False):  # noqa
-            pkg.fetch(self.pkgdir, self.config)
+            pkg.fetch(self.config, self.pkgdir)
             self.assertEqual(mtar.mock_calls, [
                 mock.call('hello-bfg/include', srcdir),
                 mock.call('hello-bfg/include/hello.hpp', srcdir),
@@ -115,7 +115,7 @@ class TestTarball(SDistTestCase):
              mock.patch('builtins.open', mock_open_after_first()) as mopen, \
              mock.patch('os.makedirs'), \
              mock.patch('subprocess.run') as mrun:  # noqa
-            pkg.fetch(self.pkgdir, self.config)
+            pkg.fetch(self.config, self.pkgdir)
             mtar.assert_called_once_with(srcdir, None)
             mrun.assert_called_once_with(
                 ['patch', '-p1'], stdout=subprocess.PIPE,
@@ -148,7 +148,7 @@ class TestTarball(SDistTestCase):
                  read_data='export:\n  build: bfg9000'
              )), \
              mock.patch('tarfile.TarFile.extractall') as mtar:  # noqa
-            config = pkg.fetch(self.pkgdir, self.config)
+            config = pkg.fetch(self.config, self.pkgdir)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(
                 Bfg9000Builder, 'foo'
@@ -163,16 +163,16 @@ class TestTarball(SDistTestCase):
                  read_data='export:\n  build: bfg9000'
              )), \
              mock.patch('tarfile.TarFile.extractall') as mtar:  # noqa
-            config = pkg.fetch(self.pkgdir, self.config)
+            config = pkg.fetch(self.config, self.pkgdir)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(
                 Bfg9000Builder, 'foo', usage={'type': 'system'}
             ))
         with mock.patch('subprocess.run', side_effect=OSError()):
             self.check_resolve(pkg, usage={
-                'type': 'path', 'auto_link': False, 'include_path': [],
-                'library_path': [], 'headers': [], 'libraries': ['foo'],
-                'compile_flags': [], 'link_flags': [],
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['foo'], 'compile_flags': [], 'link_flags': [],
             })
 
     def test_usage(self):
@@ -196,8 +196,9 @@ class TestTarball(SDistTestCase):
 
         self.check_fetch(pkg)
         self.check_resolve(pkg, usage={
-            'type': 'pkg_config', 'path': self.pkgconfdir('foo', 'pkgconf'),
-            'pcfiles': ['foo'], 'extra_args': [],
+            'name': 'foo', 'type': 'pkg_config',
+            'path': self.pkgconfdir('foo', 'pkgconf'), 'pcfiles': ['foo'],
+            'extra_args': [],
         })
 
     def test_submodules(self):
@@ -214,8 +215,9 @@ class TestTarball(SDistTestCase):
                                 submodules=submodules_required)
         self.check_fetch(pkg)
         self.check_resolve(pkg, submodules=['sub'], usage={
-            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
+            'name': 'foo', 'type': 'pkg_config',
+            'path': self.pkgconfdir('foo'), 'pcfiles': ['bar', 'foo_sub'],
+            'extra_args': [],
         })
 
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
@@ -228,8 +230,9 @@ class TestTarball(SDistTestCase):
                                 submodules=submodules_optional)
         self.check_fetch(pkg)
         self.check_resolve(pkg, submodules=['sub'], usage={
-            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
+            'name': 'foo', 'type': 'pkg_config',
+            'path': self.pkgconfdir('foo'), 'pcfiles': ['bar', 'foo_sub'],
+            'extra_args': [],
         })
 
     def test_invalid_submodule(self):
@@ -250,7 +253,7 @@ class TestTarball(SDistTestCase):
         with mock.patch('os.path.exists', mock_exists), \
              mock.patch('tarfile.TarFile.extractall') as mtar, \
              mock.patch('os.path.isdir', return_value=True):  # noqa
-            pkg.fetch(self.pkgdir, self.config)
+            pkg.fetch(self.config, self.pkgdir)
             mtar.assert_not_called()
         self.check_resolve(pkg)
 
@@ -304,35 +307,35 @@ class TestTarball(SDistTestCase):
         # Tarball -> Tarball (same)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
-            self.assertEqual(oldpkg.clean_pre(self.pkgdir, oldpkg), False)
+            self.assertEqual(oldpkg.clean_pre(oldpkg, self.pkgdir), False)
             mlog.assert_not_called()
             mrmtree.assert_not_called()
 
         # Tarball -> Tarball (different)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
-            self.assertEqual(oldpkg.clean_pre(self.pkgdir, newpkg1), True)
+            self.assertEqual(oldpkg.clean_pre(newpkg1, self.pkgdir), True)
             mlog.assert_called_once()
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
         # Tarball -> Apt
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
-            self.assertEqual(oldpkg.clean_pre(self.pkgdir, newpkg2), True)
+            self.assertEqual(oldpkg.clean_pre(newpkg2, self.pkgdir), True)
             mlog.assert_called_once()
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
         # Tarball -> nothing
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
-            self.assertEqual(oldpkg.clean_pre(self.pkgdir, None), True)
+            self.assertEqual(oldpkg.clean_pre(None, self.pkgdir), True)
             mlog.assert_called_once()
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
         # Tarball -> nothing (quiet)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
-            self.assertEqual(oldpkg.clean_pre(self.pkgdir, None, True), True)
+            self.assertEqual(oldpkg.clean_pre(None, self.pkgdir, True), True)
             mlog.assert_not_called()
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
@@ -347,35 +350,35 @@ class TestTarball(SDistTestCase):
         # Tarball -> Tarball (same)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
-            self.assertEqual(oldpkg.clean_post(self.pkgdir, oldpkg), False)
+            self.assertEqual(oldpkg.clean_post(oldpkg, self.pkgdir), False)
             mlog.assert_not_called()
             mclean.assert_not_called()
 
         # Tarball -> Tarball (different)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
-            self.assertEqual(oldpkg.clean_post(self.pkgdir, newpkg1), True)
+            self.assertEqual(oldpkg.clean_post(newpkg1, self.pkgdir), True)
             mlog.assert_called_once()
             mclean.assert_called_once_with(self.pkgdir)
 
         # Tarball -> Apt
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
-            self.assertEqual(oldpkg.clean_post(self.pkgdir, newpkg2), True)
+            self.assertEqual(oldpkg.clean_post(newpkg2, self.pkgdir), True)
             mlog.assert_called_once()
             mclean.assert_called_once_with(self.pkgdir)
 
         # Tarball -> nothing
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
-            self.assertEqual(oldpkg.clean_post(self.pkgdir, None), True)
+            self.assertEqual(oldpkg.clean_post(None, self.pkgdir), True)
             mlog.assert_called_once()
             mclean.assert_called_once_with(self.pkgdir)
 
         # Tarball -> nothing (quiet)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
-            self.assertEqual(oldpkg.clean_post(self.pkgdir, None, True), True)
+            self.assertEqual(oldpkg.clean_post(None, self.pkgdir, True), True)
             mlog.assert_not_called()
             mclean.assert_called_once_with(self.pkgdir)
 
@@ -393,7 +396,7 @@ class TestTarball(SDistTestCase):
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
-            self.assertEqual(oldpkg.clean_all(self.pkgdir, oldpkg),
+            self.assertEqual(oldpkg.clean_all(oldpkg, self.pkgdir),
                              (False, False))
             mlog.assert_not_called()
             mclean.assert_not_called()
@@ -403,7 +406,7 @@ class TestTarball(SDistTestCase):
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
-            self.assertEqual(oldpkg.clean_all(self.pkgdir, newpkg1),
+            self.assertEqual(oldpkg.clean_all(newpkg1, self.pkgdir),
                              (True, True))
             self.assertEqual(mlog.call_count, 2)
             mclean.assert_called_once_with(self.pkgdir)
@@ -413,7 +416,7 @@ class TestTarball(SDistTestCase):
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
-            self.assertEqual(oldpkg.clean_all(self.pkgdir, newpkg2),
+            self.assertEqual(oldpkg.clean_all(newpkg2, self.pkgdir),
                              (True, True))
             self.assertEqual(mlog.call_count, 2)
             mclean.assert_called_once_with(self.pkgdir)
@@ -423,7 +426,7 @@ class TestTarball(SDistTestCase):
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
-            self.assertEqual(oldpkg.clean_all(self.pkgdir, None),
+            self.assertEqual(oldpkg.clean_all(None, self.pkgdir),
                              (True, True))
             self.assertEqual(mlog.call_count, 2)
             mclean.assert_called_once_with(self.pkgdir)
@@ -433,7 +436,7 @@ class TestTarball(SDistTestCase):
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean, \
              mock.patch('shutil.rmtree') as mrmtree:  # noqa
-            self.assertEqual(oldpkg.clean_all(self.pkgdir, None, True),
+            self.assertEqual(oldpkg.clean_all(None, self.pkgdir, True),
                              (True, True))
             mlog.assert_not_called()
             mclean.assert_called_once_with(self.pkgdir)

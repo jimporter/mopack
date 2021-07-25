@@ -1,7 +1,7 @@
 from os.path import abspath
 from unittest import mock
 
-from . import through_json, UsageTest
+from . import MockPackage, through_json, UsageTest
 
 from mopack.path import Path
 from mopack.shell import ShellArguments
@@ -18,59 +18,83 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.path, Path('builddir', 'pkgconfig'))
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.extra_args, ShellArguments())
-        self.assertEqual(usage.get_usage(None, None, '/builddir'), {
-            'type': 'pkg_config', 'path': abspath('/builddir/pkgconfig'),
-            'pcfiles': ['foo'], 'extra_args': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, None, '/builddir'),
+            {
+                'name': 'foo', 'type': 'pkg_config',
+                'path': abspath('/builddir/pkgconfig'), 'pcfiles': ['foo'],
+                'extra_args': [],
+            }
+        )
 
     def test_path_relative(self):
         usage = self.make_usage('foo', path='pkgconf')
         self.assertEqual(usage.path, Path('builddir', 'pkgconf'))
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.extra_args, ShellArguments())
-        self.assertEqual(usage.get_usage(None, '/srcdir', '/builddir'), {
-            'type': 'pkg_config', 'path': abspath('/builddir/pkgconf'),
-            'pcfiles': ['foo'], 'extra_args': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, '/srcdir', '/builddir'),
+            {
+                'name': 'foo', 'type': 'pkg_config',
+                'path': abspath('/builddir/pkgconf'), 'pcfiles': ['foo'],
+                'extra_args': [],
+            }
+        )
 
     def test_path_srcdir(self):
         usage = self.make_usage('foo', path='$srcdir/pkgconf')
         self.assertEqual(usage.path, Path('srcdir', 'pkgconf'))
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.extra_args, ShellArguments())
-        self.assertEqual(usage.get_usage(None, '/srcdir', '/builddir'), {
-            'type': 'pkg_config', 'path': abspath('/srcdir/pkgconf'),
-            'pcfiles': ['foo'], 'extra_args': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, '/srcdir', '/builddir'),
+            {
+                'name': 'foo', 'type': 'pkg_config',
+                'path': abspath('/srcdir/pkgconf'), 'pcfiles': ['foo'],
+                'extra_args': [],
+            }
+        )
 
     def test_path_builddir(self):
         usage = self.make_usage('foo', path='$builddir/pkgconf')
         self.assertEqual(usage.path, Path('builddir', 'pkgconf'))
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.extra_args, ShellArguments())
-        self.assertEqual(usage.get_usage(None, '/srcdir', '/builddir'), {
-            'type': 'pkg_config', 'path': abspath('/builddir/pkgconf'),
-            'pcfiles': ['foo'], 'extra_args': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, '/srcdir', '/builddir'),
+            {
+                'name': 'foo', 'type': 'pkg_config',
+                'path': abspath('/builddir/pkgconf'), 'pcfiles': ['foo'],
+                'extra_args': [],
+            }
+        )
 
     def test_extra_args(self):
         usage = self.make_usage('foo', path='pkgconf', extra_args='--static')
         self.assertEqual(usage.path, Path('builddir', 'pkgconf'))
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.extra_args, ShellArguments(['--static']))
-        self.assertEqual(usage.get_usage(None, None, '/builddir'), {
-            'type': 'pkg_config', 'path': abspath('/builddir/pkgconf'),
-            'pcfiles': ['foo'], 'extra_args': ['--static'],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, None, '/builddir'),
+            {
+                'name': 'foo', 'type': 'pkg_config',
+                'path': abspath('/builddir/pkgconf'), 'pcfiles': ['foo'],
+                'extra_args': ['--static'],
+            }
+        )
 
         usage = self.make_usage('foo', path='pkgconf', extra_args=['--static'])
         self.assertEqual(usage.path, Path('builddir', 'pkgconf'))
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.extra_args, ShellArguments(['--static']))
-        self.assertEqual(usage.get_usage(None, None, '/builddir'), {
-            'type': 'pkg_config', 'path': abspath('/builddir/pkgconf'),
-            'pcfiles': ['foo'], 'extra_args': ['--static'],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, None, '/builddir'),
+            {
+                'name': 'foo', 'type': 'pkg_config',
+                'path': abspath('/builddir/pkgconf'), 'pcfiles': ['foo'],
+                'extra_args': ['--static'],
+            }
+        )
 
     def test_submodules(self):
         submodules_required = {'names': '*', 'required': True}
@@ -80,39 +104,55 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.path, Path('builddir', 'pkgconfig'))
         self.assertEqual(usage.pcfile, None)
         self.assertEqual(usage.extra_args, ShellArguments())
-        self.assertEqual(usage.get_usage(['sub'], None, '/builddir'), {
-            'type': 'pkg_config', 'path': abspath('/builddir/pkgconfig'),
-            'pcfiles': ['foo_sub'], 'extra_args': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), ['sub'], None, '/builddir'),
+            {
+                'name': 'foo', 'type': 'pkg_config',
+                'path': abspath('/builddir/pkgconfig'), 'pcfiles': ['foo_sub'],
+                'extra_args': [],
+            }
+        )
 
         usage = self.make_usage('foo', pcfile='bar',
                                 submodules=submodules_required)
         self.assertEqual(usage.path, Path('builddir', 'pkgconfig'))
         self.assertEqual(usage.pcfile, 'bar')
         self.assertEqual(usage.extra_args, ShellArguments())
-        self.assertEqual(usage.get_usage(['sub'], None, '/builddir'), {
-            'type': 'pkg_config', 'path': abspath('/builddir/pkgconfig'),
-            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), ['sub'], None, '/builddir'),
+            {
+                'name': 'foo', 'type': 'pkg_config',
+                'path': abspath('/builddir/pkgconfig'),
+                'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
+            }
+        )
 
         usage = self.make_usage('foo', submodules=submodules_optional)
         self.assertEqual(usage.path, Path('builddir', 'pkgconfig'))
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.extra_args, ShellArguments())
-        self.assertEqual(usage.get_usage(['sub'], None, '/builddir'), {
-            'type': 'pkg_config', 'path': abspath('/builddir/pkgconfig'),
-            'pcfiles': ['foo', 'foo_sub'], 'extra_args': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), ['sub'], None, '/builddir'),
+            {
+                'name': 'foo', 'type': 'pkg_config',
+                'path': abspath('/builddir/pkgconfig'),
+                'pcfiles': ['foo', 'foo_sub'], 'extra_args': [],
+            }
+        )
 
         usage = self.make_usage('foo', pcfile='bar',
                                 submodules=submodules_optional)
         self.assertEqual(usage.path, Path('builddir', 'pkgconfig'))
         self.assertEqual(usage.pcfile, 'bar')
         self.assertEqual(usage.extra_args, ShellArguments())
-        self.assertEqual(usage.get_usage(['sub'], None, '/builddir'), {
-            'type': 'pkg_config', 'path': abspath('/builddir/pkgconfig'),
-            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), ['sub'], None, '/builddir'),
+            {
+                'name': 'foo', 'type': 'pkg_config',
+                'path': abspath('/builddir/pkgconfig'),
+                'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
+            }
+        )
 
     def test_submodule_map(self):
         submodules_required = {'names': '*', 'required': True}
@@ -122,10 +162,14 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.path, Path('builddir', 'pkgconfig'))
         self.assertEqual(usage.pcfile, None)
         self.assertEqual(usage.extra_args, ShellArguments())
-        self.assertEqual(usage.get_usage(['sub'], None, '/builddir'), {
-            'type': 'pkg_config', 'path': abspath('/builddir/pkgconfig'),
-            'pcfiles': ['sub'], 'extra_args': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), ['sub'], None, '/builddir'),
+            {
+                'name': 'foo', 'type': 'pkg_config',
+                'path': abspath('/builddir/pkgconfig'), 'pcfiles': ['sub'],
+                'extra_args': [],
+            }
+        )
 
         usage = self.make_usage('foo', submodule_map={
             '*': {'pcfile': '$submodule'}
@@ -133,10 +177,14 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.path, Path('builddir', 'pkgconfig'))
         self.assertEqual(usage.pcfile, None)
         self.assertEqual(usage.extra_args, ShellArguments())
-        self.assertEqual(usage.get_usage(['sub'], None, '/builddir'), {
-            'type': 'pkg_config', 'path': abspath('/builddir/pkgconfig'),
-            'pcfiles': ['sub'], 'extra_args': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), ['sub'], None, '/builddir'),
+            {
+                'name': 'foo', 'type': 'pkg_config',
+                'path': abspath('/builddir/pkgconfig'), 'pcfiles': ['sub'],
+                'extra_args': [],
+            }
+        )
 
         usage = self.make_usage('foo', submodule_map={
             'sub': {'pcfile': 'foopc'},
@@ -146,18 +194,29 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.path, Path('builddir', 'pkgconfig'))
         self.assertEqual(usage.pcfile, None)
         self.assertEqual(usage.extra_args, ShellArguments())
-        self.assertEqual(usage.get_usage(['sub'], None, '/builddir'), {
-            'type': 'pkg_config', 'path': abspath('/builddir/pkgconfig'),
-            'pcfiles': ['foopc'], 'extra_args': [],
-        })
-        self.assertEqual(usage.get_usage(['sub2'], None, '/builddir'), {
-            'type': 'pkg_config', 'path': abspath('/builddir/pkgconfig'),
-            'pcfiles': ['sub2pc'], 'extra_args': [],
-        })
-        self.assertEqual(usage.get_usage(['subfoo'], None, '/builddir'), {
-            'type': 'pkg_config', 'path': abspath('/builddir/pkgconfig'),
-            'pcfiles': ['starsubfoopc'], 'extra_args': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), ['sub'], None, '/builddir'), {
+                'name': 'foo', 'type': 'pkg_config',
+                'path': abspath('/builddir/pkgconfig'), 'pcfiles': ['foopc'],
+                'extra_args': [],
+            }
+        )
+        self.assertEqual(
+            usage.get_usage(MockPackage(), ['sub2'], None, '/builddir'),
+            {
+                'name': 'foo', 'type': 'pkg_config',
+                'path': abspath('/builddir/pkgconfig'), 'pcfiles': ['sub2pc'],
+                'extra_args': [],
+            }
+        )
+        self.assertEqual(
+            usage.get_usage(MockPackage(), ['subfoo'], None, '/builddir'),
+            {
+                'name': 'foo', 'type': 'pkg_config',
+                'path': abspath('/builddir/pkgconfig'),
+                'pcfiles': ['starsubfoopc'], 'extra_args': [],
+            }
+        )
 
         submodules = {'names': '*', 'required': False}
         usage = self.make_usage('foo', submodule_map={
@@ -167,38 +226,59 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.path, Path('builddir', 'pkgconfig'))
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.extra_args, ShellArguments())
-        self.assertEqual(usage.get_usage(['sub'], None, '/builddir'), {
-            'type': 'pkg_config', 'path': abspath('/builddir/pkgconfig'),
-            'pcfiles': ['foo', 'subpc'], 'extra_args': [],
-        })
-        self.assertEqual(usage.get_usage(['sub2'], None, '/builddir'), {
-            'type': 'pkg_config', 'path': abspath('/builddir/pkgconfig'),
-            'pcfiles': ['foo'], 'extra_args': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), ['sub'], None, '/builddir'),
+            {
+                'name': 'foo', 'type': 'pkg_config',
+                'path': abspath('/builddir/pkgconfig'),
+                'pcfiles': ['foo', 'subpc'], 'extra_args': [],
+            }
+        )
+        self.assertEqual(
+            usage.get_usage(MockPackage(), ['sub2'], None, '/builddir'),
+            {
+                'name': 'foo', 'type': 'pkg_config',
+                'path': abspath('/builddir/pkgconfig'), 'pcfiles': ['foo'],
+                'extra_args': [],
+            }
+        )
 
     def test_boost(self):
         submodules = {'names': '*', 'required': False}
         final_usage = {
-            'type': 'pkg_config', 'path': abspath('/builddir/pkgconfig'),
-            'pcfiles': ['boost'], 'extra_args': [],
+            'name': 'foo', 'type': 'pkg_config',
+            'path': abspath('/builddir/pkgconfig'), 'pcfiles': ['boost'],
+            'extra_args': [],
         }
 
         usage = self.make_usage('boost', submodules=submodules)
         self.assertEqual(usage.path, Path('builddir', 'pkgconfig'))
         self.assertEqual(usage.pcfile, 'boost')
-        self.assertEqual(usage.get_usage(None, None, '/builddir'), final_usage)
-        self.assertEqual(usage.get_usage(['thread'], None, '/builddir'),
-                         final_usage)
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, None, '/builddir'),
+            final_usage
+        )
+        self.assertEqual(
+            usage.get_usage(MockPackage(), ['thread'], None, '/builddir'),
+            final_usage
+        )
 
         usage = self.make_usage('boost', submodule_map='boost_$submodule',
                                 submodules=submodules)
         self.assertEqual(usage.path, Path('builddir', 'pkgconfig'))
         self.assertEqual(usage.pcfile, 'boost')
-        self.assertEqual(usage.get_usage(None, None, '/builddir'), final_usage)
-        self.assertEqual(usage.get_usage(['thread'], None, '/builddir'), {
-            'type': 'pkg_config', 'path': abspath('/builddir/pkgconfig'),
-            'pcfiles': ['boost', 'boost_thread'], 'extra_args': [],
-        })
+        self.assertEqual(
+            usage.get_usage(MockPackage(), None, None, '/builddir'),
+            final_usage
+        )
+        self.assertEqual(
+            usage.get_usage(MockPackage(), ['thread'], None, '/builddir'),
+            {
+                'name': 'foo', 'type': 'pkg_config',
+                'path': abspath('/builddir/pkgconfig'),
+                'pcfiles': ['boost', 'boost_thread'], 'extra_args': [],
+            }
+        )
 
     def test_rehydrate(self):
         opts = self.make_options()

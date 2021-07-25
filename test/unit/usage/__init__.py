@@ -1,4 +1,4 @@
-from .. import OptionsTest, through_json  # noqa: F401
+from .. import OptionsTest, MockPackage, through_json  # noqa: F401
 
 
 class UsageTest(OptionsTest):

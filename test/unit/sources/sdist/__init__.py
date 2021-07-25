@@ -21,8 +21,9 @@ class SDistTestCase(SourceTest):
             pcfiles = ([] if pkg.submodules and pkg.submodules['required'] else
                        ['foo'])
             pcfiles.extend('foo_{}'.format(i) for i in iterate(submodules))
-            usage = {'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
-                     'pcfiles': pcfiles, 'extra_args': []}
+            usage = {'name': pkg.name, 'type': 'pkg_config',
+                     'path': self.pkgconfdir('foo'), 'pcfiles': pcfiles,
+                     'extra_args': []}
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
@@ -31,7 +32,7 @@ class SDistTestCase(SourceTest):
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')
-        self.assertEqual(pkg.get_usage(self.pkgdir, submodules), usage)
+        self.assertEqual(pkg.get_usage(submodules, self.pkgdir), usage)
 
     def make_builder(self, builder_type, name, *, submodules=None,
                      options=None, usage=None, **kwargs):

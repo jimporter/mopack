@@ -33,12 +33,13 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.path, Path('absolute', '/path'))
         self.assertEqual(pkg.builder.type, 'bfg9000')
 
-        self.assertEqual(pkg.get_usage(self.pkgdir, None), {
-            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['foo'], 'extra_args': [],
+        self.assertEqual(pkg.get_usage(None, self.pkgdir), {
+            'name': 'foo', 'type': 'pkg_config',
+            'path': self.pkgconfdir('foo'), 'pcfiles': ['foo'],
+            'extra_args': [],
         })
         with self.assertRaises(ValueError):
-            pkg.get_usage(self.pkgdir, ['sub'])
+            pkg.get_usage(['sub'], self.pkgdir)
 
     def test_make_no_deploy(self):
         pkg = make_package('foo', {
@@ -53,12 +54,13 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.path, Path('absolute', '/path'))
         self.assertEqual(pkg.builder.type, 'bfg9000')
 
-        self.assertEqual(pkg.get_usage(self.pkgdir, None), {
-            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['foo'], 'extra_args': [],
+        self.assertEqual(pkg.get_usage(None, self.pkgdir), {
+            'name': 'foo', 'type': 'pkg_config',
+            'path': self.pkgconfdir('foo'), 'pcfiles': ['foo'],
+            'extra_args': [],
         })
         with self.assertRaises(ValueError):
-            pkg.get_usage(self.pkgdir, ['sub'])
+            pkg.get_usage(['sub'], self.pkgdir)
 
     def test_make_submodules(self):
         pkg = make_package('foo', {
@@ -71,13 +73,14 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         with mock.patch('subprocess.run', side_effect=OSError()):
-            self.assertEqual(pkg.get_usage(self.pkgdir, ['sub']), {
-                'type': 'path', 'auto_link': False, 'include_path': [],
-                'library_path': [], 'headers': [], 'libraries': ['foo_sub'],
-                'compile_flags': [], 'link_flags': [],
+            self.assertEqual(pkg.get_usage(['sub'], self.pkgdir), {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['foo_sub'], 'compile_flags': [],
+                'link_flags': [],
             })
         with self.assertRaises(ValueError):
-            pkg.get_usage(self.pkgdir, None)
+            pkg.get_usage(None, self.pkgdir)
 
         pkg = make_package('foo', {
             'source': 'system', 'submodules': ['sub'],
@@ -89,15 +92,16 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         with mock.patch('subprocess.run', side_effect=OSError()):
-            self.assertEqual(pkg.get_usage(self.pkgdir, ['sub']), {
-                'type': 'path', 'auto_link': False, 'include_path': [],
-                'library_path': [], 'headers': [], 'libraries': ['foo_sub'],
-                'compile_flags': [], 'link_flags': [],
+            self.assertEqual(pkg.get_usage(['sub'], self.pkgdir), {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['foo_sub'], 'compile_flags': [],
+                'link_flags': [],
             })
         with self.assertRaises(ValueError):
-            pkg.get_usage(self.pkgdir, ['bar'])
+            pkg.get_usage(['bar'], self.pkgdir)
         with self.assertRaises(ValueError):
-            pkg.get_usage(self.pkgdir, None)
+            pkg.get_usage(None, self.pkgdir)
 
         pkg = make_package('foo', {
             'source': 'system',
@@ -110,20 +114,20 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         with mock.patch('subprocess.run', side_effect=OSError()):
-            self.assertEqual(pkg.get_usage(self.pkgdir, ['sub']), {
-                'type': 'path', 'auto_link': False, 'include_path': [],
-                'library_path': [], 'headers': [],
+            self.assertEqual(pkg.get_usage(['sub'], self.pkgdir), {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
                 'libraries': ['foo', 'foo_sub'], 'compile_flags': [],
                 'link_flags': [],
             })
         with mock.patch('subprocess.run', side_effect=OSError()):
-            self.assertEqual(pkg.get_usage(self.pkgdir, None), {
-                'type': 'path', 'auto_link': False, 'include_path': [],
-                'library_path': [], 'headers': [], 'libraries': ['foo'],
-                'compile_flags': [], 'link_flags': [],
+            self.assertEqual(pkg.get_usage(None, self.pkgdir), {
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['foo'], 'compile_flags': [], 'link_flags': [],
             })
         with self.assertRaises(ValueError):
-            pkg.get_usage(self.pkgdir, ['bar'])
+            pkg.get_usage(['bar'], self.pkgdir)
 
     def test_boost(self):
         pkg = make_package('boost', {

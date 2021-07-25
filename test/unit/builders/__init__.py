@@ -1,7 +1,16 @@
-from .. import OptionsTest, through_json  # noqa: F401
+import os
+
+from .. import OptionsTest, MockPackage, through_json  # noqa: F401
 
 
 class BuilderTest(OptionsTest):
+    srcdir = os.path.abspath('/path/to/src')
+    pkgdir = os.path.abspath('/path/to/builddir/mopack')
+    path_bases = ('srcdir', 'builddir')
+
+    def pkgconfdir(self, name, pkgconfig='pkgconfig'):
+        return os.path.join(self.pkgdir, 'build', name, pkgconfig)
+
     def make_options(self, builder_type=None, *, common_options=None,
                      this_options=None, deploy_paths=None, config_file=None):
         options = super().make_options(common_options, deploy_paths)

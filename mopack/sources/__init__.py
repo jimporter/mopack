@@ -92,21 +92,21 @@ class Package(OptionsHolder):
     def builder_types(self):
         return []
 
-    def clean_pre(self, pkgdir, new_package, quiet=False):
+    def clean_pre(self, new_package, pkgdir, quiet=False):
         return False
 
-    def clean_post(self, pkgdir, new_package, quiet=False):
+    def clean_post(self, new_package, pkgdir, quiet=False):
         return False
 
-    def clean_all(self, pkgdir, new_package, quiet=False):
-        return (self.clean_pre(pkgdir, new_package, quiet),
-                self.clean_post(pkgdir, new_package, quiet))
+    def clean_all(self, new_package, pkgdir, quiet=False):
+        return (self.clean_pre(new_package, pkgdir, quiet),
+                self.clean_post(new_package, pkgdir, quiet))
 
-    def fetch(self, pkgdir, parent_config):
+    def fetch(self, parent_config, pkgdir):
         pass
 
-    def get_usage(self, pkgdir, submodules):
-        return self._get_usage(pkgdir, self._check_submodules(submodules))
+    def get_usage(self, submodules, pkgdir):
+        return self._get_usage(self._check_submodules(submodules), pkgdir)
 
     def __repr__(self):
         return '<{}({!r})>'.format(type(self).__name__, self.name)
@@ -126,8 +126,8 @@ class BinaryPackage(Package):
                                 submodules=self.submodules, _options=_options,
                                 _path_bases=_path_bases)
 
-    def _get_usage(self, pkgdir, submodules):
-        return self.usage.get_usage(submodules, None, None)
+    def _get_usage(self, submodules, pkgdir):
+        return self.usage.get_usage(self, submodules, None, None)
 
 
 class PackageOptions(FreezeDried, BaseOptions):

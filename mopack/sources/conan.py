@@ -69,7 +69,7 @@ class ConanPackage(BinaryPackage):
     def remote_name(self):
         return self.remote.split('/')[0]
 
-    def clean_post(self, pkgdir, new_package, quiet=False):
+    def clean_post(self, new_package, pkgdir, quiet=False):
         if new_package and self.source == new_package.source:
             return False
 
@@ -84,7 +84,7 @@ class ConanPackage(BinaryPackage):
         return True
 
     @classmethod
-    def resolve_all(cls, pkgdir, packages):
+    def resolve_all(cls, packages, pkgdir):
         for i in packages:
             log.pkg_resolve(i.name, 'from {}'.format(cls.source))
 
@@ -118,10 +118,12 @@ class ConanPackage(BinaryPackage):
         for i in packages:
             i.resolved = True
 
-    def _get_usage(self, pkgdir, submodules):
-        return self.usage.get_usage(submodules, None, self._installdir(pkgdir))
+    def _get_usage(self, submodules, pkgdir):
+        return self.usage.get_usage(
+            self, submodules, None, self._installdir(pkgdir)
+        )
 
     @staticmethod
-    def deploy_all(pkgdir, packages):
+    def deploy_all(packages, pkgdir):
         if any(i.should_deploy for i in packages):
             warnings.warn('deploying not yet supported for conan packages')

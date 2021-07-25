@@ -21,7 +21,7 @@ class AptPackage(BinaryPackage):
         T.repository(types.maybe(types.string))
 
     @classmethod
-    def resolve_all(cls, pkgdir, packages):
+    def resolve_all(cls, packages, pkgdir):
         for i in packages:
             log.pkg_resolve(i.name, 'from {}'.format(cls.source))
 
@@ -42,5 +42,5 @@ class AptPackage(BinaryPackage):
             i.resolved = True
 
     @staticmethod
-    def deploy_all(pkgdir, packages):
+    def deploy_all(packages, pkgdir):
         pass

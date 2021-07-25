@@ -1,7 +1,7 @@
 import os
 from unittest import mock
 
-from . import BuilderTest, through_json
+from . import BuilderTest, MockPackage, through_json
 
 from mopack.builders import Builder
 from mopack.builders.none import NoneBuilder
@@ -11,8 +11,6 @@ from mopack.usage.pkg_config import PkgConfigUsage
 
 class TestNoneBuilder(BuilderTest):
     builder_type = NoneBuilder
-    srcdir = os.path.abspath('/path/to/src')
-    pkgdir = os.path.abspath('/path/to/builddir/mopack')
     path_bases = ('srcdir',)
 
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
@@ -23,14 +21,16 @@ class TestNoneBuilder(BuilderTest):
         if usage is None:
             pcfiles = ['foo']
             pcfiles.extend('foo_{}'.format(i) for i in iterate(submodules))
-            usage = {'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
-                     'pcfiles': pcfiles, 'extra_args': []}
+            usage = {'name': 'foo', 'type': 'pkg_config',
+                     'path': self.pkgconfdir('foo'), 'pcfiles': pcfiles,
+                     'extra_args': []}
 
         with mock.patch('subprocess.run') as mcall:
             builder.build(self.pkgdir, self.srcdir)
             mcall.assert_not_called()
-        self.assertEqual(builder.get_usage(self.pkgdir, submodules,
-                                           self.srcdir), usage)
+        self.assertEqual(builder.get_usage(
+            MockPackage(), submodules, self.pkgdir, self.srcdir
+        ), usage)
 
     def test_basic(self):
         builder = self.make_builder('foo', usage='pkg_config')
@@ -56,8 +56,9 @@ class TestNoneBuilder(BuilderTest):
         ))
 
         self.check_build(builder, usage={
-            'type': 'pkg_config', 'path': self.pkgconfdir('foo', 'pkgconf'),
-            'pcfiles': ['foo'], 'extra_args': [],
+            'name': 'foo', 'type': 'pkg_config',
+            'path': self.pkgconfdir('foo', 'pkgconf'), 'pcfiles': ['foo'],
+            'extra_args': [],
         })
 
     def test_submodules(self):
@@ -67,8 +68,9 @@ class TestNoneBuilder(BuilderTest):
         builder = self.make_builder('foo', usage='pkg_config',
                                     submodules=submodules_required)
         self.check_build(builder, submodules=['sub'], usage={
-            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['foo_sub'], 'extra_args': [],
+            'name': 'foo', 'type': 'pkg_config',
+            'path': self.pkgconfdir('foo'), 'pcfiles': ['foo_sub'],
+            'extra_args': [],
         })
 
         builder = self.make_builder(
@@ -76,8 +78,9 @@ class TestNoneBuilder(BuilderTest):
             submodules=submodules_required
         )
         self.check_build(builder, submodules=['sub'], usage={
-            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
+            'name': 'foo', 'type': 'pkg_config',
+            'path': self.pkgconfdir('foo'), 'pcfiles': ['bar', 'foo_sub'],
+            'extra_args': [],
         })
 
         builder = self.make_builder('foo', usage='pkg_config',
@@ -89,8 +92,9 @@ class TestNoneBuilder(BuilderTest):
             submodules=submodules_optional
         )
         self.check_build(builder, submodules=['sub'], usage={
-            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
+            'name': 'foo', 'type': 'pkg_config',
+            'path': self.pkgconfdir('foo'), 'pcfiles': ['bar', 'foo_sub'],
+            'extra_args': [],
         })
 
     def test_clean(self):

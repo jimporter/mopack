@@ -20,7 +20,7 @@ class TestApt(SourceTest):
                           usages=None):
         with mock_open_log() as mopen, \
              mock.patch('subprocess.run') as mcall:  # noqa
-            AptPackage.resolve_all(self.pkgdir, packages)
+            AptPackage.resolve_all(packages, self.pkgdir)
 
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'apt.log'
@@ -50,14 +50,14 @@ class TestApt(SourceTest):
                 libs.extend('{}_{}'.format(pkg.name, i)
                             for i in iterate(submodules))
                 usages.append({
-                    'type': 'path', 'auto_link': False, 'include_path': [],
-                    'library_path': [], 'headers': [], 'libraries': libs,
-                    'compile_flags': [], 'link_flags': [],
+                    'name': pkg.name, 'type': 'path', 'auto_link': False,
+                    'include_path': [], 'library_path': [], 'headers': [],
+                    'libraries': libs, 'compile_flags': [], 'link_flags': [],
                 })
 
         for pkg, usage in zip(packages, usages):
             with mock.patch('subprocess.run', side_effect=OSError()):
-                self.assertEqual(pkg.get_usage(self.pkgdir, submodules), usage)
+                self.assertEqual(pkg.get_usage(submodules, self.pkgdir), usage)
 
     def test_basic(self):
         pkg = self.make_package('foo')
@@ -98,8 +98,8 @@ class TestApt(SourceTest):
         )
         self.check_resolve_all(
             [pkg], ['libfoo-dev'], submodules=['sub'], usages=[{
-                'type': 'path', 'auto_link': False, 'include_path': [],
-                'library_path': [], 'headers': [],
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
                 'libraries': ['bar', 'foo_sub'], 'compile_flags': [],
                 'link_flags': [],
             }]
@@ -114,8 +114,8 @@ class TestApt(SourceTest):
         )
         self.check_resolve_all(
             [pkg], ['libfoo-dev'], submodules=['sub'], usages=[{
-                'type': 'path', 'auto_link': False, 'include_path': [],
-                'library_path': [], 'headers': [],
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
                 'libraries': ['bar', 'foo_sub'], 'compile_flags': [],
                 'link_flags': [],
             }]
@@ -126,12 +126,12 @@ class TestApt(SourceTest):
             'names': ['sub'], 'required': True
         })
         with self.assertRaises(ValueError):
-            pkg.get_usage(self.pkgdir, ['invalid'])
+            pkg.get_usage(['invalid'], self.pkgdir)
 
     def test_deploy(self):
         pkg = self.make_package('foo')
         # This is a no-op; just make sure it executes ok.
-        AptPackage.deploy_all(self.pkgdir, [pkg])
+        AptPackage.deploy_all([pkg], self.pkgdir)
 
     def test_clean_pre(self):
         oldpkg = self.make_package('foo')
@@ -139,10 +139,10 @@ class TestApt(SourceTest):
                                    remote='foo/1.2.4@conan/stable')
 
         # Apt -> Conan
-        self.assertEqual(oldpkg.clean_pre(self.pkgdir, newpkg), False)
+        self.assertEqual(oldpkg.clean_pre(newpkg, self.pkgdir), False)
 
         # Apt -> nothing
-        self.assertEqual(oldpkg.clean_pre(self.pkgdir, None), False)
+        self.assertEqual(oldpkg.clean_pre(None, self.pkgdir), False)
 
     def test_clean_post(self):
         oldpkg = self.make_package('foo')
@@ -150,10 +150,10 @@ class TestApt(SourceTest):
                                    remote='foo/1.2.4@conan/stable')
 
         # Apt -> Conan
-        self.assertEqual(oldpkg.clean_post(self.pkgdir, newpkg), False)
+        self.assertEqual(oldpkg.clean_post(newpkg, self.pkgdir), False)
 
         # Apt -> nothing
-        self.assertEqual(oldpkg.clean_post(self.pkgdir, None), False)
+        self.assertEqual(oldpkg.clean_post(None, self.pkgdir), False)
 
     def test_clean_all(self):
         oldpkg = self.make_package('foo')
@@ -161,10 +161,10 @@ class TestApt(SourceTest):
                                    remote='foo/1.2.4@conan/stable')
 
         # Apt -> Conan
-        self.assertEqual(oldpkg.clean_all(self.pkgdir, newpkg), (False, False))
+        self.assertEqual(oldpkg.clean_all(newpkg, self.pkgdir), (False, False))
 
         # Apt -> nothing
-        self.assertEqual(oldpkg.clean_all(self.pkgdir, None), (False, False))
+        self.assertEqual(oldpkg.clean_all(None, self.pkgdir), (False, False))
 
     def test_equality(self):
         pkg = self.make_package('foo')

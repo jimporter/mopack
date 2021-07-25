@@ -40,7 +40,7 @@ class TestDirectory(SDistTestCase):
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
-        pkg.fetch(self.pkgdir, self.config)
+        pkg.fetch(self.config, self.pkgdir)
         self.check_resolve(pkg)
 
     def test_build(self):
@@ -53,7 +53,7 @@ class TestDirectory(SDistTestCase):
         ))
         self.assertEqual(pkg.should_deploy, True)
 
-        pkg.fetch(self.pkgdir, self.config)
+        pkg.fetch(self.config, self.pkgdir)
         self.check_resolve(pkg)
 
     def test_infer_build(self):
@@ -65,7 +65,7 @@ class TestDirectory(SDistTestCase):
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open):  # noqa
-            config = pkg.fetch(self.pkgdir, self.config)
+            config = pkg.fetch(self.config, self.pkgdir)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(
                 Bfg9000Builder, 'foo'
@@ -78,16 +78,16 @@ class TestDirectory(SDistTestCase):
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open):  # noqa
-            config = pkg.fetch(self.pkgdir, self.config)
+            config = pkg.fetch(self.config, self.pkgdir)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg.builder, self.make_builder(
                 Bfg9000Builder, 'foo', usage={'type': 'system'}
             ))
         with mock.patch('subprocess.run', side_effect=OSError()):
             self.check_resolve(pkg, usage={
-                'type': 'path', 'auto_link': False, 'include_path': [],
-                'library_path': [], 'headers': [], 'libraries': ['foo'],
-                'compile_flags': [], 'link_flags': [],
+                'name': 'foo', 'type': 'path', 'auto_link': False,
+                'include_path': [], 'library_path': [], 'headers': [],
+                'libraries': ['foo'], 'compile_flags': [], 'link_flags': [],
             })
 
     def test_infer_submodules(self):
@@ -101,7 +101,7 @@ class TestDirectory(SDistTestCase):
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open):  # noqa
-            config = pkg.fetch(self.pkgdir, self.config)
+            config = pkg.fetch(self.config, self.pkgdir)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(config.export.submodules,
                              ['french', 'english'])
@@ -118,7 +118,7 @@ class TestDirectory(SDistTestCase):
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open):  # noqa
-            config = pkg.fetch(self.pkgdir, self.config)
+            config = pkg.fetch(self.config, self.pkgdir)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(config.export.submodules,
                              ['french', 'english'])
@@ -137,15 +137,16 @@ class TestDirectory(SDistTestCase):
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_data(child)), \
              self.assertRaises(ConfigurationError):  # noqa
-            pkg.fetch(self.pkgdir, self.config)
+            pkg.fetch(self.config, self.pkgdir)
 
         child = 'export:\n  build: unknown'
         loc = 'line 2, column 10'
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
-             mock.patch('builtins.open', lambda *args, **kwargs: StringIO(child)), \
+             mock.patch('builtins.open',
+                        lambda *args, **kwargs: StringIO(child)), \
              self.assertRaisesRegex(YamlParseError, loc):  # noqa
-            pkg.fetch(self.pkgdir, self.config)
+            pkg.fetch(self.config, self.pkgdir)
 
         child = 'export:\n  build:\n    type: bfg9000\n    unknown: blah'
         loc = 'line 4, column 5'
@@ -153,7 +154,7 @@ class TestDirectory(SDistTestCase):
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_data(child)), \
              self.assertRaisesRegex(YamlParseError, loc):  # noqa
-            pkg.fetch(self.pkgdir, self.config)
+            pkg.fetch(self.config, self.pkgdir)
 
         child = 'export:\n  build: bfg9000\n  usage: unknown'
         loc = 'line 3, column 10'
@@ -161,7 +162,7 @@ class TestDirectory(SDistTestCase):
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_data(child)), \
              self.assertRaises(YamlParseError):  # noqa
-            pkg.fetch(self.pkgdir, self.config)
+            pkg.fetch(self.config, self.pkgdir)
 
         child = ('export:\n  build: bfg9000\n  usage:\n' +
                  '    type: pkg_config\n    unknown: blah')
@@ -170,7 +171,7 @@ class TestDirectory(SDistTestCase):
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_data(child)), \
              self.assertRaisesRegex(YamlParseError, loc):  # noqa
-            pkg.fetch(self.pkgdir, self.config)
+            pkg.fetch(self.config, self.pkgdir)
 
     def test_infer_build_invalid_parent_usage(self):
         child = 'export:\n  build: bfg9000'
@@ -181,7 +182,7 @@ class TestDirectory(SDistTestCase):
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_data(child)), \
              self.assertRaises(FieldError):  # noqa
-            pkg.fetch(self.pkgdir, self.config)
+            pkg.fetch(self.config, self.pkgdir)
 
         usage = yaml.load('type: pkg_config\nunknown: blah',
                           Loader=SafeLineLoader)
@@ -191,7 +192,7 @@ class TestDirectory(SDistTestCase):
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_data(child)), \
              self.assertRaisesRegex(YamlParseError, loc):  # noqa
-            pkg.fetch(self.pkgdir, self.config)
+            pkg.fetch(self.config, self.pkgdir)
 
     def test_usage(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
@@ -201,7 +202,7 @@ class TestDirectory(SDistTestCase):
             Bfg9000Builder, 'foo', usage='pkg_config'
         ))
 
-        pkg.fetch(self.pkgdir, self.config)
+        pkg.fetch(self.config, self.pkgdir)
         self.check_resolve(pkg)
 
         usage = {'type': 'pkg_config', 'path': 'pkgconf'}
@@ -212,10 +213,11 @@ class TestDirectory(SDistTestCase):
             Bfg9000Builder, 'foo', usage=usage
         ))
 
-        pkg.fetch(self.pkgdir, self.config)
+        pkg.fetch(self.config, self.pkgdir)
         self.check_resolve(pkg, usage={
-            'type': 'pkg_config', 'path': self.pkgconfdir('foo', 'pkgconf'),
-            'pcfiles': ['foo'], 'extra_args': [],
+            'name': 'foo', 'type': 'pkg_config',
+            'path': self.pkgconfdir('foo', 'pkgconf'), 'pcfiles': ['foo'],
+            'extra_args': [],
         })
 
     def test_submodules(self):
@@ -230,8 +232,9 @@ class TestDirectory(SDistTestCase):
                                 usage={'type': 'pkg_config', 'pcfile': 'bar'},
                                 submodules=submodules_required)
         self.check_resolve(pkg, submodules=['sub'], usage={
-            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
+            'name': 'foo', 'type': 'pkg_config',
+            'path': self.pkgconfdir('foo'), 'pcfiles': ['bar', 'foo_sub'],
+            'extra_args': [],
         })
 
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
@@ -242,8 +245,9 @@ class TestDirectory(SDistTestCase):
                                 usage={'type': 'pkg_config', 'pcfile': 'bar'},
                                 submodules=submodules_optional)
         self.check_resolve(pkg, submodules=['sub'], usage={
-            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
+            'name': 'foo', 'type': 'pkg_config',
+            'path': self.pkgconfdir('foo'), 'pcfiles': ['bar', 'foo_sub'],
+            'extra_args': [],
         })
 
     def test_invalid_submodule(self):
@@ -295,10 +299,10 @@ class TestDirectory(SDistTestCase):
         newpkg = self.make_package(AptPackage, 'foo')
 
         # System -> Apt
-        self.assertEqual(oldpkg.clean_pre(self.pkgdir, newpkg), False)
+        self.assertEqual(oldpkg.clean_pre(newpkg, self.pkgdir), False)
 
         # Apt -> nothing
-        self.assertEqual(oldpkg.clean_pre(self.pkgdir, None), False)
+        self.assertEqual(oldpkg.clean_pre(None, self.pkgdir), False)
 
     def test_clean_post(self):
         otherpath = os.path.join(test_data_dir, 'other_project')
@@ -309,35 +313,35 @@ class TestDirectory(SDistTestCase):
         # Directory -> Directory (same)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
-            self.assertEqual(oldpkg.clean_post(self.pkgdir, oldpkg), False)
+            self.assertEqual(oldpkg.clean_post(oldpkg, self.pkgdir), False)
             mlog.assert_not_called()
             mclean.assert_not_called()
 
         # Directory -> Directory (different)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
-            self.assertEqual(oldpkg.clean_post(self.pkgdir, newpkg1), True)
+            self.assertEqual(oldpkg.clean_post(newpkg1, self.pkgdir), True)
             mlog.assert_called_once()
             mclean.assert_called_once_with(self.pkgdir)
 
         # Directory -> Apt
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
-            self.assertEqual(oldpkg.clean_post(self.pkgdir, newpkg2), True)
+            self.assertEqual(oldpkg.clean_post(newpkg2, self.pkgdir), True)
             mlog.assert_called_once()
             mclean.assert_called_once_with(self.pkgdir)
 
         # Directory -> nothing
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
-            self.assertEqual(oldpkg.clean_post(self.pkgdir, None), True)
+            self.assertEqual(oldpkg.clean_post(None, self.pkgdir), True)
             mlog.assert_called_once()
             mclean.assert_called_once_with(self.pkgdir)
 
         # Directory -> nothing (quiet)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
-            self.assertEqual(oldpkg.clean_post(self.pkgdir, None, True), True)
+            self.assertEqual(oldpkg.clean_post(None, self.pkgdir, True), True)
             mlog.assert_not_called()
             mclean.assert_called_once_with(self.pkgdir)
 
@@ -350,7 +354,7 @@ class TestDirectory(SDistTestCase):
         # Directory -> Directory (same)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
-            self.assertEqual(oldpkg.clean_all(self.pkgdir, oldpkg),
+            self.assertEqual(oldpkg.clean_all(oldpkg, self.pkgdir),
                              (False, False))
             mlog.assert_not_called()
             mclean.assert_not_called()
@@ -358,7 +362,7 @@ class TestDirectory(SDistTestCase):
         # Directory -> Directory (different)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
-            self.assertEqual(oldpkg.clean_all(self.pkgdir, newpkg1),
+            self.assertEqual(oldpkg.clean_all(newpkg1, self.pkgdir),
                              (False, True))
             mlog.assert_called_once()
             mclean.assert_called_once_with(self.pkgdir)
@@ -366,7 +370,7 @@ class TestDirectory(SDistTestCase):
         # Directory -> Apt
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
-            self.assertEqual(oldpkg.clean_all(self.pkgdir, newpkg2),
+            self.assertEqual(oldpkg.clean_all(newpkg2, self.pkgdir),
                              (False, True))
             mlog.assert_called_once()
             mclean.assert_called_once_with(self.pkgdir)
@@ -374,7 +378,7 @@ class TestDirectory(SDistTestCase):
         # Directory -> nothing
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
-            self.assertEqual(oldpkg.clean_all(self.pkgdir, None),
+            self.assertEqual(oldpkg.clean_all(None, self.pkgdir),
                              (False, True))
             mlog.assert_called_once()
             mclean.assert_called_once_with(self.pkgdir)

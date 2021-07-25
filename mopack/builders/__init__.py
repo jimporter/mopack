@@ -48,8 +48,10 @@ class Builder(OptionsHolder):
         self.usage = make_usage(self.name, usage, _options=self._options,
                                 _path_bases=self._path_bases, **kwargs)
 
-    def get_usage(self, pkgdir, submodules, srcdir):
-        return self.usage.get_usage(submodules, srcdir, self._builddir(pkgdir))
+    def get_usage(self, pkg, submodules, pkgdir, srcdir):
+        return self.usage.get_usage(
+            pkg, submodules, srcdir, self._builddir(pkgdir)
+        )
 
     def __repr__(self):
         return '<{}({!r})>'.format(type(self).__name__, self.name)

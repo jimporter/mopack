@@ -2,7 +2,7 @@ import os
 import subprocess
 from unittest import mock
 
-from . import BuilderTest, through_json
+from . import BuilderTest, MockPackage, through_json
 from .. import mock_open_log
 
 from mopack.builders import Builder
@@ -15,20 +15,15 @@ from mopack.usage.pkg_config import PkgConfigUsage
 
 class TestCustomBuilder(BuilderTest):
     builder_type = CustomBuilder
-    srcdir = os.path.abspath('/path/to/src')
-    pkgdir = os.path.abspath('/path/to/builddir/mopack')
-    path_bases = ('srcdir', 'builddir')
-
-    def pkgconfdir(self, name, pkgconfig='pkgconfig'):
-        return os.path.join(self.pkgdir, 'build', name, pkgconfig)
 
     def check_build(self, builder, build_commands=None, *, submodules=None,
                     usage=None):
         if usage is None:
             pcfiles = ['foo']
             pcfiles.extend('foo_{}'.format(i) for i in iterate(submodules))
-            usage = {'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
-                     'pcfiles': pcfiles, 'extra_args': []}
+            usage = {'name': 'foo', 'type': 'pkg_config',
+                     'path': self.pkgconfdir('foo'), 'pcfiles': pcfiles,
+                     'extra_args': []}
         if build_commands is None:
             builddir = os.path.join(self.pkgdir, 'build', builder.name)
             build_commands = [i.fill(srcdir=self.srcdir, builddir=builddir)
@@ -46,7 +41,7 @@ class TestCustomBuilder(BuilderTest):
                                       stderr=subprocess.STDOUT,
                                       universal_newlines=True, check=True)
         self.assertEqual(builder.get_usage(
-            self.pkgdir, submodules, self.srcdir
+            MockPackage(), submodules, self.pkgdir, self.srcdir
         ), usage)
 
     def test_basic(self):
@@ -187,8 +182,9 @@ class TestCustomBuilder(BuilderTest):
         ))
 
         self.check_build(builder, usage={
-            'type': 'pkg_config', 'path': self.pkgconfdir('foo', 'pkgconf'),
-            'pcfiles': ['foo'], 'extra_args': [],
+            'name': 'foo', 'type': 'pkg_config',
+            'path': self.pkgconfdir('foo', 'pkgconf'), 'pcfiles': ['foo'],
+            'extra_args': [],
         })
 
     def test_submodules(self):
@@ -200,8 +196,9 @@ class TestCustomBuilder(BuilderTest):
             submodules=submodules_required
         )
         self.check_build(builder, submodules=['sub'], usage={
-            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['foo_sub'], 'extra_args': [],
+            'name': 'foo', 'type': 'pkg_config',
+            'path': self.pkgconfdir('foo'), 'pcfiles': ['foo_sub'],
+            'extra_args': [],
         })
 
         builder = self.make_builder(
@@ -210,8 +207,9 @@ class TestCustomBuilder(BuilderTest):
             submodules=submodules_required
         )
         self.check_build(builder, submodules=['sub'], usage={
-            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
+            'name': 'foo', 'type': 'pkg_config',
+            'path': self.pkgconfdir('foo'), 'pcfiles': ['bar', 'foo_sub'],
+            'extra_args': [],
         })
 
         builder = self.make_builder(
@@ -226,8 +224,9 @@ class TestCustomBuilder(BuilderTest):
             submodules=submodules_optional
         )
         self.check_build(builder, submodules=['sub'], usage={
-            'type': 'pkg_config', 'path': self.pkgconfdir('foo'),
-            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
+            'name': 'foo', 'type': 'pkg_config',
+            'path': self.pkgconfdir('foo'), 'pcfiles': ['bar', 'foo_sub'],
+            'extra_args': [],
         })
 
     def test_clean(self):

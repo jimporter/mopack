@@ -42,9 +42,10 @@ class TestConan(SourceTest):
                        [pkg.name])
             pcfiles.extend('{}_{}'.format(pkg.name, i)
                            for i in iterate(submodules))
-            usage = {'type': 'pkg_config', 'path': self.pkgconfdir,
-                     'pcfiles': pcfiles, 'extra_args': []}
-        self.assertEqual(pkg.get_usage(self.pkgdir, submodules), usage)
+            usage = {'name': pkg.name, 'type': 'pkg_config',
+                     'path': self.pkgconfdir, 'pcfiles': pcfiles,
+                     'extra_args': []}
+        self.assertEqual(pkg.get_usage(submodules, self.pkgdir), usage)
 
     def test_basic(self):
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable')
@@ -56,7 +57,7 @@ class TestConan(SourceTest):
 
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.run') as mcall:  # noqa
-            ConanPackage.resolve_all(self.pkgdir, [pkg])
+            ConanPackage.resolve_all([pkg], self.pkgdir)
 
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
                 [requires]
@@ -86,7 +87,7 @@ class TestConan(SourceTest):
 
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.run') as mcall:  # noqa
-            ConanPackage.resolve_all(self.pkgdir, [pkg])
+            ConanPackage.resolve_all([pkg], self.pkgdir)
 
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
                 [requires]
@@ -115,7 +116,7 @@ class TestConan(SourceTest):
 
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.run') as mcall:  # noqa
-            ConanPackage.resolve_all(self.pkgdir, [pkg])
+            ConanPackage.resolve_all([pkg], self.pkgdir)
 
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
                 [requires]
@@ -146,7 +147,7 @@ class TestConan(SourceTest):
 
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.run') as mcall:  # noqa
-            ConanPackage.resolve_all(self.pkgdir, [pkg])
+            ConanPackage.resolve_all([pkg], self.pkgdir)
 
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
                 [requires]
@@ -176,7 +177,7 @@ class TestConan(SourceTest):
 
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.run') as mcall:  # noqa
-            ConanPackage.resolve_all(self.pkgdir, [pkg])
+            ConanPackage.resolve_all([pkg], self.pkgdir)
             mcall.assert_called_with(
                 ['conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
                  '--build', '--', self.pkgdir], stdout=subprocess.PIPE,
@@ -197,7 +198,7 @@ class TestConan(SourceTest):
 
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.run') as mcall:  # noqa
-            ConanPackage.resolve_all(self.pkgdir, [pkg])
+            ConanPackage.resolve_all([pkg], self.pkgdir)
             mcall.assert_called_with(
                 ['conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
                  '--build=foo', '--build=bar', '--', self.pkgdir],
@@ -216,7 +217,7 @@ class TestConan(SourceTest):
 
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.run') as mcall:  # noqa
-            ConanPackage.resolve_all(self.pkgdir, pkgs)
+            ConanPackage.resolve_all(pkgs, self.pkgdir)
 
             self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
                 [requires]
@@ -251,7 +252,7 @@ class TestConan(SourceTest):
                                        'pcfile': 'bar'},
                                 submodules=submodules_required)
         self.check_usage(pkg, submodules=['sub'], usage={
-            'type': 'pkg_config', 'path': self.pkgconfdir,
+            'name': 'foo', 'type': 'pkg_config', 'path': self.pkgconfdir,
             'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
         })
 
@@ -264,7 +265,7 @@ class TestConan(SourceTest):
                                        'pcfile': 'bar'},
                                 submodules=submodules_optional)
         self.check_usage(pkg, submodules=['sub'], usage={
-            'type': 'pkg_config', 'path': self.pkgconfdir,
+            'name': 'foo', 'type': 'pkg_config', 'path': self.pkgconfdir,
             'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
         })
 
@@ -274,20 +275,20 @@ class TestConan(SourceTest):
             submodules={'names': ['sub'], 'required': True}
         )
         with self.assertRaises(ValueError):
-            pkg.get_usage(self.pkgdir, ['invalid'])
+            pkg.get_usage(['invalid'], self.pkgdir)
 
     def test_deploy(self):
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable')
         self.assertEqual(pkg.should_deploy, True)
         with mock.patch('warnings.warn') as mwarn:
-            ConanPackage.deploy_all(self.pkgdir, [pkg])
+            ConanPackage.deploy_all([pkg], self.pkgdir)
             mwarn.assert_called_once()
 
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
                                 deploy=False)
         self.assertEqual(pkg.should_deploy, False)
         with mock.patch('warnings.warn') as mwarn:
-            ConanPackage.deploy_all(self.pkgdir, [pkg])
+            ConanPackage.deploy_all([pkg], self.pkgdir)
             mwarn.assert_not_called()
 
     def test_clean_pre(self):
@@ -295,10 +296,10 @@ class TestConan(SourceTest):
         newpkg = self.make_package(AptPackage, 'foo')
 
         # Conan -> Apt
-        self.assertEqual(oldpkg.clean_pre(self.pkgdir, newpkg), False)
+        self.assertEqual(oldpkg.clean_pre(newpkg, self.pkgdir), False)
 
         # Conan -> Nothing
-        self.assertEqual(oldpkg.clean_pre(self.pkgdir, None), False)
+        self.assertEqual(oldpkg.clean_pre(None, self.pkgdir), False)
 
     def test_clean_post(self):
         oldpkg = self.make_package('foo', remote='foo/1.2.3@conan/stable')
@@ -308,14 +309,14 @@ class TestConan(SourceTest):
         # Conan -> Conan
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('os.remove') as mremove:  # noqa
-            self.assertEqual(oldpkg.clean_post(self.pkgdir, newpkg1), False)
+            self.assertEqual(oldpkg.clean_post(newpkg1, self.pkgdir), False)
             mlog.assert_not_called()
             mremove.assert_not_called()
 
         # Conan -> Apt
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('os.remove') as mremove:  # noqa
-            self.assertEqual(oldpkg.clean_post(self.pkgdir, newpkg2), True)
+            self.assertEqual(oldpkg.clean_post(newpkg2, self.pkgdir), True)
             mlog.assert_called_once()
             mremove.assert_called_once_with(os.path.join(
                 self.pkgdir, 'conan', 'foo.pc'
@@ -324,7 +325,7 @@ class TestConan(SourceTest):
         # Conan -> nothing
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('os.remove') as mremove:  # noqa
-            self.assertEqual(oldpkg.clean_post(self.pkgdir, None), True)
+            self.assertEqual(oldpkg.clean_post(None, self.pkgdir), True)
             mlog.assert_called_once()
             mremove.assert_called_once_with(os.path.join(
                 self.pkgdir, 'conan', 'foo.pc'
@@ -333,7 +334,7 @@ class TestConan(SourceTest):
         # Conan -> nothing (quiet)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('os.remove') as mremove:  # noqa
-            self.assertEqual(oldpkg.clean_post(self.pkgdir, None, True), True)
+            self.assertEqual(oldpkg.clean_post(None, self.pkgdir, True), True)
             mlog.assert_not_called()
             mremove.assert_called_once_with(os.path.join(
                 self.pkgdir, 'conan', 'foo.pc'
@@ -343,7 +344,7 @@ class TestConan(SourceTest):
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('os.remove',
                         side_effect=FileNotFoundError) as mremove:  # noqa
-            self.assertEqual(oldpkg.clean_post(self.pkgdir, None), True)
+            self.assertEqual(oldpkg.clean_post(None, self.pkgdir), True)
             mlog.assert_called_once()
             mremove.assert_called_once_with(os.path.join(
                 self.pkgdir, 'conan', 'foo.pc'
@@ -357,7 +358,7 @@ class TestConan(SourceTest):
         # Conan -> Conan
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('os.remove') as mremove:  # noqa
-            self.assertEqual(oldpkg.clean_all(self.pkgdir, newpkg1),
+            self.assertEqual(oldpkg.clean_all(newpkg1, self.pkgdir),
                              (False, False))
             mlog.assert_not_called()
             mremove.assert_not_called()
@@ -365,7 +366,7 @@ class TestConan(SourceTest):
         # Conan -> Apt
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('os.remove') as mremove:  # noqa
-            self.assertEqual(oldpkg.clean_all(self.pkgdir, newpkg2),
+            self.assertEqual(oldpkg.clean_all(newpkg2, self.pkgdir),
                              (False, True))
             mlog.assert_called_once()
             mremove.assert_called_once_with(os.path.join(
@@ -375,7 +376,7 @@ class TestConan(SourceTest):
         # Conan -> nothing
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('os.remove') as mremove:  # noqa
-            self.assertEqual(oldpkg.clean_all(self.pkgdir, None),
+            self.assertEqual(oldpkg.clean_all(None, self.pkgdir),
                              (False, True))
             mlog.assert_called_once()
             mremove.assert_called_once_with(os.path.join(
@@ -386,7 +387,7 @@ class TestConan(SourceTest):
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('os.remove',
                         side_effect=FileNotFoundError) as mremove:  # noqa
-            self.assertEqual(oldpkg.clean_all(self.pkgdir, None),
+            self.assertEqual(oldpkg.clean_all(None, self.pkgdir),
                              (False, True))
             mlog.assert_called_once()
             mremove.assert_called_once_with(os.path.join(

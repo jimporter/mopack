@@ -31,6 +31,11 @@ def mock_open_files(files):
     return wrapper
 
 
+class MockPackage:
+    def __init__(self, name='foo'):
+        self.name = name
+
+
 def through_json(data):
     return json.loads(json.dumps(data))
 
