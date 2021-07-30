@@ -14,7 +14,10 @@ class SDistTestCase(SourceTest):
     pkgdir = os.path.abspath('/path/to/builddir/mopack')
 
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
-        return os.path.join(self.pkgdir, 'build', name, pkgconfig)
+        if name is None:
+            return os.path.join(self.pkgdir, pkgconfig)
+        else:
+            return os.path.join(self.pkgdir, 'build', name, pkgconfig)
 
     def check_resolve(self, pkg, *, submodules=None, usage=None):
         if usage is None:
@@ -32,7 +35,10 @@ class SDistTestCase(SourceTest):
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')
-        self.assertEqual(pkg.get_usage(submodules, self.pkgdir), usage)
+
+        with mock.patch('mopack.usage.path_system.file_outdated',
+                        return_value=True):
+            self.assertEqual(pkg.get_usage(submodules, self.pkgdir), usage)
 
     def make_builder(self, builder_type, name, *, submodules=None,
                      options=None, usage=None, **kwargs):

@@ -291,14 +291,27 @@ class IntegrationTest(unittest.TestCase):
                                 'extra_args': extra_args},
                          submodules=submodules)
 
-    def assertPathUsage(self, name, *, auto_link=False, include_path=[],
-                        library_path=[], headers=[], libraries=None,
-                        compile_flags=[], link_flags=[], submodules=[]):
+    def assertPathUsage(self, name, *, type='path', auto_link=False,
+                        include_path=[], library_path=[], headers=[],
+                        libraries=None, compile_flags=[], link_flags=[],
+                        submodules=[]):
         if libraries is None:
             libraries = [name]
+        pkgconfdir = os.path.join(self.stage, 'mopack', 'pkgconfig')
         self.assertUsage(name, {
-            'name': name, 'type': 'path', 'auto_link': auto_link,
-            'include_path': include_path, 'library_path': library_path,
-            'headers': headers, 'libraries': libraries,
-            'compile_flags': compile_flags, 'link_flags': link_flags,
+            'name': name, 'type': type, 'path': pkgconfdir, 'pcfiles': [name],
+            'requirements': {
+                'auto_link': auto_link, 'headers': headers,
+                'libraries': libraries,
+            },
         }, submodules=submodules)
+
+        self.assertCountEqual(
+            call_pkg_config(name, ['--cflags'], path=pkgconfdir),
+            ['-I' + i for i in include_path] + compile_flags
+        )
+        self.assertCountEqual(
+            call_pkg_config(name, ['--libs'], path=pkgconfdir),
+            (['-L' + i for i in library_path] + link_flags +
+             ['-l' + i for i in libraries])
+        )

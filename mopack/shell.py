@@ -1,5 +1,7 @@
+import re
 from collections.abc import MutableSequence
 from enum import Enum
+from itertools import chain
 from shlex import shlex
 
 from .freezedried import auto_dehydrate
@@ -11,6 +13,69 @@ from .platforms import platform_name
 
 _Token = Enum('Token', ['char', 'quote', 'space'])
 _State = Enum('State', ['between', 'char', 'word', 'quoted'])
+
+_bad_posix_chars = re.compile(r'[^\w@%+=:,./-]')
+# XXX: We need a way to escape cmd.exe-specific characters.
+_bad_windows_chars = re.compile(r'(\s|["&<>|]|\\$)')
+_windows_replace = re.compile(r'(\\*)("|$)')
+
+
+def quote_posix(s, force=False):
+    if not isinstance(s, str):
+        raise TypeError(type(s))
+
+    if s == '':
+        return "''"
+    elif _bad_posix_chars.search(s):
+        def q(has_quote):
+            return '' if has_quote else "'"
+        s = s.replace("'", r"'\''")
+
+        # Any string less than 3 characters long can't have escaped quotes.
+        if len(s) < 3:
+            return "'" + s + "'"
+
+        start = 1 if s[0] == "'" else None
+        # We can guarantee that any single-quotes at the end are unescaped, so
+        # we can deduplicate them if so.
+        end = -1 if s[-1] == "'" else None
+        return q(start) + s[start:end] + q(end)
+    elif force:
+        return "'" + s + "'"
+    else:
+        return s
+
+
+def quote_windows(s, force=False, escape_percent=False):
+    if not isinstance(s, str):
+        raise TypeError(type(s))
+
+    if s == '':
+        return '""'
+
+    # In some contexts (mainly certain uses of the Windows shell), we want to
+    # escape percent signs. This doesn't count as "escaping" for the purposes
+    # of quoting the result though.
+    if escape_percent:
+        s = s.replace('%', '%%')
+
+    if _bad_windows_chars.search(s):
+        def repl(m):
+            quote = '\\' + m.group(2) if len(m.group(2)) else ''
+            return m.group(1) * 2 + quote
+        # We can guarantee that any double-quotes are escaped, so we don't need
+        # to worry about duplicates if they're at the end.
+        return '"' + _windows_replace.sub(repl, s) + '"'
+    elif force:
+        return '"' + s + '"'
+    else:
+        return s
+
+
+def quote_native(s, force=False):
+    if platform_name() == 'windows':
+        return quote_windows(s, force)
+    return quote_posix(s, force)
 
 
 def split_posix_str(s, type=list, escapes=False):
@@ -98,21 +163,26 @@ class ShellArguments(MutableSequence):
     def insert(self, i, value):
         return self._args.insert(i, value)
 
-    def fill(self, **kwargs):
+    @staticmethod
+    def _fill_identity(s, orig):
+        return s
+
+    def fill(self, _fn=None, **kwargs):
+        if _fn is None:
+            _fn = self._fill_identity
+
         result = []
         for i in self._args:
             if isinstance(i, Path):
-                result.append(i.string(**kwargs))
+                result.append(_fn(i.string(**kwargs), i))
             elif isiterable(i):
                 arg = ''
                 for j in i:
-                    if isinstance(j, Path):
-                        arg += j.string(**kwargs)
-                    else:
-                        arg += j
+                    s = j.string(**kwargs) if isinstance(j, Path) else j
+                    arg += _fn(s, j)
                 result.append(arg)
             else:
-                result.append(i)
+                result.append(_fn(i, i))
         return result
 
     def dehydrate(self):
@@ -139,8 +209,18 @@ class ShellArguments(MutableSequence):
             return NotImplemented
         return self._args == rhs._args
 
+    def __add__(self, rhs):
+        if not isiterable(rhs):
+            return NotImplemented
+        return ShellArguments(chain(self._args, iter(rhs)))
+
+    def __radd__(self, lhs):
+        if not isiterable(lhs):
+            return NotImplemented
+        return ShellArguments(chain(iter(lhs), self._args))
+
     def __repr__(self):
-        return '<ShellArguments{!r}>'.format(tuple(self._args))
+        return '<ShellArguments({})>'.format(repr(self._args)[1:-1])
 
 
 def _wrap_placeholder(split_fn):

@@ -27,18 +27,35 @@ class TestUsage(IntegrationTest):
         self.assertUsageOutput('hello', expected_output_hello, ['--strict'])
 
         # Usage for `undef`.
+        pkgconfdir = os.path.join(self.stage, 'mopack', 'pkgconfig')
         self.assertUsageOutput('undef', {
-            'name': 'undef', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': ['undef'], 'compile_flags': [], 'link_flags': [],
+            'name': 'undef', 'type': 'system', 'path': pkgconfdir,
+            'pcfiles': ['undef'], 'requirements': {
+                'auto_link': False, 'headers': [], 'libraries': ['undef'],
+            },
         }, extra_env={'PKG_CONFIG': 'nonexist'})
+        self.assertCountEqual(
+            call_pkg_config('undef', ['--cflags'], path=pkgconfdir), []
+        )
+        self.assertCountEqual(
+            call_pkg_config('undef', ['--libs'], path=pkgconfdir), ['-lundef']
+        )
         self.assertUsage('undef', extra_args=['--strict'], returncode=1)
 
         # Usage from wrong directory.
+        wrongdir = stage_dir(self.name + '-wrongdir')
+        pkgconfdir = os.path.join(wrongdir, 'mopack', 'pkgconfig')
         self.assertUsageOutput('hello', {
-            'name': 'hello', 'type': 'path', 'auto_link': False,
-            'include_path': [], 'library_path': [], 'headers': [],
-            'libraries': ['hello'], 'compile_flags': [], 'link_flags': [],
-        }, ['--directory=..'], extra_env={'PKG_CONFIG': 'nonexist'})
+            'name': 'hello', 'type': 'system', 'path': pkgconfdir,
+            'pcfiles': ['hello'], 'requirements': {
+                'auto_link': False, 'headers': [], 'libraries': ['hello'],
+            },
+        }, ['--directory=' + wrongdir], extra_env={'PKG_CONFIG': 'nonexist'})
+        self.assertCountEqual(
+            call_pkg_config('hello', ['--cflags'], path=pkgconfdir), []
+        )
+        self.assertCountEqual(
+            call_pkg_config('hello', ['--libs'], path=pkgconfdir), ['-lhello']
+        )
         self.assertUsage('hello', extra_args=['--strict', '--directory=..'],
                          returncode=1)

@@ -17,8 +17,8 @@ class TestApt(IntegrationTest):
         self.assertExists('mopack/logs/apt.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPathUsage('ogg')
-        self.assertPathUsage('zlib', libraries=['z'])
+        self.assertPathUsage('ogg', type='system')
+        self.assertPathUsage('zlib', type='system', libraries=['z'])
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {

@@ -30,6 +30,30 @@ class TestPushd(TestCase):
         mmakedirs.assert_called_once_with('foo', 0o777, False)
 
 
+class TestFileOutdated(TestCase):
+    def test_outdated(self):
+        with mock.patch('os.path.getmtime', lambda p: 0 if p == 'foo' else 1):
+            self.assertTrue(file_outdated('foo', 'bar'))
+
+    def test_up_to_date(self):
+        with mock.patch('os.path.getmtime', lambda p: 1 if p == 'foo' else 0):
+            self.assertFalse(file_outdated('foo', 'bar'))
+
+    def test_nonexist(self):
+        def mock_getmtime(path):
+            if path == 'bar':
+                return 1
+            raise FileNotFoundError()
+
+        with mock.patch('os.path.getmtime', mock_getmtime):
+            self.assertTrue(file_outdated('foo', 'bar'))
+
+    def test_base_nonexist(self):
+        with mock.patch('os.path.getmtime', side_effect=FileNotFoundError()):
+            self.assertTrue(file_outdated('foo', 'bar'))
+            self.assertFalse(file_outdated('foo', 'bar', False))
+
+
 class TestPath(TestCase):
     def test_construct(self):
         p = Path(Path.Base.cfgdir, 'foo')
@@ -148,7 +172,9 @@ class TestPath(TestCase):
 
     def test_string(self):
         p = Path(Path.Base.srcdir, 'foo')
-        self.assertEqual(p.string(srcdir='/srcdir'),
+        self.assertEqual(p.string(srcdir=('${srcdir}')),
+                         os.path.join('${srcdir}', 'foo'))
+        self.assertEqual(p.string(srcdir=os.path.abspath('/srcdir')),
                          os.path.abspath(os.path.join('/srcdir', 'foo')))
 
         p = Path(Path.Base.absolute, '/foo')

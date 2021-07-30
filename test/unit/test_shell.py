@@ -9,47 +9,92 @@ srcdir = Path('srcdir', '')
 srcdir_ph = placeholder(srcdir)
 
 
-class TestSplitWindows(TestCase):
-    def assertSplitEqual(self, value, expected, **kwargs):
-        self.assertEqual(split_windows_str(value, **kwargs), expected)
-        self.assertEqual(split_windows(value, **kwargs),
-                         ShellArguments(expected))
+class TestQuotePosix(TestCase):
+    def assertQuote(self, original, quoted, force_quoted=None):
+        if force_quoted is None:
+            force_quoted = quoted
+        self.assertEqual(quote_posix(original), quoted)
+        self.assertEqual(quote_posix(original, force=True), force_quoted)
 
-    def test_single(self):
-        self.assertSplitEqual('foo', ['foo'])
-        self.assertSplitEqual(' foo', ['foo'])
-        self.assertSplitEqual('foo ', ['foo'])
-        self.assertSplitEqual(' foo ', ['foo'])
+    def test_empty(self):
+        self.assertQuote('', "''")
 
-    def test_multiple(self):
-        self.assertSplitEqual('foo bar baz', ['foo', 'bar', 'baz'])
+    def test_simple(self):
+        self.assertQuote('foo', 'foo', "'foo'")
 
-    def test_backslash(self):
-        self.assertSplitEqual(r'C:\path\to\file', [r'C:\path\to\file'])
+    def test_space(self):
+        self.assertQuote('foo bar', "'foo bar'")
 
     def test_quote(self):
-        self.assertSplitEqual('foo "bar baz"', ['foo', 'bar baz'])
-        self.assertSplitEqual('foo"bar baz"', ['foobar baz'])
-        self.assertSplitEqual(r'foo "c:\path\\"', ['foo', 'c:\\path\\'])
-        self.assertSplitEqual('foo "it\'s \\"good\\""',
-                              ['foo', 'it\'s "good"'])
+        self.assertQuote('"foo"', "'\"foo\"'")
+        self.assertQuote("'foo'", r"\''foo'\'")
+        self.assertQuote("'foo'z", r"\''foo'\''z'")
+        self.assertQuote("a'foo'", r"'a'\''foo'\'")
+        self.assertQuote("a'foo'z", r"'a'\''foo'\''z'")
 
-    def test_type(self):
-        self.assertSplitEqual('foo bar baz', ('foo', 'bar', 'baz'), type=tuple)
+    def test_escaped_quote(self):
+        self.assertQuote(r"\'foobar", r"'\'\''foobar'")
+        self.assertQuote(r"foo\'bar", r"'foo\'\''bar'")
+        self.assertQuote(r"foobar\'", r"'foobar\'\'")
 
-    def test_placeholder(self):
-        self.assertEqual(split_windows(srcdir_ph), ShellArguments([srcdir]))
-        self.assertEqual(split_windows('gcc ' + srcdir_ph),
-                         ShellArguments(['gcc', srcdir]))
-        self.assertEqual(split_windows('--srcdir=' + srcdir_ph),
-                         ShellArguments([('--srcdir=', srcdir)]))
-        self.assertEqual(split_windows('"prefix ' + srcdir_ph + '"'),
-                         ShellArguments([('prefix ', srcdir)]))
+    def test_shell_chars(self):
+        self.assertQuote('&&', "'&&'")
+        self.assertQuote('>', "'>'")
+        self.assertQuote('|', "'|'")
 
     def test_invalid(self):
-        self.assertRaises(TypeError, split_windows_str, 1)
-        self.assertRaises(TypeError, split_windows, 1)
-        self.assertRaises(TypeError, split_windows_str, srcdir_ph)
+        with self.assertRaises(TypeError):
+            quote_posix(1)
+
+
+class TestQuoteWindows(TestCase):
+    def assertQuote(self, original, quoted, force_quoted=None,
+                    escape_quoted=None):
+        if force_quoted is None:
+            force_quoted = quoted
+        if escape_quoted is None:
+            escape_quoted = quoted
+        self.assertEqual(quote_windows(original), quoted)
+        self.assertEqual(quote_windows(original, force=True), force_quoted)
+        self.assertEqual(quote_windows(original, escape_percent=True),
+                         escape_quoted)
+
+    def test_empty(self):
+        self.assertQuote('', '""')
+
+    def test_simple(self):
+        self.assertQuote('foo', 'foo', '"foo"')
+
+    def test_space(self):
+        self.assertQuote('foo bar', '"foo bar"')
+
+    def test_quote(self):
+        self.assertQuote('"foo"', r'"\"foo\""')
+        self.assertQuote('"foo"z', r'"\"foo\"z"')
+        self.assertQuote('a"foo"', r'"a\"foo\""')
+        self.assertQuote('a"foo"z', r'"a\"foo\"z"')
+
+    def test_escaped_quote(self):
+        self.assertQuote(r'\"foobar', r'"\\\"foobar"')
+        self.assertQuote(r'foo\"bar', r'"foo\\\"bar"')
+        self.assertQuote(r'foobar\"', r'"foobar\\\""')
+
+    def test_backslash(self):
+        self.assertQuote(r'foo\bar', r'foo\bar', r'"foo\bar"')
+        self.assertQuote('foo\\bar\\', r'"foo\bar\\"')
+
+    def test_escape_percent(self):
+        self.assertQuote('100%', r'100%', r'"100%"', r'100%%')
+        self.assertQuote('"100%"', r'"\"100%\""', escape_quoted=r'"\"100%%\""')
+
+    def test_shell_chars(self):
+        self.assertQuote('&&', '"&&"')
+        self.assertQuote('>', '">"')
+        self.assertQuote('|', '"|"')
+
+    def test_invalid(self):
+        with self.assertRaises(TypeError):
+            quote_windows(1)
 
 
 class TestSplitPosix(TestCase):
@@ -93,6 +138,49 @@ class TestSplitPosix(TestCase):
         self.assertRaises(TypeError, split_posix_str, 1)
         self.assertRaises(TypeError, split_posix, 1)
         self.assertRaises(TypeError, split_posix_str, srcdir_ph)
+
+
+class TestSplitWindows(TestCase):
+    def assertSplitEqual(self, value, expected, **kwargs):
+        self.assertEqual(split_windows_str(value, **kwargs), expected)
+        self.assertEqual(split_windows(value, **kwargs),
+                         ShellArguments(expected))
+
+    def test_single(self):
+        self.assertSplitEqual('foo', ['foo'])
+        self.assertSplitEqual(' foo', ['foo'])
+        self.assertSplitEqual('foo ', ['foo'])
+        self.assertSplitEqual(' foo ', ['foo'])
+
+    def test_multiple(self):
+        self.assertSplitEqual('foo bar baz', ['foo', 'bar', 'baz'])
+
+    def test_backslash(self):
+        self.assertSplitEqual(r'C:\path\to\file', [r'C:\path\to\file'])
+
+    def test_quote(self):
+        self.assertSplitEqual('foo "bar baz"', ['foo', 'bar baz'])
+        self.assertSplitEqual('foo"bar baz"', ['foobar baz'])
+        self.assertSplitEqual(r'foo "c:\path\\"', ['foo', 'c:\\path\\'])
+        self.assertSplitEqual('foo "it\'s \\"good\\""',
+                              ['foo', 'it\'s "good"'])
+
+    def test_type(self):
+        self.assertSplitEqual('foo bar baz', ('foo', 'bar', 'baz'), type=tuple)
+
+    def test_placeholder(self):
+        self.assertEqual(split_windows(srcdir_ph), ShellArguments([srcdir]))
+        self.assertEqual(split_windows('gcc ' + srcdir_ph),
+                         ShellArguments(['gcc', srcdir]))
+        self.assertEqual(split_windows('--srcdir=' + srcdir_ph),
+                         ShellArguments([('--srcdir=', srcdir)]))
+        self.assertEqual(split_windows('"prefix ' + srcdir_ph + '"'),
+                         ShellArguments([('prefix ', srcdir)]))
+
+    def test_invalid(self):
+        self.assertRaises(TypeError, split_windows_str, 1)
+        self.assertRaises(TypeError, split_windows, 1)
+        self.assertRaises(TypeError, split_windows_str, srcdir_ph)
 
 
 class TestShellArguments(TestCase):
@@ -141,12 +229,14 @@ class TestShellArguments(TestCase):
 
     def test_fill_path(self):
         s = ShellArguments([srcdir])
-        self.assertEqual(s.fill(srcdir='/path/to/srcdir'),
+        self.assertEqual(s.fill(srcdir='${srcdir}'), ['${srcdir}'])
+        self.assertEqual(s.fill(srcdir=os.path.abspath('/path/to/srcdir')),
                          [os.path.abspath('/path/to/srcdir')])
 
     def test_fill_path_str(self):
         s = ShellArguments([('--srcdir=', srcdir)])
-        self.assertEqual(s.fill(srcdir='/path/to/srcdir'),
+        self.assertEqual(s.fill(srcdir='${srcdir}'), ['--srcdir=${srcdir}'])
+        self.assertEqual(s.fill(srcdir=os.path.abspath('/path/to/srcdir')),
                          ['--srcdir=' + os.path.abspath('/path/to/srcdir')])
 
     def test_rehydrate(self):

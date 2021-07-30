@@ -15,6 +15,7 @@ class TestApt(SourceTest):
     pkg_type = AptPackage
     config_file = '/path/to/mopack.yml'
     pkgdir = '/path/to/builddir/mopack'
+    pkgconfdir = os.path.join(pkgdir, 'pkgconfig')
 
     def check_resolve_all(self, packages, remotes, *, submodules=None,
                           usages=None):
@@ -45,18 +46,27 @@ class TestApt(SourceTest):
         if usages is None:
             usages = []
             for pkg in packages:
+                pcname = ('{}[{}]'.format(pkg.name, ','.join(submodules))
+                          if submodules else pkg.name)
                 libs = ([] if pkg.submodules and pkg.submodules['required']
                         else [pkg.name])
                 libs.extend('{}_{}'.format(pkg.name, i)
                             for i in iterate(submodules))
+
                 usages.append({
-                    'name': pkg.name, 'type': 'path', 'auto_link': False,
-                    'include_path': [], 'library_path': [], 'headers': [],
-                    'libraries': libs, 'compile_flags': [], 'link_flags': [],
+                    'name': pkg.name, 'type': 'system',
+                    'path': self.pkgconfdir, 'pcfiles': [pcname],
+                    'requirements': {
+                        'auto_link': False, 'headers': [], 'libraries': libs,
+                    },
                 })
 
         for pkg, usage in zip(packages, usages):
-            with mock.patch('subprocess.run', side_effect=OSError()):
+            with mock.patch('subprocess.run', side_effect=OSError()), \
+                 mock.patch('os.makedirs'), \
+                 mock.patch('mopack.usage.path_system.file_outdated',
+                            return_value=True), \
+                 mock.patch('builtins.open'):  # noqa
                 self.assertEqual(pkg.get_usage(submodules, self.pkgdir), usage)
 
     def test_basic(self):
@@ -98,10 +108,11 @@ class TestApt(SourceTest):
         )
         self.check_resolve_all(
             [pkg], ['libfoo-dev'], submodules=['sub'], usages=[{
-                'name': 'foo', 'type': 'path', 'auto_link': False,
-                'include_path': [], 'library_path': [], 'headers': [],
-                'libraries': ['bar', 'foo_sub'], 'compile_flags': [],
-                'link_flags': [],
+                'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
+                'pcfiles': ['foo[sub]'], 'requirements': {
+                    'auto_link': False, 'headers': [],
+                    'libraries': ['bar', 'foo_sub'],
+                },
             }]
         )
 
@@ -114,10 +125,11 @@ class TestApt(SourceTest):
         )
         self.check_resolve_all(
             [pkg], ['libfoo-dev'], submodules=['sub'], usages=[{
-                'name': 'foo', 'type': 'path', 'auto_link': False,
-                'include_path': [], 'library_path': [], 'headers': [],
-                'libraries': ['bar', 'foo_sub'], 'compile_flags': [],
-                'link_flags': [],
+                'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
+                'pcfiles': ['foo[sub]'], 'requirements': {
+                    'auto_link': False, 'headers': [],
+                    'libraries': ['bar', 'foo_sub'],
+                },
             }]
         )
 

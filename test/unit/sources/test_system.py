@@ -1,8 +1,11 @@
-from os.path import abspath
+import os
+import shutil
 from unittest import mock
 
 from . import SourceTest
+from ... import call_pkg_config, test_stage_dir
 
+from mopack.iterutils import iterate
 from mopack.sources import Package
 from mopack.sources.apt import AptPackage
 from mopack.sources.system import SystemPackage
@@ -10,150 +13,197 @@ from mopack.sources.system import SystemPackage
 
 class TestSystemPackage(SourceTest):
     pkg_type = SystemPackage
-    config_file = abspath('/path/to/mopack.yml')
-    pkgdir = abspath('/path/to/builddir/mopack')
+    config_file = os.path.abspath('/path/to/mopack.yml')
+    pkgdir = os.path.join(test_stage_dir, 'sources')
+    pkgconfdir = os.path.join(pkgdir, 'pkgconfig')
+
+    def setUp(self):
+        self.clear_pkgdir()
+
+    def clear_pkgdir(self):
+        if os.path.exists(self.pkgdir):
+            shutil.rmtree(self.pkgdir)
+
+    def check_get_usage(self, pkg, submodules, expected=None, *,
+                        find_pkg_config=False):
+        pcname = ('{}[{}]'.format(pkg.name, ','.join(iterate(submodules)))
+                  if submodules else pkg.name)
+        if expected is None:
+            expected = {
+                'name': pkg.name, 'type': 'system', 'path': self.pkgconfdir,
+                'pcfiles': [pcname], 'requirements': {
+                    'auto_link': False, 'headers': [], 'libraries': [pkg.name],
+                },
+            }
+
+        self.clear_pkgdir()
+        side_effect = None if find_pkg_config else OSError()
+        with mock.patch('subprocess.run', side_effect=side_effect), \
+             mock.patch('mopack.usage.path_system.file_outdated',
+                        return_value=True):  # noqa
+            self.assertEqual(pkg.get_usage(submodules, self.pkgdir), expected)
+
+    def check_pkg_config(self, name, submodules, expected={}):
+        pcname = ('{}[{}]'.format(name, ','.join(iterate(submodules)))
+                  if submodules else name)
+        self.assertCountEqual(
+            call_pkg_config(pcname, ['--cflags'], path=self.pkgconfdir),
+            expected.get('cflags', [])
+        )
+        self.assertCountEqual(
+            call_pkg_config(pcname, ['--libs'], path=self.pkgconfdir),
+            expected.get('libs', ['-l' + name])
+        )
 
     def test_resolve_path(self):
         pkg = self.make_package('foo')
         pkg.resolve(self.pkgdir)
-        with mock.patch('subprocess.run', side_effect=OSError()):
-            self.assertEqual(pkg.get_usage(None, self.pkgdir), {
-                'name': 'foo', 'type': 'path', 'auto_link': False,
-                'include_path': [], 'library_path': [], 'headers': [],
-                'libraries': ['foo'], 'compile_flags': [], 'link_flags': [],
-            })
+        self.check_get_usage(pkg, None)
+        self.check_pkg_config('foo', None)
 
     def test_resolve_pkg_config(self):
         pkg = self.make_package('foo')
         pkg.resolve(self.pkgdir)
-        with mock.patch('subprocess.run'):
-            self.assertEqual(pkg.get_usage(None, self.pkgdir), {
-                'name': 'foo', 'type': 'pkg_config', 'path': None,
-                'pcfiles': ['foo'], 'extra_args': [],
-            })
+        self.check_get_usage(pkg, None, {
+            'name': 'foo', 'type': 'system', 'path': None, 'pcfiles': ['foo'],
+            'extra_args': [],
+        }, find_pkg_config=True)
 
     def test_auto_link(self):
         pkg = self.make_package('foo', auto_link=True)
         pkg.resolve(self.pkgdir)
-        with mock.patch('subprocess.run', side_effect=OSError()):
-            self.assertEqual(pkg.get_usage(None, self.pkgdir), {
-                'name': 'foo', 'type': 'path', 'auto_link': True,
-                'include_path': [], 'library_path': [], 'headers': [],
-                'libraries': ['foo'], 'compile_flags': [], 'link_flags': [],
-            })
+        self.check_get_usage(pkg, None, {
+            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
+            'pcfiles': ['foo'], 'requirements': {
+                'auto_link': True, 'headers': [], 'libraries': ['foo'],
+            },
+        })
+        self.check_pkg_config('foo', None)
 
     def test_include_path(self):
+        incdir = os.path.abspath('/path/to/include')
         pkg = self.make_package('foo', include_path='/path/to/include')
         pkg.resolve(self.pkgdir)
-        with mock.patch('subprocess.run', side_effect=OSError()):
-            self.assertEqual(pkg.get_usage(None, self.pkgdir), {
-                'name': 'foo', 'type': 'path', 'auto_link': False,
-                'include_path': [abspath('/path/to/include')],
-                'library_path': [], 'headers': [], 'libraries': ['foo'],
-                'compile_flags': [], 'link_flags': [],
-            })
+        self.check_get_usage(pkg, None, {
+            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
+            'pcfiles': ['foo'], 'requirements': {
+                'auto_link': False, 'headers': [], 'libraries': ['foo'],
+            },
+        })
+        self.check_pkg_config('foo', None, {'cflags': ['-I' + incdir]})
 
     def test_library_path(self):
+        libdir = os.path.abspath('/path/to/lib')
         pkg = self.make_package('foo', library_path='/path/to/lib')
         pkg.resolve(self.pkgdir)
-        with mock.patch('subprocess.run', side_effect=OSError()):
-            self.assertEqual(pkg.get_usage(None, self.pkgdir), {
-                'name': 'foo', 'type': 'path', 'auto_link': False,
-                'include_path': [], 'library_path': [abspath('/path/to/lib')],
-                'headers': [], 'libraries': ['foo'], 'compile_flags': [],
-                'link_flags': [],
-            })
+        self.check_get_usage(pkg, None, {
+            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
+            'pcfiles': ['foo'], 'requirements': {
+                'auto_link': False, 'headers': [], 'libraries': ['foo'],
+            },
+        })
+        self.check_pkg_config('foo', None, {
+            'libs': ['-L' + libdir, '-lfoo'],
+        })
 
     def test_headers(self):
         pkg = self.make_package('foo', headers='foo.hpp')
         pkg.resolve(self.pkgdir)
-        with mock.patch('subprocess.run', side_effect=OSError()):
-            self.assertEqual(pkg.get_usage(None, self.pkgdir), {
-                'name': 'foo', 'type': 'path', 'auto_link': False,
-                'include_path': [], 'library_path': [], 'headers': ['foo.hpp'],
-                'libraries': ['foo'], 'compile_flags': [], 'link_flags': [],
-            })
+        self.check_get_usage(pkg, None, {
+            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
+            'pcfiles': ['foo'], 'requirements': {
+                'auto_link': False, 'headers': ['foo.hpp'],
+                'libraries': ['foo'],
+            },
+        })
+        self.check_pkg_config('foo', None)
 
         pkg = self.make_package('foo', headers=['foo.hpp', 'bar.hpp'])
         pkg.resolve(self.pkgdir)
-        with mock.patch('subprocess.run', side_effect=OSError()):
-            self.assertEqual(pkg.get_usage(None, self.pkgdir), {
-                'name': 'foo', 'type': 'path', 'auto_link': False,
-                'include_path': [], 'library_path': [],
-                'headers': ['foo.hpp', 'bar.hpp'], 'libraries': ['foo'],
-                'compile_flags': [], 'link_flags': [],
-            })
+        self.check_get_usage(pkg, None, {
+            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
+            'pcfiles': ['foo'], 'requirements': {
+                'auto_link': False, 'headers': ['foo.hpp', 'bar.hpp'],
+                'libraries': ['foo'],
+            },
+        })
+        self.check_pkg_config('foo', None)
 
     def test_libraries(self):
         pkg = self.make_package('foo', libraries='bar')
         pkg.resolve(self.pkgdir)
-        with mock.patch('subprocess.run', side_effect=OSError()):
-            self.assertEqual(pkg.get_usage(None, self.pkgdir), {
-                'name': 'foo', 'type': 'path', 'auto_link': False,
-                'include_path': [], 'library_path': [], 'headers': [],
-                'libraries': ['bar'], 'compile_flags': [], 'link_flags': [],
-            })
+        self.check_get_usage(pkg, None, {
+            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
+            'pcfiles': ['foo'], 'requirements': {
+                'auto_link': False, 'headers': [], 'libraries': ['bar'],
+            },
+        })
+        self.check_pkg_config('foo', None, {'libs': ['-lbar']})
 
         pkg = self.make_package('foo', libraries=['foo', 'bar'])
         pkg.resolve(self.pkgdir)
-        with mock.patch('subprocess.run', side_effect=OSError()):
-            self.assertEqual(pkg.get_usage(None, self.pkgdir), {
-                'name': 'foo', 'type': 'path', 'auto_link': False,
-                'include_path': [], 'library_path': [], 'headers': [],
-                'libraries': ['foo', 'bar'], 'compile_flags': [],
-                'link_flags': [],
-            })
+        self.check_get_usage(pkg, None, {
+            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
+            'pcfiles': ['foo'], 'requirements': {
+                'auto_link': False, 'headers': [], 'libraries': ['foo', 'bar'],
+            },
+        })
+        self.check_pkg_config('foo', None, {'libs': ['-lfoo', '-lbar']})
 
         pkg = self.make_package('foo', libraries=None)
         pkg.resolve(self.pkgdir)
-        with mock.patch('subprocess.run', side_effect=OSError()):
-            self.assertEqual(pkg.get_usage(None, self.pkgdir), {
-                'name': 'foo', 'type': 'path', 'auto_link': False,
-                'include_path': [], 'library_path': [], 'headers': [],
-                'libraries': [], 'compile_flags': [], 'link_flags': [],
-            })
+        self.check_get_usage(pkg, None, {
+            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
+            'pcfiles': ['foo'], 'requirements': {
+                'auto_link': False, 'headers': [], 'libraries': [],
+            },
+        })
+        self.check_pkg_config('foo', None, {'libs': []})
 
     def test_submodules(self):
         submodules_required = {'names': '*', 'required': True}
         submodules_optional = {'names': '*', 'required': False}
 
         pkg = self.make_package('foo', submodules=submodules_required)
-        with mock.patch('subprocess.run', side_effect=OSError()):
-            self.assertEqual(pkg.get_usage('sub', self.pkgdir), {
-                'name': 'foo', 'type': 'path', 'auto_link': False,
-                'include_path': [], 'library_path': [], 'headers': [],
-                'libraries': ['foo_sub'], 'compile_flags': [],
-                'link_flags': [],
-            })
+        self.check_get_usage(pkg, 'sub', {
+            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
+            'pcfiles': ['foo[sub]'], 'requirements': {
+                'auto_link': False, 'headers': [], 'libraries': ['foo_sub'],
+            },
+        })
+        self.check_pkg_config('foo', ['sub'], {'libs': ['-lfoo_sub']})
 
         pkg = self.make_package('foo', libraries='bar',
                                 submodules=submodules_required)
-        with mock.patch('subprocess.run', side_effect=OSError()):
-            self.assertEqual(pkg.get_usage('sub', self.pkgdir), {
-                'name': 'foo', 'type': 'path', 'auto_link': False,
-                'include_path': [], 'library_path': [], 'headers': [],
-                'libraries': ['bar', 'foo_sub'], 'compile_flags': [],
-                'link_flags': [],
-            })
+        self.check_get_usage(pkg, 'sub', {
+            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
+            'pcfiles': ['foo[sub]'], 'requirements': {
+                'auto_link': False, 'headers': [],
+                'libraries': ['bar', 'foo_sub'],
+            },
+        })
+        self.check_pkg_config('foo', ['sub'], {'libs': ['-lbar', '-lfoo_sub']})
 
         pkg = self.make_package('foo', submodules=submodules_optional)
-        with mock.patch('subprocess.run', side_effect=OSError()):
-            self.assertEqual(pkg.get_usage('sub', self.pkgdir), {
-                'name': 'foo', 'type': 'path', 'auto_link': False,
-                'include_path': [], 'library_path': [], 'headers': [],
-                'libraries': ['foo', 'foo_sub'], 'compile_flags': [],
-                'link_flags': [],
-            })
+        self.check_get_usage(pkg, 'sub', {
+            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
+            'pcfiles': ['foo[sub]'], 'requirements': {
+                'auto_link': False, 'headers': [],
+                'libraries': ['foo', 'foo_sub'],
+            },
+        })
+        self.check_pkg_config('foo', ['sub'], {'libs': ['-lfoo', '-lfoo_sub']})
 
         pkg = self.make_package('foo', libraries='bar',
                                 submodules=submodules_optional)
-        with mock.patch('subprocess.run', side_effect=OSError()):
-            self.assertEqual(pkg.get_usage('sub', self.pkgdir), {
-                'name': 'foo', 'type': 'path', 'auto_link': False,
-                'include_path': [], 'library_path': [], 'headers': [],
-                'libraries': ['bar', 'foo_sub'], 'compile_flags': [],
-                'link_flags': [],
-            })
+        self.check_get_usage(pkg, 'sub', {
+            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
+            'pcfiles': ['foo[sub]'], 'requirements': {
+                'auto_link': False, 'headers': [],
+                'libraries': ['bar', 'foo_sub'],
+            },
+        })
+        self.check_pkg_config('foo', ['sub'], {'libs': ['-lbar', '-lfoo_sub']})
 
     def test_invalid_submodule(self):
         pkg = self.make_package('foo', submodules={

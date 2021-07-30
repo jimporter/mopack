@@ -5,7 +5,7 @@ from enum import Enum
 from .freezedried import FreezeDried
 from .placeholder import PlaceholderString
 
-__all__ = ['Path', 'pushd']
+__all__ = ['file_outdated', 'Path', 'pushd']
 
 
 @contextmanager
@@ -19,6 +19,19 @@ def pushd(dirname, makedirs=False, mode=0o777, exist_ok=False):
         yield
     finally:
         os.chdir(old)
+
+
+def file_outdated(path, compare_path, default=True):
+    try:
+        basetime = os.path.getmtime(compare_path)
+    except FileNotFoundError:
+        return default
+
+    try:
+        filetime = os.path.getmtime(path)
+        return filetime < basetime
+    except FileNotFoundError:
+        return True
 
 
 class Path(FreezeDried):
@@ -110,7 +123,7 @@ class Path(FreezeDried):
             return os.path.abspath(self.path)
         base = kwargs[self.base.name]
         path = os.path.join(base, self.path) if self.path else base
-        return os.path.abspath(path)
+        return path
 
     def __str__(self):
         raise NotImplementedError('{} cannot be converted to str'

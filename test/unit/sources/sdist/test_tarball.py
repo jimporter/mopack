@@ -168,11 +168,14 @@ class TestTarball(SDistTestCase):
             self.assertEqual(pkg.builder, self.make_builder(
                 Bfg9000Builder, 'foo', usage={'type': 'system'}
             ))
-        with mock.patch('subprocess.run', side_effect=OSError()):
+        with mock.patch('subprocess.run', side_effect=OSError()), \
+             mock.patch('os.makedirs'), \
+             mock.patch('builtins.open'):  # noqa
             self.check_resolve(pkg, usage={
-                'name': 'foo', 'type': 'path', 'auto_link': False,
-                'include_path': [], 'library_path': [], 'headers': [],
-                'libraries': ['foo'], 'compile_flags': [], 'link_flags': [],
+                'name': 'foo', 'type': 'system', 'path': self.pkgconfdir(None),
+                'pcfiles': ['foo'], 'requirements': {
+                    'auto_link': False, 'headers': [], 'libraries': ['foo'],
+                },
             })
 
     def test_usage(self):

@@ -5,6 +5,8 @@ from .. import OptionsTest, MockPackage, through_json  # noqa: F401
 
 class UsageTest(OptionsTest):
     pkgdir = os.path.abspath('/path/to/builddir/mopack')
+    srcdir = os.path.abspath('/srcdir')
+    builddir = os.path.abspath('/builddir')
 
     def make_usage(self, *args, common_options=None, deploy_paths=None,
                    submodules=None, _path_bases=('srcdir', 'builddir'),

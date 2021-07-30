@@ -1,11 +1,15 @@
+import os
 import subprocess
+from itertools import chain
 
 from . import submodule_placeholder, Usage
 from .. import types
+from ..commands import Metadata
 from ..environment import get_pkg_config
 from ..freezedried import DictFreezeDryer, FreezeDried, ListFreezeDryer
 from ..package_defaults import DefaultResolver
-from ..path import Path
+from ..path import file_outdated, Path
+from ..pkg_config import generated_pkg_config_dir, write_pkg_config
 from ..placeholder import placeholder, PlaceholderFD
 from ..platforms import package_library_name
 from ..shell import ShellArguments
@@ -150,17 +154,21 @@ class PathUsage(Usage):
             mapping = self.submodule_map['*']
         return mapping.fill(submodule, srcbase, buildbase)
 
-    def _get_libraries(self, libraries):
-        def make_library(lib):
-            if isinstance(lib, dict) and lib.get('type') == 'guess':
-                return package_library_name(
-                    self._common_options.target_platform, lib['name']
-                )
-            return lib
+    def _get_library(self, lib):
+        if isinstance(lib, dict) and lib['type'] == 'guess':
+            return package_library_name(
+                self._common_options.target_platform, lib['name']
+            )
+        return lib
 
-        return [make_library(i) for i in libraries]
+    def _link_library(self, lib):
+        if isinstance(lib, str):
+            return ['-l' + lib]
 
-    def _get_usage(self, pkg, submodules, pkgdir, srcdir, builddir, **kwargs):
+        assert lib['type'] == 'framework'
+        return ['-framework', lib['name']]
+
+    def get_usage(self, pkg, submodules, pkgdir, srcdir, builddir):
         path_vars = {'srcdir': srcdir, 'builddir': builddir}
 
         if submodules and self.submodule_map:
@@ -173,29 +181,44 @@ class PathUsage(Usage):
         else:
             mappings = []
 
-        def chain_mapping(key):
+        def chain_attr(key):
             yield from getattr(self, key)
             for i in mappings:
                 yield from getattr(i, key)
 
-        return self._usage(
-            pkg,
-            auto_link=self.auto_link,
-            include_path=[i.string(**path_vars) for i in
-                          chain_mapping('include_path')],
-            library_path=[i.string(**path_vars) for i in
-                          chain_mapping('library_path')],
-            headers=list(chain_mapping('headers')),
-            libraries=self._get_libraries(chain_mapping('libraries')),
-            compile_flags=(ShellArguments(chain_mapping('compile_flags'))
-                           .fill(**path_vars)),
-            link_flags=(ShellArguments(chain_mapping('link_flags'))
-                        .fill(**path_vars)),
-            **kwargs
+        pkgconfdir = generated_pkg_config_dir(pkgdir)
+        pcname = ('{}[{}]'.format(pkg.name, ','.join(submodules))
+                  if submodules else pkg.name)
+        pcpath = os.path.join(pkgconfdir, pcname + '.pc')
+
+        libraries = [self._get_library(i) for i in chain_attr('libraries')]
+        cflags = (
+            [('-I', i) for i in chain_attr('include_path')] +
+            ShellArguments(chain_attr('compile_flags'))
+        )
+        libs = (
+            [('-L', i) for i in chain_attr('library_path')] +
+            ShellArguments(chain_attr('link_flags')) +
+            chain.from_iterable(self._link_library(i) for i in libraries)
         )
 
-    def get_usage(self, pkg, submodules, pkgdir, srcdir, builddir):
-        return self._get_usage(pkg, submodules, pkgdir, srcdir, builddir)
+        metadata_path = os.path.join(pkgdir, Metadata.metadata_filename)
+        if file_outdated(pcpath, metadata_path):
+            os.makedirs(pkgconfdir, exist_ok=True)
+            with open(pcpath, 'w') as f:
+                # XXX: It would be nice to write one pkg-config .pc file per
+                # submodule instead of writing a single file for all the
+                # requested submodules.
+                write_pkg_config(f, pcname, cflags=cflags, libs=libs,
+                                 variables=path_vars)
+
+        return self._usage(
+            pkg, path=pkgconfdir, pcfiles=[pcname], requirements={
+                'auto_link': self.auto_link,
+                'headers': list(chain_attr('headers')),
+                'libraries': [i for i in libraries if isinstance(i, str)],
+            }
+        )
 
 
 class SystemUsage(PathUsage):
@@ -211,8 +234,7 @@ class SystemUsage(PathUsage):
             subprocess.run(pkg_config + [self.pcfile], check=True,
                            stdout=subprocess.DEVNULL,
                            stderr=subprocess.DEVNULL)
-            return self._usage(pkg, type='pkg_config', path=None,
-                               pcfiles=[self.pcfile], extra_args=[])
+            return self._usage(pkg, path=None, pcfiles=[self.pcfile],
+                               extra_args=[])
         except (OSError, subprocess.CalledProcessError):
-            return self._get_usage(pkg, submodules, pkgdir, srcdir, builddir,
-                                   type='path')
+            return super().get_usage(pkg, submodules, pkgdir, srcdir, builddir)

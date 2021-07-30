@@ -18,7 +18,10 @@ class TestMakePackage(SourceTest):
     pkgdir = os.path.abspath('/path/to/builddir/mopack')
 
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
-        return os.path.join(self.pkgdir, 'build', name, pkgconfig)
+        if name is None:
+            return os.path.join(self.pkgdir, pkgconfig)
+        else:
+            return os.path.join(self.pkgdir, 'build', name, pkgconfig)
 
     def test_make(self):
         pkg = make_package('foo', {
@@ -72,12 +75,17 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.submodules, {'names': '*', 'required': True})
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
-        with mock.patch('subprocess.run', side_effect=OSError()):
+        with mock.patch('subprocess.run', side_effect=OSError()), \
+             mock.patch('mopack.usage.path_system.file_outdated',
+                        return_value=True), \
+             mock.patch('os.makedirs'), \
+             mock.patch('builtins.open'):  # noqa
             self.assertEqual(pkg.get_usage(['sub'], self.pkgdir), {
-                'name': 'foo', 'type': 'path', 'auto_link': False,
-                'include_path': [], 'library_path': [], 'headers': [],
-                'libraries': ['foo_sub'], 'compile_flags': [],
-                'link_flags': [],
+                'name': 'foo', 'type': 'system', 'path': self.pkgconfdir(None),
+                'pcfiles': ['foo[sub]'], 'requirements': {
+                    'auto_link': False, 'headers': [],
+                    'libraries': ['foo_sub'],
+                },
             })
         with self.assertRaises(ValueError):
             pkg.get_usage(None, self.pkgdir)
@@ -91,12 +99,17 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.submodules, {'names': ['sub'], 'required': True})
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
-        with mock.patch('subprocess.run', side_effect=OSError()):
+        with mock.patch('subprocess.run', side_effect=OSError()), \
+             mock.patch('os.makedirs'), \
+             mock.patch('mopack.usage.path_system.file_outdated',
+                        return_value=True), \
+             mock.patch('builtins.open'):  # noqa
             self.assertEqual(pkg.get_usage(['sub'], self.pkgdir), {
-                'name': 'foo', 'type': 'path', 'auto_link': False,
-                'include_path': [], 'library_path': [], 'headers': [],
-                'libraries': ['foo_sub'], 'compile_flags': [],
-                'link_flags': [],
+                'name': 'foo', 'type': 'system', 'path': self.pkgconfdir(None),
+                'pcfiles': ['foo[sub]'], 'requirements': {
+                    'auto_link': False, 'headers': [],
+                    'libraries': ['foo_sub'],
+                },
             })
         with self.assertRaises(ValueError):
             pkg.get_usage(['bar'], self.pkgdir)
@@ -113,18 +126,29 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.submodules, {'names': ['sub'], 'required': False})
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
-        with mock.patch('subprocess.run', side_effect=OSError()):
+        with mock.patch('subprocess.run', side_effect=OSError()), \
+             mock.patch('os.makedirs'), \
+             mock.patch('mopack.usage.path_system.file_outdated',
+                        return_value=True), \
+             mock.patch('builtins.open'):  # noqa
             self.assertEqual(pkg.get_usage(['sub'], self.pkgdir), {
-                'name': 'foo', 'type': 'path', 'auto_link': False,
-                'include_path': [], 'library_path': [], 'headers': [],
-                'libraries': ['foo', 'foo_sub'], 'compile_flags': [],
-                'link_flags': [],
+                'name': 'foo', 'type': 'system', 'path': self.pkgconfdir(None),
+                'pcfiles': ['foo[sub]'], 'requirements': {
+                    'auto_link': False, 'headers': [],
+                    'libraries': ['foo', 'foo_sub'],
+                },
             })
-        with mock.patch('subprocess.run', side_effect=OSError()):
+        with mock.patch('subprocess.run', side_effect=OSError()), \
+             mock.patch('os.makedirs'), \
+             mock.patch('mopack.usage.path_system.file_outdated',
+                        return_value=True), \
+             mock.patch('builtins.open'):  # noqa
             self.assertEqual(pkg.get_usage(None, self.pkgdir), {
-                'name': 'foo', 'type': 'path', 'auto_link': False,
-                'include_path': [], 'library_path': [], 'headers': [],
-                'libraries': ['foo'], 'compile_flags': [], 'link_flags': [],
+                'name': 'foo', 'type': 'system', 'path': self.pkgconfdir(None),
+                'pcfiles': ['foo'], 'requirements': {
+                    'auto_link': False, 'headers': [],
+                    'libraries': ['foo'],
+                },
             })
         with self.assertRaises(ValueError):
             pkg.get_usage(['bar'], self.pkgdir)
