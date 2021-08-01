@@ -34,6 +34,10 @@ def file_outdated(path, compare_path, default=True):
         return True
 
 
+def exists(path, variables={}):
+    return os.path.exists(path.string(**variables))
+
+
 class Path(FreezeDried):
     class Base(Enum):
         absolute = 0
@@ -56,7 +60,8 @@ class Path(FreezeDried):
             filter_bases = {cls.ensure_base(i) for i in filter_bases}
             return [i for i in bases if i in filter_bases]
 
-    def __init__(self, base, path):
+    def __init__(self, path, base=Base.absolute):
+        base = self.Base.ensure_base(base)
         if not isinstance(path, str):
             raise TypeError('expected a string')
         self.path = os.path.normpath(path)
@@ -65,13 +70,11 @@ class Path(FreezeDried):
 
         if os.path.isabs(self.path):
             self.base = self.Base.absolute
-        elif base == self.Base.absolute:
-            raise ValueError('base is absolute, but path is relative')
         elif ( hasattr(os.path, 'splitdrive') and
                os.path.splitdrive(self.path)[0] ):
             raise ValueError('relative paths with drives not supported')
-        elif base is None:
-            raise ValueError('absolute path required')
+        elif base == self.Base.absolute:
+            raise ValueError('base is absolute, but path is relative')
         else:
             self.base = self.Base.ensure_base(base)
 
@@ -82,10 +85,10 @@ class Path(FreezeDried):
     def rehydrate(cls, config, **kwargs):
         if not isinstance(config, dict):
             raise TypeError('expected a dict')
-        return cls(cls.Base[config['base']], config['path'])
+        return cls(config['path'], cls.Base[config['base']])
 
     @classmethod
-    def ensure_path(cls, path, base):
+    def ensure_path(cls, path, base=Base.absolute):
         if isinstance(path, PlaceholderString):
             bits = path.unbox()
             types = [type(i) for i in bits]
@@ -93,18 +96,18 @@ class Path(FreezeDried):
                 path = bits[0]
             elif types == [Path, str]:
                 if bits[0].path:
-                    path = Path(bits[0].base, bits[0].path + bits[1])
+                    path = Path(bits[0].path + bits[1], bits[0].base)
                 else:
                     suffix = os.path.normpath(bits[1])
                     if suffix and suffix[0] != os.path.sep:
                         raise ValueError('expected a directory separator')
-                    path = Path(bits[0].base, suffix[1:])
+                    path = Path(suffix[1:], bits[0].base)
             else:
                 raise ValueError('invalid placeholder format')
 
         if isinstance(path, Path):
             return path
-        return cls(base, path)
+        return cls(path, base)
 
     def is_abs(self):
         return self.base == self.Base.absolute
@@ -112,6 +115,12 @@ class Path(FreezeDried):
     def is_inner(self):
         return (self.path != os.path.pardir and
                 not self.path.startswith(os.path.pardir + os.path.sep))
+
+    def append(self, path):
+        return Path(os.path.join(self.path, path), self.base)
+
+    def __hash__(self):
+        return hash(self.path)
 
     def __eq__(self, rhs):
         if not isinstance(rhs, Path):

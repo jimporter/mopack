@@ -433,11 +433,11 @@ class TestPathString(TypeTestCase):
 class TestAbsOrInnerPath(TypeTestCase):
     def test_inner(self):
         fn = abs_or_inner_path('cfgdir')
-        self.assertEqual(fn('field', 'path'), Path('cfgdir', 'path'))
-        self.assertEqual(fn('field', 'path/..'), Path('cfgdir', '.'))
-        self.assertEqual(fn('field', 'foo/../bar'), Path('cfgdir', 'bar'))
-        self.assertEqual(fn('field', Path('cfgdir', 'path')),
-                         Path('cfgdir', 'path'))
+        self.assertEqual(fn('field', 'path'), Path('path', 'cfgdir'))
+        self.assertEqual(fn('field', 'path/..'), Path('.', 'cfgdir'))
+        self.assertEqual(fn('field', 'foo/../bar'), Path('bar', 'cfgdir'))
+        self.assertEqual(fn('field', Path('path', 'cfgdir')),
+                         Path('path', 'cfgdir'))
 
     def test_outer(self):
         with self.assertFieldError(('field',)):
@@ -447,25 +447,23 @@ class TestAbsOrInnerPath(TypeTestCase):
 
     def test_other_base(self):
         self.assertEqual(
-            abs_or_inner_path('cfgdir')('field', Path('srcdir', 'path')),
-            Path('srcdir', 'path')
+            abs_or_inner_path('cfgdir')('field', Path('path', 'srcdir')),
+            Path('path', 'srcdir')
         )
 
     def test_absolute_posix(self):
         with mock.patch('os.path', posixpath):
             for i in ('cfgdir', None):
                 self.assertEqual(abs_or_inner_path(i)('field', '/path'),
-                                 Path('absolute', '/path'))
+                                 Path('/path'))
 
     def test_absolute_nt(self):
         fn = abs_or_inner_path('cfgdir')
         with mock.patch('os.path', ntpath):
             for i in ('cfgdir', None):
                 fn = abs_or_inner_path('cfgdir')
-                self.assertEqual(fn('field', '/path'),
-                                 Path('absolute', '\\path'))
-                self.assertEqual(fn('field', 'C:\\path'),
-                                 Path('absolute', 'C:\\path'))
+                self.assertEqual(fn('field', '/path'), Path('\\path'))
+                self.assertEqual(fn('field', 'C:\\path'), Path('C:\\path'))
                 with self.assertFieldError(('field',)):
                     fn('field', 'C:')
                 with self.assertFieldError(('field',)):
@@ -475,26 +473,23 @@ class TestAbsOrInnerPath(TypeTestCase):
 class TestAnyPath(TypeTestCase):
     def test_relative(self):
         fn = any_path('cfgdir')
-        self.assertEqual(fn('field', 'path'), Path('cfgdir', 'path'))
+        self.assertEqual(fn('field', 'path'), Path('path', 'cfgdir'))
         self.assertEqual(fn('field', '../path'),
-                         Path('cfgdir', os.path.join('..', 'path')))
-        self.assertEqual(fn('field', 'foo/../bar'), Path('cfgdir', 'bar'))
-        self.assertEqual(fn('field', Path('cfgdir', 'path')),
-                         Path('cfgdir', 'path'))
+                         Path(os.path.join('..', 'path'), 'cfgdir'))
+        self.assertEqual(fn('field', 'foo/../bar'), Path('bar', 'cfgdir'))
+        self.assertEqual(fn('field', Path('path', 'cfgdir')),
+                         Path('path', 'cfgdir'))
 
     def test_absolute(self):
         for i in ('cfgdir', None):
             fn = any_path('cfgdir')
-            self.assertEqual(fn('field', '/path'),
-                             Path('absolute', os.sep + 'path'))
-            self.assertEqual(fn('field', '/path'),
-                             Path('absolute', os.sep + 'path'))
-            self.assertEqual(fn('field', Path('absolute', '/path')),
-                             Path('absolute', '/path'))
+            self.assertEqual(fn('field', '/path'), Path(os.sep + 'path'))
+            self.assertEqual(fn('field', '/path'), Path(os.sep + 'path'))
+            self.assertEqual(fn('field', Path('/path')), Path('/path'))
 
     def test_other_base(self):
-        self.assertEqual(any_path('cfgdir')('field', Path('srcdir', 'path')),
-                         Path('srcdir', 'path'))
+        self.assertEqual(any_path('cfgdir')('field', Path('path', 'srcdir')),
+                         Path('path', 'srcdir'))
 
 
 class TestSshPath(TypeTestCase):
@@ -566,7 +561,7 @@ class TestShellArgs(TypeTestCase):
         self.assertShellArgs('foo\\ bar', ['foo bar'], escapes=True)
 
     def test_placeholder_string(self):
-        srcdir = Path('srcdir', '')
+        srcdir = Path('', 'srcdir')
         srcdir_ph = placeholder(srcdir)
 
         self.assertShellArgs(srcdir_ph, [srcdir])
@@ -578,7 +573,7 @@ class TestShellArgs(TypeTestCase):
                              [(srcdir, '/ foo')])
 
     def test_placeholder_list(self):
-        srcdir = Path('srcdir', '')
+        srcdir = Path('', 'srcdir')
         srcdir_ph = placeholder(srcdir)
 
         self.assertShellArgs([srcdir_ph], [srcdir])

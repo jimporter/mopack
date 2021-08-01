@@ -39,8 +39,8 @@ class CommonOptions(FreezeDried, BaseOptions):
     @property
     @memoize_method
     def expr_symbols(self):
-        deploy_vars = {k: placeholder(Path('absolute', v))
-                       for k, v in self.deploy_paths.items()}
+        deploy_vars = {k: placeholder(Path(v)) for k, v in
+                       self.deploy_paths.items()}
 
         return dict(
             host_platform=platform_name(),

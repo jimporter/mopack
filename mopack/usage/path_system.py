@@ -29,8 +29,8 @@ def _library(field, value):
         return value
 
 
-def _list_of_paths(*bases):
-    return types.list_of(types.abs_or_inner_path(*bases), listify=True)
+def _list_of_paths(base):
+    return types.list_of(types.abs_or_inner_path(base), listify=True)
 
 
 _list_of_headers = types.list_of(types.string, listify=True)

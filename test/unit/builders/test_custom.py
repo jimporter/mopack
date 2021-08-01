@@ -87,8 +87,8 @@ class TestCustomBuilder(BuilderTest):
         ], usage='pkg_config')
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.build_commands, [
-            ShellArguments(['configure', (Path('srcdir', ''), '/build')]),
-            ShellArguments(['make', '-C', Path('builddir', '')]),
+            ShellArguments(['configure', (Path('', 'srcdir'), '/build')]),
+            ShellArguments(['make', '-C', Path('', 'builddir')]),
         ])
         self.assertEqual(builder.deploy_commands, [])
         self.assertEqual(builder.usage, PkgConfigUsage(
@@ -141,8 +141,8 @@ class TestCustomBuilder(BuilderTest):
         ], usage='pkg_config')
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.build_commands, [
-            ShellArguments(['configure', (Path('srcdir', ''), '/build')]),
-            ShellArguments(['cd', Path('builddir', '')]),
+            ShellArguments(['configure', (Path('', 'srcdir'), '/build')]),
+            ShellArguments(['cd', Path('', 'builddir')]),
             ShellArguments(['make']),
         ])
         self.assertEqual(builder.usage, PkgConfigUsage(

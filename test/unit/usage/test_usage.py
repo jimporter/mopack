@@ -14,14 +14,14 @@ class TestMakeUsage(UsageTest):
                            submodules=None, _options=self.make_options(),
                            _path_bases=self.path_bases)
         self.assertIsInstance(usage, PkgConfigUsage)
-        self.assertEqual(usage.path, Path('builddir', 'path'))
+        self.assertEqual(usage.path, Path('path', 'builddir'))
 
     def test_make_string(self):
         usage = make_usage('pkg', 'pkg_config', submodules=None,
                            _options=self.make_options(),
                            _path_bases=self.path_bases)
         self.assertIsInstance(usage, PkgConfigUsage)
-        self.assertEqual(usage.path, Path('builddir', 'pkgconfig'))
+        self.assertEqual(usage.path, Path('pkgconfig', 'builddir'))
 
     def test_unknown_usage(self):
         with self.assertRaises(FieldError):

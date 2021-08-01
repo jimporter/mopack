@@ -56,61 +56,61 @@ class TestFileOutdated(TestCase):
 
 class TestPath(TestCase):
     def test_construct(self):
-        p = Path(Path.Base.cfgdir, 'foo')
+        p = Path('foo', Path.Base.cfgdir)
         self.assertEqual(p.base, Path.Base.cfgdir)
         self.assertEqual(p.path, 'foo')
         self.assertEqual(p.is_abs(), False)
         self.assertEqual(p.is_inner(), True)
 
-        p = Path('cfgdir', 'foo')
+        p = Path('foo', 'cfgdir')
         self.assertEqual(p.base, Path.Base.cfgdir)
         self.assertEqual(p.path, 'foo')
         self.assertEqual(p.is_abs(), False)
         self.assertEqual(p.is_inner(), True)
 
-        p = Path(Path.Base.cfgdir, 'foo/bar')
+        p = Path('foo/bar', Path.Base.cfgdir)
         self.assertEqual(p.base, Path.Base.cfgdir)
         self.assertEqual(p.path, os.path.join('foo', 'bar'))
         self.assertEqual(p.is_abs(), False)
         self.assertEqual(p.is_inner(), True)
 
-        p = Path(Path.Base.cfgdir, '../bar')
+        p = Path('../bar', Path.Base.cfgdir)
         self.assertEqual(p.base, Path.Base.cfgdir)
         self.assertEqual(p.path, os.path.join('..', 'bar'))
         self.assertEqual(p.is_abs(), False)
         self.assertEqual(p.is_inner(), False)
 
-        p = Path(Path.Base.cfgdir, 'foo/bar/../baz')
+        p = Path('foo/bar/../baz', Path.Base.cfgdir)
         self.assertEqual(p.base, Path.Base.cfgdir)
         self.assertEqual(p.path, os.path.join('foo', 'baz'))
         self.assertEqual(p.is_abs(), False)
         self.assertEqual(p.is_inner(), True)
 
-        p = Path(Path.Base.cfgdir, '/foo')
+        p = Path('/foo', Path.Base.cfgdir)
         self.assertEqual(p.base, Path.Base.absolute)
         self.assertEqual(p.path, os.sep + 'foo')
         self.assertEqual(p.is_abs(), True)
         self.assertEqual(p.is_inner(), True)
 
-        p = Path(Path.Base.absolute, '/foo')
+        p = Path('/foo', Path.Base.absolute)
         self.assertEqual(p.base, Path.Base.absolute)
         self.assertEqual(p.path, os.sep + 'foo')
         self.assertEqual(p.is_abs(), True)
         self.assertEqual(p.is_inner(), True)
 
-        p = Path(None, '/foo')
+        p = Path('/foo')
         self.assertEqual(p.base, Path.Base.absolute)
         self.assertEqual(p.path, os.sep + 'foo')
         self.assertEqual(p.is_abs(), True)
         self.assertEqual(p.is_inner(), True)
 
-        p = Path(Path.Base.cfgdir, '.')
+        p = Path('.', Path.Base.cfgdir)
         self.assertEqual(p.base, Path.Base.cfgdir)
         self.assertEqual(p.path, '')
         self.assertEqual(p.is_abs(), False)
         self.assertEqual(p.is_inner(), True)
 
-        p = Path(Path.Base.cfgdir, '')
+        p = Path('', Path.Base.cfgdir)
         self.assertEqual(p.base, Path.Base.cfgdir)
         self.assertEqual(p.path, '')
         self.assertEqual(p.is_abs(), False)
@@ -118,42 +118,40 @@ class TestPath(TestCase):
 
     def test_construct_invalid(self):
         with self.assertRaises(TypeError):
-            Path(Path.Base.cfgdir, 1)
+            Path(1, Path.Base.cfgdir)
         with self.assertRaises(TypeError):
-            Path('goofy', 'foo')
+            Path('foo', 'goofy')
         with self.assertRaises(ValueError):
-            Path(Path.Base.absolute, 'foo')
-        with self.assertRaises(ValueError):
-            Path(None, 'foo')
+            Path('foo', Path.Base.absolute)
 
         with mock.patch('os.path', ntpath), \
              self.assertRaises(ValueError):  # noqa
-            Path(Path.Base.cfgdir, 'C:foo')
+            Path('C:foo', Path.Base.cfgdir)
 
     def test_ensure_path(self):
         self.assertEqual(Path.ensure_path('foo', Path.Base.srcdir),
-                         Path(Path.Base.srcdir, 'foo'))
-        self.assertEqual(Path.ensure_path(Path(Path.Base.srcdir, 'foo'),
+                         Path('foo', Path.Base.srcdir))
+        self.assertEqual(Path.ensure_path(Path('foo', Path.Base.srcdir),
                                           Path.Base.srcdir),
-                         Path(Path.Base.srcdir, 'foo'))
-        self.assertEqual(Path.ensure_path(Path(Path.Base.srcdir, 'foo'),
+                         Path('foo', Path.Base.srcdir))
+        self.assertEqual(Path.ensure_path(Path('foo', Path.Base.srcdir),
                                           Path.Base.builddir),
-                         Path(Path.Base.srcdir, 'foo'))
+                         Path('foo', Path.Base.srcdir))
 
     def test_ensure_path_placeholder(self):
-        srcdir = placeholder(Path(Path.Base.srcdir, ''))
+        srcdir = placeholder(Path('', Path.Base.srcdir))
         self.assertEqual(Path.ensure_path(srcdir, Path.Base.srcdir),
-                         Path(Path.Base.srcdir, ''))
+                         Path('', Path.Base.srcdir))
         self.assertEqual(Path.ensure_path(srcdir + '/foo', Path.Base.srcdir),
-                         Path(Path.Base.srcdir, 'foo'))
+                         Path('foo', Path.Base.srcdir))
 
-        subsrc = placeholder(Path(Path.Base.srcdir, 'subdir'))
+        subsrc = placeholder(Path('subdir', Path.Base.srcdir))
         self.assertEqual(Path.ensure_path(subsrc, Path.Base.srcdir),
-                         Path(Path.Base.srcdir, 'subdir'))
+                         Path('subdir', Path.Base.srcdir))
         self.assertEqual(Path.ensure_path(subsrc + '/foo', Path.Base.srcdir),
-                         Path(Path.Base.srcdir, 'subdir/foo'))
+                         Path('subdir/foo', Path.Base.srcdir))
         self.assertEqual(Path.ensure_path(subsrc + 'foo', Path.Base.srcdir),
-                         Path(Path.Base.srcdir, 'subdirfoo'))
+                         Path('subdirfoo', Path.Base.srcdir))
 
         with self.assertRaises(ValueError):
             Path.ensure_path(srcdir + 'foo', Path.Base.srcdir)
@@ -170,18 +168,31 @@ class TestPath(TestCase):
         self.assertEqual(Path.Base.filter(bases, {'cfgdir', 'srcdir'}),
                          [Path.Base.srcdir])
 
+    def test_append(self):
+        p = Path('foo', Path.Base.srcdir)
+        self.assertEqual(p.append('bar'), Path('foo/bar', Path.Base.srcdir))
+        self.assertEqual(p.append('../bar'), Path('bar', Path.Base.srcdir))
+        self.assertEqual(p.append('..'), Path('', Path.Base.srcdir))
+        self.assertEqual(p.append('/bar'), Path('/bar', Path.Base.absolute))
+
+    def test_hash(self):
+        d = {Path('.', Path.Base.srcdir),
+             Path('.', Path.Base.builddir),
+             Path('foo', Path.Base.srcdir)}
+        self.assertEqual(len(d), 3)
+
     def test_string(self):
-        p = Path(Path.Base.srcdir, 'foo')
+        p = Path('foo', Path.Base.srcdir)
         self.assertEqual(p.string(srcdir=('${srcdir}')),
                          os.path.join('${srcdir}', 'foo'))
         self.assertEqual(p.string(srcdir=os.path.abspath('/srcdir')),
                          os.path.abspath(os.path.join('/srcdir', 'foo')))
 
-        p = Path(Path.Base.absolute, '/foo')
+        p = Path('/foo')
         self.assertEqual(p.string(), os.path.abspath('/foo'))
 
     def test_rehydrate(self):
-        p = Path(Path.Base.srcdir, 'foo')
+        p = Path('foo', Path.Base.srcdir)
         data = p.dehydrate()
         self.assertEqual(p, Path.rehydrate(data))
 

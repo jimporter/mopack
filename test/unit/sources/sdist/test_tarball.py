@@ -49,7 +49,7 @@ class TestTarball(SDistTestCase):
     def test_path(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000')
         self.assertEqual(pkg.url, None)
-        self.assertEqual(pkg.path, Path('absolute', self.srcpath))
+        self.assertEqual(pkg.path, Path(self.srcpath))
         self.assertEqual(pkg.patch, None)
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
         self.assertEqual(pkg.needs_dependencies, True)
@@ -62,7 +62,7 @@ class TestTarball(SDistTestCase):
         srcpath = os.path.join(test_data_dir, 'hello-bfg.zip')
         pkg = self.make_package('foo', build='bfg9000', path=srcpath)
         self.assertEqual(pkg.url, None)
-        self.assertEqual(pkg.path, Path('absolute', srcpath))
+        self.assertEqual(pkg.path, Path(srcpath))
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
@@ -104,7 +104,7 @@ class TestTarball(SDistTestCase):
         patch = os.path.join(test_data_dir, 'hello-bfg.patch')
         pkg = self.make_package('foo', path=self.srcpath, patch=patch,
                                 build='bfg9000')
-        self.assertEqual(pkg.patch, Path('absolute', patch))
+        self.assertEqual(pkg.patch, Path(patch))
 
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
         with mock.patch('mopack.sources.sdist.urlopen', self.mock_urlopen), \
@@ -128,7 +128,7 @@ class TestTarball(SDistTestCase):
         build = {'type': 'bfg9000', 'extra_args': '--extra'}
         pkg = self.make_package('foo', path=self.srcpath, build=build,
                                 usage='pkg_config')
-        self.assertEqual(pkg.path, Path('absolute', self.srcpath))
+        self.assertEqual(pkg.path, Path(self.srcpath))
         self.assertEqual(pkg.builder, self.make_builder(
             Bfg9000Builder, 'foo', extra_args='--extra'
         ))
@@ -181,7 +181,7 @@ class TestTarball(SDistTestCase):
     def test_usage(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 usage='pkg_config')
-        self.assertEqual(pkg.path, Path('absolute', self.srcpath))
+        self.assertEqual(pkg.path, Path(self.srcpath))
         self.assertEqual(pkg.builder, self.make_builder(
             Bfg9000Builder, 'foo', usage='pkg_config'
         ))
@@ -192,7 +192,7 @@ class TestTarball(SDistTestCase):
         usage = {'type': 'pkg_config', 'path': 'pkgconf'}
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 usage=usage)
-        self.assertEqual(pkg.path, Path('absolute', self.srcpath))
+        self.assertEqual(pkg.path, Path(self.srcpath))
         self.assertEqual(pkg.builder, self.make_builder(
             Bfg9000Builder, 'foo', usage=usage
         ))

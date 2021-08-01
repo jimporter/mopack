@@ -33,7 +33,7 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.submodules, None)
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
-        self.assertEqual(pkg.path, Path('absolute', '/path'))
+        self.assertEqual(pkg.path, Path('/path'))
         self.assertEqual(pkg.builder.type, 'bfg9000')
 
         self.assertEqual(pkg.get_usage(None, self.pkgdir), {
@@ -54,7 +54,7 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.submodules, None)
         self.assertEqual(pkg.should_deploy, False)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
-        self.assertEqual(pkg.path, Path('absolute', '/path'))
+        self.assertEqual(pkg.path, Path('/path'))
         self.assertEqual(pkg.builder.type, 'bfg9000')
 
         self.assertEqual(pkg.get_usage(None, self.pkgdir), {

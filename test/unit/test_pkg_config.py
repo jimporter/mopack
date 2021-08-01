@@ -35,8 +35,8 @@ class TestWritePkgConfig(TestCase):
         out = StringIO()
         write_pkg_config(
             out, 'mypackage', desc='my package', version='1.0',
-            cflags=ShellArguments([('-I', Path('srcdir', 'foo'))]),
-            libs=ShellArguments([('-L', Path('builddir', '')), '-lbar']),
+            cflags=ShellArguments([('-I', Path('foo', 'srcdir'))]),
+            libs=ShellArguments([('-L', Path('', 'builddir')), '-lbar']),
             variables={'srcdir': '/srcdir', 'builddir': '/builddir'}
         )
         self.assertRegex(

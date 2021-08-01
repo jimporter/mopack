@@ -16,15 +16,15 @@ from mopack.usage.path_system import PathUsage, SystemUsage
 
 
 def abspathobj(p):
-    return Path('absolute', p)
+    return Path(p, 'absolute')
 
 
 def srcpathobj(p):
-    return Path('srcdir', p)
+    return Path(p, 'srcdir')
 
 
 def buildpathobj(p):
-    return Path('builddir', p)
+    return Path(p, 'builddir')
 
 
 def boost_getdir(name, default, options):

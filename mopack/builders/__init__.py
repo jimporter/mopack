@@ -34,7 +34,7 @@ class Builder(OptionsHolder):
 
     @property
     def _expr_symbols(self):
-        path_vars = {i: placeholder(Path(i, '')) for i in self._path_bases}
+        path_vars = {i: placeholder(Path('', i)) for i in self._path_bases}
         return dict(**self._options.expr_symbols, **path_vars)
 
     def clean(self, pkgdir):

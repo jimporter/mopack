@@ -29,7 +29,7 @@ class Usage(OptionsHolder):
         super().__init__(_options)
 
     def _expr_symbols(self, path_bases):
-        path_vars = {i: placeholder(Path(i, '')) for i in path_bases}
+        path_vars = {i: placeholder(Path('', i)) for i in path_bases}
         return dict(**self._options.expr_symbols, **path_vars)
 
     def _preferred_base(self, preferred, path_bases):

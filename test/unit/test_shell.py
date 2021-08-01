@@ -5,7 +5,7 @@ from mopack.path import Path
 from mopack.placeholder import placeholder
 from mopack.shell import *
 
-srcdir = Path('srcdir', '')
+srcdir = Path('', 'srcdir')
 srcdir_ph = placeholder(srcdir)
 
 

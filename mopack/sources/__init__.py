@@ -66,7 +66,7 @@ class Package(OptionsHolder):
     @property
     def _expr_symbols(self):
         return dict(**self._options.expr_symbols,
-                    cfgdir=placeholder(Path('cfgdir', '')))
+                    cfgdir=placeholder(Path('', 'cfgdir')))
 
     def _check_submodules(self, wanted_submodules):
         if self.submodules:
