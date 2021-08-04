@@ -69,8 +69,14 @@ def resolve(parser, subparser, args):
 
 def usage(parser, subparser, args):
     directory = os.environ.get(nested_invoke, args.directory)
-    usage = commands.usage(commands.get_package_dir(directory),
-                           args.package, args.submodules, args.strict)
+    try:
+        usage = commands.usage(commands.get_package_dir(directory),
+                               args.package, args.submodules, args.strict)
+    except Exception as e:
+        if not args.json:
+            raise
+        print(json.dumps({'error': str(e)}))
+        return 1
 
     if args.json:
         print(json.dumps(usage))

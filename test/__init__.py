@@ -5,12 +5,12 @@ import subprocess
 from mopack.shell import split_posix_str
 
 
-__all__ = ['AlwaysEqual', 'call_pkg_config', 'this_dir', 'test_data_dir',
+__all__ = ['AlwaysEqual', 'call_pkg_config', 'test_dir', 'test_data_dir',
            'test_stage_dir']
 
-this_dir = os.path.abspath(os.path.dirname(__file__))
-test_data_dir = os.path.join(this_dir, 'data')
-test_stage_dir = os.path.join(this_dir, 'stage')
+test_dir = os.path.abspath(os.path.dirname(__file__))
+test_data_dir = os.path.join(test_dir, 'data')
+test_stage_dir = os.path.join(test_dir, 'stage')
 
 # Clear the stage directory for this test run.
 if os.path.exists(test_stage_dir):

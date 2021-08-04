@@ -1,3 +1,4 @@
+import os
 import re
 from collections.abc import MutableSequence
 from enum import Enum
@@ -18,6 +19,16 @@ _bad_posix_chars = re.compile(r'[^\w@%+=:,./-]')
 # XXX: We need a way to escape cmd.exe-specific characters.
 _bad_windows_chars = re.compile(r'(\s|["&<>|]|\\$)')
 _windows_replace = re.compile(r'(\\*)("|$)')
+
+
+def split_paths(s, sep=os.pathsep):
+    if s is None:
+        return []
+    return [i for i in s.split(sep) if i]
+
+
+def join_paths(paths, sep=os.pathsep):
+    return sep.join(paths)
 
 
 def quote_posix(s, force=False):

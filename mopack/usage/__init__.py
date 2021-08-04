@@ -40,10 +40,8 @@ class Usage(OptionsHolder):
         else:
             return None
 
-    def _usage(self, pkg, *, type=None, **kwargs):
-        if type is None:
-            type = self.type
-        return dict(name=pkg.name, type=type, **kwargs)
+    def _usage(self, pkg, **kwargs):
+        return dict(name=pkg.name, type=self.type, **kwargs)
 
     def __repr__(self):
         return '<{}, {}>'.format(type(self).__name__, self.__dict__)

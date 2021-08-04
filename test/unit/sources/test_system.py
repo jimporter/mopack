@@ -1,11 +1,13 @@
 import os
 import shutil
+from os.path import abspath
 from unittest import mock
 
 from . import SourceTest
 from ... import call_pkg_config, test_stage_dir
 
 from mopack.iterutils import iterate
+from mopack.path import Path
 from mopack.sources import Package
 from mopack.sources.apt import AptPackage
 from mopack.sources.system import SystemPackage
@@ -13,7 +15,7 @@ from mopack.sources.system import SystemPackage
 
 class TestSystemPackage(SourceTest):
     pkg_type = SystemPackage
-    config_file = os.path.abspath('/path/to/mopack.yml')
+    config_file = abspath('/path/to/mopack.yml')
     pkgdir = os.path.join(test_stage_dir, 'sources')
     pkgconfdir = os.path.join(pkgdir, 'pkgconfig')
 
@@ -26,21 +28,30 @@ class TestSystemPackage(SourceTest):
 
     def check_get_usage(self, pkg, submodules, expected=None, *,
                         find_pkg_config=False):
+        def mock_exists(p, variables={}):
+            p = os.path.normcase(p.string(**variables))
+            return p.startswith(os.path.normcase(abspath('/mock')) + os.sep)
+
         pcname = ('{}[{}]'.format(pkg.name, ','.join(iterate(submodules)))
                   if submodules else pkg.name)
         if expected is None:
-            expected = {
-                'name': pkg.name, 'type': 'system', 'path': self.pkgconfdir,
-                'pcfiles': [pcname], 'requirements': {
-                    'auto_link': False, 'headers': [], 'libraries': [pkg.name],
-                },
-            }
+            expected = {'name': pkg.name, 'type': 'system',
+                        'path': self.pkgconfdir, 'pcfiles': [pcname],
+                        'auto_link': False}
 
         self.clear_pkgdir()
         side_effect = None if find_pkg_config else OSError()
         with mock.patch('subprocess.run', side_effect=side_effect), \
              mock.patch('mopack.usage.path_system.file_outdated',
-                        return_value=True):  # noqa
+                        return_value=True), \
+             mock.patch('mopack.usage.path_system._system_include_path',
+                        return_value=[Path('/mock/include')]), \
+             mock.patch('mopack.usage.path_system._system_lib_path',
+                        return_value=[Path('/mock/lib')]), \
+             mock.patch('mopack.usage.path_system._system_lib_names',
+                        return_value=['lib{}.so']), \
+             mock.patch('mopack.usage.path_system.exists',
+                        mock_exists):  # noqa
             self.assertEqual(pkg.get_usage(submodules, self.pkgdir), expected)
 
     def check_pkg_config(self, name, submodules, expected={}):
@@ -52,7 +63,7 @@ class TestSystemPackage(SourceTest):
         )
         self.assertCountEqual(
             call_pkg_config(pcname, ['--libs'], path=self.pkgconfdir),
-            expected.get('libs', ['-l' + name])
+            expected.get('libs', ['-L' + abspath('/mock/lib'), '-l' + name])
         )
 
     def test_resolve_path(self):
@@ -74,90 +85,60 @@ class TestSystemPackage(SourceTest):
         pkg.resolve(self.pkgdir)
         self.check_get_usage(pkg, None, {
             'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
-            'pcfiles': ['foo'], 'requirements': {
-                'auto_link': True, 'headers': [], 'libraries': ['foo'],
-            },
+            'pcfiles': ['foo'], 'auto_link': True,
         })
-        self.check_pkg_config('foo', None)
+        self.check_pkg_config('foo', None, {
+            'libs': ['-L' + abspath('/mock/lib')],
+        })
 
     def test_include_path(self):
-        incdir = os.path.abspath('/path/to/include')
-        pkg = self.make_package('foo', include_path='/path/to/include')
+        incdir = abspath('/mock/path/to/include')
+        pkg = self.make_package('foo', include_path='/mock/path/to/include',
+                                headers=['foo.hpp'])
         pkg.resolve(self.pkgdir)
-        self.check_get_usage(pkg, None, {
-            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
-            'pcfiles': ['foo'], 'requirements': {
-                'auto_link': False, 'headers': [], 'libraries': ['foo'],
-            },
-        })
+        self.check_get_usage(pkg, None)
         self.check_pkg_config('foo', None, {'cflags': ['-I' + incdir]})
 
     def test_library_path(self):
-        libdir = os.path.abspath('/path/to/lib')
-        pkg = self.make_package('foo', library_path='/path/to/lib')
+        libdir = abspath('/mock/path/to/lib')
+        pkg = self.make_package('foo', library_path='/mock/path/to/lib')
         pkg.resolve(self.pkgdir)
-        self.check_get_usage(pkg, None, {
-            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
-            'pcfiles': ['foo'], 'requirements': {
-                'auto_link': False, 'headers': [], 'libraries': ['foo'],
-            },
-        })
-        self.check_pkg_config('foo', None, {
-            'libs': ['-L' + libdir, '-lfoo'],
-        })
+        self.check_get_usage(pkg, None)
+        self.check_pkg_config('foo', None, {'libs': ['-L' + libdir, '-lfoo']})
 
     def test_headers(self):
         pkg = self.make_package('foo', headers='foo.hpp')
         pkg.resolve(self.pkgdir)
-        self.check_get_usage(pkg, None, {
-            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
-            'pcfiles': ['foo'], 'requirements': {
-                'auto_link': False, 'headers': ['foo.hpp'],
-                'libraries': ['foo'],
-            },
+        self.check_get_usage(pkg, None)
+        self.check_pkg_config('foo', None, {
+            'cflags': ['-I' + abspath('/mock/include')],
         })
-        self.check_pkg_config('foo', None)
 
-        pkg = self.make_package('foo', headers=['foo.hpp', 'bar.hpp'])
+        pkg = self.make_package('foo', headers=['foo.hpp'])
         pkg.resolve(self.pkgdir)
-        self.check_get_usage(pkg, None, {
-            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
-            'pcfiles': ['foo'], 'requirements': {
-                'auto_link': False, 'headers': ['foo.hpp', 'bar.hpp'],
-                'libraries': ['foo'],
-            },
+        self.check_get_usage(pkg, None)
+        self.check_pkg_config('foo', None, {
+            'cflags': ['-I' + abspath('/mock/include')],
         })
-        self.check_pkg_config('foo', None)
 
     def test_libraries(self):
         pkg = self.make_package('foo', libraries='bar')
         pkg.resolve(self.pkgdir)
-        self.check_get_usage(pkg, None, {
-            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
-            'pcfiles': ['foo'], 'requirements': {
-                'auto_link': False, 'headers': [], 'libraries': ['bar'],
-            },
+        self.check_get_usage(pkg, None)
+        self.check_pkg_config('foo', None, {
+            'libs': ['-L' + abspath('/mock/lib'), '-lbar'],
         })
-        self.check_pkg_config('foo', None, {'libs': ['-lbar']})
 
         pkg = self.make_package('foo', libraries=['foo', 'bar'])
         pkg.resolve(self.pkgdir)
-        self.check_get_usage(pkg, None, {
-            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
-            'pcfiles': ['foo'], 'requirements': {
-                'auto_link': False, 'headers': [], 'libraries': ['foo', 'bar'],
-            },
+        self.check_get_usage(pkg, None)
+        self.check_pkg_config('foo', None, {
+            'libs': ['-L' + abspath('/mock/lib'), '-lfoo', '-lbar'],
         })
-        self.check_pkg_config('foo', None, {'libs': ['-lfoo', '-lbar']})
 
         pkg = self.make_package('foo', libraries=None)
         pkg.resolve(self.pkgdir)
-        self.check_get_usage(pkg, None, {
-            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
-            'pcfiles': ['foo'], 'requirements': {
-                'auto_link': False, 'headers': [], 'libraries': [],
-            },
-        })
+        self.check_get_usage(pkg, None)
         self.check_pkg_config('foo', None, {'libs': []})
 
     def test_submodules(self):
@@ -165,45 +146,30 @@ class TestSystemPackage(SourceTest):
         submodules_optional = {'names': '*', 'required': False}
 
         pkg = self.make_package('foo', submodules=submodules_required)
-        self.check_get_usage(pkg, 'sub', {
-            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
-            'pcfiles': ['foo[sub]'], 'requirements': {
-                'auto_link': False, 'headers': [], 'libraries': ['foo_sub'],
-            },
+        self.check_get_usage(pkg, 'sub')
+        self.check_pkg_config('foo', ['sub'], {
+            'libs': ['-L' + abspath('/mock/lib'), '-lfoo_sub'],
         })
-        self.check_pkg_config('foo', ['sub'], {'libs': ['-lfoo_sub']})
 
         pkg = self.make_package('foo', libraries='bar',
                                 submodules=submodules_required)
-        self.check_get_usage(pkg, 'sub', {
-            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
-            'pcfiles': ['foo[sub]'], 'requirements': {
-                'auto_link': False, 'headers': [],
-                'libraries': ['bar', 'foo_sub'],
-            },
+        self.check_get_usage(pkg, 'sub')
+        self.check_pkg_config('foo', ['sub'], {
+            'libs': ['-L' + abspath('/mock/lib'), '-lbar', '-lfoo_sub'],
         })
-        self.check_pkg_config('foo', ['sub'], {'libs': ['-lbar', '-lfoo_sub']})
 
         pkg = self.make_package('foo', submodules=submodules_optional)
-        self.check_get_usage(pkg, 'sub', {
-            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
-            'pcfiles': ['foo[sub]'], 'requirements': {
-                'auto_link': False, 'headers': [],
-                'libraries': ['foo', 'foo_sub'],
-            },
+        self.check_get_usage(pkg, 'sub')
+        self.check_pkg_config('foo', ['sub'], {
+            'libs': ['-L' + abspath('/mock/lib'), '-lfoo', '-lfoo_sub'],
         })
-        self.check_pkg_config('foo', ['sub'], {'libs': ['-lfoo', '-lfoo_sub']})
 
         pkg = self.make_package('foo', libraries='bar',
                                 submodules=submodules_optional)
-        self.check_get_usage(pkg, 'sub', {
-            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
-            'pcfiles': ['foo[sub]'], 'requirements': {
-                'auto_link': False, 'headers': [],
-                'libraries': ['bar', 'foo_sub'],
-            },
+        self.check_get_usage(pkg, 'sub')
+        self.check_pkg_config('foo', ['sub'], {
+            'libs': ['-L' + abspath('/mock/lib'), '-lbar', '-lfoo_sub'],
         })
-        self.check_pkg_config('foo', ['sub'], {'libs': ['-lbar', '-lfoo_sub']})
 
     def test_invalid_submodule(self):
         pkg = self.make_package('foo', submodules={

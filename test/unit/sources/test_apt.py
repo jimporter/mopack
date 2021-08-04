@@ -53,19 +53,17 @@ class TestApt(SourceTest):
                 libs.extend('{}_{}'.format(pkg.name, i)
                             for i in iterate(submodules))
 
-                usages.append({
-                    'name': pkg.name, 'type': 'system',
-                    'path': self.pkgconfdir, 'pcfiles': [pcname],
-                    'requirements': {
-                        'auto_link': False, 'headers': [], 'libraries': libs,
-                    },
-                })
+                usages.append({'name': pkg.name, 'type': 'system',
+                               'path': self.pkgconfdir, 'pcfiles': [pcname],
+                               'auto_link': False})
 
         for pkg, usage in zip(packages, usages):
             with mock.patch('subprocess.run', side_effect=OSError()), \
-                 mock.patch('os.makedirs'), \
+                 mock.patch('mopack.usage.path_system.PathUsage._filter_path',
+                            lambda *args: []), \
                  mock.patch('mopack.usage.path_system.file_outdated',
                             return_value=True), \
+                 mock.patch('os.makedirs'), \
                  mock.patch('builtins.open'):  # noqa
                 self.assertEqual(pkg.get_usage(submodules, self.pkgdir), usage)
 
@@ -107,13 +105,10 @@ class TestApt(SourceTest):
             submodules=submodules_required
         )
         self.check_resolve_all(
-            [pkg], ['libfoo-dev'], submodules=['sub'], usages=[{
-                'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
-                'pcfiles': ['foo[sub]'], 'requirements': {
-                    'auto_link': False, 'headers': [],
-                    'libraries': ['bar', 'foo_sub'],
-                },
-            }]
+            [pkg], ['libfoo-dev'], submodules=['sub'], usages=[
+                {'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
+                 'pcfiles': ['foo[sub]'], 'auto_link': False},
+            ]
         )
 
         pkg = self.make_package('foo', submodules=submodules_optional)
@@ -124,13 +119,10 @@ class TestApt(SourceTest):
             submodules=submodules_optional
         )
         self.check_resolve_all(
-            [pkg], ['libfoo-dev'], submodules=['sub'], usages=[{
-                'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
-                'pcfiles': ['foo[sub]'], 'requirements': {
-                    'auto_link': False, 'headers': [],
-                    'libraries': ['bar', 'foo_sub'],
-                },
-            }]
+            [pkg], ['libfoo-dev'], submodules=['sub'], usages=[
+                {'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
+                 'pcfiles': ['foo[sub]'], 'auto_link': False},
+            ]
         )
 
     def test_invalid_submodule(self):

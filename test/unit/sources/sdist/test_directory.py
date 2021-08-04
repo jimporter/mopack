@@ -85,12 +85,14 @@ class TestDirectory(SDistTestCase):
             ))
         with mock.patch('subprocess.run', side_effect=OSError()), \
              mock.patch('os.makedirs'), \
+             mock.patch('mopack.usage.path_system.PathUsage._filter_path',
+                        lambda *args: []), \
+             mock.patch('mopack.usage.path_system.file_outdated',
+                        return_value=True), \
              mock.patch('builtins.open'):  # noqa
             self.check_resolve(pkg, usage={
                 'name': 'foo', 'type': 'system', 'path': self.pkgconfdir(None),
-                'pcfiles': ['foo'], 'requirements': {
-                    'auto_link': False, 'headers': [], 'libraries': ['foo'],
-                },
+                'pcfiles': ['foo'], 'auto_link': False,
             })
 
     def test_infer_submodules(self):

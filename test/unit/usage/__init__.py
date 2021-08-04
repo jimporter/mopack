@@ -4,7 +4,7 @@ from .. import OptionsTest, MockPackage, through_json  # noqa: F401
 
 
 class UsageTest(OptionsTest):
-    pkgdir = os.path.abspath('/path/to/builddir/mopack')
+    pkgdir = os.path.abspath('/builddir/mopack')
     srcdir = os.path.abspath('/srcdir')
     builddir = os.path.abspath('/builddir')
 

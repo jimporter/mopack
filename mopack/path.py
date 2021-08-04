@@ -70,8 +70,7 @@ class Path(FreezeDried):
 
         if os.path.isabs(self.path):
             self.base = self.Base.absolute
-        elif ( hasattr(os.path, 'splitdrive') and
-               os.path.splitdrive(self.path)[0] ):
+        elif os.path.splitdrive(self.path)[0]:
             raise ValueError('relative paths with drives not supported')
         elif base == self.Base.absolute:
             raise ValueError('base is absolute, but path is relative')

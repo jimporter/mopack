@@ -76,16 +76,15 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         with mock.patch('subprocess.run', side_effect=OSError()), \
+             mock.patch('mopack.usage.path_system.PathUsage._filter_path',
+                        lambda *args: []), \
              mock.patch('mopack.usage.path_system.file_outdated',
                         return_value=True), \
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):  # noqa
             self.assertEqual(pkg.get_usage(['sub'], self.pkgdir), {
                 'name': 'foo', 'type': 'system', 'path': self.pkgconfdir(None),
-                'pcfiles': ['foo[sub]'], 'requirements': {
-                    'auto_link': False, 'headers': [],
-                    'libraries': ['foo_sub'],
-                },
+                'pcfiles': ['foo[sub]'], 'auto_link': False,
             })
         with self.assertRaises(ValueError):
             pkg.get_usage(None, self.pkgdir)
@@ -100,16 +99,15 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         with mock.patch('subprocess.run', side_effect=OSError()), \
-             mock.patch('os.makedirs'), \
+             mock.patch('mopack.usage.path_system.PathUsage._filter_path',
+                        lambda *args: []), \
              mock.patch('mopack.usage.path_system.file_outdated',
                         return_value=True), \
+             mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):  # noqa
             self.assertEqual(pkg.get_usage(['sub'], self.pkgdir), {
                 'name': 'foo', 'type': 'system', 'path': self.pkgconfdir(None),
-                'pcfiles': ['foo[sub]'], 'requirements': {
-                    'auto_link': False, 'headers': [],
-                    'libraries': ['foo_sub'],
-                },
+                'pcfiles': ['foo[sub]'], 'auto_link': False,
             })
         with self.assertRaises(ValueError):
             pkg.get_usage(['bar'], self.pkgdir)
@@ -127,28 +125,26 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         with mock.patch('subprocess.run', side_effect=OSError()), \
-             mock.patch('os.makedirs'), \
+             mock.patch('mopack.usage.path_system.PathUsage._filter_path',
+                        lambda *args: []), \
              mock.patch('mopack.usage.path_system.file_outdated',
                         return_value=True), \
+             mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):  # noqa
             self.assertEqual(pkg.get_usage(['sub'], self.pkgdir), {
                 'name': 'foo', 'type': 'system', 'path': self.pkgconfdir(None),
-                'pcfiles': ['foo[sub]'], 'requirements': {
-                    'auto_link': False, 'headers': [],
-                    'libraries': ['foo', 'foo_sub'],
-                },
+                'pcfiles': ['foo[sub]'], 'auto_link': False,
             })
         with mock.patch('subprocess.run', side_effect=OSError()), \
-             mock.patch('os.makedirs'), \
+             mock.patch('mopack.usage.path_system.PathUsage._filter_path',
+                        lambda *args: []), \
              mock.patch('mopack.usage.path_system.file_outdated',
                         return_value=True), \
+             mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):  # noqa
             self.assertEqual(pkg.get_usage(None, self.pkgdir), {
                 'name': 'foo', 'type': 'system', 'path': self.pkgconfdir(None),
-                'pcfiles': ['foo'], 'requirements': {
-                    'auto_link': False, 'headers': [],
-                    'libraries': ['foo'],
-                },
+                'pcfiles': ['foo'], 'auto_link': False,
             })
         with self.assertRaises(ValueError):
             pkg.get_usage(['bar'], self.pkgdir)

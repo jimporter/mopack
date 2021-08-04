@@ -40,6 +40,8 @@ class TestPath(UsageTest):
     symbols = Options.default().expr_symbols
     pkgdir = os.path.join(test_stage_dir, 'usage')
     pkgconfdir = os.path.join(pkgdir, 'pkgconfig')
+    srcdir = abspath('/mock/srcdir')
+    builddir = abspath('/mock/builddir')
 
     def setUp(self):
         self.clear_pkgdir()
@@ -62,19 +64,29 @@ class TestPath(UsageTest):
 
     def check_get_usage(self, usage, name, submodules, srcdir, builddir,
                         expected=None, *, write_pkg_config=True):
+        def mock_exists(p, variables={}):
+            p = os.path.normcase(p.string(**variables))
+            return p.startswith(os.path.normcase(abspath('/mock')) + os.sep)
+
         pcname = ('{}[{}]'.format(name, ','.join(iterate(submodules)))
                   if submodules else name)
         if expected is None:
-            expected = {
-                'name': name, 'type': self.type, 'path': self.pkgconfdir,
-                'pcfiles': [pcname], 'requirements': {
-                    'auto_link': False, 'headers': [], 'libraries': [name],
-                },
-            }
+            expected = {'name': name, 'type': self.type,
+                        'path': self.pkgconfdir, 'pcfiles': [pcname],
+                        'auto_link': False}
 
         self.clear_pkgdir()
+
         with mock.patch('mopack.usage.path_system.file_outdated',
-                        return_value=write_pkg_config):
+                        return_value=write_pkg_config), \
+             mock.patch('mopack.usage.path_system._system_include_path',
+                        return_value=[Path('/mock/include')]), \
+             mock.patch('mopack.usage.path_system._system_lib_path',
+                        return_value=[Path('/mock/lib')]), \
+             mock.patch('mopack.usage.path_system._system_lib_names',
+                        return_value=['lib{}.so']), \
+             mock.patch('mopack.usage.path_system.exists',
+                        mock_exists):  # noqa
             self.assertEqual(usage.get_usage(
                 MockPackage(name), submodules, self.pkgdir, srcdir, builddir
             ), expected)
@@ -88,7 +100,7 @@ class TestPath(UsageTest):
         )
         self.assertCountEqual(
             call_pkg_config(pcname, ['--libs'], path=self.pkgconfdir),
-            expected.get('libs', ['-l' + name])
+            expected.get('libs', ['-L' + abspath('/mock/lib'), '-l' + name])
         )
 
     def test_basic(self):
@@ -108,60 +120,86 @@ class TestPath(UsageTest):
 
     def test_auto_link(self):
         usage = self.make_usage('foo', auto_link=True)
-        self.check_usage(usage, auto_link=True)
+        self.check_usage(usage, auto_link=True, libraries=[])
         self.check_get_usage(usage, 'foo', None, self.srcdir, self.builddir, {
             'name': 'foo', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['foo'], 'requirements': {
-                'auto_link': True, 'headers': [], 'libraries': ['foo'],
-            },
+            'pcfiles': ['foo'], 'auto_link': True,
         })
-        self.check_pkg_config('foo', None)
+        self.check_pkg_config('foo', None, {
+            'libs': ['-L' + abspath('/mock/lib')],
+        })
+
+        libdir = abspath('/mock/path/to/lib')
+        usage = self.make_usage('foo', auto_link=True,
+                                library_path='/mock/path/to/lib')
+        self.check_usage(usage, auto_link=True, libraries=[],
+                         library_path=[abspathobj('/mock/path/to/lib')])
+        self.check_get_usage(usage, 'foo', None, self.srcdir, self.builddir, {
+            'name': 'foo', 'type': self.type, 'path': self.pkgconfdir,
+            'pcfiles': ['foo'], 'auto_link': True,
+        })
+        self.check_pkg_config('foo', None, {'libs': ['-L' + libdir]})
 
     def test_include_path_relative(self):
         incdir = os.path.join(self.srcdir, 'include')
-        usage = self.make_usage('foo', include_path='include')
-        self.check_usage(usage, include_path=[srcpathobj('include')])
+        usage = self.make_usage('foo', include_path='include',
+                                headers=['foo.hpp'])
+        self.check_usage(usage, include_path=[srcpathobj('include')],
+                         headers=['foo.hpp'])
         self.check_get_usage(usage, 'foo', None, self.srcdir, self.builddir)
         self.check_pkg_config('foo', None, {'cflags': ['-I' + incdir]})
 
-        usage = self.make_usage('foo', include_path=['include'])
-        self.check_usage(usage, include_path=[srcpathobj('include')])
+        usage = self.make_usage('foo', include_path=['include'],
+                                headers=['foo.hpp'])
+        self.check_usage(usage, include_path=[srcpathobj('include')],
+                         headers=['foo.hpp'])
         self.check_get_usage(usage, 'foo', None, self.srcdir, self.builddir)
         self.check_pkg_config('foo', None, {'cflags': ['-I' + incdir]})
 
     def test_include_path_srcdir(self):
         incdir = os.path.join(self.srcdir, 'include')
-        usage = self.make_usage('foo', include_path='$srcdir/include')
-        self.check_usage(usage, include_path=[srcpathobj('include')])
+        usage = self.make_usage('foo', include_path='$srcdir/include',
+                                headers=['foo.hpp'])
+        self.check_usage(usage, include_path=[srcpathobj('include')],
+                         headers=['foo.hpp'])
         self.check_get_usage(usage, 'foo', None, self.srcdir, self.builddir)
         self.check_pkg_config('foo', None, {'cflags': ['-I' + incdir]})
 
-        usage = self.make_usage('foo', include_path=['$srcdir/include'])
-        self.check_usage(usage, include_path=[srcpathobj('include')])
+        usage = self.make_usage('foo', include_path=['$srcdir/include'],
+                                headers=['foo.hpp'])
+        self.check_usage(usage, include_path=[srcpathobj('include')],
+                         headers=['foo.hpp'])
         self.check_get_usage(usage, 'foo', None, self.srcdir, self.builddir)
         self.check_pkg_config('foo', None, {'cflags': ['-I' + incdir]})
 
     def test_include_path_builddir(self):
         incdir = os.path.join(self.builddir, 'include')
-        usage = self.make_usage('foo', include_path='$builddir/include')
-        self.check_usage(usage, include_path=[buildpathobj('include')])
+        usage = self.make_usage('foo', include_path='$builddir/include',
+                                headers=['foo.hpp'])
+        self.check_usage(usage, include_path=[buildpathobj('include')],
+                         headers=['foo.hpp'])
         self.check_get_usage(usage, 'foo', None, self.srcdir, self.builddir)
         self.check_pkg_config('foo', None, {'cflags': ['-I' + incdir]})
 
-        usage = self.make_usage('foo', include_path=['$builddir/include'])
-        self.check_usage(usage, include_path=[buildpathobj('include')])
+        usage = self.make_usage('foo', include_path=['$builddir/include'],
+                                headers=['foo.hpp'])
+        self.check_usage(usage, include_path=[buildpathobj('include')],
+                         headers=['foo.hpp'])
         self.check_get_usage(usage, 'foo', None, self.srcdir, self.builddir)
         self.check_pkg_config('foo', None, {'cflags': ['-I' + incdir]})
 
     def test_include_path_absolute(self):
-        incdir = abspath('/path/to/include')
-        usage = self.make_usage('foo', include_path='/path/to/include')
-        self.check_usage(usage, include_path=[abspathobj('/path/to/include')])
+        incdir = abspath('/mock/path/to/include')
+        incdirobj = abspathobj('/mock/path/to/include')
+        usage = self.make_usage('foo', include_path='/mock/path/to/include',
+                                headers=['foo.hpp'])
+        self.check_usage(usage, include_path=[incdirobj], headers=['foo.hpp'])
         self.check_get_usage(usage, 'foo', None, self.srcdir, self.builddir)
         self.check_pkg_config('foo', None, {'cflags': ['-I' + incdir]})
 
-        usage = self.make_usage('foo', include_path='/path/to/include')
-        self.check_usage(usage, include_path=[abspathobj('/path/to/include')])
+        usage = self.make_usage('foo', include_path='/mock/path/to/include',
+                                headers=['foo.hpp'])
+        self.check_usage(usage, include_path=[incdirobj], headers=['foo.hpp'])
         self.check_get_usage(usage, 'foo', None, None, None)
         self.check_pkg_config('foo', None, {'cflags': ['-I' + incdir]})
 
@@ -206,14 +244,14 @@ class TestPath(UsageTest):
         self.check_pkg_config('foo', None, {'libs': ['-L' + libdir, '-lfoo']})
 
     def test_library_path_absolute(self):
-        libdir = abspath('/path/to/lib')
-        usage = self.make_usage('foo', library_path='/path/to/lib')
-        self.check_usage(usage, library_path=[abspathobj('/path/to/lib')])
+        libdir = abspath('/mock/path/to/lib')
+        usage = self.make_usage('foo', library_path='/mock/path/to/lib')
+        self.check_usage(usage, library_path=[abspathobj('/mock/path/to/lib')])
         self.check_get_usage(usage, 'foo', None, self.srcdir, self.builddir)
         self.check_pkg_config('foo', None, {'libs': ['-L' + libdir, '-lfoo']})
 
-        usage = self.make_usage('foo', library_path='/path/to/lib')
-        self.check_usage(usage, library_path=[abspathobj('/path/to/lib')])
+        usage = self.make_usage('foo', library_path='/mock/path/to/lib')
+        self.check_usage(usage, library_path=[abspathobj('/mock/path/to/lib')])
         self.check_get_usage(usage, 'foo', None, None, None)
         self.check_pkg_config('foo', None, {'libs': ['-L' + libdir, '-lfoo']})
 
@@ -224,80 +262,55 @@ class TestPath(UsageTest):
     def test_headers(self):
         usage = self.make_usage('foo', headers='foo.hpp')
         self.check_usage(usage, headers=['foo.hpp'])
-        self.check_get_usage(usage, 'foo', None, None, None, {
-            'name': 'foo', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['foo'], 'requirements': {
-                'auto_link': False, 'headers': ['foo.hpp'],
-                'libraries': ['foo'],
-            },
+        self.check_get_usage(usage, 'foo', None, None, None)
+        self.check_pkg_config('foo', None, {
+            'cflags': ['-I' + abspath('/mock/include')],
         })
-        self.check_pkg_config('foo', None)
 
         usage = self.make_usage('foo', headers=['foo.hpp'])
         self.check_usage(usage, headers=['foo.hpp'])
-        self.check_get_usage(usage, 'foo', None, None, None, {
-            'name': 'foo', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['foo'], 'requirements': {
-                'auto_link': False, 'headers': ['foo.hpp'],
-                'libraries': ['foo'],
-            },
+        self.check_get_usage(usage, 'foo', None, None, None)
+        self.check_pkg_config('foo', None, {
+            'cflags': ['-I' + abspath('/mock/include')],
         })
-        self.check_pkg_config('foo', None)
 
     def test_libraries(self):
         usage = self.make_usage('foo', libraries='bar')
         self.check_usage(usage, libraries=['bar'])
-        self.check_get_usage(usage, 'foo', None, None, None, {
-            'name': 'foo', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['foo'], 'requirements': {
-                'auto_link': False, 'headers': [], 'libraries': ['bar'],
-            },
+        self.check_get_usage(usage, 'foo', None, None, None)
+        self.check_pkg_config('foo', None, {
+            'libs': ['-L' + abspath('/mock/lib'), '-lbar'],
         })
-        self.check_pkg_config('foo', None, {'libs': ['-lbar']})
 
         usage = self.make_usage('foo', libraries=['bar'])
         self.check_usage(usage, libraries=['bar'])
-        self.check_get_usage(usage, 'foo', None, None, None, {
-            'name': 'foo', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['foo'], 'requirements': {
-                'auto_link': False, 'headers': [], 'libraries': ['bar'],
-            },
+        self.check_get_usage(usage, 'foo', None, None, None)
+        self.check_pkg_config('foo', None, {
+            'libs': ['-L' + abspath('/mock/lib'), '-lbar'],
         })
-        self.check_pkg_config('foo', None, {'libs': ['-lbar']})
 
         usage = self.make_usage('foo', libraries=None)
         self.check_usage(usage, libraries=[])
-        self.check_get_usage(usage, 'foo', None, None, None, {
-            'name': 'foo', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['foo'], 'requirements': {
-                'auto_link': False, 'headers': [], 'libraries': [],
-            },
-        })
+        self.check_get_usage(usage, 'foo', None, None, None)
         self.check_pkg_config('foo', None, {'libs': []})
 
         usage = self.make_usage('foo', libraries=[
             {'type': 'library', 'name': 'bar'},
         ])
         self.check_usage(usage, libraries=['bar'])
-        self.check_get_usage(usage, 'foo', None, None, None, {
-            'name': 'foo', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['foo'], 'requirements': {
-                'auto_link': False, 'headers': [], 'libraries': ['bar'],
-            },
+        self.check_get_usage(usage, 'foo', None, None, None)
+        self.check_pkg_config('foo', None, {
+            'libs': ['-L' + abspath('/mock/lib'), '-lbar'],
         })
-        self.check_pkg_config('foo', None, {'libs': ['-lbar']})
 
         usage = self.make_usage('foo', libraries=[
             {'type': 'guess', 'name': 'bar'},
         ])
         self.check_usage(usage, libraries=[{'type': 'guess', 'name': 'bar'}])
-        self.check_get_usage(usage, 'foo', None, None, None, {
-            'name': 'foo', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['foo'], 'requirements': {
-                'auto_link': False, 'headers': [], 'libraries': ['bar'],
-            },
+        self.check_get_usage(usage, 'foo', None, None, None)
+        self.check_pkg_config('foo', None, {
+            'libs': ['-L' + abspath('/mock/lib'), '-lbar'],
         })
-        self.check_pkg_config('foo', None, {'libs': ['-lbar']})
 
         usage = self.make_usage('foo', libraries=[
             {'type': 'framework', 'name': 'bar'},
@@ -305,12 +318,7 @@ class TestPath(UsageTest):
         self.check_usage(usage, libraries=[
             {'type': 'framework', 'name': 'bar'},
         ])
-        self.check_get_usage(usage, 'foo', None, None, None, {
-            'name': 'foo', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['foo'], 'requirements': {
-                'auto_link': False, 'headers': [], 'libraries': [],
-            },
-        })
+        self.check_get_usage(usage, 'foo', None, None, None)
         self.check_pkg_config('foo', None, {'libs': ['-framework', 'bar']})
 
     def test_compile_flags(self):
@@ -329,14 +337,16 @@ class TestPath(UsageTest):
         self.check_usage(usage, link_flags=['-pthread', '-fPIC'])
         self.check_get_usage(usage, 'foo', None, None, None)
         self.check_pkg_config('foo', None, {
-            'libs': ['-pthread', '-fPIC', '-lfoo'],
+            'libs': ['-pthread', '-fPIC', '-L' + abspath('/mock/lib'),
+                     '-lfoo'],
         })
 
         usage = self.make_usage('foo', link_flags=['-pthread', '-fPIC'])
         self.check_usage(usage, link_flags=['-pthread', '-fPIC'])
         self.check_get_usage(usage, 'foo', None, None, None)
         self.check_pkg_config('foo', None, {
-            'libs': ['-pthread', '-fPIC', '-lfoo'],
+            'libs': ['-pthread', '-fPIC', '-L' + abspath('/mock/lib'),
+                     '-lfoo'],
         })
 
     def test_submodules(self):
@@ -345,48 +355,33 @@ class TestPath(UsageTest):
 
         usage = self.make_usage('foo', submodules=submodules_required)
         self.check_usage(usage, libraries=[])
-        self.check_get_usage(usage, 'foo', ['sub'], None, None, {
-            'name': 'foo', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['foo[sub]'], 'requirements': {
-                'auto_link': False, 'headers': [], 'libraries': ['foo_sub'],
-            },
+        self.check_get_usage(usage, 'foo', ['sub'], None, None)
+        self.check_pkg_config('foo', ['sub'], {
+            'libs': ['-L' + abspath('/mock/lib'), '-lfoo_sub'],
         })
-        self.check_pkg_config('foo', ['sub'], {'libs': ['-lfoo_sub']})
 
         usage = self.make_usage('foo', libraries=['bar'],
                                 submodules=submodules_required)
         self.check_usage(usage, libraries=['bar'])
-        self.check_get_usage(usage, 'foo', ['sub'], None, None, {
-            'name': 'foo', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['foo[sub]'], 'requirements': {
-                'auto_link': False, 'headers': [],
-                'libraries': ['bar', 'foo_sub'],
-            },
+        self.check_get_usage(usage, 'foo', ['sub'], None, None)
+        self.check_pkg_config('foo', ['sub'], {
+            'libs': ['-L' + abspath('/mock/lib'), '-lbar', '-lfoo_sub'],
         })
-        self.check_pkg_config('foo', ['sub'], {'libs': ['-lbar', '-lfoo_sub']})
 
         usage = self.make_usage('foo', submodules=submodules_optional)
         self.check_usage(usage, libraries=[{'type': 'guess', 'name': 'foo'}])
-        self.check_get_usage(usage, 'foo', ['sub'], None, None, {
-            'name': 'foo', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['foo[sub]'], 'requirements': {
-                'auto_link': False, 'headers': [],
-                'libraries': ['foo', 'foo_sub'],
-            },
+        self.check_get_usage(usage, 'foo', ['sub'], None, None)
+        self.check_pkg_config('foo', ['sub'], {
+            'libs': ['-L' + abspath('/mock/lib'), '-lfoo', '-lfoo_sub'],
         })
-        self.check_pkg_config('foo', ['sub'], {'libs': ['-lfoo', '-lfoo_sub']})
 
         usage = self.make_usage('foo', libraries=['bar'],
                                 submodules=submodules_optional)
         self.check_usage(usage, libraries=['bar'])
-        self.check_get_usage(usage, 'foo', ['sub'], None, None, {
-            'name': 'foo', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['foo[sub]'], 'requirements': {
-                'auto_link': False, 'headers': [],
-                'libraries': ['bar', 'foo_sub'],
-            },
+        self.check_get_usage(usage, 'foo', ['sub'], None, None)
+        self.check_pkg_config('foo', ['sub'], {
+            'libs': ['-L' + abspath('/mock/lib'), '-lbar', '-lfoo_sub'],
         })
-        self.check_pkg_config('foo', ['sub'], {'libs': ['-lbar', '-lfoo_sub']})
 
     def test_submodule_map(self):
         submodules_required = {'names': '*', 'required': True}
@@ -394,66 +389,52 @@ class TestPath(UsageTest):
         usage = self.make_usage('foo', submodule_map='$submodule',
                                 submodules=submodules_required)
         self.check_usage(usage, libraries=[])
-        self.check_get_usage(usage, 'foo', ['sub'], None, None, {
-            'name': 'foo', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['foo[sub]'], 'requirements': {
-                'auto_link': False, 'headers': [], 'libraries': ['sub'],
-            },
+        self.check_get_usage(usage, 'foo', ['sub'], None, None)
+        self.check_pkg_config('foo', ['sub'], {
+            'libs': ['-L' + abspath('/mock/lib'), '-lsub'],
         })
-        self.check_pkg_config('foo', ['sub'], {'libs': ['-lsub']})
 
         usage = self.make_usage('foo', submodule_map={
             '*': {'libraries': '$submodule'},
         }, submodules=submodules_required)
         self.check_usage(usage, libraries=[])
-        self.check_get_usage(usage, 'foo', ['sub'], None, None, {
-            'name': 'foo', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['foo[sub]'], 'requirements': {
-                'auto_link': False, 'headers': [], 'libraries': ['sub'],
-            },
+        self.check_get_usage(usage, 'foo', ['sub'], None, None)
+        self.check_pkg_config('foo', ['sub'], {
+            'libs': ['-L' + abspath('/mock/lib'), '-lsub'],
         })
-        self.check_pkg_config('foo', ['sub'], {'libs': ['-lsub']})
 
         usage = self.make_usage('foo', submodule_map={'sub': {
-            'include_path': '/sub/incdir',
-            'library_path': '/sub/libdir',
+            'include_path': '/mock/sub/incdir',
+            'library_path': '/mock/sub/libdir',
             'headers': 'sub.hpp',
             'libraries': 'sublib',
             'compile_flags': '-Dsub',
             'link_flags': '-Wl,-sub',
         }, '*': {'libraries': '$submodule'}}, submodules=submodules_required)
         self.check_usage(usage, libraries=[])
-        self.check_get_usage(usage, 'foo', ['sub'], None, None, {
-            'name': 'foo', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['foo[sub]'], 'requirements': {
-                'auto_link': False, 'headers': ['sub.hpp'],
-                'libraries': ['sublib'],
-            },
-        })
+        self.check_get_usage(usage, 'foo', ['sub'], None, None)
         self.check_pkg_config('foo', ['sub'], {
-            'cflags': ['-Dsub', '-I' + abspath('/sub/incdir')],
-            'libs': ['-L' + abspath('/sub/libdir'), '-Wl,-sub', '-lsublib'],
+            'cflags': ['-Dsub', '-I' + abspath('/mock/sub/incdir')],
+            'libs': ['-L' + abspath('/mock/sub/libdir'), '-Wl,-sub',
+                     '-lsublib'],
         })
-        self.check_get_usage(usage, 'foo', ['sub2'], None, None, {
-            'name': 'foo', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['foo[sub2]'], 'requirements': {
-                'auto_link': False, 'headers': [], 'libraries': ['sub2'],
-            },
+        self.check_get_usage(usage, 'foo', ['sub2'], None, None)
+        self.check_pkg_config('foo', ['sub2'], {
+            'libs': ['-L' + abspath('/mock/lib'), '-lsub2'],
         })
-        self.check_pkg_config('foo', ['sub2'], {'libs': ['-lsub2']})
 
         usage = self.make_usage('foo', submodule_map={
             'sub': {
-                'include_path': '/incdir/$submodule',
-                'library_path': '/libdir/$submodule',
+                'include_path': '/mock/incdir/$submodule',
+                'library_path': '/mock/libdir/$submodule',
                 'headers': '$submodule/file.hpp',
                 'libraries': '$submodule',
                 'compile_flags': '-D$submodule',
                 'link_flags': '-Wl,-$submodule',
             },
             '*': {
-                'include_path': '/incdir/star/$submodule',
-                'library_path': '/libdir/star/$submodule',
+                'include_path': '/mock/incdir/star/$submodule',
+                'library_path': '/mock/libdir/star/$submodule',
                 'headers': 'star/$submodule/file.hpp',
                 'libraries': 'star$submodule',
                 'compile_flags': '-Dstar$submodule',
@@ -461,27 +442,15 @@ class TestPath(UsageTest):
             },
         }, submodules=submodules_required)
         self.check_usage(usage, libraries=[])
-        self.check_get_usage(usage, 'foo', ['sub'], None, None, {
-            'name': 'foo', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['foo[sub]'], 'requirements': {
-                'auto_link': False, 'headers': ['sub/file.hpp'],
-                'libraries': ['sub'],
-            },
-        })
+        self.check_get_usage(usage, 'foo', ['sub'], None, None)
         self.check_pkg_config('foo', ['sub'], {
-            'cflags': ['-Dsub', '-I' + abspath('/incdir/sub')],
-            'libs': ['-L' + abspath('/libdir/sub'), '-Wl,-sub', '-lsub'],
+            'cflags': ['-Dsub', '-I' + abspath('/mock/incdir/sub')],
+            'libs': ['-L' + abspath('/mock/libdir/sub'), '-Wl,-sub', '-lsub'],
         })
-        self.check_get_usage(usage, 'foo', ['sub2'], None, None, {
-            'name': 'foo', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['foo[sub2]'], 'requirements': {
-                'auto_link': False, 'headers': ['star/sub2/file.hpp'],
-                'libraries': ['starsub2'],
-            },
-        })
+        self.check_get_usage(usage, 'foo', ['sub2'], None, None)
         self.check_pkg_config('foo', ['sub2'], {
-            'cflags': ['-Dstarsub2', '-I' + abspath('/incdir/star/sub2')],
-            'libs': ['-L' + abspath('/libdir/star/sub2'), '-Wl,-starsub2',
+            'cflags': ['-Dstarsub2', '-I' + abspath('/mock/incdir/star/sub2')],
+            'libs': ['-L' + abspath('/mock/libdir/star/sub2'), '-Wl,-starsub2',
                      '-lstarsub2'],
         })
 
@@ -496,23 +465,22 @@ class TestPath(UsageTest):
                              include_path=[], library_path=[])
             self.check_get_usage(usage, 'boost', None, None, None, {
                 'name': 'boost', 'type': self.type, 'path': self.pkgconfdir,
-                'pcfiles': ['boost'], 'requirements': {
-                    'auto_link': plat == 'windows',
-                    'headers': ['boost/version.hpp'], 'libraries': [],
-                },
+                'pcfiles': ['boost'], 'auto_link': plat == 'windows',
             })
-            self.check_pkg_config('boost', None, {'libs': ''})
+            self.check_pkg_config('boost', None, {
+                'cflags': ['-I' + abspath('/mock/include')],
+                'libs': (['-L' + abspath('/mock/lib')]
+                         if plat == 'windows' else []),
+            })
             self.check_get_usage(usage, 'boost', ['thread'], None, None, {
                 'name': 'boost', 'type': self.type, 'path': self.pkgconfdir,
-                'pcfiles': ['boost[thread]'], 'requirements': {
-                    'auto_link': plat == 'windows',
-                    'headers': ['boost/version.hpp'],
-                    'libraries': ['boost_thread'] if plat != 'windows' else [],
-                },
+                'pcfiles': ['boost[thread]'], 'auto_link': plat == 'windows',
             })
             self.check_pkg_config('boost', ['thread'], {
-                'cflags': ['-pthread'] if plat != 'windows' else [],
-                'libs': ( (['-pthread'] if plat == 'linux' else []) +
+                'cflags': ( ['-I' + abspath('/mock/include')] +
+                            (['-pthread'] if plat != 'windows' else []) ),
+                'libs': ( ['-L' + abspath('/mock/lib')] +
+                          (['-pthread'] if plat == 'linux' else []) +
                           (['-lboost_thread'] if plat != 'windows' else []) ),
             })
 
@@ -524,30 +492,27 @@ class TestPath(UsageTest):
                              library_path=[])
             self.check_get_usage(usage, 'boost', None, None, None, {
                 'name': 'boost', 'type': self.type, 'path': self.pkgconfdir,
-                'pcfiles': ['boost'], 'requirements': {
-                    'auto_link': plat == 'windows',
-                    'headers': ['boost/version.hpp'], 'libraries': ['boost'],
-                },
+                'pcfiles': ['boost'], 'auto_link': plat == 'windows',
             })
-            self.check_pkg_config('boost', None)
+            self.check_pkg_config('boost', None, {
+                'cflags': ['-I' + abspath('/mock/include')]
+            })
             extra_libs = ['boost_regex'] if plat != 'windows' else []
             self.check_get_usage(usage, 'boost', ['regex'], None, None, {
                 'name': 'boost', 'type': self.type, 'path': self.pkgconfdir,
-                'pcfiles': ['boost[regex]'], 'requirements': {
-                    'auto_link': plat == 'windows',
-                    'headers': ['boost/version.hpp'],
-                    'libraries': ['boost'] + extra_libs,
-                },
+                'pcfiles': ['boost[regex]'], 'auto_link': plat == 'windows',
             })
             self.check_pkg_config('boost', ['regex'], {
-                'libs': ['-l' + i for i in ['boost'] + extra_libs],
+                'cflags': ['-I' + abspath('/mock/include')],
+                'libs': (['-L' + abspath('/mock/lib')] +
+                         ['-l' + i for i in ['boost'] + extra_libs]),
             })
 
     def test_boost_env_vars(self):
         submodules = {'names': '*', 'required': False}
-        boost_root = abspath('/boost')
-        boost_inc = abspath('/boost/inc')
-        boost_lib = abspath('/boost/lib')
+        boost_root = abspath('/mock/boost')
+        boost_inc = abspath('/mock/boost/inc')
+        boost_lib = abspath('/mock/boost/lib')
         opts = {'target_platform': 'linux', 'env': {
             'BOOST_ROOT': boost_root,
             'BOOST_INCLUDEDIR': boost_inc,
@@ -559,27 +524,13 @@ class TestPath(UsageTest):
 
         usage = self.make_usage('boost', submodules=submodules,
                                 common_options=opts)
-        self.check_usage(usage, auto_link=False,
-                         headers=['boost/version.hpp'], libraries=[],
-                         **pathobjs)
-        self.check_get_usage(usage, 'boost', None, None, None, {
-            'name': 'boost', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['boost'], 'requirements': {
-                'auto_link': False, 'headers': ['boost/version.hpp'],
-                'libraries': [],
-            },
-        })
+        self.check_usage(usage, auto_link=False, headers=['boost/version.hpp'],
+                         libraries=[], **pathobjs)
+        self.check_get_usage(usage, 'boost', None, None, None)
         self.check_pkg_config('boost', None, {
-            'cflags': ['-I{}'.format(boost_inc)],
-            'libs': ['-L{}'.format(boost_lib)],
+            'cflags': ['-I{}'.format(boost_inc)], 'libs': [],
         })
-        self.check_get_usage(usage, 'boost', ['thread'], None, None, {
-            'name': 'boost', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['boost[thread]'], 'requirements': {
-                'auto_link': False, 'headers': ['boost/version.hpp'],
-                'libraries': ['boost_thread'],
-            },
-        })
+        self.check_get_usage(usage, 'boost', ['thread'], None, None)
         self.check_pkg_config('boost', ['thread'], {
             'cflags': ['-I{}'.format(boost_inc), '-pthread'],
             'libs': ['-L{}'.format(boost_lib), '-pthread', '-lboost_thread'],
@@ -587,27 +538,14 @@ class TestPath(UsageTest):
 
         usage = self.make_usage('boost', libraries=['boost'],
                                 submodules=submodules, common_options=opts)
-        self.check_usage(usage, auto_link=False,
-                         headers=['boost/version.hpp'], libraries=['boost'],
-                         **pathobjs)
-        self.check_get_usage(usage, 'boost', None, None, None, {
-            'name': 'boost', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['boost'], 'requirements': {
-                'auto_link': False, 'headers': ['boost/version.hpp'],
-                'libraries': ['boost'],
-            },
-        })
+        self.check_usage(usage, auto_link=False, headers=['boost/version.hpp'],
+                         libraries=['boost'], **pathobjs)
+        self.check_get_usage(usage, 'boost', None, None, None)
         self.check_pkg_config('boost', None, {
             'cflags': ['-I{}'.format(boost_inc)],
             'libs': ['-L{}'.format(boost_lib), '-lboost'],
         })
-        self.check_get_usage(usage, 'boost', ['regex'], None, None, {
-            'name': 'boost', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['boost[regex]'], 'requirements': {
-                'auto_link': False, 'headers': ['boost/version.hpp'],
-                'libraries': ['boost', 'boost_regex'],
-            },
-        })
+        self.check_get_usage(usage, 'boost', ['regex'], None, None)
         self.check_pkg_config('boost', ['regex'], {
             'cflags': ['-I{}'.format(boost_inc)],
             'libs': ['-L{}'.format(boost_lib), '-lboost', '-lboost_regex'],
@@ -618,24 +556,16 @@ class TestPath(UsageTest):
             'target_platform': 'linux',
         })
         self.check_usage(usage, libraries=[{'type': 'guess', 'name': 'gl'}])
-        self.check_get_usage(usage, 'gl', None, None, None, {
-            'name': 'gl', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['gl'], 'requirements': {
-                'auto_link': False, 'headers': [], 'libraries': ['GL'],
-            },
+        self.check_get_usage(usage, 'gl', None, None, None)
+        self.check_pkg_config('gl', None, {
+            'libs': ['-L' + abspath('/mock/lib'), '-lGL'],
         })
-        self.check_pkg_config('gl', None, {'libs': ['-lGL']})
 
         usage = self.make_usage('gl', common_options={
             'target_platform': 'darwin',
         })
         self.check_usage(usage, libraries=[{'type': 'guess', 'name': 'gl'}])
-        self.check_get_usage(usage, 'gl', None, None, None, {
-            'name': 'gl', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['gl'], 'requirements': {
-                'auto_link': False, 'headers': [], 'libraries': [],
-            },
-        })
+        self.check_get_usage(usage, 'gl', None, None, None)
         self.check_pkg_config('gl', None, {'libs': ['-framework', 'OpenGL']})
 
         usage = self.make_usage('gl', libraries=['gl'], common_options={
@@ -650,13 +580,10 @@ class TestPath(UsageTest):
             common_options={'target_platform': 'linux'}
         )
         self.check_usage(usage, libraries=[{'type': 'guess', 'name': 'gl'}])
-        self.check_get_usage(usage, 'foo', None, None, None, {
-            'name': 'foo', 'type': self.type, 'path': self.pkgconfdir,
-            'pcfiles': ['foo'], 'requirements': {
-                'auto_link': False, 'headers': [], 'libraries': ['GL'],
-            },
+        self.check_get_usage(usage, 'foo', None, None, None)
+        self.check_pkg_config('foo', None, {
+            'libs': ['-L' + abspath('/mock/lib'), '-lGL'],
         })
-        self.check_pkg_config('foo', None, {'libs': ['-lGL']})
 
     def test_rehydrate(self):
         opts = self.make_options()

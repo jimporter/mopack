@@ -20,6 +20,19 @@ for i in os.getenv('MOPACK_SKIPPED_TESTS', '').split(' '):
     if i:
         test_features.remove(i)
 
+# Get additional environment variables to use when getting usage. This
+# is useful for setting things up to properly detect headers/libs for `path`
+# usage.
+usage_env = {}
+try:
+    test_env_file = os.path.join(test_dir, '../.mopack_test_env')
+    with open(os.getenv('MOPACK_TEST_ENV_FILE', test_env_file)) as f:
+        for line in f.readlines():
+            k, v = line.rstrip('\n').split('=', 1)
+            usage_env[k] = v
+except FileNotFoundError:
+    pass
+
 
 def stage_dir(name, chdir=True):
     stage = tempfile.mkdtemp(prefix=name + '-', dir=test_stage_dir)
@@ -264,7 +277,7 @@ class IntegrationTest(unittest.TestCase):
         self.assertEqual(self.assertPopen(command, *args, **kwargs), output)
 
     def assertUsage(self, name, usage='', extra_args=[], *, format='json',
-                    submodules=[], returncode=0):
+                    submodules=[], extra_env=usage_env, returncode=0):
         loader = {
             'json': json.loads,
             'yaml': yaml.safe_load,
@@ -275,9 +288,10 @@ class IntegrationTest(unittest.TestCase):
             (['--json'] if format == 'json' else []) +
             ['-s' + i for i in submodules] +
             extra_args
-        ), returncode=returncode)
+        ), extra_env=extra_env, returncode=returncode)
         if returncode == 0:
             self.assertEqual(loader[format](output), usage)
+        return output
 
     def assertPkgConfigUsage(self, name, *, path=None, pcfiles=None,
                              extra_args=[], submodules=[]):
@@ -300,10 +314,7 @@ class IntegrationTest(unittest.TestCase):
         pkgconfdir = os.path.join(self.stage, 'mopack', 'pkgconfig')
         self.assertUsage(name, {
             'name': name, 'type': type, 'path': pkgconfdir, 'pcfiles': [name],
-            'requirements': {
-                'auto_link': auto_link, 'headers': headers,
-                'libraries': libraries,
-            },
+            'auto_link': auto_link,
         }, submodules=submodules)
 
         self.assertCountEqual(

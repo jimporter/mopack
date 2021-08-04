@@ -8,12 +8,27 @@ from ..commands import Metadata
 from ..environment import get_pkg_config
 from ..freezedried import DictFreezeDryer, FreezeDried, ListFreezeDryer
 from ..package_defaults import DefaultResolver
-from ..path import file_outdated, Path
+from ..path import exists, file_outdated, Path
 from ..pkg_config import generated_pkg_config_dir, write_pkg_config
 from ..placeholder import placeholder, PlaceholderFD
 from ..platforms import package_library_name
-from ..shell import ShellArguments
+from ..shell import ShellArguments, split_paths
 from ..types import Unset
+
+
+# XXX: Getting build configuration like this from the environment is a bit
+# hacky. Maybe there's a better way?
+
+def _system_include_path(env=os.environ):
+    return [Path(i) for i in split_paths(env.get('MOPACK_INCLUDE_PATH'))]
+
+
+def _system_lib_path(env=os.environ):
+    return [Path(i) for i in split_paths(env.get('MOPACK_LIB_PATH'))]
+
+
+def _system_lib_names(env=os.environ):
+    return split_paths(env.get('MOPACK_LIB_NAMES'))
 
 
 def _library(field, value):
@@ -118,17 +133,22 @@ class PathUsage(Usage):
         buildbase = self._preferred_base('builddir', _path_bases)
 
         T = types.TypeCheck(locals(), symbols)
-        # XXX: `auto_link` can probably be removed if/when we pull more package
-        # resolution logic into mopack.
+        # XXX: Maybe have the compiler tell *us* if it supports auto-linking,
+        # instead of us telling it?
         T.auto_link(package_default(types.boolean, default=False))
+
+        # XXX: These specify the *possible* paths to find headers/libraries.
+        # Should there be a way of specifying paths that are *always* passed to
+        # the compiler?
         T.include_path(package_default(_list_of_paths(srcbase)))
         T.library_path(package_default(_list_of_paths(buildbase)))
+
         T.headers(package_default(_list_of_headers))
 
-        if submodules and submodules['required']:
-            # If submodules are required, default to an empty list of
-            # libraries, since we likely don't have a "base" library that
-            # always needs linking to.
+        if self.auto_link or submodules and submodules['required']:
+            # If auto-linking or if submodules are required, default to an
+            # empty list of libraries, since we likely don't have a "base"
+            # library that always needs linking to.
             libs_checker = types.maybe(_list_of_libraries, default=[])
         else:
             libs_checker = package_default(
@@ -161,12 +181,25 @@ class PathUsage(Usage):
             )
         return lib
 
-    def _link_library(self, lib):
+    @staticmethod
+    def _link_library(lib):
         if isinstance(lib, str):
             return ['-l' + lib]
 
         assert lib['type'] == 'framework'
         return ['-framework', lib['name']]
+
+    @staticmethod
+    def _filter_path(fn, path, files, kind):
+        filtered = {}
+        for f in files:
+            for p in path:
+                if fn(p, f):
+                    filtered[p] = True
+                    break
+            else:
+                raise ValueError('unable to find {} {!r}'.format(kind, f))
+        return list(filtered.keys())
 
     def get_usage(self, pkg, submodules, pkgdir, srcdir, builddir):
         path_vars = {'srcdir': srcdir, 'builddir': builddir}
@@ -191,13 +224,37 @@ class PathUsage(Usage):
                   if submodules else pkg.name)
         pcpath = os.path.join(pkgconfdir, pcname + '.pc')
 
+        # Get the include directories.
+        headers = list(chain_attr('headers'))
+        include_path = (list(chain_attr('include_path')) or
+                        _system_include_path())
+        include_dirs = self._filter_path(
+            lambda p, f: exists(p.append(f), path_vars),
+            include_path, headers, 'header'
+        )
+
+        # Get the library directories.
         libraries = [self._get_library(i) for i in chain_attr('libraries')]
+        lib_names = _system_lib_names()
+        library_path = (list(chain_attr('library_path')) or _system_lib_path())
+        if self.auto_link:
+            # When auto-linking, we can't determine the library dirs that are
+            # actually used, so include them all.
+            library_dirs = library_path
+        else:
+            library_dirs = self._filter_path(
+                lambda p, f: any(exists(p.append(i.format(f)), path_vars)
+                                 for i in lib_names),
+                library_path, (i for i in libraries if isinstance(i, str)),
+                'library'
+            )
+
         cflags = (
-            [('-I', i) for i in chain_attr('include_path')] +
+            [('-I', i) for i in include_dirs] +
             ShellArguments(chain_attr('compile_flags'))
         )
         libs = (
-            [('-L', i) for i in chain_attr('library_path')] +
+            [('-L', i) for i in library_dirs] +
             ShellArguments(chain_attr('link_flags')) +
             chain.from_iterable(self._link_library(i) for i in libraries)
         )
@@ -213,11 +270,7 @@ class PathUsage(Usage):
                                  variables=path_vars)
 
         return self._usage(
-            pkg, path=pkgconfdir, pcfiles=[pcname], requirements={
-                'auto_link': self.auto_link,
-                'headers': list(chain_attr('headers')),
-                'libraries': [i for i in libraries if isinstance(i, str)],
-            }
+            pkg, path=pkgconfdir, pcfiles=[pcname], auto_link=self.auto_link,
         )
 
 

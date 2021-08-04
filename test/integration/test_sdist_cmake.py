@@ -23,7 +23,7 @@ class TestInnerCMake(IntegrationTest):
 
         self.assertPkgConfigUsage('greeter')
 
-        include_path = [os.path.join(test_data_dir, 'hello-cmake', 'include')]
+        include_path = [os.path.join(test_data_dir, 'hello-cmake/include')]
         library_path = [os.path.join(self.pkgbuilddir, 'hello')]
         self.assertPathUsage('hello', include_path=include_path,
                              library_path=library_path)
@@ -41,8 +41,10 @@ class TestInnerCMake(IntegrationTest):
                     builder=cfg_cmake_builder(
                         'hello',
                         usage=cfg_path_usage(
-                            include_path=[{'base': 'srcdir',
-                                           'path': 'include'}],
+                            compile_flags=[[
+                                '-I', {'base': 'srcdir', 'path': ''},
+                                '/include'
+                            ]],
                             library_path=[{'base': 'builddir', 'path': ''}],
                             libraries=[{'type': 'guess', 'name': 'hello'}]
                         )
@@ -79,8 +81,7 @@ class TestOuterCMake(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        include_path = [os.path.join(test_data_dir, 'greeter-cmake',
-                                     'include')]
+        include_path = [os.path.join(test_data_dir, 'greeter-cmake/include')]
         library_path = [os.path.join(self.pkgbuilddir, 'greeter')]
         self.assertPathUsage('greeter', include_path=include_path,
                              library_path=library_path)
@@ -109,8 +110,10 @@ class TestOuterCMake(IntegrationTest):
                     builder=cfg_cmake_builder(
                         'greeter',
                         usage=cfg_path_usage(
-                            include_path=[{'base': 'srcdir',
-                                           'path': 'include'}],
+                            compile_flags=[[
+                                '-I', {'base': 'srcdir', 'path': ''},
+                                '/include'
+                            ]],
                             library_path=[{'base': 'builddir', 'path': ''}],
                             libraries=[{'type': 'guess', 'name': 'greeter'}],
                         )

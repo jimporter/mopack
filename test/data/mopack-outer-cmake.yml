@@ -5,6 +5,6 @@ packages:
     build: cmake
     usage:
       type: path
-      include_path: $srcdir/include
+      # XXX: Pass this via `include_path` instead?
+      compile_flags: -I$srcdir/include
       library_path: .
-

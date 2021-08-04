@@ -59,6 +59,8 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get install mingw-w64 ninja-build libboost-dev
+          echo "MOPACK_LIB_NAMES=lib{}.so" >> .mopack_test_env
+          echo "MOPACK_LIB_PATH=/usr/lib/x86_64-linux-gnu" >> .mopack_test_env
       - name: Install Windows dependencies
         if: matrix.os == 'windows-latest'
         run: |
@@ -71,10 +73,13 @@ jobs:
           7z x -y glib_2.28.8-1_win32.zip -oC:\pkg-config
           7z x -y gettext-runtime_0.18.1.1-2_win32.zip -oC:\pkg-config
           echo "PKG_CONFIG=C:\pkg-config\bin\pkg-config.exe" >> ${env:GITHUB_ENV}
+
+          echo "MOPACK_LIB_NAMES={}.lib;lib{}.dll.a" >> .mopack_test_env
       - name: Install macOS dependencies
         if: matrix.os == 'macos-latest'
         run: |
           brew install ninja pkg-config boost
+          echo "MOPACK_LIB_NAMES=lib{}.dylib" >> .mopack_test_env
       - name: Install Boost ${{ matrix.boost-version }} from binaries
         if: startsWith(matrix.os, 'windows-') && matrix.boost-version
         run: |
@@ -139,6 +144,7 @@ jobs:
           -P python38-pip,python38-setuptools
       - name: Copy mopack to Cygwin
         run: |
+          echo "MOPACK_LIB_NAMES=lib{}.dll.a" >> .mopack_test_env
           robocopy . ${env:CYGROOT}\home\runneradmin\bfg9000 /E
           if(${LastExitCode} -le 7) { ${LastExitCode} = 0 }
       - name: Install Python dependencies

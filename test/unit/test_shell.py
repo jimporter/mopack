@@ -9,6 +9,41 @@ srcdir = Path('', 'srcdir')
 srcdir_ph = placeholder(srcdir)
 
 
+class TestSplitPaths(TestCase):
+    def test_empty(self):
+        self.assertEqual(split_paths(''), [])
+        self.assertEqual(split_paths(None), [])
+
+    def test_single(self):
+        self.assertEqual(split_paths('foo'), ['foo'])
+
+    def test_multiple(self):
+        self.assertEqual(split_paths('foo{}bar'.format(os.pathsep)),
+                         ['foo', 'bar'])
+        self.assertEqual(split_paths('{0}foo{0}{0}bar{0}'.format(os.pathsep)),
+                         ['foo', 'bar'])
+
+    def test_sep(self):
+        self.assertEqual(split_paths('foo!bar', '!'), ['foo', 'bar'])
+
+
+class TestJoinPaths(TestCase):
+    def test_empty(self):
+        self.assertEqual(join_paths([]), '')
+
+    def test_single(self):
+        self.assertEqual(join_paths(['foo']), 'foo')
+
+    def test_multiple(self):
+        self.assertEqual(join_paths(['foo', 'bar']), 'foo{}bar'
+                         .format(os.pathsep))
+        self.assertEqual(join_paths(['', 'foo', '', 'bar', '']),
+                         '{0}foo{0}{0}bar{0}'.format(os.pathsep))
+
+    def test_sep(self):
+        self.assertEqual(join_paths(['foo', 'bar'], '!'), 'foo!bar')
+
+
 class TestQuotePosix(TestCase):
     def assertQuote(self, original, quoted, force_quoted=None):
         if force_quoted is None:
