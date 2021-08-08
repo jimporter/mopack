@@ -11,6 +11,7 @@ from mopack.path import Path
 from mopack.sources import Package
 from mopack.sources.apt import AptPackage
 from mopack.sources.system import SystemPackage
+from mopack.types import FieldKeyError
 
 
 class TestSystemPackage(SourceTest):
@@ -177,6 +178,10 @@ class TestSystemPackage(SourceTest):
         })
         with self.assertRaises(ValueError):
             pkg.get_usage(['invalid'], self.pkgdir)
+
+    def test_invalid_usage(self):
+        with self.assertRaises(FieldKeyError):
+            self.make_package('foo', usage={'type': 'system'})
 
     def test_deploy(self):
         pkg = self.make_package('foo')

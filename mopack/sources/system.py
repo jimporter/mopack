@@ -1,6 +1,6 @@
 from . import BinaryPackage
 from .. import log
-from ..types import Unset
+from ..types import FieldKeyError, Unset
 
 
 class SystemPackage(BinaryPackage):
@@ -14,7 +14,13 @@ class SystemPackage(BinaryPackage):
     def __init__(self, name, *, auto_link=Unset, include_path=Unset,
                  library_path=Unset, headers=Unset, libraries=Unset,
                  compile_flags=Unset, link_flags=Unset, submodule_map=Unset,
-                 **kwargs):
+                 usage=Unset, **kwargs):
+        if usage is not Unset:
+            raise FieldKeyError(
+                "'system' package doesn't accept 'usage' attribute; " +
+                "pass usage options directly", 'usage'
+            )
+
         super().__init__(name, usage={
             'type': 'system', 'auto_link': auto_link,
             'include_path': include_path, 'library_path': library_path,
