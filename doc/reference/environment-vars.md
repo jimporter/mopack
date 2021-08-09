@@ -36,6 +36,12 @@ Default: `cmake`
 
 The command to use when configuring a [CMake][cmake]-based project.
 
+#### *DPKG_QUERY*
+Default: `dpkg-query`
+{: .subtitle}
+
+The command to use when querying an apt package.
+
 #### *GIT*
 Default: `git`
 {: .subtitle}

@@ -26,7 +26,7 @@ class TestInnerCMake(IntegrationTest):
         include_path = [os.path.join(test_data_dir, 'hello-cmake/include')]
         library_path = [os.path.join(self.pkgbuilddir, 'hello')]
         self.assertPathUsage('hello', include_path=include_path,
-                             library_path=library_path)
+                             library_path=library_path, version='1.0')
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -38,6 +38,7 @@ class TestInnerCMake(IntegrationTest):
                 cfg_directory_pkg(
                     'hello', config,
                     path={'base': 'cfgdir', 'path': 'hello-cmake'},
+                    explicit_version='1.0',
                     builder=cfg_cmake_builder(
                         'hello',
                         usage=cfg_path_usage(
@@ -84,7 +85,7 @@ class TestOuterCMake(IntegrationTest):
         include_path = [os.path.join(test_data_dir, 'greeter-cmake/include')]
         library_path = [os.path.join(self.pkgbuilddir, 'greeter')]
         self.assertPathUsage('greeter', include_path=include_path,
-                             library_path=library_path)
+                             library_path=library_path, version='1.0')
 
         self.assertPkgConfigUsage('hello')
 
@@ -107,6 +108,7 @@ class TestOuterCMake(IntegrationTest):
                 cfg_directory_pkg(
                     'greeter', config,
                     path={'base': 'cfgdir', 'path': 'greeter-cmake'},
+                    explicit_version='1.0',
                     builder=cfg_cmake_builder(
                         'greeter',
                         usage=cfg_path_usage(

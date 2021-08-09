@@ -9,6 +9,7 @@ from mopack.iterutils import iterate
 from mopack.sources import Package
 from mopack.sources.apt import AptPackage
 from mopack.sources.conan import ConanPackage
+from mopack.types import FieldKeyError
 
 
 class TestApt(SourceTest):
@@ -17,55 +18,55 @@ class TestApt(SourceTest):
     pkgdir = '/path/to/builddir/mopack'
     pkgconfdir = os.path.join(pkgdir, 'pkgconfig')
 
-    def check_resolve_all(self, packages, remotes, *, submodules=None,
-                          usages=None):
+    def check_resolve_all(self, packages, remotes):
         with mock_open_log() as mopen, \
-             mock.patch('subprocess.run') as mcall:  # noqa
+             mock.patch('subprocess.run') as mrun:  # noqa
             AptPackage.resolve_all(packages, self.pkgdir)
 
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'apt.log'
             ), 'a')
+
             for i in packages:
                 if i.repository:
-                    mcall.assert_any_call(
+                    mrun.assert_any_call(
                         ['sudo', 'add-apt-repository', '-y', i.repository],
                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                         universal_newlines=True, check=True
                     )
-            mcall.assert_any_call(
+            mrun.assert_any_call(
                 ['sudo', 'apt-get', 'update'], stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT, universal_newlines=True, check=True
             )
-            mcall.assert_any_call(
+            mrun.assert_any_call(
                 ['sudo', 'apt-get', 'install', '-y'] + remotes,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                 universal_newlines=True, check=True
             )
 
-        if usages is None:
-            usages = []
-            for pkg in packages:
-                pcname = ('{}[{}]'.format(pkg.name, ','.join(submodules))
-                          if submodules else pkg.name)
-                libs = ([] if pkg.submodules and pkg.submodules['required']
-                        else [pkg.name])
-                libs.extend('{}_{}'.format(pkg.name, i)
-                            for i in iterate(submodules))
+    def check_usage(self, pkg, *, submodules=None, usage=None):
+        if usage is None:
+            pcname = ('{}[{}]'.format(pkg.name, ','.join(submodules))
+                      if submodules else pkg.name)
+            libs = ([] if pkg.submodules and pkg.submodules['required']
+                    else [pkg.name])
+            libs.extend('{}_{}'.format(pkg.name, i)
+                        for i in iterate(submodules))
 
-                usages.append({'name': pkg.name, 'type': 'system',
-                               'path': self.pkgconfdir, 'pcfiles': [pcname],
-                               'auto_link': False})
+            usage = {'name': pkg.name, 'type': 'system',
+                     'path': self.pkgconfdir, 'pcfiles': [pcname],
+                     'auto_link': False}
 
-        for pkg, usage in zip(packages, usages):
-            with mock.patch('subprocess.run', side_effect=OSError()), \
-                 mock.patch('mopack.usage.path_system.PathUsage._filter_path',
-                            lambda *args: []), \
-                 mock.patch('mopack.usage.path_system.file_outdated',
-                            return_value=True), \
-                 mock.patch('os.makedirs'), \
-                 mock.patch('builtins.open'):  # noqa
-                self.assertEqual(pkg.get_usage(submodules, self.pkgdir), usage)
+        with mock.patch('subprocess.run', side_effect=OSError()), \
+             mock.patch('mopack.sources.apt.AptPackage.version',
+                        '1.2.3'), \
+             mock.patch('mopack.usage.path_system.PathUsage._filter_path',
+                        lambda *args: []), \
+             mock.patch('mopack.usage.path_system.file_outdated',
+                        return_value=True), \
+             mock.patch('os.makedirs'), \
+             mock.patch('builtins.open'):  # noqa
+            self.assertEqual(pkg.get_usage(submodules, self.pkgdir), usage)
 
     def test_basic(self):
         pkg = self.make_package('foo')
@@ -75,11 +76,21 @@ class TestApt(SourceTest):
         self.assertEqual(pkg.should_deploy, True)
         self.check_resolve_all([pkg], ['libfoo-dev'])
 
+        with mock.patch('subprocess.run') as mrun:
+            pkg.version(self.pkgdir)
+            mrun.assert_called_once_with(
+                ['dpkg-query', '-W', '-f${Version}', 'libfoo-dev'],
+                check=True, stdout=subprocess.PIPE, universal_newlines=True
+            )
+
+        self.check_usage(pkg)
+
     def test_remote(self):
         pkg = self.make_package('foo', remote='foo-dev')
         self.assertEqual(pkg.remote, 'foo-dev')
         self.assertEqual(pkg.repository, None)
         self.check_resolve_all([pkg], ['foo-dev'])
+        self.check_usage(pkg)
 
     def test_repository(self):
         pkg = self.make_package('foo', remote='foo-dev',
@@ -87,43 +98,50 @@ class TestApt(SourceTest):
         self.assertEqual(pkg.remote, 'foo-dev')
         self.assertEqual(pkg.repository, 'ppa:foo/stable')
         self.check_resolve_all([pkg], ['foo-dev'])
+        self.check_usage(pkg)
 
     def test_multiple(self):
-        pkg1 = self.make_package('foo')
-        pkg2 = self.make_package('bar', remote='bar-dev')
-        self.check_resolve_all([pkg1, pkg2], ['libfoo-dev', 'bar-dev'])
+        pkgs = [self.make_package('foo'),
+                self.make_package('bar', remote='bar-dev')]
+        self.check_resolve_all(pkgs, ['libfoo-dev', 'bar-dev'])
+        for pkg in pkgs:
+            self.check_usage(pkg)
+
+    def test_invalid_version(self):
+        with self.assertRaises(FieldKeyError):
+            self.make_package('foo', version='1.0')
 
     def test_submodules(self):
         submodules_required = {'names': '*', 'required': True}
         submodules_optional = {'names': '*', 'required': False}
 
         pkg = self.make_package('foo', submodules=submodules_required)
-        self.check_resolve_all([pkg], ['libfoo-dev'], submodules=['sub'])
+        self.check_resolve_all([pkg], ['libfoo-dev'])
+        self.check_usage(pkg, submodules=['sub'])
 
         pkg = self.make_package(
             'foo', usage={'type': 'system', 'libraries': 'bar'},
             submodules=submodules_required
         )
-        self.check_resolve_all(
-            [pkg], ['libfoo-dev'], submodules=['sub'], usages=[
-                {'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
-                 'pcfiles': ['foo[sub]'], 'auto_link': False},
-            ]
-        )
+        self.check_resolve_all([pkg], ['libfoo-dev'])
+        self.check_usage(pkg, submodules=['sub'], usage={
+            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
+            'pcfiles': ['foo[sub]'], 'auto_link': False,
+        })
 
         pkg = self.make_package('foo', submodules=submodules_optional)
-        self.check_resolve_all([pkg], ['libfoo-dev'], submodules=['sub'])
+        self.check_resolve_all([pkg], ['libfoo-dev'])
+        self.check_usage(pkg, submodules=['sub'])
 
         pkg = self.make_package(
             'foo', usage={'type': 'system', 'libraries': 'bar'},
             submodules=submodules_optional
         )
-        self.check_resolve_all(
-            [pkg], ['libfoo-dev'], submodules=['sub'], usages=[
-                {'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
-                 'pcfiles': ['foo[sub]'], 'auto_link': False},
-            ]
-        )
+        self.check_resolve_all([pkg], ['libfoo-dev'])
+        self.check_usage(pkg, submodules=['sub'], usage={
+            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
+            'pcfiles': ['foo[sub]'], 'auto_link': False,
+        })
 
     def test_invalid_submodule(self):
         pkg = self.make_package('foo', submodules={

@@ -16,10 +16,10 @@ class SystemPackage(BinaryPackage):
                  compile_flags=Unset, link_flags=Unset, submodule_map=Unset,
                  usage=Unset, **kwargs):
         if usage is not Unset:
-            raise FieldKeyError(
+            raise FieldKeyError((
                 "'system' package doesn't accept 'usage' attribute; " +
-                "pass usage options directly", 'usage'
-            )
+                "pass usage options directly"
+            ), 'usage')
 
         super().__init__(name, usage={
             'type': 'system', 'auto_link': auto_link,

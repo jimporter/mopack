@@ -107,7 +107,7 @@ def list_files(parser, subparser, args):
 
 
 def list_packages(parser, subparser, args):
-    pkg_fmt = ('\033[1;34m{package.name}\033[0m ' +
+    pkg_fmt = ('\033[1;34m{package.name}\033[0m {version}' +
                '(\033[33m{package.source}\033[0m)')
     try:
         # Try to encode a Unicode box drawing character; if we fail, use ASCII.
@@ -118,18 +118,24 @@ def list_packages(parser, subparser, args):
         lines = ('|  ', '+- ')
         lines_last = ('   ', '+- ')
 
+    def get_version(p):
+        return '\033[32m{}\033[0m '.format(p.version) if p.version else ''
+
     def list_level(pkgs, prefix=''):
         for i, p in enumerate(pkgs):
             next_prefix, hline = lines if i < len(pkgs) - 1 else lines_last
-            print(('{prefix}{hline}' + pkg_fmt)
-                  .format(prefix=prefix, hline=hline, package=p.package))
+            print(('{prefix}{hline}' + pkg_fmt).format(
+                prefix=prefix, hline=hline, package=p.package,
+                version=get_version(p)
+            ))
+
             list_level(p.children, prefix + next_prefix)
 
     packages = commands.list_packages(commands.get_package_dir(args.directory),
                                       args.flat)
     if args.flat:
         for p in packages:
-            print(pkg_fmt.format(package=p))
+            print(pkg_fmt.format(package=p.package, version=get_version(p)))
     else:
         list_level(packages)
 

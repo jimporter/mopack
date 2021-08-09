@@ -111,6 +111,14 @@ class TestTypeCheck(TypeTestCase):
 
         self.assertEqual(thing.field, 'foo')
 
+    def test_dest_field(self):
+        class Thing:
+            def __init__(self, field):
+                T = TypeCheck(locals(), {})
+                T.field(string, dest_field='dest')
+
+        self.assertEqual(Thing('foo').dest, 'foo')
+
     def test_evaluate(self):
         symbols = {'variable': 'value', 'bad': 1}
 

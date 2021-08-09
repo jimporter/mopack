@@ -1,3 +1,5 @@
+import subprocess
+
 from . import BinaryPackage
 from .. import log, types
 from ..environment import get_cmd
@@ -19,6 +21,15 @@ class AptPackage(BinaryPackage):
         T = types.TypeCheck(locals(), self._expr_symbols)
         T.remote(types.maybe(types.string, default='lib{}-dev'.format(name)))
         T.repository(types.maybe(types.string))
+
+    def version(self, pkgdir):
+        # XXX: Maybe try to de-munge the version into something not
+        # apt-specific?
+        dpkgq = get_cmd(self._common_options.env, 'DPKG_QUERY', 'dpkg-query')
+        return subprocess.run(
+            dpkgq + ['-W', '-f${Version}', self.remote],
+            check=True, stdout=subprocess.PIPE, universal_newlines=True
+        ).stdout
 
     @classmethod
     def resolve_all(cls, packages, pkgdir):

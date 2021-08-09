@@ -1,5 +1,8 @@
+import subprocess
+
 from . import submodule_placeholder, Usage
 from .. import types
+from ..environment import get_pkg_config
 from ..freezedried import DictFreezeDryer, FreezeDried
 from ..iterutils import listify
 from ..package_defaults import DefaultResolver
@@ -83,6 +86,18 @@ class PkgConfigUsage(Usage):
                 default=name + '_' + submodule_var,
                 extra_symbols=extra_symbols
             ), extra_symbols=extra_symbols)
+
+    def version(self, pkgdir, srcdir, builddir):
+        pcpath = self.path.string(srcdir=srcdir, builddir=builddir)
+        env = self._common_options.env
+        env['PKG_CONFIG_PATH'] = pcpath
+        pkg_config = get_pkg_config(self._common_options.env)
+
+        return subprocess.run(
+            pkg_config + [self.pcfile, '--modversion'],
+            check=True, env=env, stdout=subprocess.PIPE,
+            universal_newlines=True,
+        ).stdout.strip()
 
     def _get_submodule_mapping(self, submodule):
         try:

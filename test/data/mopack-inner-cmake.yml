@@ -7,6 +7,7 @@ packages:
   hello:
     source: directory
     path: hello-cmake
+    version: "1.0"
     build: cmake
     usage:
       type: path

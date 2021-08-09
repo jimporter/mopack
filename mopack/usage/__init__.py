@@ -40,6 +40,9 @@ class Usage(OptionsHolder):
         else:
             return None
 
+    def version(self, pkgdir, srcdir, builddir):
+        raise NotImplementedError('Usage.version not implemented')
+
     def _usage(self, pkg, **kwargs):
         return dict(name=pkg.name, type=self.type, **kwargs)
 

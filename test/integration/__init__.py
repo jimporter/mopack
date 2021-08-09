@@ -78,13 +78,15 @@ def cfg_options(**kwargs):
     return result
 
 
-def _cfg_package(source, version, name, config_file, parent=None,
-                 resolved=True, submodules=None, should_deploy=True):
+def _cfg_package(source, api_version, name, config_file, explicit_version=None,
+                 parent=None, resolved=True, submodules=None,
+                 should_deploy=True):
     return {
         'source': source,
-        '_version': version,
+        '_version': api_version,
         'name': name,
         'config_file': config_file,
+        'explicit_version': explicit_version,
         'parent': parent,
         'resolved': resolved,
         'submodules': submodules,
@@ -308,7 +310,7 @@ class IntegrationTest(unittest.TestCase):
     def assertPathUsage(self, name, *, type='path', auto_link=False,
                         include_path=[], library_path=[], headers=[],
                         libraries=None, compile_flags=[], link_flags=[],
-                        submodules=[]):
+                        submodules=[], version=''):
         if libraries is None:
             libraries = [name]
         pkgconfdir = os.path.join(self.stage, 'mopack', 'pkgconfig')
@@ -325,4 +327,9 @@ class IntegrationTest(unittest.TestCase):
             call_pkg_config(name, ['--libs'], path=pkgconfdir),
             (['-L' + i for i in library_path] + link_flags +
              ['-l' + i for i in libraries])
+        )
+        self.assertEqual(
+            call_pkg_config(name, ['--modversion'], path=pkgconfdir,
+                            split=False),
+            version
         )

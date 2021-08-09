@@ -23,15 +23,20 @@ class AlwaysEqual:
         return True
 
 
-def call_pkg_config(package, options, path=None):
+def call_pkg_config(package, options, *, path=None, split=True):
     extra_kwargs = {}
     if path:
         env = os.environ.copy()
         env['PKG_CONFIG_PATH'] = path
         extra_kwargs['env'] = env
 
-    return split_posix_str(subprocess.run(
+    output = subprocess.run(
         [os.environ.get('PKG_CONFIG', 'pkg-config'), package] + options,
         check=True, universal_newlines=True, stdout=subprocess.PIPE,
         **extra_kwargs
-    ).stdout.strip(), escapes=True)
+    ).stdout.strip()
+
+    if split:
+        return split_posix_str(output, escapes=True)
+    else:
+        return output

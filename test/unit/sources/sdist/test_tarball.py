@@ -14,6 +14,10 @@ from mopack.sources.sdist import TarballPackage
 from mopack.types import ConfigurationError
 
 
+def mock_exists(p):
+    return os.path.basename(p) == 'mopack.yml'
+
+
 class TestTarball(SDistTestCase):
     pkg_type = TarballPackage
     srcurl = 'http://example.invalid/hello-bfg.tar.gz'
@@ -137,36 +141,39 @@ class TestTarball(SDistTestCase):
         self.check_resolve(pkg)
 
     def test_infer_build(self):
-        def mock_exists(p):
-            return os.path.basename(p) == 'mopack.yml'
-
+        # Basic inference
         pkg = self.make_package('foo', path=self.srcpath)
         self.assertEqual(pkg.builder, None)
 
         with mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_after_first(
-                 read_data='export:\n  build: bfg9000'
+                 read_data='export:\n  version: "1.0"\n  build: bfg9000'
              )), \
-             mock.patch('tarfile.TarFile.extractall') as mtar:  # noqa
+             mock.patch('tarfile.TarFile.extractall'):  # noqa
             config = pkg.fetch(self.config, self.pkgdir)
+            self.assertEqual(config.export.version, '1.0')
             self.assertEqual(config.export.build, 'bfg9000')
-            self.assertEqual(pkg.builder, self.make_builder(
-                Bfg9000Builder, 'foo'
+            self.assertEqual(pkg, self.make_package(
+                'foo', path=self.srcpath, version='1.0', build='bfg9000'
             ))
         self.check_resolve(pkg)
 
-        pkg = self.make_package('foo', path=self.srcpath,
+        # Infer but override usage and version
+        pkg = self.make_package('foo', path=self.srcpath, version='1.1',
                                 usage={'type': 'system'})
+        self.assertEqual(pkg.builder, None)
 
         with mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_after_first(
-                 read_data='export:\n  build: bfg9000'
+                 read_data='export:\n  version: "1.0"\n  build: bfg9000'
              )), \
-             mock.patch('tarfile.TarFile.extractall') as mtar:  # noqa
+             mock.patch('tarfile.TarFile.extractall'):  # noqa
             config = pkg.fetch(self.config, self.pkgdir)
+            self.assertEqual(config.export.version, '1.0')
             self.assertEqual(config.export.build, 'bfg9000')
-            self.assertEqual(pkg.builder, self.make_builder(
-                Bfg9000Builder, 'foo', usage={'type': 'system'}
+            self.assertEqual(pkg, self.make_package(
+                'foo', path=self.srcpath, version='1.1', build='bfg9000',
+                usage={'type': 'system'}
             ))
         with mock.patch('subprocess.run', side_effect=OSError()), \
              mock.patch('mopack.usage.path_system.PathUsage._filter_path',
@@ -180,6 +187,25 @@ class TestTarball(SDistTestCase):
                 'pcfiles': ['foo'], 'auto_link': False,
             })
 
+    def test_infer_build_override(self):
+        pkg = self.make_package('foo', path=self.srcpath, version='1.1',
+                                build='cmake', usage='pkg_config')
+
+        with mock.patch('os.path.exists', mock_exists), \
+             mock.patch('builtins.open', mock_open_after_first(
+                 read_data='export:\n  version: "1.0"\n  build: bfg9000'
+             )), \
+             mock.patch('tarfile.TarFile.extractall'):  # noqa
+            config = pkg.fetch(self.config, self.pkgdir)
+            self.assertEqual(config.export.version, '1.0')
+            self.assertEqual(config.export.build, 'bfg9000')
+            self.assertEqual(pkg, self.make_package(
+                'foo', path=self.srcpath, version='1.1', build='cmake',
+                usage='pkg_config'
+            ))
+        with mock.patch('mopack.builders.cmake.pushd'):
+            self.check_resolve(pkg)
+
     def test_usage(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 usage='pkg_config')
@@ -190,6 +216,14 @@ class TestTarball(SDistTestCase):
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
+
+        with mock.patch('subprocess.run') as mrun:
+            pkg.version(self.pkgdir)
+            mrun.assert_called_once_with(
+                ['pkg-config', 'foo', '--modversion'],
+                check=True, env={'PKG_CONFIG_PATH': self.pkgconfdir('foo')},
+                stdout=subprocess.PIPE, universal_newlines=True
+            )
 
         usage = {'type': 'pkg_config', 'path': 'pkgconf'}
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
@@ -205,6 +239,24 @@ class TestTarball(SDistTestCase):
             'path': self.pkgconfdir('foo', 'pkgconf'), 'pcfiles': ['foo'],
             'extra_args': [],
         })
+
+        usage = {'type': 'path', 'libraries': []}
+        pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
+                                usage=usage)
+        self.assertEqual(pkg.path, Path(self.srcpath))
+        self.assertEqual(pkg.builder, self.make_builder(
+            Bfg9000Builder, 'foo', usage=usage
+        ))
+
+        self.check_fetch(pkg)
+        self.check_resolve(pkg, usage={
+            'name': 'foo', 'type': 'path', 'path': self.pkgconfdir(None),
+            'pcfiles': ['foo'], 'auto_link': False,
+        })
+
+        with mock.patch('subprocess.run') as mrun:
+            self.assertEqual(pkg.version(self.pkgdir), None)
+            mrun.assert_not_called()
 
     def test_submodules(self):
         submodules_required = {'names': '*', 'required': True}

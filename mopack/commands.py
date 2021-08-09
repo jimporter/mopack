@@ -79,8 +79,9 @@ class Metadata:
 
 
 class PackageTreeItem:
-    def __init__(self, package, children=None):
+    def __init__(self, package, version, children=None):
         self.package = package
+        self.version = version
         self.children = children or []
 
 
@@ -243,12 +244,14 @@ def list_packages(pkgdir, flat=False):
     metadata = Metadata.load(pkgdir)
 
     if flat:
-        return list(metadata.packages.values())
+        return [PackageTreeItem(pkg, pkg.version(pkgdir)) for pkg in
+                metadata.packages.values()]
 
     packages = []
     pending = {}
     for pkg in metadata.packages.values():
-        item = PackageTreeItem(pkg, pending.pop(pkg.name, None))
+        item = PackageTreeItem(pkg, pkg.version(pkgdir),
+                               pending.pop(pkg.name, None))
         if pkg.parent:
             pending.setdefault(pkg.parent, []).append(item)
         else:

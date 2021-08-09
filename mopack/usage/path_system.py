@@ -266,8 +266,8 @@ class PathUsage(Usage):
                 # XXX: It would be nice to write one pkg-config .pc file per
                 # submodule instead of writing a single file for all the
                 # requested submodules.
-                write_pkg_config(f, pcname, cflags=cflags, libs=libs,
-                                 variables=path_vars)
+                write_pkg_config(f, pcname, version=pkg.explicit_version or '',
+                                 cflags=cflags, libs=libs, variables=path_vars)
 
         return self._usage(
             pkg, path=pkgconfdir, pcfiles=[pcname], auto_link=self.auto_link,

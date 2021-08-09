@@ -1,4 +1,5 @@
 import os
+import subprocess
 from unittest import mock
 
 from . import MockPackage, through_json, UsageTest
@@ -12,18 +13,27 @@ from mopack.usage.pkg_config import PkgConfigUsage
 
 class TestPkgConfig(UsageTest):
     usage_type = PkgConfigUsage
+    pkgconfdir = os.path.join(UsageTest.builddir, 'pkgconfig')
 
     def test_basic(self):
         usage = self.make_usage('foo')
         self.assertEqual(usage.path, Path('pkgconfig', 'builddir'))
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.extra_args, ShellArguments())
+
+        with mock.patch('subprocess.run') as mrun:
+            usage.version(self.pkgdir, None, self.builddir)
+            mrun.assert_called_once_with(
+                ['pkg-config', 'foo', '--modversion'],
+                check=True, env={'PKG_CONFIG_PATH': self.pkgconfdir},
+                stdout=subprocess.PIPE, universal_newlines=True
+            )
+
         self.assertEqual(
             usage.get_usage(MockPackage(), None, self.pkgdir, None,
                             self.builddir),
             {
-                'name': 'foo', 'type': 'pkg_config',
-                'path': os.path.join(self.builddir, 'pkgconfig'),
+                'name': 'foo', 'type': 'pkg_config', 'path': self.pkgconfdir,
                 'pcfiles': ['foo'], 'extra_args': [],
             }
         )
@@ -74,30 +84,28 @@ class TestPkgConfig(UsageTest):
         )
 
     def test_extra_args(self):
-        usage = self.make_usage('foo', path='pkgconf', extra_args='--static')
-        self.assertEqual(usage.path, Path('pkgconf', 'builddir'))
+        usage = self.make_usage('foo', extra_args='--static')
+        self.assertEqual(usage.path, Path('pkgconfig', 'builddir'))
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.extra_args, ShellArguments(['--static']))
         self.assertEqual(
             usage.get_usage(MockPackage(), None, self.pkgdir, None,
                             self.builddir),
             {
-                'name': 'foo', 'type': 'pkg_config',
-                'path': os.path.join(self.builddir, 'pkgconf'),
+                'name': 'foo', 'type': 'pkg_config', 'path': self.pkgconfdir,
                 'pcfiles': ['foo'], 'extra_args': ['--static'],
             }
         )
 
-        usage = self.make_usage('foo', path='pkgconf', extra_args=['--static'])
-        self.assertEqual(usage.path, Path('pkgconf', 'builddir'))
+        usage = self.make_usage('foo', extra_args=['--static'])
+        self.assertEqual(usage.path, Path('pkgconfig', 'builddir'))
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.extra_args, ShellArguments(['--static']))
         self.assertEqual(
             usage.get_usage(MockPackage(), None, self.pkgdir, None,
                             self.builddir),
             {
-                'name': 'foo', 'type': 'pkg_config',
-                'path': os.path.join(self.builddir, 'pkgconf'),
+                'name': 'foo', 'type': 'pkg_config', 'path': self.pkgconfdir,
                 'pcfiles': ['foo'], 'extra_args': ['--static'],
             }
         )
@@ -114,8 +122,7 @@ class TestPkgConfig(UsageTest):
             usage.get_usage(MockPackage(), ['sub'], self.pkgdir, None,
                             self.builddir),
             {
-                'name': 'foo', 'type': 'pkg_config',
-                'path': os.path.join(self.builddir, 'pkgconfig'),
+                'name': 'foo', 'type': 'pkg_config', 'path': self.pkgconfdir,
                 'pcfiles': ['foo_sub'], 'extra_args': [],
             }
         )
@@ -129,8 +136,7 @@ class TestPkgConfig(UsageTest):
             usage.get_usage(MockPackage(), ['sub'], self.pkgdir, None,
                             self.builddir),
             {
-                'name': 'foo', 'type': 'pkg_config',
-                'path': os.path.join(self.builddir, 'pkgconfig'),
+                'name': 'foo', 'type': 'pkg_config', 'path': self.pkgconfdir,
                 'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
             }
         )
@@ -143,8 +149,7 @@ class TestPkgConfig(UsageTest):
             usage.get_usage(MockPackage(), ['sub'], self.pkgdir, None,
                             self.builddir),
             {
-                'name': 'foo', 'type': 'pkg_config',
-                'path': os.path.join(self.builddir, 'pkgconfig'),
+                'name': 'foo', 'type': 'pkg_config', 'path': self.pkgconfdir,
                 'pcfiles': ['foo', 'foo_sub'], 'extra_args': [],
             }
         )
@@ -158,8 +163,7 @@ class TestPkgConfig(UsageTest):
             usage.get_usage(MockPackage(), ['sub'], self.pkgdir, None,
                             self.builddir),
             {
-                'name': 'foo', 'type': 'pkg_config',
-                'path': os.path.join(self.builddir, 'pkgconfig'),
+                'name': 'foo', 'type': 'pkg_config', 'path': self.pkgconfdir,
                 'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
             }
         )
@@ -176,8 +180,7 @@ class TestPkgConfig(UsageTest):
             usage.get_usage(MockPackage(), ['sub'], self.pkgdir, None,
                             self.builddir),
             {
-                'name': 'foo', 'type': 'pkg_config',
-                'path': os.path.join(self.builddir, 'pkgconfig'),
+                'name': 'foo', 'type': 'pkg_config', 'path': self.pkgconfdir,
                 'pcfiles': ['sub'], 'extra_args': [],
             }
         )
@@ -192,8 +195,7 @@ class TestPkgConfig(UsageTest):
             usage.get_usage(MockPackage(), ['sub'], self.pkgdir, None,
                             self.builddir),
             {
-                'name': 'foo', 'type': 'pkg_config',
-                'path': os.path.join(self.builddir, 'pkgconfig'),
+                'name': 'foo', 'type': 'pkg_config', 'path': self.pkgconfdir,
                 'pcfiles': ['sub'], 'extra_args': [],
             }
         )
@@ -210,8 +212,7 @@ class TestPkgConfig(UsageTest):
             usage.get_usage(MockPackage(), ['sub'], self.pkgdir, None,
                             self.builddir),
             {
-                'name': 'foo', 'type': 'pkg_config',
-                'path': os.path.join(self.builddir, 'pkgconfig'),
+                'name': 'foo', 'type': 'pkg_config', 'path': self.pkgconfdir,
                 'pcfiles': ['foopc'], 'extra_args': [],
             }
         )
@@ -219,8 +220,7 @@ class TestPkgConfig(UsageTest):
             usage.get_usage(MockPackage(), ['sub2'], self.pkgdir, None,
                             self.builddir),
             {
-                'name': 'foo', 'type': 'pkg_config',
-                'path': os.path.join(self.builddir, 'pkgconfig'),
+                'name': 'foo', 'type': 'pkg_config', 'path': self.pkgconfdir,
                 'pcfiles': ['sub2pc'], 'extra_args': [],
             }
         )
@@ -228,8 +228,7 @@ class TestPkgConfig(UsageTest):
             usage.get_usage(MockPackage(), ['subfoo'], self.pkgdir, None,
                             self.builddir),
             {
-                'name': 'foo', 'type': 'pkg_config',
-                'path': os.path.join(self.builddir, 'pkgconfig'),
+                'name': 'foo', 'type': 'pkg_config', 'path': self.pkgconfdir,
                 'pcfiles': ['starsubfoopc'], 'extra_args': [],
             }
         )
@@ -246,8 +245,7 @@ class TestPkgConfig(UsageTest):
             usage.get_usage(MockPackage(), ['sub'], self.pkgdir, None,
                             self.builddir),
             {
-                'name': 'foo', 'type': 'pkg_config',
-                'path': os.path.join(self.builddir, 'pkgconfig'),
+                'name': 'foo', 'type': 'pkg_config', 'path': self.pkgconfdir,
                 'pcfiles': ['foo', 'subpc'], 'extra_args': [],
             }
         )
@@ -255,8 +253,7 @@ class TestPkgConfig(UsageTest):
             usage.get_usage(MockPackage(), ['sub2'], self.pkgdir, None,
                             self.builddir),
             {
-                'name': 'foo', 'type': 'pkg_config',
-                'path': os.path.join(self.builddir, 'pkgconfig'),
+                'name': 'foo', 'type': 'pkg_config', 'path': self.pkgconfdir,
                 'pcfiles': ['foo'], 'extra_args': [],
             }
         )
@@ -264,8 +261,7 @@ class TestPkgConfig(UsageTest):
     def test_boost(self):
         submodules = {'names': '*', 'required': False}
         final_usage = {
-            'name': 'foo', 'type': 'pkg_config',
-            'path': os.path.join(self.builddir, 'pkgconfig'),
+            'name': 'foo', 'type': 'pkg_config', 'path': self.pkgconfdir,
             'pcfiles': ['boost'], 'extra_args': [],
         }
 
@@ -290,8 +286,7 @@ class TestPkgConfig(UsageTest):
             usage.get_usage(MockPackage(), ['thread'], self.pkgdir, None,
                             self.builddir),
             {
-                'name': 'foo', 'type': 'pkg_config',
-                'path': os.path.join(self.builddir, 'pkgconfig'),
+                'name': 'foo', 'type': 'pkg_config', 'path': self.pkgconfdir,
                 'pcfiles': ['boost', 'boost_thread'], 'extra_args': [],
             }
         )

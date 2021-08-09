@@ -70,17 +70,17 @@ class TestNested(IntegrationTest):
 
         if self.supports_unicode:
             self.assertOutput(['mopack', 'list-packages'], dedent("""
-                └─ greeter (directory)
-                   └─ hello (tarball)
+                └─ greeter 1.0 (directory)
+                   └─ hello 1.0 (tarball)
             """).lstrip())
         else:
             self.assertOutput(['mopack', 'list-packages'], dedent("""
-                +- greeter (directory)
-                   +- hello (tarball)
+                +- greeter 1.0 (directory)
+                   +- hello 1.0 (tarball)
             """).lstrip())
 
         self.assertOutput(['mopack', 'list-packages', '--flat'],
-                          'hello (tarball)\ngreeter (directory)\n')
+                          'hello 1.0 (tarball)\ngreeter 1.0 (directory)\n')
 
     def test_resolve_extra(self):
         config = os.path.join(test_data_dir, 'mopack-nested-extra.yml')
@@ -131,14 +131,14 @@ class TestNested(IntegrationTest):
 
         if self.supports_unicode:
             self.assertOutput(['mopack', 'list-packages'], dedent("""
-                ├─ hello (directory)
-                └─ greeter (directory)
+                ├─ hello 1.0 (directory)
+                └─ greeter 1.0 (directory)
             """).lstrip())
         else:
             self.assertOutput(['mopack', 'list-packages'], dedent("""
-                +- hello (directory)
-                +- greeter (directory)
+                +- hello 1.0 (directory)
+                +- greeter 1.0 (directory)
             """).lstrip())
 
         self.assertOutput(['mopack', 'list-packages', '--flat'],
-                          'hello (directory)\ngreeter (directory)\n')
+                          'hello 1.0 (directory)\ngreeter 1.0 (directory)\n')

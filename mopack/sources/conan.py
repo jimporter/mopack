@@ -1,4 +1,5 @@
 import os
+import subprocess
 import warnings
 
 from . import BinaryPackage, PackageOptions
@@ -68,6 +69,15 @@ class ConanPackage(BinaryPackage):
     @property
     def remote_name(self):
         return self.remote.split('/')[0]
+
+    def version(self, pkgdir):
+        # Inspect the local conan cache to get the package's version.
+        # XXX: There might be a better way to do this...
+        conan = get_cmd(self._common_options.env, 'CONAN', 'conan')
+        return subprocess.run(
+            conan + ['inspect', '--raw=version', self.remote],
+            check=True, stdout=subprocess.PIPE, universal_newlines=True
+        ).stdout
 
     def clean_post(self, new_package, pkgdir, quiet=False):
         if new_package and self.source == new_package.source:

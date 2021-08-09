@@ -226,6 +226,10 @@ class ChildConfig(BaseConfig):
             self.data = data
 
         @property
+        def version(self):
+            return self.data.get('version')
+
+        @property
         def submodules(self):
             return self.data.get('submodules')
 

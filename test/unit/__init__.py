@@ -32,8 +32,9 @@ def mock_open_files(files):
 
 
 class MockPackage:
-    def __init__(self, name='foo'):
+    def __init__(self, name='foo', version=None):
         self.name = name
+        self.explicit_version = version
 
 
 def through_json(data):

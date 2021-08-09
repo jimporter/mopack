@@ -151,10 +151,12 @@ class TypeCheck:
 
         return data
 
-    def __call__(self, field, check, *, dest=None, extend=False,
-                 extra_symbols=None):
+    def __call__(self, field, check, *, dest=None, dest_field=None,
+                 extend=False, extra_symbols=None):
         if dest is None:
             dest = self.__dest
+        if dest_field is None:
+            dest_field = field
 
         if extra_symbols is None:
             symbols = self.__symbols
@@ -167,12 +169,13 @@ class TypeCheck:
                                              symbols))
 
         if extend:
-            d = dest[field] if isinstance(dest, dict) else getattr(dest, field)
+            d = (dest[dest_field] if isinstance(dest, dict)
+                 else getattr(dest, dest_field))
             d.extend(value)
         elif isinstance(dest, dict):
-            dest[field] = value
+            dest[dest_field] = value
         else:
-            setattr(dest, field, value)
+            setattr(dest, dest_field, value)
 
     def __getattr__(self, field):
         return lambda *args, **kwargs: self(field, *args, **kwargs)

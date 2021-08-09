@@ -8,6 +8,7 @@
 packages:
   my_pkg:
     source: directory
+    version: <string>
     path: <path>
     build: <build>
     usage: <usage>
@@ -18,7 +19,8 @@ packages:
 ```yaml
 packages:
   my_pkg:
-    source: repository
+    source: git
+    version: <string>
     tag: <tag-name>  # or...
     branch: <branch-name>  # or...
     commit: <commit-sha>
@@ -33,6 +35,7 @@ packages:
 packages:
   my_pkg:
     source: tarball
+    version: <string>
     path: <path>  # or...
     url: <url>
     files: <glob-list>
@@ -77,6 +80,8 @@ packages:
 packages:
   my_pkg:
     source: system
+    version: <string>
+
     auto_link: <boolean>
     include_path: <path-list>
     library_path: <path-list>

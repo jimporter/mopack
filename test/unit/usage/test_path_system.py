@@ -63,7 +63,7 @@ class TestPath(UsageTest):
         self.assertEqual(usage.link_flags, ShellArguments(link_flags))
 
     def check_get_usage(self, usage, name, submodules, srcdir, builddir,
-                        expected=None, *, write_pkg_config=True):
+                        expected=None, *, pkg=None, write_pkg_config=True):
         def mock_exists(p, variables={}):
             p = os.path.normcase(p.string(**variables))
             return p.startswith(os.path.normcase(abspath('/mock')) + os.sep)
@@ -74,6 +74,9 @@ class TestPath(UsageTest):
             expected = {'name': name, 'type': self.type,
                         'path': self.pkgconfdir, 'pcfiles': [pcname],
                         'auto_link': False}
+
+        if pkg is None:
+            pkg = MockPackage(name)
 
         self.clear_pkgdir()
 
@@ -88,7 +91,7 @@ class TestPath(UsageTest):
              mock.patch('mopack.usage.path_system.exists',
                         mock_exists):  # noqa
             self.assertEqual(usage.get_usage(
-                MockPackage(name), submodules, self.pkgdir, srcdir, builddir
+                pkg, submodules, self.pkgdir, srcdir, builddir
             ), expected)
 
     def check_pkg_config(self, name, submodules, expected={}):
@@ -102,12 +105,28 @@ class TestPath(UsageTest):
             call_pkg_config(pcname, ['--libs'], path=self.pkgconfdir),
             expected.get('libs', ['-L' + abspath('/mock/lib'), '-l' + name])
         )
+        self.assertEqual(
+            call_pkg_config(pcname, ['--modversion'], path=self.pkgconfdir,
+                            split=False),
+            expected.get('version', '')
+        )
 
     def test_basic(self):
         usage = self.make_usage('foo')
         self.check_usage(usage)
+
+        with self.assertRaises(NotImplementedError):
+            usage.version(None, None, None)
+
         self.check_get_usage(usage, 'foo', None, None, None)
         self.check_pkg_config('foo', None)
+
+    def test_package_version(self):
+        usage = self.make_usage('foo')
+        self.check_usage(usage)
+        self.check_get_usage(usage, 'foo', None, None, None,
+                             pkg=MockPackage('foo', version='1.23'))
+        self.check_pkg_config('foo', None, {'version': '1.23'})
 
     def test_pkg_config_up_to_date(self):
         usage = self.make_usage('foo')

@@ -12,6 +12,7 @@ from mopack.shell import ShellArguments
 from mopack.sources import Package, PackageOptions
 from mopack.sources.apt import AptPackage
 from mopack.sources.conan import ConanPackage
+from mopack.types import FieldKeyError
 
 
 def mock_open_write():
@@ -36,6 +37,20 @@ class TestConan(SourceTest):
     pkgdir = os.path.abspath('/path/to/builddir/mopack')
     pkgconfdir = os.path.join(pkgdir, 'conan')
 
+    def check_resolve_all(self, pkgs, conanfile, extra_args=[]):
+        with mock_open_log(mock_open_write()) as mopen, \
+             mock.patch('subprocess.run') as mrun:  # noqa
+            ConanPackage.resolve_all(pkgs, self.pkgdir)
+
+            self.assertEqual(mopen.mock_file.getvalue(), conanfile)
+            conandir = os.path.join(self.pkgdir, 'conan')
+            mrun.assert_called_with(
+                (['conan', 'install', '-if', conandir] + extra_args +
+                 ['--', self.pkgdir]),
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                universal_newlines=True, check=True
+            )
+
     def check_usage(self, pkg, *, submodules=None, usage=None):
         if usage is None:
             pcfiles = ([] if pkg.submodules and pkg.submodules['required'] else
@@ -55,23 +70,22 @@ class TestConan(SourceTest):
         self.assertEqual(pkg.needs_dependencies, False)
         self.assertEqual(pkg.should_deploy, True)
 
-        with mock_open_log(mock_open_write()) as mopen, \
-             mock.patch('subprocess.run') as mcall:  # noqa
-            ConanPackage.resolve_all([pkg], self.pkgdir)
+        self.check_resolve_all([pkg], dedent("""\
+            [requires]
+            foo/1.2.3@conan/stable
 
-            self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
-                [requires]
-                foo/1.2.3@conan/stable
+            [options]
 
-                [options]
+            [generators]
+            pkg_config
+        """))
 
-                [generators]
-                pkg_config
-            """))
-            mcall.assert_called_with(
-                ['conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
-                 '--', self.pkgdir], stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT, universal_newlines=True, check=True
+        with mock.patch('subprocess.run') as mrun:
+            pkg.version(self.pkgdir)
+            mrun.assert_called_once_with(
+                ['conan', 'inspect', '--raw=version',
+                 'foo/1.2.3@conan/stable'],
+                check=True, stdout=subprocess.PIPE, universal_newlines=True
             )
 
         self.check_usage(pkg)
@@ -85,24 +99,15 @@ class TestConan(SourceTest):
         self.assertEqual(pkg.needs_dependencies, False)
         self.assertEqual(pkg.should_deploy, True)
 
-        with mock_open_log(mock_open_write()) as mopen, \
-             mock.patch('subprocess.run') as mcall:  # noqa
-            ConanPackage.resolve_all([pkg], self.pkgdir)
+        self.check_resolve_all([pkg], dedent("""\
+            [requires]
+            foo/1.2.3@conan/stable
 
-            self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
-                [requires]
-                foo/1.2.3@conan/stable
+            [options]
 
-                [options]
-
-                [generators]
-                pkg_config
-            """))
-            mcall.assert_called_with(
-                ['conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
-                 '--build=foo', '--', self.pkgdir], stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT, universal_newlines=True, check=True
-            )
+            [generators]
+            pkg_config
+        """), ['--build=foo'])
 
         self.check_usage(pkg)
 
@@ -114,25 +119,16 @@ class TestConan(SourceTest):
         self.assertEqual(pkg.options, {'shared': True})
         self.assertEqual(pkg.should_deploy, True)
 
-        with mock_open_log(mock_open_write()) as mopen, \
-             mock.patch('subprocess.run') as mcall:  # noqa
-            ConanPackage.resolve_all([pkg], self.pkgdir)
+        self.check_resolve_all([pkg], dedent("""\
+            [requires]
+            foo/1.2.3@conan/stable
 
-            self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
-                [requires]
-                foo/1.2.3@conan/stable
+            [options]
+            foo:shared=True
 
-                [options]
-                foo:shared=True
-
-                [generators]
-                pkg_config
-            """))
-            mcall.assert_called_with(
-                ['conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
-                 '--', self.pkgdir], stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT, universal_newlines=True, check=True
-            )
+            [generators]
+            pkg_config
+        """))
 
         self.check_usage(pkg)
 
@@ -145,25 +141,15 @@ class TestConan(SourceTest):
         self.assertEqual(pkg.options, {})
         self.assertEqual(pkg.should_deploy, True)
 
-        with mock_open_log(mock_open_write()) as mopen, \
-             mock.patch('subprocess.run') as mcall:  # noqa
-            ConanPackage.resolve_all([pkg], self.pkgdir)
+        self.check_resolve_all([pkg], dedent("""\
+            [requires]
+            foo/1.2.3@conan/stable
 
-            self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
-                [requires]
-                foo/1.2.3@conan/stable
+            [options]
 
-                [options]
-
-                [generators]
-                pkg_config
-            """))
-            mcall.assert_called_with(
-                ['conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
-                 '--build=foo', '-gcmake', '--', self.pkgdir],
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, check=True
-            )
+            [generators]
+            pkg_config
+        """), ['--build=foo', '-gcmake'])
 
         self.check_usage(pkg)
 
@@ -175,14 +161,15 @@ class TestConan(SourceTest):
         self.assertEqual(pkg.options, {})
         self.assertEqual(pkg.should_deploy, True)
 
-        with mock_open_log(mock_open_write()) as mopen, \
-             mock.patch('subprocess.run') as mcall:  # noqa
-            ConanPackage.resolve_all([pkg], self.pkgdir)
-            mcall.assert_called_with(
-                ['conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
-                 '--build', '--', self.pkgdir], stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT, universal_newlines=True, check=True
-            )
+        self.check_resolve_all([pkg], dedent("""\
+            [requires]
+            foo/1.2.3@conan/stable
+
+            [options]
+
+            [generators]
+            pkg_config
+        """), ['--build'])
 
         self.check_usage(pkg)
 
@@ -196,15 +183,15 @@ class TestConan(SourceTest):
         self.assertEqual(pkg.options, {})
         self.assertEqual(pkg.should_deploy, True)
 
-        with mock_open_log(mock_open_write()) as mopen, \
-             mock.patch('subprocess.run') as mcall:  # noqa
-            ConanPackage.resolve_all([pkg], self.pkgdir)
-            mcall.assert_called_with(
-                ['conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
-                 '--build=foo', '--build=bar', '--', self.pkgdir],
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, check=True
-            )
+        self.check_resolve_all([pkg], dedent("""\
+            [requires]
+            foo/1.2.3@conan/stable
+
+            [options]
+
+            [generators]
+            pkg_config
+        """), ['--build=foo', '--build=bar'])
 
         self.check_usage(pkg)
 
@@ -215,11 +202,7 @@ class TestConan(SourceTest):
                               options={'shared': True}),
         ]
 
-        with mock_open_log(mock_open_write()) as mopen, \
-             mock.patch('subprocess.run') as mcall:  # noqa
-            ConanPackage.resolve_all(pkgs, self.pkgdir)
-
-            self.assertEqual(mopen.mock_file.getvalue(), dedent("""\
+        self.check_resolve_all(pkgs, dedent("""\
                 [requires]
                 foo/1.2.3@conan/stable
                 bar/2.3.4@conan/stable
@@ -230,14 +213,14 @@ class TestConan(SourceTest):
                 [generators]
                 pkg_config
             """))
-            mcall.assert_called_with(
-                ['conan', 'install', '-if', os.path.join(self.pkgdir, 'conan'),
-                 '--', self.pkgdir], stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT, universal_newlines=True, check=True
-            )
 
         for pkg in pkgs:
             self.check_usage(pkg)
+
+    def test_invalid_version(self):
+        with self.assertRaises(FieldKeyError):
+            self.make_package('foo', remote='foo/1.2.3@conan/stable',
+                              version='1.0')
 
     def test_submodules(self):
         submodules_required = {'names': '*', 'required': True}

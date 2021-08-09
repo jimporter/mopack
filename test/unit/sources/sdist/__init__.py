@@ -37,7 +37,7 @@ class SDistTestCase(SourceTest):
             ), 'a')
 
         with mock.patch('mopack.usage.path_system.file_outdated',
-                        return_value=True):
+                        return_value=False):
             self.assertEqual(pkg.get_usage(submodules, self.pkgdir), usage)
 
     def make_builder(self, builder_type, name, *, submodules=None,
