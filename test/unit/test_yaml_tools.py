@@ -25,11 +25,11 @@ class TestMakeParseError(TestCase):
         self.assertError(err, (0, 1), '&', '  &\n   ^')
 
     def test_offset_plain(self):
-        data = StringIO(dedent("""
+        data = StringIO(dedent("""\
           house:
             cat: meow
             dog: woof
-        """).strip())
+        """))
         cfg = yaml.load(data, Loader=SafeLineLoader)
         e = MarkedYAMLOffsetError('context', cfg['house'].mark, 'problem',
                                   cfg['house'].value_marks['cat'], offset=2)
@@ -38,11 +38,11 @@ class TestMakeParseError(TestCase):
                          '    cat: meow\n           ^')
 
     def test_offset_quoted(self):
-        data = StringIO(dedent("""
+        data = StringIO(dedent("""\
           house:
             cat: "meow"
             dog: "woof"
-        """).strip())
+        """))
         cfg = yaml.load(data, Loader=SafeLineLoader)
         e = MarkedYAMLOffsetError('context', cfg['house'].mark, 'problem',
                                   cfg['house'].value_marks['cat'], offset=2)
@@ -51,13 +51,13 @@ class TestMakeParseError(TestCase):
                          '    cat: "meow"\n            ^')
 
     def test_offset_quoted_multiline(self):
-        data = StringIO(dedent("""
+        data = StringIO(dedent("""\
           house:
             cat: "meow
               meow
               meow"
             dog: "woof"
-        """).strip())
+        """))
         cfg = yaml.load(data, Loader=SafeLineLoader)
 
         # Error at start of second line.
@@ -79,13 +79,13 @@ class TestMakeParseError(TestCase):
         self.assertError(err, (3, 4), '    meow"', '      meow"\n      ^')
 
     def test_offset_block(self):
-        data = StringIO(dedent("""
+        data = StringIO(dedent("""\
           house:
             cat: >
               meow
               meow
             dog: "woof"
-        """).strip())
+        """))
         cfg = yaml.load(data, Loader=SafeLineLoader)
 
         # Error on first line of block.
@@ -107,13 +107,13 @@ class TestMakeParseError(TestCase):
         self.assertError(err, (4, 0), '', '  \n  ^')
 
     def test_offset_block_indent_level(self):
-        data = StringIO(dedent("""
+        data = StringIO(dedent("""\
           house:
             cat: >2
                meow
                meow
             dog: "woof"
-        """).strip())
+        """))
         cfg = yaml.load(data, Loader=SafeLineLoader)
 
         # Error on first line of block.
@@ -129,11 +129,11 @@ class TestMakeParseError(TestCase):
         self.assertError(err, (3, 4), '     meow', '       meow\n      ^')
 
     def test_offset_anchor_alias(self):
-        data = StringIO(dedent("""
+        data = StringIO(dedent("""\
           house:
             cat: &anchor meow
             dog: *anchor
-        """).strip())
+        """))
         cfg = yaml.load(data, Loader=SafeLineLoader)
 
         # Error on anchor line.
@@ -153,13 +153,13 @@ class TestMakeParseError(TestCase):
                          '                   ^')
 
     def test_offset_anchor_block(self):
-        data = StringIO(dedent("""
+        data = StringIO(dedent("""\
           house:
             cat: &anchor >
               meow
               meow
             dog: *anchor
-        """).strip())
+        """))
         cfg = yaml.load(data, Loader=SafeLineLoader)
 
         # Error on anchor line.
@@ -176,14 +176,14 @@ class TestMakeParseError(TestCase):
 
 
 class TestLoadFile(TestCase):
-    yaml_data = dedent("""
+    yaml_data = dedent("""\
       house:
         cat: 1
         dog: 2
       zoo:
         panda: 3
         giraffe: 4
-    """).strip()
+    """)
 
     def test_success(self):
         mopen = mock_open_data(self.yaml_data)
@@ -366,25 +366,25 @@ class TestSafeLineLoader(TestCase):
                          expected)
 
     def test_mapping(self):
-        data = yaml.load(dedent("""
+        data = yaml.load(dedent("""\
           house:
             cat: 1
             dog: 2
           zoo:
             panda: 3
             giraffe: 4
-        """).strip(), Loader=SafeLineLoader)
+        """), Loader=SafeLineLoader)
 
         self.assertEqual(data, {'house': {'cat': 1, 'dog': 2},
                                 'zoo': {'panda': 3, 'giraffe': 4}})
 
-        self.assertMark(data.mark, (0, 0), (5, 12))
+        self.assertMark(data.mark, (0, 0), (6, 0))
         self.assertMarkDicts(data.marks,
                              {'house': [(0, 0), (0, 5)],
                               'zoo':   [(3, 0), (3, 3)]})
         self.assertMarkDicts(data.value_marks,
-                             {'house': [(1, 2), (3,  0)],
-                              'zoo':   [(4, 2), (5, 12)]})
+                             {'house': [(1, 2), (3, 0)],
+                              'zoo':   [(4, 2), (6, 0)]})
 
         self.assertMark(data['house'].mark, (1, 2), (3, 0))
         self.assertMarkDicts(data['house'].marks,
@@ -394,7 +394,7 @@ class TestSafeLineLoader(TestCase):
                              {'cat': [(1, 7), (1, 8)],
                               'dog': [(2, 7), (2, 8)]})
 
-        self.assertMark(data['zoo'].mark, (4, 2), (5, 12))
+        self.assertMark(data['zoo'].mark, (4, 2), (6, 0))
         self.assertMarkDicts(data['zoo'].marks,
                              {'panda':   [(4, 2), (4, 7)],
                               'giraffe': [(5, 2), (5, 9)]})
@@ -403,26 +403,26 @@ class TestSafeLineLoader(TestCase):
                               'giraffe': [(5, 11), (5, 12)]})
 
     def test_sequence(self):
-        data = yaml.load(dedent("""
+        data = yaml.load(dedent("""\
           - - A1
             - A2
           - - B1
             - B2
-        """).strip(), Loader=SafeLineLoader)
+        """), Loader=SafeLineLoader)
 
         self.assertEqual(data, [['A1', 'A2'], ['B1', 'B2']])
 
-        self.assertMark(data.mark, (0, 0), (3, 6))
+        self.assertMark(data.mark, (0, 0), (4, 0))
         self.assertMarkLists(data.marks,
                              [[(0, 2), (2, 0)],
-                              [(2, 2), (3, 6)]])
+                              [(2, 2), (4, 0)]])
 
         self.assertMark(data[0].mark, (0, 2), (2, 0))
         self.assertMarkLists(data[0].marks,
                              [[(0, 4), (0, 6)],
                               [(1, 4), (1, 6)]])
 
-        self.assertMark(data[1].mark, (2, 2), (3, 6))
+        self.assertMark(data[1].mark, (2, 2), (4, 0))
         self.assertMarkLists(data[1].marks,
                              [[(2, 4), (2, 6)],
                               [(3, 4), (3, 6)]])
@@ -492,11 +492,11 @@ class TestGetOffsetMark(TestCase):
         self.assertMark(_get_offset_mark(data, 15), (2, 7), 20)
 
     def test_block(self):
-        data = dedent("""
+        data = dedent("""\
           >
             meow
             meow
-        """).strip()
+        """)
         self.assertMark(_get_offset_mark(data, 0), (1, 2), 4)
         self.assertMark(_get_offset_mark(data, 3), (1, 5), 7)
         self.assertMark(_get_offset_mark(data, 4), (1, 6), 8)
@@ -504,19 +504,19 @@ class TestGetOffsetMark(TestCase):
         self.assertMark(_get_offset_mark(data, 8), (2, 5), 14)
         self.assertMark(_get_offset_mark(data, 9), (2, 6), 15)
 
-        data = dedent("""
+        data = dedent("""\
           >
             meow
 
-        """).lstrip()
+        """)
         self.assertMark(_get_offset_mark(data, 5), (3, 0), 10)
 
     def test_block_indent_level(self):
-        data = dedent("""
+        data = dedent("""\
           >2
               meow
               meow
-        """).strip()
+        """)
         self.assertMark(_get_offset_mark(data, 0), (1, 2), 5)
         self.assertMark(_get_offset_mark(data, 5), (1, 7), 10)
         self.assertMark(_get_offset_mark(data, 6), (1, 8), 11)
@@ -525,20 +525,20 @@ class TestGetOffsetMark(TestCase):
         self.assertMark(_get_offset_mark(data, 13), (2, 8), 20)
 
     def test_block_keep_newlines(self):
-        data = dedent("""
+        data = dedent("""\
           |+
             meow
 
 
-        """).lstrip()
+        """)
         self.assertMark(_get_offset_mark(data, 5), (4, 0), 12)
 
     def test_block_empty(self):
-        data = dedent("""
+        data = dedent("""\
           >
-        """).strip()
-        self.assertMark(_get_offset_mark(data, 0), (0, 1), 1)
-        self.assertMark(_get_offset_mark(data, 1), (0, 1), 1)
+        """)
+        self.assertMark(_get_offset_mark(data, 0), (1, 0), 2)
+        self.assertMark(_get_offset_mark(data, 1), (1, 0), 2)
 
     def test_anchor(self):
         data = '&anchor meow'
@@ -546,11 +546,11 @@ class TestGetOffsetMark(TestCase):
         self.assertMark(_get_offset_mark(data, 2), (0, 10), 10)
 
     def test_anchor_block(self):
-        data = dedent("""
+        data = dedent("""\
           &anchor >
             meow
             meow
-        """).strip()
+        """)
         self.assertMark(_get_offset_mark(data, 0), (1, 2), 12)
         self.assertMark(_get_offset_mark(data, 3), (1, 5), 15)
         self.assertMark(_get_offset_mark(data, 4), (1, 6), 16)

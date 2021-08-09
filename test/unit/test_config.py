@@ -11,20 +11,20 @@ from mopack.sources.apt import AptPackage
 from mopack.sources.conan import ConanPackage
 from mopack.sources.sdist import DirectoryPackage
 
-foobar_cfg = dedent("""
+foobar_cfg = dedent("""\
   packages:
     foo: {source: apt}
     bar: {source: apt}
 """)
 
-foo_cfg = dedent("""
+foo_cfg = dedent("""\
   packages:
     foo:
       source: apt
       remote: libfoo1-dev
 """)
 
-bar_cfg = dedent("""
+bar_cfg = dedent("""\
   packages:
     bar:
       source: apt
@@ -121,7 +121,7 @@ class TestConfig(TestCase):
         self.assertEqual(list(cfg.packages.items()), [])
 
     def test_packages(self):
-        data = dedent("""
+        data = dedent("""\
           packages:
             foo:
               source: apt
@@ -138,7 +138,7 @@ class TestConfig(TestCase):
         self.assertEqual(list(cfg.packages.items()), [('foo', pkg)])
 
     def test_conditional_packages(self):
-        data = dedent("""
+        data = dedent("""\
           packages:
             foo:
               - if: false
@@ -160,7 +160,7 @@ class TestConfig(TestCase):
         self.assertEqual(list(cfg.packages.items()), [('foo', pkg)])
 
     def test_invalid_conditional_packages(self):
-        data = dedent("""
+        data = dedent("""\
           packages:
             foo:
               - source: apt
@@ -184,7 +184,7 @@ class TestConfig(TestCase):
         self.assertEqual(list(cfg.packages.items()), [])
 
     def test_common_options(self):
-        data = dedent("""
+        data = dedent("""\
           options:
             target_platform: linux
             env:
@@ -208,7 +208,7 @@ class TestConfig(TestCase):
         self.assertEqual(list(cfg.packages.items()), [('foo', pkg)])
 
     def test_multiple_common_options(self):
-        data1 = dedent("""
+        data1 = dedent("""\
           options:
             target_platform: linux
             env:
@@ -217,7 +217,7 @@ class TestConfig(TestCase):
             foo:
               source: apt
         """)
-        data2 = dedent("""
+        data2 = dedent("""\
           options:
             target_platform: windows
             env:
@@ -245,7 +245,7 @@ class TestConfig(TestCase):
         ])
 
     def test_builder_options(self):
-        data = dedent("""
+        data = dedent("""\
           options:
             builders:
               bfg9000:
@@ -279,7 +279,7 @@ class TestConfig(TestCase):
         ])
 
     def test_multiple_builder_options(self):
-        data1 = dedent("""
+        data1 = dedent("""\
           options:
             builders:
               bfg9000:
@@ -288,7 +288,7 @@ class TestConfig(TestCase):
             foo:
               source: apt
         """)
-        data2 = dedent("""
+        data2 = dedent("""\
           options:
             builders:
               bfg9000:
@@ -319,7 +319,7 @@ class TestConfig(TestCase):
         ])
 
     def test_source_options(self):
-        data = dedent("""
+        data = dedent("""\
           options:
             sources:
               conan:
@@ -351,13 +351,13 @@ class TestConfig(TestCase):
         ])
 
     def test_multiple_source_options(self):
-        data1 = dedent("""
+        data1 = dedent("""\
           options:
             sources:
               conan:
                 extra_args: -B
         """)
-        data2 = dedent("""
+        data2 = dedent("""\
           options:
             sources:
               conan:
@@ -367,7 +367,7 @@ class TestConfig(TestCase):
             foo:
               source: apt
         """)
-        data3 = dedent("""
+        data3 = dedent("""\
           options:
             sources:
               conan:
@@ -418,7 +418,7 @@ class TestChildConfig(TestCase):
         self.assertEqual(list(parent.packages.items()), [])
 
     def test_export_config(self):
-        cfg = dedent("""
+        cfg = dedent("""\
         export:
           build: bfg9000
           usage: pkg_config
@@ -528,7 +528,7 @@ class TestChildConfig(TestCase):
             parent.add_children([child1, child2])
 
     def test_builder_options(self):
-        data = dedent("""
+        data = dedent("""\
           options:
             builders:
               bfg9000:
@@ -567,13 +567,13 @@ class TestChildConfig(TestCase):
         ])
 
     def test_source_options(self):
-        data1 = dedent("""
+        data1 = dedent("""\
           options:
             sources:
               conan:
                 extra_args: foo
         """)
-        data2 = dedent("""
+        data2 = dedent("""\
           options:
             sources:
               conan:

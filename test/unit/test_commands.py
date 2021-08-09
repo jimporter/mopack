@@ -18,7 +18,7 @@ class CommandsTestCase(TestCase):
             return Config(files)
 
     def make_apt_config(self):
-        cfg_data = dedent("""
+        cfg_data = dedent("""\
           packages:
             foo:
               source: apt

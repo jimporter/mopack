@@ -69,15 +69,15 @@ class TestNested(IntegrationTest):
             self.assertExists(lib_prefix + 'pkgconfig/hello.pc')
 
         if self.supports_unicode:
-            self.assertOutput(['mopack', 'list-packages'], dedent("""
+            self.assertOutput(['mopack', 'list-packages'], dedent("""\
                 └─ greeter 1.0 (directory)
                    └─ hello 1.0 (tarball)
-            """).lstrip())
+            """))
         else:
-            self.assertOutput(['mopack', 'list-packages'], dedent("""
+            self.assertOutput(['mopack', 'list-packages'], dedent("""\
                 +- greeter 1.0 (directory)
                    +- hello 1.0 (tarball)
-            """).lstrip())
+            """))
 
         self.assertOutput(['mopack', 'list-packages', '--flat'],
                           'hello 1.0 (tarball)\ngreeter 1.0 (directory)\n')
@@ -130,15 +130,15 @@ class TestNested(IntegrationTest):
             self.assertExists(lib_prefix + 'pkgconfig/hello.pc')
 
         if self.supports_unicode:
-            self.assertOutput(['mopack', 'list-packages'], dedent("""
+            self.assertOutput(['mopack', 'list-packages'], dedent("""\
                 ├─ hello 1.0 (directory)
                 └─ greeter 1.0 (directory)
-            """).lstrip())
+            """))
         else:
-            self.assertOutput(['mopack', 'list-packages'], dedent("""
+            self.assertOutput(['mopack', 'list-packages'], dedent("""\
                 +- hello 1.0 (directory)
                 +- greeter 1.0 (directory)
-            """).lstrip())
+            """))
 
         self.assertOutput(['mopack', 'list-packages', '--flat'],
                           'hello 1.0 (directory)\ngreeter 1.0 (directory)\n')
