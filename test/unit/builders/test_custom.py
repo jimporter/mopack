@@ -22,7 +22,7 @@ class TestCustomBuilder(BuilderTest):
             pcfiles = ['foo']
             pcfiles.extend('foo_{}'.format(i) for i in iterate(submodules))
             usage = {'name': 'foo', 'type': 'pkg_config',
-                     'path': self.pkgconfdir('foo'), 'pcfiles': pcfiles,
+                     'path': [self.pkgconfdir('foo')], 'pcfiles': pcfiles,
                      'extra_args': []}
         if build_commands is None:
             builddir = os.path.join(self.pkgdir, 'build', builder.name)
@@ -183,7 +183,7 @@ class TestCustomBuilder(BuilderTest):
 
         self.check_build(builder, usage={
             'name': 'foo', 'type': 'pkg_config',
-            'path': self.pkgconfdir('foo', 'pkgconf'), 'pcfiles': ['foo'],
+            'path': [self.pkgconfdir('foo', 'pkgconf')], 'pcfiles': ['foo'],
             'extra_args': [],
         })
 
@@ -197,7 +197,7 @@ class TestCustomBuilder(BuilderTest):
         )
         self.check_build(builder, submodules=['sub'], usage={
             'name': 'foo', 'type': 'pkg_config',
-            'path': self.pkgconfdir('foo'), 'pcfiles': ['foo_sub'],
+            'path': [self.pkgconfdir('foo')], 'pcfiles': ['foo_sub'],
             'extra_args': [],
         })
 
@@ -208,7 +208,7 @@ class TestCustomBuilder(BuilderTest):
         )
         self.check_build(builder, submodules=['sub'], usage={
             'name': 'foo', 'type': 'pkg_config',
-            'path': self.pkgconfdir('foo'), 'pcfiles': ['bar', 'foo_sub'],
+            'path': [self.pkgconfdir('foo')], 'pcfiles': ['bar', 'foo_sub'],
             'extra_args': [],
         })
 
@@ -225,7 +225,7 @@ class TestCustomBuilder(BuilderTest):
         )
         self.check_build(builder, submodules=['sub'], usage={
             'name': 'foo', 'type': 'pkg_config',
-            'path': self.pkgconfdir('foo'), 'pcfiles': ['bar', 'foo_sub'],
+            'path': [self.pkgconfdir('foo')], 'pcfiles': ['bar', 'foo_sub'],
             'extra_args': [],
         })
 

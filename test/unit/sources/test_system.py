@@ -37,7 +37,7 @@ class TestSystemPackage(SourceTest):
                   if submodules else pkg.name)
         if expected is None:
             expected = {'name': pkg.name, 'type': 'system',
-                        'path': self.pkgconfdir, 'pcfiles': [pcname],
+                        'path': [self.pkgconfdir], 'pcfiles': [pcname],
                         'auto_link': False}
 
         self.clear_pkgdir()
@@ -85,7 +85,7 @@ class TestSystemPackage(SourceTest):
         pkg = self.make_package('foo', auto_link=True)
         pkg.resolve(self.pkgdir)
         self.check_get_usage(pkg, None, {
-            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
+            'name': 'foo', 'type': 'system', 'path': [self.pkgconfdir],
             'pcfiles': ['foo'], 'auto_link': True,
         })
         self.check_pkg_config('foo', None, {

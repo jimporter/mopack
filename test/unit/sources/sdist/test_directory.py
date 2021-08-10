@@ -99,8 +99,9 @@ class TestDirectory(SDistTestCase):
                         return_value=True), \
              mock.patch('builtins.open'):  # noqa
             self.check_resolve(pkg, usage={
-                'name': 'foo', 'type': 'system', 'path': self.pkgconfdir(None),
-                'pcfiles': ['foo'], 'auto_link': False,
+                'name': 'foo', 'type': 'system',
+                'path': [self.pkgconfdir(None)], 'pcfiles': ['foo'],
+                'auto_link': False,
             })
 
     def test_infer_build_override(self):
@@ -256,7 +257,7 @@ class TestDirectory(SDistTestCase):
         pkg.fetch(self.config, self.pkgdir)
         self.check_resolve(pkg, usage={
             'name': 'foo', 'type': 'pkg_config',
-            'path': self.pkgconfdir('foo', 'pkgconf'), 'pcfiles': ['foo'],
+            'path': [self.pkgconfdir('foo', 'pkgconf')], 'pcfiles': ['foo'],
             'extra_args': [],
         })
 
@@ -270,7 +271,7 @@ class TestDirectory(SDistTestCase):
 
         pkg.fetch(self.config, self.pkgdir)
         self.check_resolve(pkg, usage={
-            'name': 'foo', 'type': 'path', 'path': self.pkgconfdir(None),
+            'name': 'foo', 'type': 'path', 'path': [self.pkgconfdir(None)],
             'pcfiles': ['foo'], 'auto_link': False,
         })
 
@@ -291,7 +292,7 @@ class TestDirectory(SDistTestCase):
                                 submodules=submodules_required)
         self.check_resolve(pkg, submodules=['sub'], usage={
             'name': 'foo', 'type': 'pkg_config',
-            'path': self.pkgconfdir('foo'), 'pcfiles': ['bar', 'foo_sub'],
+            'path': [self.pkgconfdir('foo')], 'pcfiles': ['bar', 'foo_sub'],
             'extra_args': [],
         })
 
@@ -304,7 +305,7 @@ class TestDirectory(SDistTestCase):
                                 submodules=submodules_optional)
         self.check_resolve(pkg, submodules=['sub'], usage={
             'name': 'foo', 'type': 'pkg_config',
-            'path': self.pkgconfdir('foo'), 'pcfiles': ['bar', 'foo_sub'],
+            'path': [self.pkgconfdir('foo')], 'pcfiles': ['bar', 'foo_sub'],
             'extra_args': [],
         })
 

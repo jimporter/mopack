@@ -25,9 +25,8 @@ function(mopack_usage package)
     OUTPUT_FILE ${usage_file}
   )
 
-  _jq(${usage_file} QUERY .path OUT pkgconf_path)
-  _jq(${usage_file} QUERY .pcfiles[] OUT pkgconf_pcfiles)
-  string(REPLACE "\n" " " pkgconf_pcfiles "${pkgconf_pcfiles}")
+  _jq(${usage_file} QUERY ".path | join(\":\")" OUT pkgconf_path)
+  _jq(${usage_file} QUERY ".pcfiles | join(\" \")" OUT pkgconf_pcfiles)
 
   set(ENV{PKG_CONFIG_PATH} ${pkgconf_path})
   pkg_check_modules(

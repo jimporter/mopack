@@ -3,12 +3,12 @@ import subprocess
 from . import submodule_placeholder, Usage
 from .. import types
 from ..environment import get_pkg_config
-from ..freezedried import DictFreezeDryer, FreezeDried
+from ..freezedried import DictFreezeDryer, FreezeDried, ListFreezeDryer
 from ..iterutils import listify
 from ..package_defaults import DefaultResolver
 from ..path import Path
 from ..placeholder import placeholder, PlaceholderFD
-from ..shell import ShellArguments
+from ..shell import join_paths, ShellArguments
 
 _SubmoduleFD = PlaceholderFD(submodule_placeholder)
 
@@ -47,7 +47,7 @@ def _submodule_map(field, value):
 
 
 @FreezeDried.fields(rehydrate={
-    'path': Path, 'extra_args': ShellArguments,
+    'path': ListFreezeDryer(Path), 'extra_args': ShellArguments,
     'submodule_map': DictFreezeDryer(value_type=_SubmoduleMapping),
 })
 class PkgConfigUsage(Usage):
@@ -74,7 +74,7 @@ class PkgConfigUsage(Usage):
             default_pcfile = name
 
         T = types.TypeCheck(locals(), symbols)
-        T.path(types.abs_or_inner_path(buildbase))
+        T.path(types.list_of(types.abs_or_inner_path(buildbase), listify=True))
         T.pcfile(types.maybe(types.string, default=default_pcfile))
         T.extra_args(types.shell_args(none_ok=True))
 
@@ -88,9 +88,9 @@ class PkgConfigUsage(Usage):
             ), extra_symbols=extra_symbols)
 
     def version(self, pkgdir, srcdir, builddir):
-        pcpath = self.path.string(srcdir=srcdir, builddir=builddir)
+        path = [i.string(srcdir=srcdir, builddir=builddir) for i in self.path]
         env = self._common_options.env
-        env['PKG_CONFIG_PATH'] = pcpath
+        env['PKG_CONFIG_PATH'] = join_paths(path)
         pkg_config = get_pkg_config(self._common_options.env)
 
         return subprocess.run(
@@ -106,7 +106,7 @@ class PkgConfigUsage(Usage):
             return self.submodule_map['*'].fill(submodule)
 
     def get_usage(self, pkg, submodules, pkgdir, srcdir, builddir):
-        pcpath = self.path.string(srcdir=srcdir, builddir=builddir)
+        path = [i.string(srcdir=srcdir, builddir=builddir) for i in self.path]
         extra_args = self.extra_args.fill(srcdir=srcdir, builddir=builddir)
 
         if submodules and self.submodule_map:
@@ -119,5 +119,5 @@ class PkgConfigUsage(Usage):
             if i.pcfile:
                 pcfiles.append(i.pcfile)
 
-        return self._usage(pkg, path=pcpath, pcfiles=pcfiles,
+        return self._usage(pkg, path=path, pcfiles=pcfiles,
                            extra_args=extra_args)

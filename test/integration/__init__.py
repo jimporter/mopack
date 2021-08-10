@@ -188,7 +188,7 @@ def cfg_custom_builder(name, *, build_commands=[], deploy_commands=[],
     }
 
 
-def cfg_pkg_config_usage(*, path={'base': 'builddir', 'path': 'pkgconfig'},
+def cfg_pkg_config_usage(*, path=[{'base': 'builddir', 'path': 'pkgconfig'}],
                          pcfile, extra_args=[], **kwargs):
     return {
         'type': 'pkg_config',
@@ -295,10 +295,10 @@ class IntegrationTest(unittest.TestCase):
             self.assertEqual(loader[format](output), usage)
         return output
 
-    def assertPkgConfigUsage(self, name, *, path=None, pcfiles=None,
+    def assertPkgConfigUsage(self, name, *, path=['pkgconfig'], pcfiles=None,
                              extra_args=[], submodules=[]):
-        if path is None or not os.path.isabs(path):
-            path = os.path.join(self.pkgbuilddir, name, path or 'pkgconfig')
+        path = [(i if os.path.isabs(i) else
+                 os.path.join(self.pkgbuilddir, name, i)) for i in path]
         if pcfiles is None:
             pcfiles = [name]
 
@@ -315,8 +315,8 @@ class IntegrationTest(unittest.TestCase):
             libraries = [name]
         pkgconfdir = os.path.join(self.stage, 'mopack', 'pkgconfig')
         self.assertUsage(name, {
-            'name': name, 'type': type, 'path': pkgconfdir, 'pcfiles': [name],
-            'auto_link': auto_link,
+            'name': name, 'type': type, 'path': [pkgconfdir],
+            'pcfiles': [name], 'auto_link': auto_link,
         }, submodules=submodules)
 
         self.assertCountEqual(

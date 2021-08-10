@@ -54,7 +54,7 @@ class TestApt(SourceTest):
                         for i in iterate(submodules))
 
             usage = {'name': pkg.name, 'type': 'system',
-                     'path': self.pkgconfdir, 'pcfiles': [pcname],
+                     'path': [self.pkgconfdir], 'pcfiles': [pcname],
                      'auto_link': False}
 
         with mock.patch('subprocess.run', side_effect=OSError()), \
@@ -125,7 +125,7 @@ class TestApt(SourceTest):
         )
         self.check_resolve_all([pkg], ['libfoo-dev'])
         self.check_usage(pkg, submodules=['sub'], usage={
-            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
+            'name': 'foo', 'type': 'system', 'path': [self.pkgconfdir],
             'pcfiles': ['foo[sub]'], 'auto_link': False,
         })
 
@@ -139,7 +139,7 @@ class TestApt(SourceTest):
         )
         self.check_resolve_all([pkg], ['libfoo-dev'])
         self.check_usage(pkg, submodules=['sub'], usage={
-            'name': 'foo', 'type': 'system', 'path': self.pkgconfdir,
+            'name': 'foo', 'type': 'system', 'path': [self.pkgconfdir],
             'pcfiles': ['foo[sub]'], 'auto_link': False,
         })
 

@@ -30,7 +30,7 @@ packages:
     # ...
     usage:
       type: pkg_config
-      path: <path>
+      path: <path-list>
       extra_args: <shell-args>
       submodule_map: <submodule-map>  # or...
       submodule_map:

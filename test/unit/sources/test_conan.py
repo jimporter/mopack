@@ -58,7 +58,7 @@ class TestConan(SourceTest):
             pcfiles.extend('{}_{}'.format(pkg.name, i)
                            for i in iterate(submodules))
             usage = {'name': pkg.name, 'type': 'pkg_config',
-                     'path': self.pkgconfdir, 'pcfiles': pcfiles,
+                     'path': [self.pkgconfdir], 'pcfiles': pcfiles,
                      'extra_args': []}
         self.assertEqual(pkg.get_usage(submodules, self.pkgdir), usage)
 
@@ -235,7 +235,7 @@ class TestConan(SourceTest):
                                        'pcfile': 'bar'},
                                 submodules=submodules_required)
         self.check_usage(pkg, submodules=['sub'], usage={
-            'name': 'foo', 'type': 'pkg_config', 'path': self.pkgconfdir,
+            'name': 'foo', 'type': 'pkg_config', 'path': [self.pkgconfdir],
             'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
         })
 
@@ -248,7 +248,7 @@ class TestConan(SourceTest):
                                        'pcfile': 'bar'},
                                 submodules=submodules_optional)
         self.check_usage(pkg, submodules=['sub'], usage={
-            'name': 'foo', 'type': 'pkg_config', 'path': self.pkgconfdir,
+            'name': 'foo', 'type': 'pkg_config', 'path': [self.pkgconfdir],
             'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
         })
 

@@ -22,8 +22,8 @@ class TestUsage(IntegrationTest):
         expected_output_hello = {
             'name': 'hello',
             'type': 'pkg_config',
-            'path': os.path.join(self.stage, 'mopack', 'build', 'hello',
-                                 'pkgconfig'),
+            'path': [os.path.join(self.stage, 'mopack', 'build', 'hello',
+                                  'pkgconfig')],
             'pcfiles': ['hello'],
             'extra_args': [],
         }
@@ -33,7 +33,7 @@ class TestUsage(IntegrationTest):
         # Usage for `fake`.
         pkgconfdir = os.path.join(self.stage, 'mopack', 'pkgconfig')
         self.assertUsageOutput('fake', {
-            'name': 'fake', 'type': 'system', 'path': pkgconfdir,
+            'name': 'fake', 'type': 'system', 'path': [pkgconfdir],
             'pcfiles': ['fake'], 'auto_link': False,
         }, extra_env=usage_env)
         self.assertCountEqual(
@@ -56,7 +56,7 @@ class TestUsage(IntegrationTest):
         self.assertEqual(json.loads(output),
                          {'error': "unable to find library 'hello'"})
         self.assertUsageOutput('fake', {
-            'name': 'fake', 'type': 'system', 'path': pkgconfdir,
+            'name': 'fake', 'type': 'system', 'path': [pkgconfdir],
             'pcfiles': ['fake'], 'auto_link': False,
         }, wrongdir_args, extra_env=usage_env)
         self.assertCountEqual(

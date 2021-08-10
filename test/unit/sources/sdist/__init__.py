@@ -25,7 +25,7 @@ class SDistTestCase(SourceTest):
                        ['foo'])
             pcfiles.extend('foo_{}'.format(i) for i in iterate(submodules))
             usage = {'name': pkg.name, 'type': 'pkg_config',
-                     'path': self.pkgconfdir('foo'), 'pcfiles': pcfiles,
+                     'path': [self.pkgconfdir('foo')], 'pcfiles': pcfiles,
                      'extra_args': []}
 
         with mock_open_log() as mopen, \
