@@ -175,8 +175,8 @@
 <pre><code class="yaml">packages:
   my_pkg:
     source: apt
-    name: &lt;apt-name&gt;
-    remote: &lt;apt-repo&gt;
+    remote: &lt;string-list&gt;
+    repository: &lt;string&gt;
     usage: &lt;usage&gt;
 </code></pre>
 
@@ -189,8 +189,10 @@
 packages:
   my_pkg:
     source: conan
-    name: &lt;conan-name&gt;
-    remote: &lt;conan-repo&gt;
+    remote: &lt;string&gt;
+    build: &lt;boolean&gt;
+    options:
+      my_option: &lt;string-or-boolean&gt;
     usage: &lt;usage&gt;
 </code></pre>
 
