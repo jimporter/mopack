@@ -70,7 +70,7 @@ class TestApt(SourceTest):
 
     def test_basic(self):
         pkg = self.make_package('foo')
-        self.assertEqual(pkg.remote, 'libfoo-dev')
+        self.assertEqual(pkg.remote, ['libfoo-dev'])
         self.assertEqual(pkg.repository, None)
         self.assertEqual(pkg.needs_dependencies, False)
         self.assertEqual(pkg.should_deploy, True)
@@ -87,15 +87,37 @@ class TestApt(SourceTest):
 
     def test_remote(self):
         pkg = self.make_package('foo', remote='foo-dev')
-        self.assertEqual(pkg.remote, 'foo-dev')
+        self.assertEqual(pkg.remote, ['foo-dev'])
         self.assertEqual(pkg.repository, None)
         self.check_resolve_all([pkg], ['foo-dev'])
+
+        with mock.patch('subprocess.run') as mrun:
+            pkg.version(self.pkgdir)
+            mrun.assert_called_once_with(
+                ['dpkg-query', '-W', '-f${Version}', 'foo-dev'],
+                check=True, stdout=subprocess.PIPE, universal_newlines=True
+            )
+
+        self.check_usage(pkg)
+
+        pkg = self.make_package('foo', remote=['foo-dev', 'bar-dev'])
+        self.assertEqual(pkg.remote, ['foo-dev', 'bar-dev'])
+        self.assertEqual(pkg.repository, None)
+        self.check_resolve_all([pkg], ['foo-dev', 'bar-dev'])
+
+        with mock.patch('subprocess.run') as mrun:
+            pkg.version(self.pkgdir)
+            mrun.assert_called_once_with(
+                ['dpkg-query', '-W', '-f${Version}', 'foo-dev'],
+                check=True, stdout=subprocess.PIPE, universal_newlines=True
+            )
+
         self.check_usage(pkg)
 
     def test_repository(self):
         pkg = self.make_package('foo', remote='foo-dev',
                                 repository='ppa:foo/stable')
-        self.assertEqual(pkg.remote, 'foo-dev')
+        self.assertEqual(pkg.remote, ['foo-dev'])
         self.assertEqual(pkg.repository, 'ppa:foo/stable')
         self.check_resolve_all([pkg], ['foo-dev'])
         self.check_usage(pkg)

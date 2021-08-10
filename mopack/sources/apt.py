@@ -1,4 +1,5 @@
 import subprocess
+from itertools import chain
 
 from . import BinaryPackage
 from .. import log, types
@@ -19,7 +20,10 @@ class AptPackage(BinaryPackage):
         super().__init__(name, usage=usage, **kwargs)
 
         T = types.TypeCheck(locals(), self._expr_symbols)
-        T.remote(types.maybe(types.string, default='lib{}-dev'.format(name)))
+        T.remote(types.maybe(
+            types.list_of(types.string, listify=True, allow_empty=False),
+            default=['lib{}-dev'.format(name)]
+        ))
         T.repository(types.maybe(types.string))
 
     def version(self, pkgdir):
@@ -27,7 +31,7 @@ class AptPackage(BinaryPackage):
         # apt-specific?
         dpkgq = get_cmd(self._common_options.env, 'DPKG_QUERY', 'dpkg-query')
         return subprocess.run(
-            dpkgq + ['-W', '-f${Version}', self.remote],
+            dpkgq + ['-W', '-f${Version}', self.remote[0]],
             check=True, stdout=subprocess.PIPE, universal_newlines=True
         ).stdout
 
@@ -40,7 +44,7 @@ class AptPackage(BinaryPackage):
         apt = get_cmd(env, 'APT_GET', 'sudo apt-get')
         aptrepo = get_cmd(env, 'ADD_APT_REPOSITORY', 'sudo add-apt-repository')
 
-        remotes = [i.remote for i in packages]
+        remotes = list(chain.from_iterable(i.remote for i in packages))
         repositories = uniques(i.repository for i in packages if i.repository)
 
         with log.LogFile.open(pkgdir, 'apt') as logfile:

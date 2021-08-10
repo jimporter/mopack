@@ -27,7 +27,7 @@ class TestApt(IntegrationTest):
             'packages': [
                 cfg_apt_pkg(
                     'ogg', config,
-                    remote='libogg-dev',
+                    remote=['libogg-dev'],
                     usage=cfg_system_usage(
                         pcfile='ogg',
                         libraries=[{'name': 'ogg', 'type': 'guess'}]
@@ -35,7 +35,7 @@ class TestApt(IntegrationTest):
                 ),
                 cfg_apt_pkg(
                     'zlib', config,
-                    remote='zlib1g-dev',
+                    remote=['zlib1g-dev'],
                     usage=cfg_system_usage(
                         pcfile='zlib',
                         libraries=[{'name': 'zlib', 'type': 'guess'}]

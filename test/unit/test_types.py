@@ -284,6 +284,10 @@ class TestListOf(TypeTestCase):
             list_of(string)('field', 'foo')
         with self.assertFieldError(('field',), 'expected a list'):
             list_of(string)('field', {})
+        with self.assertFieldError(('field',), 'expected a non-empty list'):
+            list_of(string, allow_empty=False)('field', [])
+        with self.assertFieldError(('field',), 'expected a non-empty list'):
+            list_of(string, listify=True, allow_empty=False)('field', None)
         with self.assertFieldError(('field', 0), 'expected a string'):
             list_of(string)('field', [1])
         with self.assertFieldError(('field',), 'expected a string'):

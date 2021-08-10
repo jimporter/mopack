@@ -53,8 +53,8 @@ packages:
 packages:
   my_pkg:
     source: apt
-    name: <apt-name>
-    remote: <apt-repo>
+    remote: <string-list>
+    repository: <string>
     usage: <usage>
 ```
 
@@ -69,8 +69,10 @@ options:
 packages:
   my_pkg:
     source: conan
-    name: <conan-name>
-    remote: <conan-repo>
+    remote: <string>
+    build: <boolean>
+    options:
+      my_option: <string-or-boolean>
     usage: <usage>
 ```
 

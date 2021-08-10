@@ -223,17 +223,19 @@ def constant(*args):
     return check
 
 
-def list_of(other, listify=False):
+def list_of(other, listify=False, allow_empty=True):
     def check(field, value):
         if iterutils.isiterable(value):
             with wrap_field_error(field):
-                return [other(i, v) for i, v in enumerate(value)]
+                result = [other(i, v) for i, v in enumerate(value)]
         elif listify:
-            if value is not None:
-                return [other(field, value)]
-            return []
+            result = [other(field, value)] if value is not None else []
         else:
             raise FieldValueError('expected a list', field)
+
+        if not allow_empty and result == []:
+            raise FieldValueError('expected a non-empty list', field)
+        return result
 
     return check
 
