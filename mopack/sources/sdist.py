@@ -142,6 +142,11 @@ class SDistPackage(Package):
             log.pkg_deploy(self.name)
             self.builder.deploy(pkgdir, self._srcdir(pkgdir))
 
+    def _get_usage(self, submodules, pkgdir):
+        return self.builder.get_usage(
+            self, submodules, pkgdir, self._srcdir(pkgdir)
+        )
+
 
 @FreezeDried.fields(rehydrate={'path': Path})
 class DirectoryPackage(SDistPackage):
@@ -161,10 +166,6 @@ class DirectoryPackage(SDistPackage):
         path = self.path.string(cfgdir=self.config_dir)
         log.pkg_fetch(self.name, 'from {}'.format(path))
         return self._find_mopack(parent_config, path)
-
-    def _get_usage(self, submodules, pkgdir):
-        path = self.path.string(cfgdir=self.config_dir)
-        return self.builder.get_usage(self, submodules, pkgdir, path)
 
 
 @FreezeDried.fields(rehydrate={'path': Path}, skip_compare={'guessed_srcdir'})
@@ -244,11 +245,6 @@ class TarballPackage(SDistPackage):
 
         return self._find_mopack(parent_config, self._srcdir(pkgdir))
 
-    def _get_usage(self, submodules, pkgdir):
-        return self.builder.get_usage(
-            self, submodules, pkgdir, self._srcdir(pkgdir)
-        )
-
 
 class GitPackage(SDistPackage):
     source = 'git'
@@ -320,8 +316,3 @@ class GitPackage(SDistPackage):
                                      .format(self.rev[0]))
 
         return self._find_mopack(parent_config, self._srcdir(pkgdir))
-
-    def _get_usage(self, submodules, pkgdir):
-        return self.builder.get_usage(
-            self, submodules, pkgdir, self._srcdir(pkgdir)
-        )
