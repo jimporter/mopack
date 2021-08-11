@@ -37,8 +37,8 @@ class Builder(OptionsHolder):
         path_vars = {i: placeholder(Path('', i)) for i in self._path_bases}
         return dict(**self._options.expr_symbols, **path_vars)
 
-    def version(self, pkgdir, srcdir):
-        return self.usage.version(pkgdir, srcdir, self._builddir(pkgdir))
+    def version(self, pkg, pkgdir, srcdir):
+        return self.usage.version(pkg, pkgdir, srcdir, self._builddir(pkgdir))
 
     def clean(self, pkgdir):
         shutil.rmtree(self._builddir(pkgdir), ignore_errors=True)

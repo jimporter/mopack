@@ -155,33 +155,31 @@ class TestGit(SDistTestCase):
         with mock_open_log(), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_after_first(
-                 read_data='export:\n  version: "1.0"\n  build: bfg9000'
+                 read_data='export:\n  build: bfg9000'
              )), \
              mock.patch('subprocess.run'):  # noqa
             config = pkg.fetch(self.config, self.pkgdir)
-            self.assertEqual(config.export.version, '1.0')
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
-                'foo', repository=self.srcssh, version='1.0', build='bfg9000'
+                'foo', repository=self.srcssh, build='bfg9000'
             ))
         self.check_resolve(pkg)
 
         # Infer but override usage and version
-        pkg = self.make_package('foo', repository=self.srcssh, version='1.1',
+        pkg = self.make_package('foo', repository=self.srcssh,
                                 usage={'type': 'system'})
         self.assertEqual(pkg.builder, None)
 
         with mock_open_log(), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_after_first(
-                 read_data='export:\n  version: "1.0"\n  build: bfg9000'
+                 read_data='export:\n  build: bfg9000'
              )), \
              mock.patch('subprocess.run'):  # noqa
             config = pkg.fetch(self.config, self.pkgdir)
-            self.assertEqual(config.export.version, '1.0')
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
-                'foo', repository=self.srcssh, version='1.1', build='bfg9000',
+                'foo', repository=self.srcssh, build='bfg9000',
                 usage={'type': 'system'}
             ))
         with mock.patch('subprocess.run', side_effect=OSError()), \
@@ -198,20 +196,19 @@ class TestGit(SDistTestCase):
             })
 
     def test_infer_build_override(self):
-        pkg = self.make_package('foo', repository=self.srcssh, version='1.1',
-                                build='cmake', usage='pkg_config')
+        pkg = self.make_package('foo', repository=self.srcssh, build='cmake',
+                                usage='pkg_config')
 
         with mock_open_log(), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_after_first(
-                 read_data='export:\n  version: "1.0"\n  build: bfg9000'
+                 read_data='export:\n  build: bfg9000'
              )), \
              mock.patch('subprocess.run'):  # noqa
             config = pkg.fetch(self.config, self.pkgdir)
-            self.assertEqual(config.export.version, '1.0')
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
-                'foo', repository=self.srcssh, version='1.1', build='cmake',
+                'foo', repository=self.srcssh, build='cmake',
                 usage='pkg_config'
             ))
         with mock.patch('mopack.builders.cmake.pushd'):

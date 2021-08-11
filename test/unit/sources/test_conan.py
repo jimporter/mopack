@@ -12,7 +12,6 @@ from mopack.shell import ShellArguments
 from mopack.sources import Package, PackageOptions
 from mopack.sources.apt import AptPackage
 from mopack.sources.conan import ConanPackage
-from mopack.types import FieldKeyError
 
 
 def mock_open_write():
@@ -216,11 +215,6 @@ class TestConan(SourceTest):
 
         for pkg in pkgs:
             self.check_usage(pkg)
-
-    def test_invalid_version(self):
-        with self.assertRaises(FieldKeyError):
-            self.make_package('foo', remote='foo/1.2.3@conan/stable',
-                              version='1.0')
 
     def test_submodules(self):
         submodules_required = {'names': '*', 'required': True}

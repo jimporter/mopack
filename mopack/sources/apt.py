@@ -26,7 +26,7 @@ class AptPackage(BinaryPackage):
         ))
         T.repository(types.maybe(types.string))
 
-    def version(self, pkgdir):
+    def guessed_version(self, pkgdir):
         # XXX: Maybe try to de-munge the version into something not
         # apt-specific?
         dpkgq = get_cmd(self._common_options.env, 'DPKG_QUERY', 'dpkg-query')

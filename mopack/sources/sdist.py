@@ -23,23 +23,19 @@ class SDistPackage(Package):
     def upgrade(config, version):
         return config
 
-    def __init__(self, name, *, version=types.Unset, build=None, usage=None,
-                 submodules=types.Unset, _options, **kwargs):
+    def __init__(self, name, *, build=None, usage=None, submodules=types.Unset,
+                 _options, **kwargs):
         super().__init__(name, _options=_options, **kwargs)
         symbols = self._expr_symbols
         T = types.TypeCheck(locals(), symbols)
 
         if build is None:
-            if version is not types.Unset:
-                T.version(types.maybe(types.string),
-                          dest_field='explicit_version')
             if submodules is not types.Unset:
                 T.submodules(submodules_type)
             self.builder = None
             self.pending_usage = usage
         else:
             package_default = DefaultResolver(self, symbols, name)
-            T.version(types.maybe(types.string), dest_field='explicit_version')
             T.submodules(package_default(submodules_type))
             self.builder = make_builder(
                 name, build, submodules=self.submodules,
@@ -50,12 +46,6 @@ class SDistPackage(Package):
     @property
     def needs_dependencies(self):
         return True
-
-    def version(self, pkgdir):
-        try:
-            return self.builder.version(pkgdir, self._srcdir(pkgdir))
-        except NotImplementedError:
-            return self.explicit_version
 
     @property
     def builder_types(self):
@@ -116,10 +106,6 @@ class SDistPackage(Package):
         self.builder = builder
         if not hasattr(self, 'submodules'):
             self.submodules = submodules
-        if not hasattr(self, 'explicit_version'):
-            with to_parse_error(export.config_file):
-                version = types.maybe(types.string)('version', export.version)
-                self.explicit_version = version
         del self.pending_usage
         return config
 
@@ -141,6 +127,9 @@ class SDistPackage(Package):
         if self.should_deploy:
             log.pkg_deploy(self.name)
             self.builder.deploy(pkgdir, self._srcdir(pkgdir))
+
+    def version(self, pkgdir):
+        return self.builder.version(self, pkgdir, self._srcdir(pkgdir))
 
     def _get_usage(self, submodules, pkgdir):
         return self.builder.get_usage(

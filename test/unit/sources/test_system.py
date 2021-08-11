@@ -70,6 +70,7 @@ class TestSystemPackage(SourceTest):
     def test_resolve_path(self):
         pkg = self.make_package('foo')
         pkg.resolve(self.pkgdir)
+        self.assertEqual(pkg.version(self.pkgdir), None)
         self.check_get_usage(pkg, None)
         self.check_pkg_config('foo', None)
 
@@ -80,6 +81,13 @@ class TestSystemPackage(SourceTest):
             'name': 'foo', 'type': 'system', 'path': None, 'pcfiles': ['foo'],
             'extra_args': [],
         }, find_pkg_config=True)
+
+    def test_explicit_version(self):
+        pkg = self.make_package('foo', version='2.0')
+        pkg.resolve(self.pkgdir)
+        self.assertEqual(pkg.version(self.pkgdir), '2.0')
+        self.check_get_usage(pkg, None)
+        self.check_pkg_config('foo', None)
 
     def test_auto_link(self):
         pkg = self.make_package('foo', auto_link=True)

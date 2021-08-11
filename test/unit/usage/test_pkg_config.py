@@ -22,7 +22,7 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.extra_args, ShellArguments())
 
         with mock.patch('subprocess.run') as mrun:
-            usage.version(self.pkgdir, None, self.builddir)
+            usage.version(MockPackage(), self.pkgdir, None, self.builddir)
             mrun.assert_called_once_with(
                 ['pkg-config', 'foo', '--modversion'],
                 check=True, env={'PKG_CONFIG_PATH': self.pkgconfdir},

@@ -34,7 +34,10 @@ def mock_open_files(files):
 class MockPackage:
     def __init__(self, name='foo', version=None):
         self.name = name
-        self.explicit_version = version
+        self._version = version
+
+    def guessed_version(self, pkgdir):
+        return self._version
 
 
 def through_json(data):

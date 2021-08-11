@@ -10,6 +10,7 @@ packages:
       type: path  # or ...
       type: system
       auto_link: <boolean>
+      version: <string>
       include_path: <path-list>
       library_path: <path-list>
       headers: <header-list>

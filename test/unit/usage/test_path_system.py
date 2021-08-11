@@ -114,19 +114,8 @@ class TestPath(UsageTest):
     def test_basic(self):
         usage = self.make_usage('foo')
         self.check_usage(usage)
-
-        with self.assertRaises(NotImplementedError):
-            usage.version(None, None, None)
-
         self.check_get_usage(usage, 'foo', None, None, None)
         self.check_pkg_config('foo', None)
-
-    def test_package_version(self):
-        usage = self.make_usage('foo')
-        self.check_usage(usage)
-        self.check_get_usage(usage, 'foo', None, None, None,
-                             pkg=MockPackage('foo', version='1.23'))
-        self.check_pkg_config('foo', None, {'version': '1.23'})
 
     def test_pkg_config_up_to_date(self):
         usage = self.make_usage('foo')
@@ -158,6 +147,33 @@ class TestPath(UsageTest):
             'pcfiles': ['foo'], 'auto_link': True,
         })
         self.check_pkg_config('foo', None, {'libs': ['-L' + libdir]})
+
+    def test_version(self):
+        usage = self.make_usage('foo', version='1.0')
+        self.check_usage(usage)
+
+        with mock.patch('subprocess.run', side_effect=OSError()):
+            self.assertEqual(usage.version(
+                MockPackage(), self.pkgdir, None, None
+            ), '1.0')
+        self.check_get_usage(usage, 'foo', None, None, None)
+        self.check_pkg_config('foo', None, {'version': '1.0'})
+
+        with mock.patch('subprocess.run', side_effect=OSError()):
+            self.assertEqual(usage.version(
+                MockPackage(version='2.0'), self.pkgdir, None, None
+            ), '1.0')
+        self.check_get_usage(usage, 'foo', None, None, None)
+        self.check_pkg_config('foo', None, {'version': '1.0'})
+
+        usage = self.make_usage('foo')
+        with mock.patch('subprocess.run', side_effect=OSError()):
+            self.assertEqual(usage.version(
+                MockPackage(version='2.0'), self.pkgdir, None, None
+            ), '2.0')
+        self.check_get_usage(usage, 'foo', None, None, None,
+                             pkg=MockPackage(version='2.0'))
+        self.check_pkg_config('foo', None, {'version': '2.0'})
 
     def test_include_path_relative(self):
         incdir = os.path.join(self.srcdir, 'include')

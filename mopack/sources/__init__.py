@@ -70,8 +70,8 @@ class Package(OptionsHolder):
         return dict(**self._options.expr_symbols,
                     cfgdir=placeholder(Path('', 'cfgdir')))
 
-    def version(self, pkgdir):
-        return self.explicit_version  # pragma: no cover
+    def guessed_version(self, pkgdir):
+        return None
 
     def _check_submodules(self, wanted_submodules):
         if self.submodules:
@@ -119,28 +119,21 @@ class Package(OptionsHolder):
 
 @FreezeDried.fields(rehydrate={'usage': Usage})
 class BinaryPackage(Package):
-    def __init__(self, name, *, version=types.Unset, usage,
-                 submodules=types.Unset, _options, _path_bases=(),
-                 _usage_field='usage', **kwargs):
-        # Currently, all binary packages are automatically-versioned. Perhaps
-        # in the future, this will change.
-        if version is not types.Unset:
-            raise types.FieldKeyError((
-                "{!r} package doesn't accept 'version' attribute; " +
-                "version is determined automatically"
-            ).format(self.source), 'version')
-
+    def __init__(self, name, *, submodules=types.Unset, usage, _options,
+                 _path_bases=(), _usage_field='usage', **kwargs):
         super().__init__(name, _options=_options, **kwargs)
 
         symbols = self._expr_symbols
         package_default = DefaultResolver(self, symbols, name)
         T = types.TypeCheck(locals(), symbols)
-        T.version(types.maybe(types.string), dest_field='explicit_version')
         T.submodules(package_default(submodules_type))
 
         self.usage = make_usage(name, usage, field=_usage_field,
                                 submodules=self.submodules, _options=_options,
                                 _path_bases=_path_bases)
+
+    def version(self, pkgdir):
+        return self.usage.version(self, pkgdir, None, None)
 
     def _get_usage(self, submodules, pkgdir):
         return self.usage.get_usage(self, submodules, pkgdir, None, None)

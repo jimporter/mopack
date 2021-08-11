@@ -87,9 +87,9 @@ class PkgConfigUsage(Usage):
                 extra_symbols=extra_symbols
             ), extra_symbols=extra_symbols)
 
-    def version(self, pkgdir, srcdir, builddir):
+    def version(self, pkg, pkgdir, srcdir, builddir):
         path = [i.string(srcdir=srcdir, builddir=builddir) for i in self.path]
-        env = self._common_options.env
+        env = self._common_options.env.copy()
         env['PKG_CONFIG_PATH'] = join_paths(path)
         pkg_config = get_pkg_config(self._common_options.env)
 

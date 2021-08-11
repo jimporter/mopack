@@ -122,10 +122,10 @@ class PathUsage(Usage):
     def upgrade(config, version):
         return config
 
-    def __init__(self, name, *, auto_link=Unset, include_path=Unset,
-                 library_path=Unset, headers=Unset, libraries=Unset,
-                 compile_flags=Unset, link_flags=Unset, submodule_map=Unset,
-                 submodules, _options, _path_bases):
+    def __init__(self, name, *, auto_link=Unset, version=Unset,
+                 include_path=Unset, library_path=Unset, headers=Unset,
+                 libraries=Unset, compile_flags=Unset, link_flags=Unset,
+                 submodule_map=Unset, submodules, _options, _path_bases):
         super().__init__(_options=_options)
         symbols = self._expr_symbols(_path_bases)
         package_default = DefaultResolver(self, symbols, name)
@@ -136,6 +136,8 @@ class PathUsage(Usage):
         # XXX: Maybe have the compiler tell *us* if it supports auto-linking,
         # instead of us telling it?
         T.auto_link(package_default(types.boolean, default=False))
+
+        T.version(types.maybe(types.string), dest_field='explicit_version')
 
         # XXX: These specify the *possible* paths to find headers/libraries.
         # Should there be a way of specifying paths that are *always* passed to
@@ -201,6 +203,11 @@ class PathUsage(Usage):
                 raise ValueError('unable to find {} {!r}'.format(kind, f))
         return list(filtered.keys())
 
+    def version(self, pkg, pkgdir, srcdir, builddir):
+        if self.explicit_version is not None:
+            return self.explicit_version
+        return pkg.guessed_version(pkgdir)
+
     def get_usage(self, pkg, submodules, pkgdir, srcdir, builddir):
         path_vars = {'srcdir': srcdir, 'builddir': builddir}
 
@@ -223,6 +230,7 @@ class PathUsage(Usage):
         pcname = ('{}[{}]'.format(pkg.name, ','.join(submodules))
                   if submodules else pkg.name)
         pcpath = os.path.join(pkgconfdir, pcname + '.pc')
+        version = self.version(pkg, pkgdir, srcdir, builddir) or ''
 
         # Get the include directories.
         headers = list(chain_attr('headers'))
@@ -266,8 +274,8 @@ class PathUsage(Usage):
                 # XXX: It would be nice to write one pkg-config .pc file per
                 # submodule instead of writing a single file for all the
                 # requested submodules.
-                write_pkg_config(f, pcname, version=pkg.explicit_version or '',
-                                 cflags=cflags, libs=libs, variables=path_vars)
+                write_pkg_config(f, pcname, version=version, cflags=cflags,
+                                 libs=libs, variables=path_vars)
 
         return self._usage(
             pkg, path=[pkgconfdir], pcfiles=[pcname], auto_link=self.auto_link
@@ -280,6 +288,17 @@ class SystemUsage(PathUsage):
     def __init__(self, name, **kwargs):
         super().__init__(name, **kwargs)
         self.pcfile = name
+
+    def version(self, pkg, pkgdir, srcdir, builddir):
+        pkg_config = get_pkg_config(self._common_options.env)
+        try:
+            return subprocess.run(
+                pkg_config + [self.pcfile, '--modversion'], check=True,
+                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                universal_newlines=True
+            ).stdout.strip()
+        except (OSError, subprocess.CalledProcessError):
+            return super().version(pkg, pkgdir, srcdir, builddir)
 
     def get_usage(self, pkg, submodules, pkgdir, srcdir, builddir):
         pkg_config = get_pkg_config(self._common_options.env)

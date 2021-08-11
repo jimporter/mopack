@@ -2,10 +2,10 @@ packages:
   greeter:
     source: directory
     path: greeter-cmake
-    version: "1.0"
     build: cmake
     usage:
       type: path
+      version: "1.0"
       # XXX: Pass this via `include_path` instead?
       compile_flags: -I$srcdir/include
       library_path: .

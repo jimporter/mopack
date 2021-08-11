@@ -78,15 +78,13 @@ def cfg_options(**kwargs):
     return result
 
 
-def _cfg_package(source, api_version, name, config_file, explicit_version=None,
-                 parent=None, resolved=True, submodules=None,
-                 should_deploy=True):
+def _cfg_package(source, api_version, name, config_file, parent=None,
+                 resolved=True, submodules=None, should_deploy=True):
     return {
         'source': source,
         '_version': api_version,
         'name': name,
         'config_file': config_file,
-        'explicit_version': explicit_version,
         'parent': parent,
         'resolved': resolved,
         'submodules': submodules,
@@ -200,13 +198,14 @@ def cfg_pkg_config_usage(*, path=[{'base': 'builddir', 'path': 'pkgconfig'}],
     }
 
 
-def cfg_path_usage(*, auto_link=False, include_path=[], library_path=[],
-                   headers=[], libraries=[], compile_flags=[], link_flags=[],
-                   **kwargs):
+def cfg_path_usage(*, auto_link=False, explicit_version=None, include_path=[],
+                   library_path=[], headers=[], libraries=[], compile_flags=[],
+                   link_flags=[], **kwargs):
     return {
         'type': 'path',
         '_version': 1,
         'auto_link': auto_link,
+        'explicit_version': explicit_version,
         'include_path': include_path,
         'library_path': library_path,
         'headers': headers,

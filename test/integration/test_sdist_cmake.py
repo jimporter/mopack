@@ -38,10 +38,10 @@ class TestInnerCMake(IntegrationTest):
                 cfg_directory_pkg(
                     'hello', config,
                     path={'base': 'cfgdir', 'path': 'hello-cmake'},
-                    explicit_version='1.0',
                     builder=cfg_cmake_builder(
                         'hello',
                         usage=cfg_path_usage(
+                            explicit_version='1.0',
                             compile_flags=[[
                                 '-I', {'base': 'srcdir', 'path': ''},
                                 '/include'
@@ -108,10 +108,10 @@ class TestOuterCMake(IntegrationTest):
                 cfg_directory_pkg(
                     'greeter', config,
                     path={'base': 'cfgdir', 'path': 'greeter-cmake'},
-                    explicit_version='1.0',
                     builder=cfg_cmake_builder(
                         'greeter',
                         usage=cfg_path_usage(
+                            explicit_version='1.0',
                             compile_flags=[[
                                 '-I', {'base': 'srcdir', 'path': ''},
                                 '/include'

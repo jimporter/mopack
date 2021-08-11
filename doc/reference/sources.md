@@ -20,7 +20,6 @@ packages:
 packages:
   my_pkg:
     source: git
-    version: <string>
     tag: <tag-name>  # or...
     branch: <branch-name>  # or...
     commit: <commit-sha>
@@ -35,7 +34,6 @@ packages:
 packages:
   my_pkg:
     source: tarball
-    version: <string>
     path: <path>  # or...
     url: <url>
     files: <glob-list>
@@ -82,9 +80,8 @@ packages:
 packages:
   my_pkg:
     source: system
-    version: <string>
-
     auto_link: <boolean>
+    version: <string>
     include_path: <path-list>
     library_path: <path-list>
     headers: <header-list>

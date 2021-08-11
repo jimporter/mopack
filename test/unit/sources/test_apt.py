@@ -9,7 +9,12 @@ from mopack.iterutils import iterate
 from mopack.sources import Package
 from mopack.sources.apt import AptPackage
 from mopack.sources.conan import ConanPackage
-from mopack.types import FieldKeyError
+
+
+def mock_run(args, **kwargs):
+    if args[0] == 'dpkg-query':
+        return subprocess.CompletedProcess(args, 0, '1.2.3')
+    raise OSError()
 
 
 class TestApt(SourceTest):
@@ -57,9 +62,7 @@ class TestApt(SourceTest):
                      'path': [self.pkgconfdir], 'pcfiles': [pcname],
                      'auto_link': False}
 
-        with mock.patch('subprocess.run', side_effect=OSError()), \
-             mock.patch('mopack.sources.apt.AptPackage.version',
-                        '1.2.3'), \
+        with mock.patch('subprocess.run', mock_run), \
              mock.patch('mopack.usage.path_system.PathUsage._filter_path',
                         lambda *args: []), \
              mock.patch('mopack.usage.path_system.file_outdated',
@@ -76,12 +79,19 @@ class TestApt(SourceTest):
         self.assertEqual(pkg.should_deploy, True)
         self.check_resolve_all([pkg], ['libfoo-dev'])
 
-        with mock.patch('subprocess.run') as mrun:
-            pkg.version(self.pkgdir)
-            mrun.assert_called_once_with(
-                ['dpkg-query', '-W', '-f${Version}', 'libfoo-dev'],
-                check=True, stdout=subprocess.PIPE, universal_newlines=True
-            )
+        with mock.patch('subprocess.run', side_effect=mock_run) as mrun:
+            self.assertEqual(pkg.version(self.pkgdir), '1.2.3')
+            mrun.assert_has_calls([
+                mock.call(
+                    ['pkg-config', 'foo', '--modversion'], check=True,
+                    stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                    universal_newlines=True
+                ),
+                mock.call(
+                    ['dpkg-query', '-W', '-f${Version}', 'libfoo-dev'],
+                    check=True, stdout=subprocess.PIPE, universal_newlines=True
+                ),
+            ])
 
         self.check_usage(pkg)
 
@@ -91,12 +101,19 @@ class TestApt(SourceTest):
         self.assertEqual(pkg.repository, None)
         self.check_resolve_all([pkg], ['foo-dev'])
 
-        with mock.patch('subprocess.run') as mrun:
-            pkg.version(self.pkgdir)
-            mrun.assert_called_once_with(
-                ['dpkg-query', '-W', '-f${Version}', 'foo-dev'],
-                check=True, stdout=subprocess.PIPE, universal_newlines=True
-            )
+        with mock.patch('subprocess.run', side_effect=mock_run) as mrun:
+            self.assertEqual(pkg.version(self.pkgdir), '1.2.3')
+            mrun.assert_has_calls([
+                mock.call(
+                    ['pkg-config', 'foo', '--modversion'], check=True,
+                    stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                    universal_newlines=True
+                ),
+                mock.call(
+                    ['dpkg-query', '-W', '-f${Version}', 'foo-dev'],
+                    check=True, stdout=subprocess.PIPE, universal_newlines=True
+                ),
+            ])
 
         self.check_usage(pkg)
 
@@ -105,12 +122,19 @@ class TestApt(SourceTest):
         self.assertEqual(pkg.repository, None)
         self.check_resolve_all([pkg], ['foo-dev', 'bar-dev'])
 
-        with mock.patch('subprocess.run') as mrun:
+        with mock.patch('subprocess.run', side_effect=mock_run) as mrun:
             pkg.version(self.pkgdir)
-            mrun.assert_called_once_with(
-                ['dpkg-query', '-W', '-f${Version}', 'foo-dev'],
-                check=True, stdout=subprocess.PIPE, universal_newlines=True
-            )
+            mrun.assert_has_calls([
+                mock.call(
+                    ['pkg-config', 'foo', '--modversion'], check=True,
+                    stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                    universal_newlines=True
+                ),
+                mock.call(
+                    ['dpkg-query', '-W', '-f${Version}', 'foo-dev'],
+                    check=True, stdout=subprocess.PIPE, universal_newlines=True
+                ),
+            ])
 
         self.check_usage(pkg)
 
@@ -122,16 +146,32 @@ class TestApt(SourceTest):
         self.check_resolve_all([pkg], ['foo-dev'])
         self.check_usage(pkg)
 
+    def test_explicit_version(self):
+        pkg = self.make_package('foo', usage={
+            'type': 'system', 'version': '2.0',
+        })
+        self.assertEqual(pkg.remote, ['libfoo-dev'])
+        self.assertEqual(pkg.repository, None)
+        self.assertEqual(pkg.needs_dependencies, False)
+        self.assertEqual(pkg.should_deploy, True)
+        self.check_resolve_all([pkg], ['libfoo-dev'])
+
+        with mock.patch('subprocess.run', side_effect=mock_run) as mrun:
+            self.assertEqual(pkg.version(self.pkgdir), '2.0')
+            mrun.assert_called_once_with(
+                ['pkg-config', 'foo', '--modversion'], check=True,
+                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                universal_newlines=True
+            )
+
+        self.check_usage(pkg)
+
     def test_multiple(self):
         pkgs = [self.make_package('foo'),
                 self.make_package('bar', remote='bar-dev')]
         self.check_resolve_all(pkgs, ['libfoo-dev', 'bar-dev'])
         for pkg in pkgs:
             self.check_usage(pkg)
-
-    def test_invalid_version(self):
-        with self.assertRaises(FieldKeyError):
-            self.make_package('foo', version='1.0')
 
     def test_submodules(self):
         submodules_required = {'names': '*', 'required': True}

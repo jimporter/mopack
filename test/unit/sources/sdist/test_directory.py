@@ -58,7 +58,7 @@ class TestDirectory(SDistTestCase):
 
     def test_infer_build(self):
         mock_open = mock_open_data(
-            'export:\n  version: "1.0"\n  build: bfg9000'
+            'export:\n  build: bfg9000'
         )
 
         # Basic inference
@@ -69,15 +69,14 @@ class TestDirectory(SDistTestCase):
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open):  # noqa
             config = pkg.fetch(self.config, self.pkgdir)
-            self.assertEqual(config.export.version, '1.0')
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
-                'foo', path=self.srcpath, version='1.0', build='bfg9000'
+                'foo', path=self.srcpath, build='bfg9000'
             ))
         self.check_resolve(pkg)
 
-        # Infer but override usage and version
-        pkg = self.make_package('foo', path=self.srcpath, version='1.1',
+        # Infer but override usage
+        pkg = self.make_package('foo', path=self.srcpath,
                                 usage={'type': 'system'})
         self.assertEqual(pkg.builder, None)
 
@@ -85,10 +84,9 @@ class TestDirectory(SDistTestCase):
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open):  # noqa
             config = pkg.fetch(self.config, self.pkgdir)
-            self.assertEqual(config.export.version, '1.0')
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
-                'foo', path=self.srcpath, version='1.1', build='bfg9000',
+                'foo', path=self.srcpath, build='bfg9000',
                 usage={'type': 'system'}
             ))
         with mock.patch('subprocess.run', side_effect=OSError()), \
@@ -105,20 +103,18 @@ class TestDirectory(SDistTestCase):
             })
 
     def test_infer_build_override(self):
-        pkg = self.make_package('foo', path=self.srcpath, version='1.1',
-                                build='cmake', usage='pkg_config')
+        pkg = self.make_package('foo', path=self.srcpath, build='cmake',
+                                usage='pkg_config')
 
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_data(
-                 'export:\n  version: "1.0"\n  build: bfg9000'
+                 'export:\n  build: bfg9000'
              )):  # noqa
             config = pkg.fetch(self.config, self.pkgdir)
-            self.assertEqual(config.export.version, '1.0')
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
-                'foo', path=self.srcpath, version='1.1', build='cmake',
-                usage='pkg_config'
+                'foo', path=self.srcpath, build='cmake', usage='pkg_config'
             ))
         with mock.patch('mopack.builders.cmake.pushd'):
             self.check_resolve(pkg)
