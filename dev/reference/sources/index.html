@@ -147,7 +147,6 @@
 <pre><code class="yaml">packages:
   my_pkg:
     source: git
-    version: &lt;string&gt;
     tag: &lt;tag-name&gt;  # or...
     branch: &lt;branch-name&gt;  # or...
     commit: &lt;commit-sha&gt;
@@ -160,7 +159,6 @@
 <pre><code class="yaml">packages:
   my_pkg:
     source: tarball
-    version: &lt;string&gt;
     path: &lt;path&gt;  # or...
     url: &lt;url&gt;
     files: &lt;glob-list&gt;
@@ -200,9 +198,8 @@ packages:
 <pre><code class="yaml">packages:
   my_pkg:
     source: system
-    version: &lt;string&gt;
-
     auto_link: &lt;boolean&gt;
+    version: &lt;string&gt;
     include_path: &lt;path-list&gt;
     library_path: &lt;path-list&gt;
     headers: &lt;header-list&gt;
