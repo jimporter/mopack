@@ -8,6 +8,12 @@ usage:
     - &path_usage
       if: target_platform == 'windows'
       auto_link: true
+      version:
+        type: regex
+        file: boost/version.hpp
+        regex:
+          - '^#\s*define\s+BOOST_LIB_VERSION\s+"([\d_]+)"'
+          - ['_', '.']
       include_path: >-
         ${{ env['BOOST_INCLUDEDIR'] || (
           env['BOOST_ROOT'] ? env['BOOST_ROOT'] + '/include' : null

@@ -233,9 +233,21 @@ def list_of(other, listify=False, allow_empty=True):
         else:
             raise FieldValueError('expected a list', field)
 
-        if not allow_empty and result == []:
+        if not allow_empty and len(result) == 0:
             raise FieldValueError('expected a non-empty list', field)
         return result
+
+    return check
+
+
+def list_of_length(other, length):
+    def check(field, value):
+        if iterutils.isiterable(value) and len(value) == length:
+            with wrap_field_error(field):
+                return [other(i, v) for i, v in enumerate(value)]
+
+        raise FieldValueError('expected a list of length {}'.format(length),
+                              field)
 
     return check
 

@@ -1,6 +1,9 @@
 import os
 import shutil
+import sys
+import warnings
 from os.path import abspath
+from textwrap import dedent
 from unittest import mock
 
 from . import MockPackage, through_json, UsageTest
@@ -10,7 +13,7 @@ from mopack.iterutils import iterate
 from mopack.options import Options
 from mopack.path import Path
 from mopack.shell import ShellArguments
-from mopack.types import FieldError
+from mopack.types import FieldValueError
 from mopack.usage import Usage
 from mopack.usage.path_system import PathUsage, SystemUsage
 
@@ -32,6 +35,11 @@ def boost_getdir(name, default, options):
     p = options['env'].get('BOOST_{}DIR'.format(name),
                            (os.path.join(root, default) if root else None))
     return [abspath(p)] if p is not None else []
+
+
+def mock_exists(p, variables={}):
+    p = os.path.normcase(p.string(**variables))
+    return p.startswith(os.path.normcase(abspath('/mock')) + os.sep)
 
 
 class TestPath(UsageTest):
@@ -62,12 +70,27 @@ class TestPath(UsageTest):
         self.assertEqual(usage.compile_flags, ShellArguments(compile_flags))
         self.assertEqual(usage.link_flags, ShellArguments(link_flags))
 
+    def check_version(self, usage, expected=None, *, pkg=None, header=None):
+        # XXX: Remove this after we drop support for Python 3.6.
+        if header and sys.version_info < (3, 7):
+            warnings.warn('mock_open() fails to iterate in Python 3.6')
+            return
+
+        open_args = ({'new': mock.mock_open(read_data=header)} if header
+                     else {'side_effect': AssertionError()})
+        if pkg is None:
+            pkg = MockPackage()
+
+        with mock.patch('subprocess.run', side_effect=OSError()), \
+             mock.patch('mopack.usage.path_system._system_include_path',
+                        return_value=[Path('/mock/include')]), \
+             mock.patch('mopack.usage.path_system.exists', mock_exists), \
+             mock.patch('builtins.open', **open_args):
+            self.assertEqual(usage.version(pkg, self.pkgdir, None, None),
+                             expected)
+
     def check_get_usage(self, usage, name, submodules, srcdir, builddir,
                         expected=None, *, pkg=None, write_pkg_config=True):
-        def mock_exists(p, variables={}):
-            p = os.path.normcase(p.string(**variables))
-            return p.startswith(os.path.normcase(abspath('/mock')) + os.sep)
-
         pcname = ('{}[{}]'.format(name, ','.join(iterate(submodules)))
                   if submodules else name)
         if expected is None:
@@ -152,28 +175,55 @@ class TestPath(UsageTest):
         usage = self.make_usage('foo', version='1.0')
         self.check_usage(usage)
 
-        with mock.patch('subprocess.run', side_effect=OSError()):
-            self.assertEqual(usage.version(
-                MockPackage(), self.pkgdir, None, None
-            ), '1.0')
+        self.check_version(usage, '1.0')
         self.check_get_usage(usage, 'foo', None, None, None)
         self.check_pkg_config('foo', None, {'version': '1.0'})
 
-        with mock.patch('subprocess.run', side_effect=OSError()):
-            self.assertEqual(usage.version(
-                MockPackage(version='2.0'), self.pkgdir, None, None
-            ), '1.0')
+        self.check_version(usage, '1.0', pkg=MockPackage(version='2.0'))
         self.check_get_usage(usage, 'foo', None, None, None)
         self.check_pkg_config('foo', None, {'version': '1.0'})
 
         usage = self.make_usage('foo')
-        with mock.patch('subprocess.run', side_effect=OSError()):
-            self.assertEqual(usage.version(
-                MockPackage(version='2.0'), self.pkgdir, None, None
-            ), '2.0')
+        self.check_version(usage, '2.0', pkg=MockPackage(version='2.0'))
         self.check_get_usage(usage, 'foo', None, None, None,
                              pkg=MockPackage(version='2.0'))
         self.check_pkg_config('foo', None, {'version': '2.0'})
+
+    def test_version_regex(self):
+        good_header = dedent("""\
+            // This is a header
+            #define VERSION "1.0"
+        """)
+        uscore_header = dedent("""\
+            // This is a header
+            #define VERSION "1_0"
+        """)
+        bad_header = dedent("""\
+            // This is a header
+        """)
+
+        usage = self.make_usage('foo', headers=['foo.hpp'], version={
+            'type': 'regex',
+            'file': 'foo.hpp',
+            'regex': [r'#define VERSION "([\d\.]+)"']
+        })
+        self.check_usage(usage, headers=['foo.hpp'])
+        self.check_version(usage, '1.0', header=good_header)
+        self.check_version(usage, None, header=bad_header)
+
+        usage = self.make_usage('foo', headers=['foo.hpp'], version={
+            'type': 'regex',
+            'file': 'foo.hpp',
+            'regex': [r'#define VERSION "([\d_]+)"',
+                      ['_', '.']]
+        })
+        self.check_usage(usage, headers=['foo.hpp'])
+        self.check_version(usage, '1.0', header=uscore_header)
+        self.check_version(usage, None, header=bad_header)
+
+    def test_invalid_version(self):
+        with self.assertRaises(FieldValueError):
+            self.make_usage('foo', version={'type': 'goofy'})
 
     def test_include_path_relative(self):
         incdir = os.path.join(self.srcdir, 'include')
@@ -239,7 +289,7 @@ class TestPath(UsageTest):
         self.check_pkg_config('foo', None, {'cflags': ['-I' + incdir]})
 
     def test_invalid_include_path(self):
-        with self.assertRaises(FieldError):
+        with self.assertRaises(FieldValueError):
             self.make_usage('foo', include_path='../include')
 
     def test_library_path_relative(self):
@@ -291,7 +341,7 @@ class TestPath(UsageTest):
         self.check_pkg_config('foo', None, {'libs': ['-L' + libdir, '-lfoo']})
 
     def test_invalid_library_path(self):
-        with self.assertRaises(FieldError):
+        with self.assertRaises(FieldValueError):
             self.make_usage('foo', library_path='../lib')
 
     def test_headers(self):
@@ -490,6 +540,9 @@ class TestPath(UsageTest):
         })
 
     def test_boost(self):
+        header = dedent("""\
+            #define BOOST_LIB_VERSION "1_23"
+        """)
         submodules = {'names': '*', 'required': False}
         for plat in ['linux', 'darwin', 'windows']:
             opts = {'target_platform': plat}
@@ -498,6 +551,7 @@ class TestPath(UsageTest):
             self.check_usage(usage, auto_link=(plat == 'windows'),
                              headers=['boost/version.hpp'], libraries=[],
                              include_path=[], library_path=[])
+            self.check_version(usage, '1.23', header=header)
             self.check_get_usage(usage, 'boost', None, None, None, {
                 'name': 'boost', 'type': self.type, 'path': [self.pkgconfdir],
                 'pcfiles': ['boost'], 'auto_link': plat == 'windows',
@@ -525,6 +579,7 @@ class TestPath(UsageTest):
                              headers=['boost/version.hpp'],
                              libraries=['boost'], include_path=[],
                              library_path=[])
+            self.check_version(usage, '1.23', header=header)
             self.check_get_usage(usage, 'boost', None, None, None, {
                 'name': 'boost', 'type': self.type, 'path': [self.pkgconfdir],
                 'pcfiles': ['boost'], 'auto_link': plat == 'windows',
@@ -544,6 +599,9 @@ class TestPath(UsageTest):
             })
 
     def test_boost_env_vars(self):
+        header = dedent("""\
+            #define BOOST_LIB_VERSION "1_23"
+        """)
         submodules = {'names': '*', 'required': False}
         boost_root = abspath('/mock/boost')
         boost_inc = abspath('/mock/boost/inc')
@@ -562,6 +620,7 @@ class TestPath(UsageTest):
         self.check_usage(usage, auto_link=False, headers=['boost/version.hpp'],
                          libraries=[], **pathobjs)
         self.check_get_usage(usage, 'boost', None, None, None)
+        self.check_version(usage, '1.23', header=header)
         self.check_pkg_config('boost', None, {
             'cflags': ['-I{}'.format(boost_inc)], 'libs': [],
         })
@@ -575,6 +634,7 @@ class TestPath(UsageTest):
                                 submodules=submodules, common_options=opts)
         self.check_usage(usage, auto_link=False, headers=['boost/version.hpp'],
                          libraries=['boost'], **pathobjs)
+        self.check_version(usage, '1.23', header=header)
         self.check_get_usage(usage, 'boost', None, None, None)
         self.check_pkg_config('boost', None, {
             'cflags': ['-I{}'.format(boost_inc)],
@@ -659,15 +719,15 @@ class TestPath(UsageTest):
             m.assert_called_once()
 
     def test_invalid_usage(self):
-        with self.assertRaises(FieldError):
+        with self.assertRaises(FieldValueError):
             self.make_usage('foo', include_path='$builddir/include',
                             _path_bases=('srcdir',))
 
-        with self.assertRaises(FieldError):
+        with self.assertRaises(FieldValueError):
             self.make_usage('foo', library_path='$srcdir/lib',
                             _path_bases=('builddir',))
 
-        with self.assertRaises(FieldError):
+        with self.assertRaises(FieldValueError):
             self.make_usage('foo', include_path='include', _path_bases=())
 
 

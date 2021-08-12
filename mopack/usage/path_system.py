@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 from itertools import chain
 
@@ -7,6 +8,7 @@ from .. import types
 from ..commands import Metadata
 from ..environment import get_pkg_config
 from ..freezedried import DictFreezeDryer, FreezeDried, ListFreezeDryer
+from ..iterutils import listify
 from ..package_defaults import DefaultResolver
 from ..path import exists, file_outdated, Path
 from ..pkg_config import generated_pkg_config_dir, write_pkg_config
@@ -47,6 +49,22 @@ def _library(field, value):
 def _list_of_paths(base):
     return types.list_of(types.abs_or_inner_path(base), listify=True)
 
+
+_version_def = types.one_of(
+    types.maybe(types.string),
+    types.dict_shape({
+        'type': types.constant('regex'),
+        'file': types.string,
+        'regex': types.list_of(
+            types.one_of(
+                types.string,
+                types.list_of_length(types.string, 2),
+                desc='string or pair of strings'
+            )
+        ),
+    }, desc='version finder'),
+    desc='version definition'
+)
 
 _list_of_headers = types.list_of(types.string, listify=True)
 _list_of_libraries = types.list_of(_library, listify=True)
@@ -137,7 +155,7 @@ class PathUsage(Usage):
         # instead of us telling it?
         T.auto_link(package_default(types.boolean, default=False))
 
-        T.version(types.maybe(types.string), dest_field='explicit_version')
+        T.version(package_default(_version_def), dest_field='explicit_version')
 
         # XXX: These specify the *possible* paths to find headers/libraries.
         # Should there be a way of specifying paths that are *always* passed to
@@ -203,10 +221,78 @@ class PathUsage(Usage):
                 raise ValueError('unable to find {} {!r}'.format(kind, f))
         return list(filtered.keys())
 
-    def version(self, pkg, pkgdir, srcdir, builddir):
-        if self.explicit_version is not None:
+    @classmethod
+    def _include_dirs(cls, headers, include_path, path_vars):
+        headers = listify(headers, scalar_ok=False)
+        include_path = (listify(include_path, scalar_ok=False) or
+                        _system_include_path())
+        return cls._filter_path(
+            lambda p, f: exists(p.append(f), path_vars),
+            include_path, headers, 'header'
+        )
+
+    @classmethod
+    def _library_dirs(cls, auto_link, libraries, library_path, path_vars):
+        library_path = (listify(library_path, scalar_ok=False)
+                        or _system_lib_path())
+        if auto_link:
+            # When auto-linking, we can't determine the library dirs that are
+            # actually used, so include them all.
+            return library_path
+
+        lib_names = _system_lib_names()
+        return cls._filter_path(
+            lambda p, f: any(exists(p.append(i.format(f)), path_vars)
+                             for i in lib_names),
+            library_path, (i for i in libraries if isinstance(i, str)),
+            'library'
+        )
+
+    @staticmethod
+    def _match_line(ex, line):
+        if isinstance(ex, str):
+            m = re.search(ex, line)
+            line = m.group(1) if m else None
+            return line is not None, line
+        else:
+            return True, re.sub(ex[0], ex[1], line)
+
+    def _get_version(self, pkg, pkgdir, include_dirs, path_vars):
+        if isinstance(self.explicit_version, dict):
+            version = self.explicit_version
+            for path in include_dirs:
+                header = path.append(version['file'])
+                try:
+                    with open(header.string(**path_vars)) as f:
+                        for line in f:
+                            for ex in version['regex']:
+                                found, line = self._match_line(ex, line)
+                                if not found:
+                                    break
+                            else:
+                                return line
+                except FileNotFoundError:
+                    pass
+            return None
+        elif self.explicit_version is not None:
             return self.explicit_version
-        return pkg.guessed_version(pkgdir)
+        else:
+            return pkg.guessed_version(pkgdir)
+
+    def version(self, pkg, pkgdir, srcdir, builddir):
+        path_vars = {'srcdir': srcdir, 'builddir': builddir}
+        try:
+            include_dirs = self._include_dirs(
+                self.headers, self.include_path, path_vars
+            )
+        except ValueError:  # pragma: no cover
+            # XXX: This is a hack to work around the fact that we currently
+            # require the build system to pass include dirs during `usage` (and
+            # really, during `list-packages` too). We should handle this in a
+            # smarter way and then remove this.
+            include_dirs = []
+
+        return self._get_version(pkg, pkgdir, include_dirs, path_vars)
 
     def get_usage(self, pkg, submodules, pkgdir, srcdir, builddir):
         path_vars = {'srcdir': srcdir, 'builddir': builddir}
@@ -230,32 +316,14 @@ class PathUsage(Usage):
         pcname = ('{}[{}]'.format(pkg.name, ','.join(submodules))
                   if submodules else pkg.name)
         pcpath = os.path.join(pkgconfdir, pcname + '.pc')
-        version = self.version(pkg, pkgdir, srcdir, builddir) or ''
 
-        # Get the include directories.
-        headers = list(chain_attr('headers'))
-        include_path = (list(chain_attr('include_path')) or
-                        _system_include_path())
-        include_dirs = self._filter_path(
-            lambda p, f: exists(p.append(f), path_vars),
-            include_path, headers, 'header'
+        include_dirs = self._include_dirs(
+            chain_attr('headers'), chain_attr('include_path'), path_vars
         )
-
-        # Get the library directories.
         libraries = [self._get_library(i) for i in chain_attr('libraries')]
-        lib_names = _system_lib_names()
-        library_path = (list(chain_attr('library_path')) or _system_lib_path())
-        if self.auto_link:
-            # When auto-linking, we can't determine the library dirs that are
-            # actually used, so include them all.
-            library_dirs = library_path
-        else:
-            library_dirs = self._filter_path(
-                lambda p, f: any(exists(p.append(i.format(f)), path_vars)
-                                 for i in lib_names),
-                library_path, (i for i in libraries if isinstance(i, str)),
-                'library'
-            )
+        library_dirs = self._library_dirs(
+            self.auto_link, libraries, chain_attr('library_path'), path_vars
+        )
 
         cflags = (
             [('-I', i) for i in include_dirs] +
@@ -266,6 +334,7 @@ class PathUsage(Usage):
             ShellArguments(chain_attr('link_flags')) +
             chain.from_iterable(self._link_library(i) for i in libraries)
         )
+        version = self._get_version(pkg, pkgdir, include_dirs, path_vars) or ''
 
         metadata_path = os.path.join(pkgdir, Metadata.metadata_filename)
         if file_outdated(pcpath, metadata_path):
