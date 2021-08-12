@@ -34,7 +34,7 @@ class TestUsage(IntegrationTest):
         pkgconfdir = os.path.join(self.stage, 'mopack', 'pkgconfig')
         self.assertUsageOutput('fake', {
             'name': 'fake', 'type': 'system', 'path': [pkgconfdir],
-            'pcfiles': ['fake'], 'auto_link': False,
+            'pcfiles': ['fake'], 'generated': True, 'auto_link': False,
         }, extra_env=usage_env)
         self.assertCountEqual(
             call_pkg_config('fake', ['--cflags'], path=pkgconfdir), []
@@ -57,7 +57,7 @@ class TestUsage(IntegrationTest):
                          {'error': "unable to find library 'hello'"})
         self.assertUsageOutput('fake', {
             'name': 'fake', 'type': 'system', 'path': [pkgconfdir],
-            'pcfiles': ['fake'], 'auto_link': False,
+            'pcfiles': ['fake'], 'generated': True, 'auto_link': False,
         }, wrongdir_args, extra_env=usage_env)
         self.assertCountEqual(
             call_pkg_config('fake', ['--cflags'], path=pkgconfdir), []

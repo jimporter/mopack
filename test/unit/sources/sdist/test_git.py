@@ -192,7 +192,7 @@ class TestGit(SDistTestCase):
             self.check_resolve(pkg, usage={
                 'name': 'foo', 'type': 'system',
                 'path': [self.pkgconfdir(None)], 'pcfiles': ['foo'],
-                'auto_link': False,
+                'generated': True, 'auto_link': False,
             })
 
     def test_infer_build_override(self):
@@ -265,7 +265,7 @@ class TestGit(SDistTestCase):
         self.check_fetch(pkg)
         self.check_resolve(pkg, usage={
             'name': 'foo', 'type': 'path', 'path': [self.pkgconfdir(None)],
-            'pcfiles': ['foo'], 'auto_link': False,
+            'pcfiles': ['foo'], 'generated': True, 'auto_link': False,
         })
 
         with mock.patch('subprocess.run') as mrun:

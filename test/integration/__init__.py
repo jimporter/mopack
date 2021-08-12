@@ -315,7 +315,7 @@ class IntegrationTest(unittest.TestCase):
         pkgconfdir = os.path.join(self.stage, 'mopack', 'pkgconfig')
         self.assertUsage(name, {
             'name': name, 'type': type, 'path': [pkgconfdir],
-            'pcfiles': [name], 'auto_link': auto_link,
+            'pcfiles': [name], 'generated': True, 'auto_link': auto_link,
         }, submodules=submodules)
 
         self.assertCountEqual(

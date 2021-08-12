@@ -96,7 +96,7 @@ class TestPath(UsageTest):
         if expected is None:
             expected = {'name': name, 'type': self.type,
                         'path': [self.pkgconfdir], 'pcfiles': [pcname],
-                        'auto_link': False}
+                        'generated': True, 'auto_link': False}
 
         if pkg is None:
             pkg = MockPackage(name)
@@ -154,7 +154,7 @@ class TestPath(UsageTest):
         self.check_usage(usage, auto_link=True, libraries=[])
         self.check_get_usage(usage, 'foo', None, self.srcdir, self.builddir, {
             'name': 'foo', 'type': self.type, 'path': [self.pkgconfdir],
-            'pcfiles': ['foo'], 'auto_link': True,
+            'pcfiles': ['foo'], 'generated': True, 'auto_link': True,
         })
         self.check_pkg_config('foo', None, {
             'libs': ['-L' + abspath('/mock/lib')],
@@ -167,7 +167,7 @@ class TestPath(UsageTest):
                          library_path=[abspathobj('/mock/path/to/lib')])
         self.check_get_usage(usage, 'foo', None, self.srcdir, self.builddir, {
             'name': 'foo', 'type': self.type, 'path': [self.pkgconfdir],
-            'pcfiles': ['foo'], 'auto_link': True,
+            'pcfiles': ['foo'], 'generated': True, 'auto_link': True,
         })
         self.check_pkg_config('foo', None, {'libs': ['-L' + libdir]})
 
@@ -554,7 +554,8 @@ class TestPath(UsageTest):
             self.check_version(usage, '1.23', header=header)
             self.check_get_usage(usage, 'boost', None, None, None, {
                 'name': 'boost', 'type': self.type, 'path': [self.pkgconfdir],
-                'pcfiles': ['boost'], 'auto_link': plat == 'windows',
+                'pcfiles': ['boost'], 'generated': True,
+                'auto_link': plat == 'windows',
             })
             self.check_pkg_config('boost', None, {
                 'cflags': ['-I' + abspath('/mock/include')],
@@ -563,7 +564,8 @@ class TestPath(UsageTest):
             })
             self.check_get_usage(usage, 'boost', ['thread'], None, None, {
                 'name': 'boost', 'type': self.type, 'path': [self.pkgconfdir],
-                'pcfiles': ['boost[thread]'], 'auto_link': plat == 'windows',
+                'pcfiles': ['boost[thread]'], 'generated': True,
+                'auto_link': plat == 'windows',
             })
             self.check_pkg_config('boost', ['thread'], {
                 'cflags': ( ['-I' + abspath('/mock/include')] +
@@ -582,7 +584,8 @@ class TestPath(UsageTest):
             self.check_version(usage, '1.23', header=header)
             self.check_get_usage(usage, 'boost', None, None, None, {
                 'name': 'boost', 'type': self.type, 'path': [self.pkgconfdir],
-                'pcfiles': ['boost'], 'auto_link': plat == 'windows',
+                'pcfiles': ['boost'], 'generated': True,
+                'auto_link': plat == 'windows',
             })
             self.check_pkg_config('boost', None, {
                 'cflags': ['-I' + abspath('/mock/include')]
@@ -590,7 +593,8 @@ class TestPath(UsageTest):
             extra_libs = ['boost_regex'] if plat != 'windows' else []
             self.check_get_usage(usage, 'boost', ['regex'], None, None, {
                 'name': 'boost', 'type': self.type, 'path': [self.pkgconfdir],
-                'pcfiles': ['boost[regex]'], 'auto_link': plat == 'windows',
+                'pcfiles': ['boost[regex]'], 'generated': True,
+                'auto_link': plat == 'windows',
             })
             self.check_pkg_config('boost', ['regex'], {
                 'cflags': ['-I' + abspath('/mock/include')],

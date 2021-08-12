@@ -60,7 +60,7 @@ class TestApt(SourceTest):
 
             usage = {'name': pkg.name, 'type': 'system',
                      'path': [self.pkgconfdir], 'pcfiles': [pcname],
-                     'auto_link': False}
+                     'generated': True, 'auto_link': False}
 
         with mock.patch('subprocess.run', mock_run), \
              mock.patch('mopack.usage.path_system.PathUsage._filter_path',
@@ -188,7 +188,7 @@ class TestApt(SourceTest):
         self.check_resolve_all([pkg], ['libfoo-dev'])
         self.check_usage(pkg, submodules=['sub'], usage={
             'name': 'foo', 'type': 'system', 'path': [self.pkgconfdir],
-            'pcfiles': ['foo[sub]'], 'auto_link': False,
+            'pcfiles': ['foo[sub]'], 'generated': True, 'auto_link': False,
         })
 
         pkg = self.make_package('foo', submodules=submodules_optional)
@@ -202,7 +202,7 @@ class TestApt(SourceTest):
         self.check_resolve_all([pkg], ['libfoo-dev'])
         self.check_usage(pkg, submodules=['sub'], usage={
             'name': 'foo', 'type': 'system', 'path': [self.pkgconfdir],
-            'pcfiles': ['foo[sub]'], 'auto_link': False,
+            'pcfiles': ['foo[sub]'], 'generated': True, 'auto_link': False,
         })
 
     def test_invalid_submodule(self):

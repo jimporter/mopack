@@ -38,7 +38,7 @@ class TestSystemPackage(SourceTest):
         if expected is None:
             expected = {'name': pkg.name, 'type': 'system',
                         'path': [self.pkgconfdir], 'pcfiles': [pcname],
-                        'auto_link': False}
+                        'generated': True, 'auto_link': False}
 
         self.clear_pkgdir()
         side_effect = None if find_pkg_config else OSError()
@@ -94,7 +94,7 @@ class TestSystemPackage(SourceTest):
         pkg.resolve(self.pkgdir)
         self.check_get_usage(pkg, None, {
             'name': 'foo', 'type': 'system', 'path': [self.pkgconfdir],
-            'pcfiles': ['foo'], 'auto_link': True,
+            'pcfiles': ['foo'], 'generated': True, 'auto_link': True,
         })
         self.check_pkg_config('foo', None, {
             'libs': ['-L' + abspath('/mock/lib')],

@@ -85,7 +85,7 @@ class TestMakePackage(SourceTest):
             self.assertEqual(pkg.get_usage(['sub'], self.pkgdir), {
                 'name': 'foo', 'type': 'system',
                 'path': [self.pkgconfdir(None)], 'pcfiles': ['foo[sub]'],
-                'auto_link': False,
+                'generated': True, 'auto_link': False,
             })
         with self.assertRaises(ValueError):
             pkg.get_usage(None, self.pkgdir)
@@ -109,7 +109,7 @@ class TestMakePackage(SourceTest):
             self.assertEqual(pkg.get_usage(['sub'], self.pkgdir), {
                 'name': 'foo', 'type': 'system',
                 'path': [self.pkgconfdir(None)], 'pcfiles': ['foo[sub]'],
-                'auto_link': False,
+                'generated': True, 'auto_link': False,
             })
         with self.assertRaises(ValueError):
             pkg.get_usage(['bar'], self.pkgdir)
@@ -136,7 +136,7 @@ class TestMakePackage(SourceTest):
             self.assertEqual(pkg.get_usage(['sub'], self.pkgdir), {
                 'name': 'foo', 'type': 'system',
                 'path': [self.pkgconfdir(None)], 'pcfiles': ['foo[sub]'],
-                'auto_link': False,
+                'generated': True, 'auto_link': False,
             })
         with mock.patch('subprocess.run', side_effect=OSError()), \
              mock.patch('mopack.usage.path_system.PathUsage._filter_path',
@@ -148,7 +148,7 @@ class TestMakePackage(SourceTest):
             self.assertEqual(pkg.get_usage(None, self.pkgdir), {
                 'name': 'foo', 'type': 'system',
                 'path': [self.pkgconfdir(None)], 'pcfiles': ['foo'],
-                'auto_link': False,
+                'generated': True, 'auto_link': False,
             })
         with self.assertRaises(ValueError):
             pkg.get_usage(['bar'], self.pkgdir)

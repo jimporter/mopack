@@ -347,7 +347,8 @@ class PathUsage(Usage):
                                  libs=libs, variables=path_vars)
 
         return self._usage(
-            pkg, path=[pkgconfdir], pcfiles=[pcname], auto_link=self.auto_link
+            pkg, path=[pkgconfdir], pcfiles=[pcname], generated=True,
+            auto_link=self.auto_link
         )
 
 
