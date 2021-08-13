@@ -758,6 +758,6 @@ class TestSystem(TestPath):
         self.check_usage(usage)
         with mock.patch('subprocess.run'):
             self.check_get_usage(usage, 'foo', None, None, None, {
-                'name': 'foo', 'type': 'system', 'path': None,
+                'name': 'foo', 'type': 'system', 'path': [],
                 'pcfiles': ['foo'], 'extra_args': [],
             }, find_pkg_config=True)

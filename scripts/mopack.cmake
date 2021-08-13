@@ -5,7 +5,7 @@ find_package(PkgConfig REQUIRED)
 macro(_jq FILE)
   cmake_parse_arguments(JQ_ARGS "" "OUT" "QUERY" ${ARGN})
   execute_process(
-    COMMAND jq -r ${JQ_ARGS_QUERY}
+    COMMAND jq -r "${JQ_ARGS_QUERY}"
     INPUT_FILE ${FILE}
     OUTPUT_VARIABLE ${JQ_ARGS_OUT}
     OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -25,10 +25,14 @@ function(mopack_usage package)
     OUTPUT_FILE ${usage_file}
   )
 
-  _jq(${usage_file} QUERY ".path | join(\":\")" OUT pkgconf_path)
+  _jq(${usage_file} QUERY ".path | join(\";\")" OUT pkgconf_path)
   _jq(${usage_file} QUERY ".pcfiles | join(\" \")" OUT pkgconf_pcfiles)
 
-  set(ENV{PKG_CONFIG_PATH} ${pkgconf_path})
+  if(UNIX)
+    string(REPLACE ";" ":" pkgconf_path "${pkgconf_path}")
+  endif()
+
+  set(ENV{PKG_CONFIG_PATH} "${pkgconf_path}")
   pkg_check_modules(
     ${package}
     REQUIRED IMPORTED_TARGET

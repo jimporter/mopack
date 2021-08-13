@@ -78,7 +78,7 @@ class TestSystemPackage(SourceTest):
         pkg = self.make_package('foo')
         pkg.resolve(self.pkgdir)
         self.check_get_usage(pkg, None, {
-            'name': 'foo', 'type': 'system', 'path': None, 'pcfiles': ['foo'],
+            'name': 'foo', 'type': 'system', 'path': [], 'pcfiles': ['foo'],
             'extra_args': [],
         }, find_pkg_config=True)
 
