@@ -140,6 +140,10 @@ def list_packages(parser, subparser, args):
         list_level(packages)
 
 
+def help(parser, subparser, args):
+    parser.parse_args(args.subcommand + ['--help'])
+
+
 def main():
     parser = argparse.ArgumentParser(prog='mopack')
     parser.add_argument('--version', action='version',
@@ -240,6 +244,13 @@ def main():
                                  help='directory storing local package data')
     list_packages_p.add_argument('--flat', action='store_true',
                                  help='list packages without hierarchy')
+
+    help_p = subparsers.add_parser(
+        'help', help='show this help message and exit', add_help=False
+    )
+    help_p.set_defaults(func=help, parser=help_p)
+    help_p.add_argument('subcommand', metavar='CMD', nargs=argparse.REMAINDER,
+                        help='subcommand to request help for')
 
     args = parser.parse_args()
     log.init(args.color, debug=args.debug, verbose=args.verbose,

@@ -235,15 +235,7 @@ class SubprocessError(unittest.TestCase.failureException):
         super().__init__(msg)
 
 
-class IntegrationTest(unittest.TestCase):
-    deploy = False
-
-    def setUp(self):
-        self.stage = stage_dir(self.name)
-        self.pkgbuilddir = os.path.join(self.stage, 'mopack', 'build')
-        if self.deploy:
-            self.prefix = stage_dir(self.name + '-install', chdir=False)
-
+class SubprocessTestCase(unittest.TestCase):
     def assertExistence(self, path, exists):
         if os.path.exists(path) != exists:
             msg = '{!r} does not exist' if exists else '{!r} exists'
@@ -276,6 +268,16 @@ class IntegrationTest(unittest.TestCase):
 
     def assertOutput(self, command, output, *args, **kwargs):
         self.assertEqual(self.assertPopen(command, *args, **kwargs), output)
+
+
+class IntegrationTest(SubprocessTestCase):
+    deploy = False
+
+    def setUp(self):
+        self.stage = stage_dir(self.name)
+        self.pkgbuilddir = os.path.join(self.stage, 'mopack', 'build')
+        if self.deploy:
+            self.prefix = stage_dir(self.name + '-install', chdir=False)
 
     def assertUsage(self, name, usage='', extra_args=[], *, format='json',
                     submodules=[], extra_env=usage_env, returncode=0):
