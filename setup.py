@@ -173,8 +173,9 @@ setup(
 
     install_requires=['colorama', 'pyparsing', 'pyyaml', 'setuptools'],
     extras_require={
-        'dev': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6'],
-        'test': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6'],
+        'dev': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6',
+                'mike >= 0.3.1', 'mkdocs-bootswatch', 'shtab'],
+        'test': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6', 'shtab'],
     },
 
     entry_points={

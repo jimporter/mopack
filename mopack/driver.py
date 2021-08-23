@@ -58,7 +58,7 @@ class ConfigOptionAction(argparse.Action):
         merge_into_dict(getattr(namespace, self.dest), value)
 
 
-def resolve(parser, subparser, args):
+def resolve(parser, args):
     if os.environ.get(nested_invoke):
         return 3
 
@@ -67,7 +67,7 @@ def resolve(parser, subparser, args):
     commands.resolve(config_data, commands.get_package_dir(args.directory))
 
 
-def usage(parser, subparser, args):
+def usage(parser, args):
     directory = os.environ.get(nested_invoke, args.directory)
     try:
         usage = commands.usage(commands.get_package_dir(directory),
@@ -84,17 +84,17 @@ def usage(parser, subparser, args):
         print(yaml_tools.dump(usage))
 
 
-def deploy(parser, subparser, args):
+def deploy(parser, args):
     assert nested_invoke not in os.environ
     commands.deploy(commands.get_package_dir(args.directory))
 
 
-def clean(parser, subparser, args):
+def clean(parser, args):
     assert nested_invoke not in os.environ
     commands.clean(commands.get_package_dir(args.directory))
 
 
-def list_files(parser, subparser, args):
+def list_files(parser, args):
     assert nested_invoke not in os.environ
     files = commands.list_files(commands.get_package_dir(args.directory),
                                 args.include_implicit, args.strict)
@@ -106,7 +106,7 @@ def list_files(parser, subparser, args):
             print(i)
 
 
-def list_packages(parser, subparser, args):
+def list_packages(parser, args):
     pkg_fmt = ('\033[1;34m{package.name}\033[0m {version}' +
                '(\033[33m{package.source}\033[0m)')
     try:
@@ -140,8 +140,17 @@ def list_packages(parser, subparser, args):
         list_level(packages)
 
 
-def help(parser, subparser, args):
+def help(parser, args):
     parser.parse_args(args.subcommand + ['--help'])
+
+
+def dump_completion(parser, args):
+    try:
+        import shtab
+        print(shtab.complete(parser, shell=args.shell))
+    except ImportError:  # pragma: no cover
+        print('shtab not found; install via `pip install shtab`')
+        return 1
 
 
 def main():
@@ -168,7 +177,7 @@ def main():
     resolve_p = subparsers.add_parser(
         'resolve', help='fetch and build package dependencies'
     )
-    resolve_p.set_defaults(func=resolve, parser=resolve_p)
+    resolve_p.set_defaults(func=resolve)
     resolve_p.add_argument('--directory', default='.', type=os.path.abspath,
                            metavar='PATH',
                            help='directory to store local package data in')
@@ -192,7 +201,7 @@ def main():
     usage_p = subparsers.add_parser(
         'usage', help='retrieve usage info for a package'
     )
-    usage_p.set_defaults(func=usage, parser=usage_p)
+    usage_p.set_defaults(func=usage)
     usage_p.add_argument('-s', '--submodule', action='append',
                          dest='submodules',
                          help='the name of the submodule to use')
@@ -208,7 +217,7 @@ def main():
     deploy_p = subparsers.add_parser(
         'deploy', help='deploy packages'
     )
-    deploy_p.set_defaults(func=deploy, parser=deploy_p)
+    deploy_p.set_defaults(func=deploy)
     deploy_p.add_argument('--directory', default='.', type=os.path.abspath,
                           metavar='PATH',
                           help='directory storing local package data')
@@ -216,7 +225,7 @@ def main():
     clean_p = subparsers.add_parser(
         'clean', help='clean package directory'
     )
-    clean_p.set_defaults(func=clean, parser=clean_p)
+    clean_p.set_defaults(func=clean)
     clean_p.add_argument('--directory', default='.', type=os.path.abspath,
                          metavar='PATH',
                          help='directory storing local package data')
@@ -224,7 +233,7 @@ def main():
     list_files_p = subparsers.add_parser(
         'list-files', help='list input files'
     )
-    list_files_p.set_defaults(func=list_files, parser=list_files_p)
+    list_files_p.set_defaults(func=list_files)
     list_files_p.add_argument('--directory', default='.', type=os.path.abspath,
                               metavar='PATH',
                               help='directory storing local package data')
@@ -238,7 +247,7 @@ def main():
     list_packages_p = subparsers.add_parser(
         'list-packages', help='list packages'
     )
-    list_packages_p.set_defaults(func=list_packages, parser=list_packages_p)
+    list_packages_p.set_defaults(func=list_packages)
     list_packages_p.add_argument('--directory', default='.',
                                  type=os.path.abspath, metavar='PATH',
                                  help='directory storing local package data')
@@ -248,16 +257,25 @@ def main():
     help_p = subparsers.add_parser(
         'help', help='show this help message and exit', add_help=False
     )
-    help_p.set_defaults(func=help, parser=help_p)
+    help_p.set_defaults(func=help)
     help_p.add_argument('subcommand', metavar='CMD', nargs=argparse.REMAINDER,
                         help='subcommand to request help for')
+
+    completion_p = subparsers.add_parser(
+        'dump-completion', help='print shell completion script'
+    )
+    completion_p.set_defaults(func=dump_completion)
+    shell = (os.path.basename(os.environ['SHELL'])
+             if 'SHELL' in os.environ else None)
+    completion_p.add_argument('-s', '--shell', metavar='SHELL', default=shell,
+                              help='shell type (default: %(default)s)')
 
     args = parser.parse_args()
     log.init(args.color, debug=args.debug, verbose=args.verbose,
              warn_once=args.warn_once)
 
     try:
-        return args.func(parser, args.parser, args)
+        return args.func(parser, args)
     except Exception as e:
         logger.exception(e)
         return 1
