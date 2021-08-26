@@ -144,7 +144,7 @@ def help(parser, args):
     parser.parse_args(args.subcommand + ['--help'])
 
 
-def dump_completion(parser, args):
+def generate_completion(parser, args):
     try:
         import shtab
         print(shtab.complete(parser, shell=args.shell))
@@ -262,9 +262,9 @@ def main():
                         help='subcommand to request help for')
 
     completion_p = subparsers.add_parser(
-        'dump-completion', help='print shell completion script'
+        'generate-completion', help='print shell completion script'
     )
-    completion_p.set_defaults(func=dump_completion)
+    completion_p.set_defaults(func=generate_completion)
     shell = (os.path.basename(os.environ['SHELL'])
              if 'SHELL' in os.environ else None)
     completion_p.add_argument('-s', '--shell', metavar='SHELL', default=shell,

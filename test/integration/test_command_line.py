@@ -15,7 +15,7 @@ class HelpTest(SubprocessTestCase):
         self.assertRegex(output, r'^usage: mopack resolve \[-h\]')
 
 
-class DumpCompletionTest(SubprocessTestCase):
+class GenerateCompletionTest(SubprocessTestCase):
     def test_completion(self):
-        output = self.assertPopen(['mopack', 'dump-completion', '-sbash'])
+        output = self.assertPopen(['mopack', 'generate-completion', '-sbash'])
         self.assertRegex(output, r'^#!/usr/bin/env bash')
