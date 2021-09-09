@@ -245,7 +245,7 @@ def main():
                               help='return an error if package is not defined')
 
     list_packages_p = subparsers.add_parser(
-        'list-packages', help='list packages'
+        'list-packages', aliases=['ls'], help='list packages'
     )
     list_packages_p.set_defaults(func=list_packages)
     list_packages_p.add_argument('--directory', default='.',
