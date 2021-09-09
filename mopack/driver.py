@@ -16,7 +16,9 @@ logger = log.getLogger(__name__)
 nested_invoke = 'MOPACK_NESTED_INVOCATION'
 
 description = """
-mopack ("multiple-origin packager
+mopack ("multiple-origin package manager") is a tool providing a unified means
+of defining package dependencies across multiple package managers, including
+using tarballs directly.
 """
 
 
@@ -154,7 +156,7 @@ def generate_completion(parser, args):
 
 
 def main():
-    parser = argparse.ArgumentParser(prog='mopack')
+    parser = argparse.ArgumentParser(prog='mopack', description=description)
     parser.add_argument('--version', action='version',
                         version='%(prog)s ' + version)
     parser.add_argument('--verbose', action='store_true',
