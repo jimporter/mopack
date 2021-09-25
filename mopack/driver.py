@@ -22,6 +22,14 @@ using tarballs directly.
 """
 
 
+class CompletingArgumentParser(argparse.ArgumentParser):
+    def add_argument(self, *args, complete=None, **kwargs):
+        result = super().add_argument(*args, **kwargs)
+        if complete is not None:
+            result.complete = complete
+        return result
+
+
 class KeyValueAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         try:
@@ -156,7 +164,7 @@ def generate_completion(parser, args):
 
 
 def main():
-    parser = argparse.ArgumentParser(prog='mopack', description=description)
+    parser = CompletingArgumentParser(prog='mopack', description=description)
     parser.add_argument('--version', action='version',
                         version='%(prog)s ' + version)
     parser.add_argument('--verbose', action='store_true',
@@ -181,7 +189,7 @@ def main():
     )
     resolve_p.set_defaults(func=resolve)
     resolve_p.add_argument('--directory', default='.', type=os.path.abspath,
-                           metavar='PATH',
+                           metavar='PATH', complete='directory',
                            help='directory to store local package data in')
     resolve_p.add_argument('-P', '--deploy-path', action=KeyValueAction,
                            dest='deploy_paths', metavar='TYPE=PATH',
@@ -197,7 +205,7 @@ def main():
                            key=['builders'], dest='options',
                            metavar='OPTION=VALUE',
                            help='additional builder options')
-    resolve_p.add_argument('file', nargs='+',
+    resolve_p.add_argument('file', nargs='+', complete='file',
                            help='the mopack configuration files')
 
     usage_p = subparsers.add_parser(
@@ -208,7 +216,7 @@ def main():
                          dest='submodules',
                          help='the name of the submodule to use')
     usage_p.add_argument('--directory', default='.', type=os.path.abspath,
-                         metavar='PATH',
+                         metavar='PATH', complete='directory',
                          help='directory storing local package data')
     usage_p.add_argument('--json', action='store_true',
                          help='display results as JSON')
@@ -221,7 +229,7 @@ def main():
     )
     deploy_p.set_defaults(func=deploy)
     deploy_p.add_argument('--directory', default='.', type=os.path.abspath,
-                          metavar='PATH',
+                          metavar='PATH', complete='directory',
                           help='directory storing local package data')
 
     clean_p = subparsers.add_parser(
@@ -229,7 +237,7 @@ def main():
     )
     clean_p.set_defaults(func=clean)
     clean_p.add_argument('--directory', default='.', type=os.path.abspath,
-                         metavar='PATH',
+                         metavar='PATH', complete='directory',
                          help='directory storing local package data')
 
     list_files_p = subparsers.add_parser(
@@ -237,7 +245,7 @@ def main():
     )
     list_files_p.set_defaults(func=list_files)
     list_files_p.add_argument('--directory', default='.', type=os.path.abspath,
-                              metavar='PATH',
+                              metavar='PATH', complete='directory',
                               help='directory storing local package data')
     list_files_p.add_argument('-I', '--include-implicit', action='store_true',
                               help='include implicit input files')
@@ -252,6 +260,7 @@ def main():
     list_packages_p.set_defaults(func=list_packages)
     list_packages_p.add_argument('--directory', default='.',
                                  type=os.path.abspath, metavar='PATH',
+                                 complete='directory',
                                  help='directory storing local package data')
     list_packages_p.add_argument('--flat', action='store_true',
                                  help='list packages without hierarchy')
