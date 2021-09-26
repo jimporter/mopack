@@ -16,7 +16,7 @@ class TestUsage(IntegrationTest):
                      'MOPACK_LIB_PATH': test_lib_dir}
 
         config = os.path.join(test_data_dir, 'mopack-tarball.yml')
-        self.assertPopen(['mopack', 'resolve', config])
+        self.assertPopen(['mopack', '--debug', 'resolve', config])
 
         # Usage for `hello`.
         expected_output_hello = {

@@ -1,12 +1,9 @@
-import argparse
 import os
 import json
 import sys
-import yaml
 
-from . import commands, config, log, yaml_tools
+from . import arguments, commands, config, log, yaml_tools
 from .app_version import version
-from .iterutils import merge_into_dict
 
 logger = log.getLogger(__name__)
 
@@ -20,61 +17,6 @@ mopack ("multiple-origin package manager") is a tool providing a unified means
 of defining package dependencies across multiple package managers, including
 using tarballs directly.
 """
-
-
-class CompletingArgumentParser(argparse.ArgumentParser):
-    @staticmethod
-    def _wrap_complete(action):
-        def wrapper(*args, complete=None, **kwargs):
-            argument = action(*args, **kwargs)
-            if complete is not None:
-                argument.complete = complete
-            return argument
-
-        return wrapper
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for k, v in self._registries['action'].items():
-            self._registries['action'][k] = self._wrap_complete(v)
-
-
-class KeyValueAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        try:
-            key, value = values.split('=', 1)
-        except ValueError:
-            raise argparse.ArgumentError(self, 'expected TYPE=PATH')
-        if getattr(namespace, self.dest) is None:
-            setattr(namespace, self.dest, {})
-        getattr(namespace, self.dest)[key] = value
-
-
-class ConfigOptionAction(argparse.Action):
-    def __init__(self, *args, key=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.key = key or []
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        try:
-            key, value = values.split('=', 1)
-        except ValueError:
-            raise argparse.ArgumentError(self, 'expected OPTION=VALUE')
-
-        key = self.key + key.split(':')
-
-        try:
-            value = yaml.safe_load(value)
-        except yaml.parser.ParserError:
-            raise argparse.ArgumentError(
-                self, 'invalid yaml: {!r}'.format(value)
-            )
-        for i in reversed(key):
-            value = {i: value}
-
-        if getattr(namespace, self.dest) is None:
-            setattr(namespace, self.dest, {})
-        merge_into_dict(getattr(namespace, self.dest), value)
 
 
 def resolve(parser, args):
@@ -173,12 +115,13 @@ def generate_completion(parser, args):
 
 
 def main():
-    parser = CompletingArgumentParser(prog='mopack', description=description)
+    parser = arguments.ArgumentParser(prog='mopack', description=description)
     parser.add_argument('--version', action='version',
                         version='%(prog)s ' + version)
     parser.add_argument('--verbose', action='store_true',
                         help='show verbose output')
-    parser.add_argument('--debug', action='store_true', help=argparse.SUPPRESS)
+    parser.add_argument('--debug', action='store_true',
+                        help=arguments.SUPPRESS)
     parser.add_argument('--color', metavar='WHEN',
                         choices=['always', 'never', 'auto'], default='auto',
                         help=('show colored output (one of: %(choices)s; ' +
@@ -200,17 +143,21 @@ def main():
     resolve_p.add_argument('--directory', default='.', type=os.path.abspath,
                            metavar='PATH', complete='directory',
                            help='directory to store local package data in')
-    resolve_p.add_argument('-P', '--deploy-path', action=KeyValueAction,
+    resolve_p.add_argument('-P', '--deploy-path',
+                           action=arguments.KeyValueAction,
                            dest='deploy_paths', metavar='TYPE=PATH',
                            help='directories to deploy packages to')
-    resolve_p.add_argument('-o', '--option', action=ConfigOptionAction,
+    resolve_p.add_argument('-o', '--option',
+                           action=arguments.ConfigOptionAction,
                            dest='options', metavar='OPTION=VALUE',
                            help='additional common options')
-    resolve_p.add_argument('-S', '--source-option', action=ConfigOptionAction,
+    resolve_p.add_argument('-S', '--source-option',
+                           action=arguments.ConfigOptionAction,
                            key=['sources'], dest='options',
                            metavar='OPTION=VALUE',
                            help='additional source options')
-    resolve_p.add_argument('-B', '--builder-option', action=ConfigOptionAction,
+    resolve_p.add_argument('-B', '--builder-option',
+                           action=arguments.ConfigOptionAction,
                            key=['builders'], dest='options',
                            metavar='OPTION=VALUE',
                            help='additional builder options')
@@ -278,7 +225,7 @@ def main():
         'help', help='show this help message and exit', add_help=False
     )
     help_p.set_defaults(func=help)
-    help_p.add_argument('subcommand', metavar='CMD', nargs=argparse.REMAINDER,
+    help_p.add_argument('subcommand', metavar='CMD', nargs=arguments.REMAINDER,
                         help='subcommand to request help for')
 
     completion_p = subparsers.add_parser(
