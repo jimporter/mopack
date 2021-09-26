@@ -23,11 +23,20 @@ using tarballs directly.
 
 
 class CompletingArgumentParser(argparse.ArgumentParser):
-    def add_argument(self, *args, complete=None, **kwargs):
-        result = super().add_argument(*args, **kwargs)
-        if complete is not None:
-            result.complete = complete
-        return result
+    @staticmethod
+    def _wrap_complete(action):
+        def wrapper(*args, complete=None, **kwargs):
+            argument = action(*args, **kwargs)
+            if complete is not None:
+                argument.complete = complete
+            return argument
+
+        return wrapper
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for k, v in self._registries['action'].items():
+            self._registries['action'][k] = self._wrap_complete(v)
 
 
 class KeyValueAction(argparse.Action):
