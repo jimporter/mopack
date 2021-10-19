@@ -52,8 +52,7 @@ jobs:
           path: bfg9000
       - name: Install Python dependencies
         run: |
-          pip install ./bfg9000
-          pip install codecov '.[test]'
+          pip install ./bfg9000 '.[test]'
       - name: Install Linux dependencies
         if: matrix.os == 'ubuntu-latest'
         run: |
@@ -114,9 +113,9 @@ jobs:
       - name: Run tests
         run: |
           python setup.py coverage -q
+          coverage xml
       - name: Upload coverage
-        run: |
-          codecov
+        uses: codecov/codecov-action@v2
   build-cygwin:
     runs-on: windows-latest
     env:
@@ -148,14 +147,16 @@ jobs:
       - name: Install Python dependencies
         run: >
           C:\cygwin\bin\bash -lc
-          "cd bfg9000 && pip3.8 install ./bfg9000 && pip3.8 install codecov '.[test]'"
+          "cd bfg9000 && pip3.8 install ./bfg9000 '.[test]'"
       - name: Run tests
         run: >
           C:\cygwin\bin\bash -lc
-          "cd bfg9000 && python3.8 setup.py coverage -q"
+          "cd bfg9000 && python3.8 setup.py coverage -q && coverage xml"
+      - name: Copy coverage from Cygwin
+        run: |
+          copy C:\cygwin\home\runneradmin\bfg9000\coverage.xml .
       - name: Upload coverage
-        run: >
-          C:\cygwin\bin\bash -lc "cd bfg9000 && codecov"
+        uses: codecov/codecov-action@v2
   lint:
     runs-on: ubuntu-latest
 
