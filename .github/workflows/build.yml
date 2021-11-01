@@ -139,24 +139,24 @@ jobs:
 
           .\setup-x86_64.exe -qgnNdO -R %CYGROOT% -l %CYGCACHE%
           -s http://mirrors.kernel.org/sourceware/cygwin/
-          -P cmake,gcc-g++,git,libboost-devel,make,ninja,pkg-config,python38
-          -P python38-pip,python38-setuptools
+          -P cmake,gcc-g++,git,jq,libboost-devel,make,ninja,pkg-config,python38
+          -P python38-pip,python38-setuptools,python38-wheel
       - name: Copy mopack to Cygwin
         run: |
           echo "MOPACK_LIB_NAMES=lib{}.dll.a" >> .mopack_test_env
-          robocopy . ${env:CYGROOT}\home\runneradmin\bfg9000 /E
+          robocopy . ${env:CYGROOT}\home\runneradmin\mopack /E
           if(${LastExitCode} -le 7) { ${LastExitCode} = 0 }
       - name: Install Python dependencies
         run: >
           C:\cygwin\bin\bash -lc
-          "cd bfg9000 && pip3.8 install ./bfg9000 '.[test]'"
+          "cd mopack && pip3.8 install ./bfg9000 '.[test]'"
       - name: Run tests
         run: >
           C:\cygwin\bin\bash -lc
-          "cd bfg9000 && python3.8 setup.py coverage -q && coverage xml"
+          "cd mopack && python3.8 setup.py coverage -q && coverage xml"
       - name: Copy coverage from Cygwin
         run: |
-          copy C:\cygwin\home\runneradmin\bfg9000\coverage.xml .
+          copy C:\cygwin\home\runneradmin\mopack\coverage.xml .
       - name: Upload coverage
         uses: codecov/codecov-action@v2
         with:
