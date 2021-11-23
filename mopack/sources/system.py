@@ -18,7 +18,7 @@ class SystemPackage(BinaryPackage):
         if usage is not Unset:
             raise FieldKeyError((
                 "'system' package doesn't accept 'usage' attribute; " +
-                "pass usage options directly"
+                'pass usage options directly'
             ), 'usage')
 
         super().__init__(name, usage={

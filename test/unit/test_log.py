@@ -182,7 +182,7 @@ class TestLogFile(TestCase):
     def test_check_call_proc_error_output(self):
         err = CalledProcessError(1, None, output='stdout\nstdout\n')
         msg = ("Command 'cmd --arg' returned non-zero exit status 1:" +
-               "  stdout\n  stdout")
+               '  stdout\n  stdout')
 
         with mock.patch('builtins.open', mock.mock_open()) as mopen, \
              mock.patch('subprocess.run', side_effect=err):  # noqa

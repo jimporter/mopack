@@ -403,10 +403,10 @@ def _scan_flow_scalar_non_spaces(loader, double, start_mark, offset):
         loader.forward(length)
 
         ch = loader.peek()
-        if not double and ch == '\'' and loader.peek(1) == '\'':
+        if not double and ch == "'" and loader.peek(1) == "'":
             offset -= 1
             loader.forward(2)
-        elif (double and ch == '\'') or (not double and ch in '\"\\'):
+        elif (double and ch == "'") or (not double and ch in '"\\'):
             offset -= 1
             loader.forward()
         elif double and ch == '\\':

@@ -144,4 +144,4 @@ class Path(FreezeDried):
             path = '$({})'.format(self.base.name)
         else:
             path = '$({})/{}'.format(self.base.name, self.path)
-        return "<{}({!r})>".format(type(self).__name__, path)
+        return '<{}({!r})>'.format(type(self).__name__, path)
