@@ -300,3 +300,17 @@ class TestMergeDicts(TestCase):
         self.assertEqual(iterutils.merge_dicts({}, d, {'foo': [2]}),
                          {'foo': [1, 2]})
         self.assertEqual(d, {'foo': [1]})
+
+
+class TestSliceDict(TestCase):
+    def test_present(self):
+        d = {'foo': 1, 'bar': 2, 'baz': 3}
+        self.assertEqual(iterutils.slice_dict(d, ['foo', 'bar']),
+                         {'foo': 1, 'bar': 2})
+        self.assertEqual(d, {'baz': 3})
+
+    def test_not_present(self):
+        d = {'foo': 1, 'bar': 2, 'baz': 3}
+        self.assertEqual(iterutils.slice_dict(d, ['foo', 'quux']),
+                         {'foo': 1})
+        self.assertEqual(d, {'bar': 2, 'baz': 3})
