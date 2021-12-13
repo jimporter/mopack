@@ -59,11 +59,11 @@ class PkgConfigUsage(Usage):
         return config
 
     def __init__(self, name, *, path='pkgconfig', pcfile=types.Unset,
-                 extra_args=None, submodule_map=types.Unset, submodules,
-                 _options, _path_bases):
-        super().__init__(_options=_options)
+                 extra_args=None, submodule_map=types.Unset,
+                 inherit_defaults=False, submodules, _options, _path_bases):
+        super().__init__(inherit_defaults=inherit_defaults, _options=_options)
         symbols = self._expr_symbols(_path_bases)
-        package_default = DefaultResolver(self, symbols, name)
+        pkg_default = DefaultResolver(self, symbols, inherit_defaults, name)
         buildbase = self._preferred_base('builddir', _path_bases)
         if submodules and submodules['required']:
             # If submodules are required, default to an empty .pc file, since
@@ -81,7 +81,7 @@ class PkgConfigUsage(Usage):
         if submodules:
             submodule_var = placeholder(submodule_placeholder)
             extra_symbols = {'submodule': submodule_var}
-            T.submodule_map(package_default(
+            T.submodule_map(pkg_default(
                 types.maybe(_submodule_map),
                 default=name + '_' + submodule_var,
                 extra_symbols=extra_symbols

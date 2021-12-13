@@ -1,4 +1,5 @@
 import os
+from collections import namedtuple
 from itertools import chain
 from yaml.error import MarkedYAMLError
 
@@ -11,6 +12,8 @@ from .yaml_tools import (load_file, to_parse_error, MarkedDict,
 
 mopack_file = 'mopack.yml'
 mopack_local_file = 'mopack-local.yml'
+
+PendingPackage = namedtuple('PendingPackage', ['config_file', 'config'])
 
 
 class _PlaceholderPackage:
@@ -84,11 +87,11 @@ class BaseConfig:
                                'not last entry of list')
                         raise MarkedYAMLError(ctx, cfgs.mark.start, msg,
                                               cfg.mark.start)
-                    cfg['config_file'] = filename
-                    self._pending_packages[name].append(cfg)
+                    pkg = PendingPackage(filename, cfg)
+                    self._pending_packages[name].append(pkg)
             else:
-                cfgs['config_file'] = filename
-                self._pending_packages[name].append(cfgs)
+                pkg = PendingPackage(filename, cfgs)
+                self._pending_packages[name].append(pkg)
 
     def _process_options(self, filename, data):
         if not data:
@@ -108,11 +111,12 @@ class BaseConfig:
                 self.packages[name] = cfgs
                 continue
 
-            for cfg in cfgs:
-                with to_parse_error(cfg['config_file']):
+            for config_file, cfg in cfgs:
+                with to_parse_error(config_file):
                     if self._if_evaluate(options.expr_symbols, cfg, 'if'):
                         self.packages[name] = try_make_package(
-                            name, cfg, parent=parent_package, _options=options
+                            name, cfg, parent=parent_package, _options=options,
+                            config_file=config_file
                         )
                         break
         del self._pending_packages

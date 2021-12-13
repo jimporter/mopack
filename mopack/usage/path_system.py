@@ -143,27 +143,28 @@ class PathUsage(Usage):
     def __init__(self, name, *, auto_link=Unset, version=Unset,
                  include_path=Unset, library_path=Unset, headers=Unset,
                  libraries=Unset, compile_flags=Unset, link_flags=Unset,
-                 submodule_map=Unset, submodules, _options, _path_bases):
-        super().__init__(_options=_options)
+                 submodule_map=Unset, inherit_defaults=False, submodules,
+                 _options, _path_bases):
+        super().__init__(inherit_defaults=inherit_defaults, _options=_options)
         symbols = self._expr_symbols(_path_bases)
-        package_default = DefaultResolver(self, symbols, name)
+        pkg_default = DefaultResolver(self, symbols, inherit_defaults, name)
         srcbase = self._preferred_base('srcdir', _path_bases)
         buildbase = self._preferred_base('builddir', _path_bases)
 
         T = types.TypeCheck(locals(), symbols)
         # XXX: Maybe have the compiler tell *us* if it supports auto-linking,
         # instead of us telling it?
-        T.auto_link(package_default(types.boolean, default=False))
+        T.auto_link(pkg_default(types.boolean, default=False))
 
-        T.version(package_default(_version_def), dest_field='explicit_version')
+        T.version(pkg_default(_version_def), dest_field='explicit_version')
 
         # XXX: These specify the *possible* paths to find headers/libraries.
         # Should there be a way of specifying paths that are *always* passed to
         # the compiler?
-        T.include_path(package_default(_list_of_paths(srcbase)))
-        T.library_path(package_default(_list_of_paths(buildbase)))
+        T.include_path(pkg_default(_list_of_paths(srcbase)))
+        T.library_path(pkg_default(_list_of_paths(buildbase)))
 
-        T.headers(package_default(_list_of_headers))
+        T.headers(pkg_default(_list_of_headers))
 
         if self.auto_link or submodules and submodules['required']:
             # If auto-linking or if submodules are required, default to an
@@ -171,7 +172,7 @@ class PathUsage(Usage):
             # library that always needs linking to.
             libs_checker = types.maybe(_list_of_libraries, default=[])
         else:
-            libs_checker = package_default(
+            libs_checker = pkg_default(
                 _list_of_libraries, default={'type': 'guess', 'name': name}
             )
         T.libraries(libs_checker)
@@ -181,7 +182,7 @@ class PathUsage(Usage):
         if submodules:
             submodule_var = placeholder(submodule_placeholder)
             extra_symbols = {'submodule': submodule_var}
-            T.submodule_map(package_default(
+            T.submodule_map(pkg_default(
                 types.maybe(_submodule_map(srcbase, buildbase)),
                 default=name + '_' + submodule_var,
                 extra_symbols=extra_symbols

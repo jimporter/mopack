@@ -265,7 +265,8 @@ class TestPkgConfig(UsageTest):
             'pcfiles': ['boost'], 'extra_args': [],
         }
 
-        usage = self.make_usage('boost', submodules=submodules)
+        usage = self.make_usage('boost', inherit_defaults=True,
+                                submodules=submodules)
         self.assertEqual(usage.path, [Path('pkgconfig', 'builddir')])
         self.assertEqual(usage.pcfile, 'boost')
         self.assertEqual(usage.get_usage(
@@ -275,7 +276,8 @@ class TestPkgConfig(UsageTest):
             MockPackage(), ['thread'], self.pkgdir, None, self.builddir
         ), final_usage)
 
-        usage = self.make_usage('boost', submodule_map='boost_$submodule',
+        usage = self.make_usage('boost', inherit_defaults=True,
+                                submodule_map='boost_$submodule',
                                 submodules=submodules)
         self.assertEqual(usage.path, [Path('pkgconfig', 'builddir')])
         self.assertEqual(usage.pcfile, 'boost')

@@ -25,7 +25,7 @@ class Usage(OptionsHolder):
     _type_field = 'type'
     _get_type = _get_usage_type
 
-    def __init__(self, *, _options):
+    def __init__(self, *, inherit_defaults=False, _options):
         super().__init__(_options)
 
     def _expr_symbols(self, path_bases):
@@ -55,10 +55,16 @@ def make_usage(name, config, *, field='usage', **kwargs):
         raise TypeError('usage not specified')
 
     if isinstance(config, str):
-        with wrap_field_error(field, config):
-            return _get_usage_type(config, ())(name, **kwargs)
+        type_field = ()
+        type = config
+        config = {}
     else:
-        fwd_config = config.copy()
-        type = fwd_config.pop('type')
-        with wrap_field_error(field, type):
-            return _get_usage_type(type)(name, **fwd_config, **kwargs)
+        type_field = 'type'
+        config = config.copy()
+        type = config.pop('type')
+
+    if not config:
+        config = {'inherit_defaults': True}
+
+    with wrap_field_error(field, type):
+        return _get_usage_type(type, type_field)(name, **config, **kwargs)

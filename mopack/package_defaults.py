@@ -111,11 +111,12 @@ def get_default(symbols, package_name, genus, species, field, default=None):
 
 
 class DefaultResolver:
-    def __init__(self, obj, symbols, name=None):
+    def __init__(self, obj, symbols, get_defaults=True, name=None):
         self.package_name = name or obj.name
         self.genus = obj._default_genus
         self.species = getattr(obj, obj._type_field)
         self.symbols = symbols
+        self.get_defaults = get_defaults
 
     def __call__(self, other, field=None, default=None, extra_symbols=None):
         forced_field = field
@@ -123,10 +124,13 @@ class DefaultResolver:
 
         def check(field, value):
             if value is types.Unset:
-                value = get_default(
-                    symbols, self.package_name, self.genus, self.species,
-                    forced_field or field, default
-                )
+                if self.get_defaults:
+                    value = get_default(
+                        symbols, self.package_name, self.genus, self.species,
+                        forced_field or field, default
+                    )
+                else:
+                    value = default
             return other(field, value)
 
         return check

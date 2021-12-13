@@ -73,14 +73,20 @@ class BuilderOptions(FreezeDried, BaseOptions):
 
 
 def make_builder(name, config, *, field='build', **kwargs):
+    if config is None:
+        raise TypeError('builder not specified')
+
     if isinstance(config, str):
-        with wrap_field_error(field, config):
-            return _get_builder_type(config, ())(name, **kwargs)
+        type_field = ()
+        type = config
+        config = {}
     else:
-        fwd_config = config.copy()
-        type = fwd_config.pop('type')
-        with wrap_field_error(field, type):
-            return _get_builder_type(type)(name, **fwd_config, **kwargs)
+        type_field = 'type'
+        config = config.copy()
+        type = config.pop('type')
+
+    with wrap_field_error(field, type):
+        return _get_builder_type(type, type_field)(name, **config, **kwargs)
 
 
 def make_builder_options(type):

@@ -8,7 +8,7 @@ from ..iterutils import listify
 from ..package_defaults import DefaultResolver
 from ..path import Path
 from ..placeholder import placeholder
-from ..types import FieldValueError, try_load_config
+from ..types import FieldKeyError, FieldValueError, try_load_config
 from ..usage import Usage, make_usage
 
 
@@ -47,7 +47,7 @@ class Package(OptionsHolder):
     Options = None
 
     def __init__(self, name, *, deploy=True, parent=None,
-                 _options, config_file):
+                 inherit_defaults=False, _options, config_file):
         super().__init__(_options)
         self.name = name
         self.config_file = config_file
@@ -119,14 +119,16 @@ class Package(OptionsHolder):
 
 @FreezeDried.fields(rehydrate={'usage': Usage})
 class BinaryPackage(Package):
-    def __init__(self, name, *, submodules=types.Unset, usage, _options,
-                 _path_bases=(), _usage_field='usage', **kwargs):
-        super().__init__(name, _options=_options, **kwargs)
+    def __init__(self, name, *, submodules=types.Unset, usage,
+                 inherit_defaults=False, _options, _path_bases=(),
+                 _usage_field='usage', **kwargs):
+        super().__init__(name, inherit_defaults=inherit_defaults,
+                         _options=_options, **kwargs)
 
         symbols = self._expr_symbols
-        package_default = DefaultResolver(self, symbols, name)
+        pkg_default = DefaultResolver(self, symbols, inherit_defaults, name)
         T = types.TypeCheck(locals(), symbols)
-        T.submodules(package_default(submodules_type))
+        T.submodules(pkg_default(submodules_type))
 
         self.usage = make_usage(name, usage, field=_usage_field,
                                 submodules=self.submodules, _options=_options,
@@ -152,9 +154,19 @@ class PackageOptions(FreezeDried, BaseOptions):
 
 
 def make_package(name, config, **kwargs):
-    fwd_config = config.copy()
-    source = fwd_config.pop('source')
-    return _get_source_type(source)(name, **fwd_config, **kwargs)
+    if config is None:
+        raise TypeError('usage not specified')
+    # config_file should always be specified in kwargs.
+    if 'config_file' in config:
+        raise FieldKeyError('config_file is reserved', 'config_file')
+
+    config = config.copy()
+    source = config.pop('source')
+
+    if not config:
+        config = {'inherit_defaults': True}
+
+    return _get_source_type(source)(name, **config, **kwargs)
 
 
 def try_make_package(name, config, **kwargs):

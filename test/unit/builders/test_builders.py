@@ -19,8 +19,14 @@ class TestMakeBuilder(BuilderTest):
         self.assertEqual(builder.name, 'foo')
 
     def test_unknown_builder(self):
-        self.assertRaises(FieldError, make_builder, 'foo', {'type': 'goofy'},
-                          submodules=None, _options=self.make_options())
+        with self.assertRaises(FieldError):
+            make_builder('foo', {'type': 'goofy'}, submodules=None,
+                         _options=self.make_options())
+
+    def test_no_builder(self):
+        with self.assertRaises(TypeError):
+            make_builder('foo', None, submodules=None,
+                         _options=self.make_options())
 
     def test_invalid_keys(self):
         self.assertRaises(TypeError, make_builder, 'foo',

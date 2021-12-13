@@ -1,5 +1,13 @@
 # Package Sources
 
+```yaml
+packages:
+  my_pkg:
+    source: <package-source>
+    inherit_defaults: <boolean>
+    submodules: <submodules>
+```
+
 ## Source distributions
 
 ### directory

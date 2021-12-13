@@ -24,8 +24,9 @@ class SDistPackage(Package):
         return config
 
     def __init__(self, name, *, build=None, usage=None, submodules=types.Unset,
-                 _options, **kwargs):
-        super().__init__(name, _options=_options, **kwargs)
+                 inherit_defaults=True, _options, **kwargs):
+        super().__init__(name, inherit_defaults=inherit_defaults,
+                         _options=_options, **kwargs)
         symbols = self._expr_symbols
         T = types.TypeCheck(locals(), symbols)
 
@@ -35,8 +36,9 @@ class SDistPackage(Package):
             self.builder = None
             self.pending_usage = usage
         else:
-            package_default = DefaultResolver(self, symbols, name)
-            T.submodules(package_default(submodules_type))
+            pkg_default = DefaultResolver(self, symbols, inherit_defaults,
+                                          name)
+            T.submodules(pkg_default(submodules_type))
             self.builder = make_builder(
                 name, build, submodules=self.submodules,
                 _options=_options

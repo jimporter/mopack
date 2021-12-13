@@ -546,11 +546,34 @@ class TestPath(UsageTest):
         submodules = {'names': '*', 'required': False}
         for plat in ['linux', 'darwin', 'windows']:
             opts = {'target_platform': plat}
-            usage = self.make_usage('boost', submodules=submodules,
-                                    common_options=opts)
+            usage = self.make_usage(
+                'boost', submodules=submodules, common_options=opts
+            )
+            self.check_usage(usage, libraries=[
+                {'type': 'guess', 'name': 'boost'},
+            ])
+            self.check_version(usage, None, header=header)
+            self.check_get_usage(usage, 'boost', None, None, None, {
+                'name': 'boost', 'type': self.type, 'path': [self.pkgconfdir],
+                'pcfiles': ['boost'], 'generated': True, 'auto_link': False,
+            })
+            self.check_pkg_config('boost', None)
+            self.check_get_usage(usage, 'boost', ['thread'], None, None, {
+                'name': 'boost', 'type': self.type, 'path': [self.pkgconfdir],
+                'pcfiles': ['boost[thread]'], 'generated': True,
+                'auto_link': False,
+            })
+            self.check_pkg_config('boost', ['thread'], {
+                'libs': ['-L' + abspath('/mock/lib'), '-lboost',
+                         '-lboost_thread'],
+            })
+
+            usage = self.make_usage(
+                'boost', inherit_defaults=True, submodules=submodules,
+                common_options=opts
+            )
             self.check_usage(usage, auto_link=(plat == 'windows'),
-                             headers=['boost/version.hpp'], libraries=[],
-                             include_path=[], library_path=[])
+                             headers=['boost/version.hpp'], libraries=[])
             self.check_version(usage, '1.23', header=header)
             self.check_get_usage(usage, 'boost', None, None, None, {
                 'name': 'boost', 'type': self.type, 'path': [self.pkgconfdir],
@@ -575,8 +598,10 @@ class TestPath(UsageTest):
                           (['-lboost_thread'] if plat != 'windows' else []) ),
             })
 
-            usage = self.make_usage('boost', libraries=['boost'],
-                                    submodules=submodules, common_options=opts)
+            usage = self.make_usage(
+                'boost', inherit_defaults=True, libraries=['boost'],
+                submodules=submodules, common_options=opts
+            )
             self.check_usage(usage, auto_link=(plat == 'windows'),
                              headers=['boost/version.hpp'],
                              libraries=['boost'], include_path=[],
@@ -619,8 +644,10 @@ class TestPath(UsageTest):
             'library_path': [abspathobj(boost_lib)],
         }
 
-        usage = self.make_usage('boost', submodules=submodules,
-                                common_options=opts)
+        usage = self.make_usage(
+            'boost', inherit_defaults=True, submodules=submodules,
+            common_options=opts
+        )
         self.check_usage(usage, auto_link=False, headers=['boost/version.hpp'],
                          libraries=[], **pathobjs)
         self.check_get_usage(usage, 'boost', None, None, None)
@@ -634,8 +661,10 @@ class TestPath(UsageTest):
             'libs': ['-L{}'.format(boost_lib), '-pthread', '-lboost_thread'],
         })
 
-        usage = self.make_usage('boost', libraries=['boost'],
-                                submodules=submodules, common_options=opts)
+        usage = self.make_usage(
+            'boost', inherit_defaults=True, libraries=['boost'],
+            submodules=submodules, common_options=opts
+        )
         self.check_usage(usage, auto_link=False, headers=['boost/version.hpp'],
                          libraries=['boost'], **pathobjs)
         self.check_version(usage, '1.23', header=header)

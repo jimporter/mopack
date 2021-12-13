@@ -1,5 +1,18 @@
 # Usage
 
+```yaml
+packages:
+  my_pkg:
+    # ...
+    usage:
+      type: <usage-type>
+      inherit_defaults: <boolean>
+      submodule_map: <submodule-map>  # or...
+      submodule_map:
+        my_submodule: <submodule-map>
+        '*': <submodule-map>
+```
+
 ## path/system
 
 ```yaml
@@ -17,10 +30,6 @@ packages:
       libraries: <library-list>
       compile_flags: <shell-args>
       link_flags: <shell-args>
-      submodule_map: <submodule-map>  # or...
-      submodule_map:
-        my_submodule: <submodule-map>
-        '*': <submodule-map>
 ```
 
 ## pkg_config
@@ -33,8 +42,4 @@ packages:
       type: pkg_config
       path: <path-list>
       extra_args: <shell-args>
-      submodule_map: <submodule-map>  # or...
-      submodule_map:
-        my_submodule: <submodule-map>
-        '*': <submodule-map>
 ```
