@@ -294,6 +294,26 @@ class TestListOf(TypeTestCase):
             list_of(string, listify=True)('field', 1)
 
 
+class TestListOfLength(TypeTestCase):
+    def test_list(self):
+        self.assertEqual(list_of_length(string, 0)('field', []), [])
+        self.assertEqual(list_of_length(string, 1)('field', ['foo']), ['foo'])
+        self.assertEqual(list_of_length(string, 2)('field', ['foo', 'bar']),
+                         ['foo', 'bar'])
+
+    def test_invalid(self):
+        with self.assertFieldError(('field',), 'expected a list'):
+            list_of_length(string, 2)('field', None)
+        with self.assertFieldError(('field',), 'expected a list'):
+            list_of_length(string, 2)('field', 'foo')
+        with self.assertFieldError(('field',), 'expected a list'):
+            list_of_length(string, 2)('field', {})
+        with self.assertFieldError(('field',), 'expected a list of length 2'):
+            list_of_length(string, 2)('field', ['foo'])
+        with self.assertFieldError(('field', 0), 'expected a string'):
+            list_of_length(string, 2)('field', [1, 2])
+
+
 class TestDictOf(TypeTestCase):
     def test_dict(self):
         checker = dict_of(string, string)
