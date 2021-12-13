@@ -132,6 +132,18 @@
                 <div class="col-md-9" role="main">
 
 <h1 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">§</a></h1>
+<pre><code class="yaml">packages:
+  my_pkg:
+    # ...
+    usage:
+      type: &lt;usage-type&gt;
+      inherit_defaults: &lt;boolean&gt;
+      submodule_map: &lt;submodule-map&gt;  # or...
+      submodule_map:
+        my_submodule: &lt;submodule-map&gt;
+        '*': &lt;submodule-map&gt;
+</code></pre>
+
 <h2 id="pathsystem">path/system<a class="headerlink" href="#pathsystem" title="Permanent link">§</a></h2>
 <pre><code class="yaml">packages:
   my_pkg:
@@ -147,10 +159,6 @@
       libraries: &lt;library-list&gt;
       compile_flags: &lt;shell-args&gt;
       link_flags: &lt;shell-args&gt;
-      submodule_map: &lt;submodule-map&gt;  # or...
-      submodule_map:
-        my_submodule: &lt;submodule-map&gt;
-        '*': &lt;submodule-map&gt;
 </code></pre>
 
 <h2 id="pkg_config">pkg_config<a class="headerlink" href="#pkg_config" title="Permanent link">§</a></h2>
@@ -161,10 +169,6 @@
       type: pkg_config
       path: &lt;path-list&gt;
       extra_args: &lt;shell-args&gt;
-      submodule_map: &lt;submodule-map&gt;  # or...
-      submodule_map:
-        my_submodule: &lt;submodule-map&gt;
-        '*': &lt;submodule-map&gt;
 </code></pre></div>
         </div>
 
