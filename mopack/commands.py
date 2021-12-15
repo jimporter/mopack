@@ -34,6 +34,19 @@ class Metadata:
     def add_package(self, package):
         self.packages[package.name] = package
 
+    def get_package(self, name, strict=False):
+        if name in self.packages:
+            package = self.packages[name]
+        elif strict:
+            raise ValueError('no definition for package {!r}'.format(name))
+        else:
+            package = fallback_system_package(name, self.options)
+
+        if not package.resolved:
+            raise ValueError('package {!r} has not been resolved successfully'
+                             .format(name))
+        return package
+
     def save(self, pkgdir):
         os.makedirs(pkgdir, exist_ok=True)
         with open(os.path.join(pkgdir, self.metadata_filename), 'w') as f:
@@ -207,24 +220,14 @@ def deploy(pkgdir):
 
 
 def usage(pkgdir, name, submodules=None, strict=False):
-    package = None
     try:
         metadata = Metadata.load(pkgdir)
-        if name in metadata.packages:
-            package = metadata.packages[name]
-        elif strict:
-            raise ValueError('no definition for package {!r}'.format(name))
     except FileNotFoundError:
         if strict:
             raise
         metadata = Metadata()
 
-    if package is None:
-        package = fallback_system_package(name, metadata.options)
-
-    if not package.resolved:
-        raise ValueError('package {!r} has not been resolved successfully'
-                         .format(name))
+    package = metadata.get_package(name, strict)
     return package.get_usage(submodules, pkgdir)
 
 

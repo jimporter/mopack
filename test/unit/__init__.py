@@ -20,6 +20,11 @@ def mock_open_log(new=None, *args, **kwargs):
         yield m
 
 
+class Stream(StringIO):
+    def close(self):
+        pass
+
+
 def mock_open_data(read_data):
     return lambda *args, **kwargs: StringIO(read_data)
 
