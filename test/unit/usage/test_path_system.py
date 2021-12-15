@@ -37,7 +37,7 @@ def boost_getdir(name, default, options):
     return [abspath(p)] if p is not None else []
 
 
-def mock_exists(p, variables={}):
+def mock_isfile(p, variables={}):
     p = os.path.normcase(p.string(**variables))
     return p.startswith(os.path.normcase(abspath('/mock')) + os.sep)
 
@@ -84,7 +84,7 @@ class TestPath(UsageTest):
         with mock.patch('subprocess.run', side_effect=OSError()), \
              mock.patch('mopack.usage.path_system._system_include_path',
                         return_value=[Path('/mock/include')]), \
-             mock.patch('mopack.usage.path_system.exists', mock_exists), \
+             mock.patch('mopack.usage.path_system.isfile', mock_isfile), \
              mock.patch('builtins.open', **open_args):
             self.assertEqual(usage.version(pkg, self.pkgdir, None, None),
                              expected)
@@ -111,8 +111,8 @@ class TestPath(UsageTest):
                         return_value=[Path('/mock/lib')]), \
              mock.patch('mopack.usage.path_system._system_lib_names',
                         return_value=['lib{}.so']), \
-             mock.patch('mopack.usage.path_system.exists',
-                        mock_exists):  # noqa
+             mock.patch('mopack.usage.path_system.isfile',
+                        mock_isfile):  # noqa
             self.assertEqual(usage.get_usage(
                 pkg, submodules, self.pkgdir, srcdir, builddir
             ), expected)

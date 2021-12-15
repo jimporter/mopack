@@ -29,7 +29,7 @@ class TestSystemPackage(SourceTest):
 
     def check_get_usage(self, pkg, submodules, expected=None, *,
                         find_pkg_config=False):
-        def mock_exists(p, variables={}):
+        def mock_isfile(p, variables={}):
             p = os.path.normcase(p.string(**variables))
             return p.startswith(os.path.normcase(abspath('/mock')) + os.sep)
 
@@ -51,8 +51,8 @@ class TestSystemPackage(SourceTest):
                         return_value=[Path('/mock/lib')]), \
              mock.patch('mopack.usage.path_system._system_lib_names',
                         return_value=['lib{}.so']), \
-             mock.patch('mopack.usage.path_system.exists',
-                        mock_exists):  # noqa
+             mock.patch('mopack.usage.path_system.isfile',
+                        mock_isfile):  # noqa
             self.assertEqual(pkg.get_usage(submodules, self.pkgdir), expected)
 
     def check_pkg_config(self, name, submodules, expected={}):

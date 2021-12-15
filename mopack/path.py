@@ -1,3 +1,4 @@
+import functools
 import os
 from contextlib import contextmanager
 from enum import Enum
@@ -34,8 +35,18 @@ def file_outdated(path, compare_path, default=True):
         return True
 
 
-def exists(path, variables={}):
-    return os.path.exists(path.string(**variables))
+def _wrap_ospath(fn):
+    @functools.wraps(fn)
+    def wrapper(path, variables={}):
+        return fn(path.string(**variables))
+
+    return wrapper
+
+
+exists = _wrap_ospath(os.path.exists)
+isdir = _wrap_ospath(os.path.isdir)
+isfile = _wrap_ospath(os.path.isfile)
+islink = _wrap_ospath(os.path.islink)
 
 
 class Path(FreezeDried):

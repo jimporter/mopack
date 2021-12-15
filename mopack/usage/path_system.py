@@ -10,7 +10,7 @@ from ..environment import get_pkg_config
 from ..freezedried import DictFreezeDryer, FreezeDried, ListFreezeDryer
 from ..iterutils import listify
 from ..package_defaults import DefaultResolver
-from ..path import exists, file_outdated, Path
+from ..path import file_outdated, isfile, Path
 from ..pkg_config import generated_pkg_config_dir, write_pkg_config
 from ..placeholder import placeholder, PlaceholderFD
 from ..platforms import package_library_name
@@ -228,7 +228,7 @@ class PathUsage(Usage):
         include_path = (listify(include_path, scalar_ok=False) or
                         _system_include_path())
         return cls._filter_path(
-            lambda p, f: exists(p.append(f), path_vars),
+            lambda p, f: isfile(p.append(f), path_vars),
             include_path, headers, 'header'
         )
 
@@ -243,7 +243,7 @@ class PathUsage(Usage):
 
         lib_names = _system_lib_names()
         return cls._filter_path(
-            lambda p, f: any(exists(p.append(i.format(f)), path_vars)
+            lambda p, f: any(isfile(p.append(i.format(f)), path_vars)
                              for i in lib_names),
             library_path, (i for i in libraries if isinstance(i, str)),
             'library'
