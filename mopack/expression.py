@@ -112,25 +112,29 @@ class StringOp(Token):
 
 expr = pp.Forward()
 
-string_literal = (pp.QuotedString('"') | pp.QuotedString("'")).setParseAction(
-    lambda t: [Literal(t[0])]
-)
-true_literal = pp.Keyword('true').setParseAction(lambda t: [Literal(True)])
-false_literal = pp.Keyword('false').setParseAction(lambda t: [Literal(False)])
-bool_literal = true_literal | false_literal
-null_literal = pp.Keyword('null').setParseAction(lambda t: [Literal(None)])
+string_literal = (
+    pp.QuotedString('"') | pp.QuotedString("'")
+).set_parse_action(lambda t: [Literal(t[0])])
 
-identifier = pp.Word(pp.alphas + '_', pp.alphanums + '_').setParseAction(
+true_literal = pp.Keyword('true').set_parse_action(lambda: [Literal(True)])
+false_literal = pp.Keyword('false').set_parse_action(lambda: [Literal(False)])
+bool_literal = true_literal | false_literal
+
+null_literal = pp.Keyword('null').set_parse_action(lambda: [Literal(None)])
+
+literal = string_literal | bool_literal | null_literal
+
+identifier = pp.Word(pp.alphas + '_', pp.alphanums + '_').set_parse_action(
     lambda s, loc, t: [Symbol(s, loc, t[0])]
 )
-pre_expr = identifier | ('(' + expr + ')').setParseAction(lambda t: t[1])
+pre_expr = identifier | ('(' + expr + ')').set_parse_action(lambda t: t[1])
 
-index = (pre_expr + '[' + expr + ']').setParseAction(
+index = (pre_expr + '[' + expr + ']').set_parse_action(
     lambda t: [BinaryOp(t[0], '[]', t[2])]
 )
 
-expr_atom = string_literal | bool_literal | null_literal | index | identifier
-expr <<= pp.infixNotation(expr_atom, [
+expr_atom = literal | index | identifier
+expr <<= pp.infix_notation(expr_atom, [
     ('!', 1, pp.opAssoc.RIGHT, lambda t: [UnaryOp(*t[0])]),
     ('+', 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
     (pp.oneOf('== !='), 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
@@ -139,13 +143,13 @@ expr <<= pp.infixNotation(expr_atom, [
     (('?', ':'), 3, pp.opAssoc.LEFT, lambda t: [TernaryOp(*t[0])]),
 ])
 
-expr_holder = ('${{' + expr + '}}').setParseAction(lambda t: t[1])
-identifier_holder = ('$' + identifier).setParseAction(lambda t: t[1])
-escaped_dollar = pp.Literal('$$').setParseAction(lambda t: ['$'])
+expr_holder = ('${{' + expr + '}}').set_parse_action(lambda t: t[1])
+identifier_holder = ('$' + identifier).set_parse_action(lambda t: t[1])
+escaped_dollar = pp.Literal('$$').set_parse_action(lambda: ['$'])
 dollar_expr = escaped_dollar | identifier_holder | expr_holder
 
-bare_string = (pp.SkipTo(pp.Literal('$') | pp.StringEnd()).leaveWhitespace()
-               .setParseAction(lambda t: t if len(t[0]) else []))
+bare_string = (pp.SkipTo(pp.Literal('$') | pp.StringEnd()).leave_whitespace()
+               .set_parse_action(lambda t: t if len(t[0]) else []))
 
 if_expr = dollar_expr | expr
 str_expr = bare_string + (dollar_expr + bare_string)[...]
@@ -159,9 +163,9 @@ def evaluate_token(symbols, tok):
 
 def parse(expression, if_context=False):
     if if_context:
-        return if_expr.parseString(expression, parseAll=True)[0]
+        return if_expr.parse_string(expression, parseAll=True)[0]
     else:
-        ast = str_expr.parseString(expression, parseAll=True)
+        ast = str_expr.parse_string(expression, parseAll=True)
         if len(ast) == 0:
             return expression
         elif len(ast) == 1:

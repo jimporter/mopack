@@ -199,7 +199,7 @@ setup(
     packages=find_packages(exclude=['test', 'test.*']),
     package_data={'': ['defaults/*.yml']},
 
-    install_requires=['colorama', 'pyparsing', 'pyyaml', 'setuptools'],
+    install_requires=['colorama', 'pyparsing >= 3.0', 'pyyaml', 'setuptools'],
     extras_require={
         'dev': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6',
                 'flake8-quotes', 'mike >= 0.3.1', 'mkdocs-bootswatch',
