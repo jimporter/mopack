@@ -28,6 +28,14 @@ class Literal(Token):
         return '<Literal({!r})>'.format(self.value)
 
 
+class ArrayLiteral(Literal):
+    def __call__(self, symbols):
+        return [i(symbols) for i in self.value]
+
+    def __repr__(self):
+        return '<ArrayLiteral({!r})>'.format(self.value)
+
+
 class Symbol(Token):
     def __init__(self, pstr, loc, symbol):
         self._pstr = pstr
@@ -116,13 +124,17 @@ string_literal = (
     pp.QuotedString('"') | pp.QuotedString("'")
 ).set_parse_action(lambda t: [Literal(t[0])])
 
+array_literal = (
+    pp.Suppress('[') + pp.Optional(pp.delimited_list(expr)) + pp.Suppress(']')
+).set_parse_action(lambda t: [ArrayLiteral(t.copy())])
+
 true_literal = pp.Keyword('true').set_parse_action(lambda: [Literal(True)])
 false_literal = pp.Keyword('false').set_parse_action(lambda: [Literal(False)])
 bool_literal = true_literal | false_literal
 
 null_literal = pp.Keyword('null').set_parse_action(lambda: [Literal(None)])
 
-literal = string_literal | bool_literal | null_literal
+literal = string_literal | array_literal | bool_literal | null_literal
 
 identifier = pp.Word(pp.alphas + '_', pp.alphanums + '_').set_parse_action(
     lambda s, loc, t: [Symbol(s, loc, t[0])]

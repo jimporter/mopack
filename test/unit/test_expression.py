@@ -6,7 +6,7 @@ from mopack.expression import *
 class TestEvaluate(TestCase):
     symbols = {
         'foo': 'Foo',
-        'bar': {'baz': 'Baz'}
+        'bar': {'baz': 'Baz'},
     }
 
     def assertEvaluate(self, expr, result):
@@ -27,11 +27,6 @@ class TestEvaluate(TestCase):
         with self.assertRaises(ParseException):
             evaluate(self.symbols, '$!', True)
 
-    def test_index(self):
-        self.assertEvaluate('bar["baz"]', 'Baz')
-        self.assertEvaluate('(bar)["baz"]', 'Baz')
-        self.assertEvaluate('(bar)["nonexist"]', None)
-
     def test_string_literal(self):
         self.assertEvaluate("'foo'", 'foo')
         self.assertEvaluate('"foo"', 'foo')
@@ -42,6 +37,15 @@ class TestEvaluate(TestCase):
                          '${{ foo }}')
         self.assertEqual(evaluate(self.symbols, "${{ 'foo }}' }}"), 'foo }}')
 
+    def test_array_literal(self):
+        self.assertEvaluate('[]', [])
+        self.assertEvaluate('[ ]', [])
+        self.assertEvaluate('["foo"]', ['foo'])
+        self.assertEvaluate('["foo", "bar"]', ['foo', 'bar'])
+        self.assertEvaluate('[foo]', ['Foo'])
+        self.assertEvaluate('[bar["baz"]]', ['Baz'])
+        self.assertEvaluate('[[]]', [[]])
+
     def test_bool_literal(self):
         self.assertEvaluate('true', True)
         self.assertEvaluate('false', False)
@@ -49,11 +53,17 @@ class TestEvaluate(TestCase):
     def test_null_literal(self):
         self.assertEvaluate('null', None)
 
+    def test_index(self):
+        self.assertEvaluate('bar["baz"]', 'Baz')
+        self.assertEvaluate('(bar)["baz"]', 'Baz')
+        self.assertEvaluate('(bar)["nonexist"]', None)
+
     def test_add(self):
         self.assertEvaluate('"Foo" + "Bar"', 'FooBar')
         self.assertEvaluate('foo + "Bar"', 'FooBar')
         self.assertEvaluate('"Foo" + bar["baz"]', 'FooBaz')
         self.assertEvaluate('foo + bar["baz"]', 'FooBaz')
+        self.assertEvaluate('["foo"] + ["bar"]', ['foo', 'bar'])
 
     def test_equal(self):
         self.assertEvaluate('"Foo" == "Foo"', True)
