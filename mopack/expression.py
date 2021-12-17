@@ -140,7 +140,7 @@ expr <<= pp.infix_notation(expr_atom, [
     (pp.oneOf('== !='), 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
     ('&&', 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
     ('||', 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
-    (('?', ':'), 3, pp.opAssoc.LEFT, lambda t: [TernaryOp(*t[0])]),
+    (('?', ':'), 3, pp.opAssoc.RIGHT, lambda t: [TernaryOp(*t[0])]),
 ])
 
 expr_holder = ('${{' + expr + '}}').set_parse_action(lambda t: t[1])

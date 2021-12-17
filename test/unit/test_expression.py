@@ -88,8 +88,12 @@ class TestEvaluate(TestCase):
         self.assertEvaluate('!(foo == "Bar")', True)
 
     def test_ternary(self):
-        self.assertEvaluate('true ? "foo" : "bar"', 'foo')
+        self.assertEvaluate('true  ? "foo" : "bar"', 'foo')
         self.assertEvaluate('false ? "foo" : "bar"', 'bar')
+        self.assertEvaluate('true  ? true  ? "foo" : "bar" : "baz"', 'foo')
+        self.assertEvaluate('true  ? false ? "foo" : "bar" : "baz"', 'bar')
+        self.assertEvaluate('false ? "foo" : true  ? "bar" : "baz"', 'bar')
+        self.assertEvaluate('false ? "foo" : false ? "bar" : "baz"', 'baz')
 
     def test_mixed(self):
         self.assertEqual(evaluate(
