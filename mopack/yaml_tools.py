@@ -59,12 +59,12 @@ class MarkedYAMLOffsetError(MarkedYAMLError):
 
 class YamlParseError(ConfigurationError):
     def __init__(self, message, mark, snippet):
-        self.message = message
+        super().__init__(message)
         self.mark = mark
         self.snippet = snippet
 
     def __str__(self):
-        return (self.message + '\n' +
+        return (self.args[0] + '\n' +
                 str(self.mark) + '\n' +
                 '  ' + self.snippet + '\n' +
                 ' ' * (self.mark.column + 2) + '^')
