@@ -3,7 +3,7 @@ import pyparsing as pp
 from functools import reduce
 from pyparsing import ParseBaseException, ParseException
 
-pp.ParserElement.enablePackrat()
+pp.ParserElement.enable_packrat(512)
 
 __all__ = ['evaluate', 'evaluate_token', 'parse', 'ParseBaseException',
            'ParseException', 'SemanticException', 'Token']
@@ -54,38 +54,55 @@ class Symbol(Token):
 
 
 class UnaryOp(Token):
+    _simple_ops = {
+        '!': operator.not_,
+        '-': operator.neg,
+    }
+
     def __init__(self, operator, operand):
         self.operator = operator
         self.operand = operand
 
     def __call__(self, symbols):
-        if self.operator == '!':
-            return not self.operand(symbols)
-        assert False
+        return self._simple_ops[self.operator](self.operand(symbols))
 
     def __repr__(self):
         return '({}{})'.format(self.operator, self.operand)
 
 
 class BinaryOp(Token):
+    _simple_ops = {
+        '*':  operator.mul,
+        '/':  operator.truediv,
+        '%':  operator.mod,
+        '+':  operator.add,
+        '-':  operator.sub,
+        '<':  operator.lt,
+        '<=': operator.le,
+        '>':  operator.gt,
+        '>=': operator.ge,
+        '==': operator.eq,
+        '!=': operator.ne,
+    }
+
     def __init__(self, left, operator, right):
         self.operator = operator
         self.operands = [left, right]
 
     def __call__(self, symbols):
-        if self.operator == '+':
-            return self.operands[0](symbols) + self.operands[1](symbols)
-        elif self.operator == '==':
-            return self.operands[0](symbols) == self.operands[1](symbols)
-        elif self.operator == '!=':
-            return self.operands[0](symbols) != self.operands[1](symbols)
-        elif self.operator == '&&':
+        if self.operator == '&&':
             return self.operands[0](symbols) and self.operands[1](symbols)
-        elif self.operator == '||':
+        if self.operator == '||':
             return self.operands[0](symbols) or self.operands[1](symbols)
         elif self.operator == '[]':
-            return self.operands[0](symbols).get(self.operands[1](symbols))
-        assert False
+            left = self.operands[0](symbols)
+            right = self.operands[1](symbols)
+            if hasattr(left, 'get'):
+                return left.get(right)
+            return left[right]
+        else:
+            op = self._simple_ops[self.operator]
+            return op(self.operands[0](symbols), self.operands[1](symbols))
 
     def __repr__(self):
         return '({} {} {})'.format(self.operands[0], self.operator,
@@ -118,7 +135,21 @@ class StringOp(Token):
         ))
 
 
+def left_assoc(operands, operator, index=None):
+    if index is None:
+        index = len(operands) - 1
+    if index == 0:
+        return operands[index]
+
+    return BinaryOp(left_assoc(operands, operator, index - 1),
+                    operator, operands[index])
+
+
 expr = pp.Forward()
+
+integer_literal = pp.common.signed_integer.set_parse_action(
+    lambda t: [Literal(int(t[0]))]
+)
 
 string_literal = (
     pp.QuotedString('"') | pp.QuotedString("'")
@@ -134,22 +165,27 @@ bool_literal = true_literal | false_literal
 
 null_literal = pp.Keyword('null').set_parse_action(lambda: [Literal(None)])
 
-literal = string_literal | array_literal | bool_literal | null_literal
+literal = (integer_literal | string_literal | array_literal | bool_literal |
+           null_literal)
 
 identifier = pp.Word(pp.alphas + '_', pp.alphanums + '_').set_parse_action(
     lambda s, loc, t: [Symbol(s, loc, t[0])]
 )
-pre_expr = identifier | ('(' + expr + ')').set_parse_action(lambda t: t[1])
 
-index = (pre_expr + '[' + expr + ']').set_parse_action(
-    lambda t: [BinaryOp(t[0], '[]', t[2])]
-)
+pre_expr = literal | identifier | (pp.Suppress('(') + expr + pp.Suppress(')'))
+
+index = (
+    pre_expr + (pp.Suppress('[') + expr + pp.Suppress(']'))[1, ...]
+).set_parse_action(lambda t: [left_assoc(t, '[]')])
 
 expr_atom = literal | index | identifier
 expr <<= pp.infix_notation(expr_atom, [
     ('!', 1, pp.opAssoc.RIGHT, lambda t: [UnaryOp(*t[0])]),
-    ('+', 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
-    (pp.oneOf('== !='), 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
+    ('-', 1, pp.opAssoc.RIGHT, lambda t: [UnaryOp(*t[0])]),
+    (pp.one_of('* / %'), 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
+    (pp.one_of('+ -'), 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
+    (pp.one_of('> >= < <='), 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
+    (pp.one_of('== !='), 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
     ('&&', 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
     ('||', 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
     (('?', ':'), 3, pp.opAssoc.RIGHT, lambda t: [TernaryOp(*t[0])]),
