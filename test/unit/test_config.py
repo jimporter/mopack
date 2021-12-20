@@ -2,7 +2,7 @@ from os.path import normpath
 from textwrap import dedent
 from unittest import mock, TestCase
 
-from . import mock_open_files
+from . import mock_open_files, MockPackage
 
 from mopack.config import *
 from mopack.options import Options
@@ -30,11 +30,6 @@ bar_cfg = dedent("""\
       source: apt
       remote: libbar1-dev
 """)
-
-
-class MockPackage:
-    def __init__(self, name):
-        self.name = name
 
 
 class TestConfig(TestCase):
@@ -407,8 +402,7 @@ class TestChildConfig(TestCase):
             parent = Config(['mopack.yml'])
 
         with mock.patch('builtins.open', mock_open_files(files)):
-            child = ChildConfig(['mopack-child.yml'], parent,
-                                MockPackage('foo'))
+            child = ChildConfig(['mopack-child.yml'], parent, MockPackage())
         self.assertEqual(list(child.packages.items()), [])
 
         parent.finalize()
@@ -428,8 +422,7 @@ class TestChildConfig(TestCase):
             parent = Config(['mopack.yml'])
 
         with mock.patch('builtins.open', mock_open_files(files)):
-            child = ChildConfig(['mopack-child.yml'], parent,
-                                MockPackage('foo'))
+            child = ChildConfig(['mopack-child.yml'], parent, MockPackage())
         self.assertEqual(child.export.build, 'bfg9000')
         self.assertEqual(child.export.usage, 'pkg_config')
 
@@ -438,8 +431,7 @@ class TestChildConfig(TestCase):
         with mock.patch('builtins.open', mock_open_files(files)):
             parent = Config(['mopack.yml'])
         with mock.patch('builtins.open', mock_open_files(files)):
-            child = ChildConfig(['mopack-child.yml'], parent,
-                                MockPackage('foo'))
+            child = ChildConfig(['mopack-child.yml'], parent, MockPackage())
         self.assertEqual(list(child.packages.items()), [
             ('foo', PlaceholderPackage)
         ])
@@ -457,8 +449,7 @@ class TestChildConfig(TestCase):
         with mock.patch('builtins.open', mock_open_files(files)):
             parent = Config(['mopack.yml'])
         with mock.patch('builtins.open', mock_open_files(files)):
-            child = ChildConfig(['mopack-child.yml'], parent,
-                                MockPackage('foo'))
+            child = ChildConfig(['mopack-child.yml'], parent, MockPackage())
         self.assertEqual(list(child.packages.items()), [
             ('bar', AptPackage('bar', remote='libbar1-dev',
                                _options=self.default_opts,
@@ -480,8 +471,7 @@ class TestChildConfig(TestCase):
         with mock.patch('builtins.open', mock_open_files(files)):
             parent = Config(['mopack.yml'])
         with mock.patch('builtins.open', mock_open_files(files)):
-            child = ChildConfig(['mopack-child.yml'], parent,
-                                MockPackage('foo'))
+            child = ChildConfig(['mopack-child.yml'], parent, MockPackage())
         self.assertEqual(list(child.packages.items()), [
             ('foo', PlaceholderPackage),
             ('bar', AptPackage('bar', _options=self.default_opts,
@@ -501,11 +491,9 @@ class TestChildConfig(TestCase):
         files = {'mopack-child1.yml': foo_cfg, 'mopack-child2.yml': foo_cfg}
         parent = Config([])
         with mock.patch('builtins.open', mock_open_files(files)):
-            child1 = ChildConfig(['mopack-child1.yml'], parent,
-                                 MockPackage('foo'))
+            child1 = ChildConfig(['mopack-child1.yml'], parent, MockPackage())
         with mock.patch('builtins.open', mock_open_files(files)):
-            child2 = ChildConfig(['mopack-child2.yml'], parent,
-                                 MockPackage('foo'))
+            child2 = ChildConfig(['mopack-child2.yml'], parent, MockPackage())
 
         parent.add_children([child1, child2])
         self.assertEqual(list(parent.packages.items()), [
@@ -518,11 +506,9 @@ class TestChildConfig(TestCase):
         files = {'mopack-child1.yml': foobar_cfg, 'mopack-child2.yml': foo_cfg}
         parent = Config([])
         with mock.patch('builtins.open', mock_open_files(files)):
-            child1 = ChildConfig(['mopack-child1.yml'], parent,
-                                 MockPackage('foo'))
+            child1 = ChildConfig(['mopack-child1.yml'], parent, MockPackage())
         with mock.patch('builtins.open', mock_open_files(files)):
-            child2 = ChildConfig(['mopack-child2.yml'], parent,
-                                 MockPackage('foo'))
+            child2 = ChildConfig(['mopack-child2.yml'], parent, MockPackage())
 
         with self.assertRaises(ValueError):
             parent.add_children([child1, child2])
@@ -548,8 +534,7 @@ class TestChildConfig(TestCase):
         with mock.patch('builtins.open', mock_open_files(files)):
             parent = Config(['mopack.yml'])
         with mock.patch('builtins.open', mock_open_files(files)):
-            child = ChildConfig(['mopack-child.yml'], parent,
-                                MockPackage('foo'))
+            child = ChildConfig(['mopack-child.yml'], parent, MockPackage())
 
         parent.add_children([child])
         parent.finalize()
@@ -593,8 +578,7 @@ class TestChildConfig(TestCase):
         with mock.patch('builtins.open', mock_open_files(files)):
             parent = Config(['mopack.yml'])
         with mock.patch('builtins.open', mock_open_files(files)):
-            child = ChildConfig(['mopack-child.yml'], parent,
-                                MockPackage('foo'))
+            child = ChildConfig(['mopack-child.yml'], parent, MockPackage())
 
         parent.add_children([child])
         parent.finalize()
