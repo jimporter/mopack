@@ -81,9 +81,9 @@ class TestMakePackage(SourceTest):
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):  # noqa
             self.assertEqual(pkg.get_usage(['sub'], self.pkgdir), {
-                'name': 'foo', 'type': 'system',
-                'path': [self.pkgconfdir(None)], 'pcfiles': ['foo[sub]'],
-                'generated': True, 'auto_link': False,
+                'name': 'foo[sub]', 'type': 'system', 'generated': True,
+                'auto_link': False, 'path': [self.pkgconfdir(None)],
+                'pcfiles': ['foo[sub]'],
             })
         with self.assertRaises(ValueError):
             pkg.get_usage(None, self.pkgdir)
@@ -104,9 +104,9 @@ class TestMakePackage(SourceTest):
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):  # noqa
             self.assertEqual(pkg.get_usage(['sub'], self.pkgdir), {
-                'name': 'foo', 'type': 'system',
-                'path': [self.pkgconfdir(None)], 'pcfiles': ['foo[sub]'],
-                'generated': True, 'auto_link': False,
+                'name': 'foo[sub]', 'type': 'system', 'generated': True,
+                'auto_link': False, 'path': [self.pkgconfdir(None)],
+                'pcfiles': ['foo[sub]'],
             })
         with self.assertRaises(ValueError):
             pkg.get_usage(['bar'], self.pkgdir)
@@ -130,9 +130,9 @@ class TestMakePackage(SourceTest):
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):  # noqa
             self.assertEqual(pkg.get_usage(['sub'], self.pkgdir), {
-                'name': 'foo', 'type': 'system',
-                'path': [self.pkgconfdir(None)], 'pcfiles': ['foo[sub]'],
-                'generated': True, 'auto_link': False,
+                'name': 'foo[sub]', 'type': 'system', 'generated': True,
+                'auto_link': False, 'path': [self.pkgconfdir(None)],
+                'pcfiles': ['foo[sub]'],
             })
         with mock.patch('subprocess.run', side_effect=OSError()), \
              mock.patch('mopack.usage.path_system.PathUsage._filter_path',
@@ -142,9 +142,9 @@ class TestMakePackage(SourceTest):
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):  # noqa
             self.assertEqual(pkg.get_usage(None, self.pkgdir), {
-                'name': 'foo', 'type': 'system',
-                'path': [self.pkgconfdir(None)], 'pcfiles': ['foo'],
-                'generated': True, 'auto_link': False,
+                'name': 'foo', 'type': 'system', 'generated': True,
+                'auto_link': False, 'path': [self.pkgconfdir(None)],
+                'pcfiles': ['foo'],
             })
         with self.assertRaises(ValueError):
             pkg.get_usage(['bar'], self.pkgdir)

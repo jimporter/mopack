@@ -10,7 +10,7 @@ from mopack.builders.bfg9000 import Bfg9000Builder
 from mopack.iterutils import iterate
 from mopack.shell import ShellArguments
 from mopack.usage.pkg_config import PkgConfigUsage
-from mopack.types import Unset
+from mopack.types import dependency_string, Unset
 
 
 class TestBfg9000Builder(BuilderTest):
@@ -21,9 +21,9 @@ class TestBfg9000Builder(BuilderTest):
         if usage is None:
             pcfiles = ['foo']
             pcfiles.extend('foo_{}'.format(i) for i in iterate(submodules))
-            usage = {'name': 'foo', 'type': 'pkg_config',
-                     'path': [self.pkgconfdir('foo')], 'pcfiles': pcfiles,
-                     'extra_args': []}
+            usage = {'name': dependency_string('foo', submodules),
+                     'type': 'pkg_config', 'path': [self.pkgconfdir('foo')],
+                     'pcfiles': pcfiles, 'extra_args': []}
 
         builddir = os.path.join(self.pkgdir, 'build', 'foo')
         with mock_open_log() as mopen, \
@@ -115,7 +115,7 @@ class TestBfg9000Builder(BuilderTest):
 
         builder = self.make_builder('foo', submodules=submodules_required)
         self.check_build(builder, submodules=['sub'], usage={
-            'name': 'foo', 'type': 'pkg_config',
+            'name': 'foo[sub]', 'type': 'pkg_config',
             'path': [self.pkgconfdir('foo')], 'pcfiles': ['foo_sub'],
             'extra_args': [],
         })
@@ -125,7 +125,7 @@ class TestBfg9000Builder(BuilderTest):
             submodules=submodules_required
         )
         self.check_build(builder, submodules=['sub'], usage={
-            'name': 'foo', 'type': 'pkg_config',
+            'name': 'foo[sub]', 'type': 'pkg_config',
             'path': [self.pkgconfdir('foo')], 'pcfiles': ['bar', 'foo_sub'],
             'extra_args': [],
         })
@@ -138,7 +138,7 @@ class TestBfg9000Builder(BuilderTest):
             submodules=submodules_optional
         )
         self.check_build(builder, submodules=['sub'], usage={
-            'name': 'foo', 'type': 'pkg_config',
+            'name': 'foo[sub]', 'type': 'pkg_config',
             'path': [self.pkgconfdir('foo')], 'pcfiles': ['bar', 'foo_sub'],
             'extra_args': [],
         })

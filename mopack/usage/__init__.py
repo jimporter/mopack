@@ -3,7 +3,7 @@ from pkg_resources import load_entry_point
 from ..base_options import OptionsHolder
 from ..path import Path
 from ..placeholder import placeholder
-from ..types import FieldValueError, wrap_field_error
+from ..types import FieldValueError, dependency_string, wrap_field_error
 
 
 class _SubmodulePlaceholder:
@@ -43,8 +43,9 @@ class Usage(OptionsHolder):
     def version(self, pkgdir, srcdir, builddir):
         raise NotImplementedError('Usage.version not implemented')
 
-    def _usage(self, pkg, **kwargs):
-        return dict(name=pkg.name, type=self.type, **kwargs)
+    def _usage(self, pkg, submodules, **kwargs):
+        return dict(name=dependency_string(pkg.name, submodules),
+                    type=self.type, **kwargs)
 
     def __repr__(self):
         return '<{}, {}>'.format(type(self).__name__, self.__dict__)

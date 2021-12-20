@@ -11,6 +11,7 @@ from mopack.iterutils import iterate
 from mopack.path import Path
 from mopack.shell import ShellArguments
 from mopack.usage.pkg_config import PkgConfigUsage
+from mopack.types import dependency_string
 
 
 class TestCustomBuilder(BuilderTest):
@@ -21,9 +22,9 @@ class TestCustomBuilder(BuilderTest):
         if usage is None:
             pcfiles = ['foo']
             pcfiles.extend('foo_{}'.format(i) for i in iterate(submodules))
-            usage = {'name': 'foo', 'type': 'pkg_config',
-                     'path': [self.pkgconfdir('foo')], 'pcfiles': pcfiles,
-                     'extra_args': []}
+            usage = {'name': dependency_string('foo', submodules),
+                     'type': 'pkg_config', 'path': [self.pkgconfdir('foo')],
+                     'pcfiles': pcfiles, 'extra_args': []}
         if build_commands is None:
             builddir = os.path.join(self.pkgdir, 'build', builder.name)
             build_commands = [i.fill(srcdir=self.srcdir, builddir=builddir)
@@ -196,7 +197,7 @@ class TestCustomBuilder(BuilderTest):
             submodules=submodules_required
         )
         self.check_build(builder, submodules=['sub'], usage={
-            'name': 'foo', 'type': 'pkg_config',
+            'name': 'foo[sub]', 'type': 'pkg_config',
             'path': [self.pkgconfdir('foo')], 'pcfiles': ['foo_sub'],
             'extra_args': [],
         })
@@ -207,7 +208,7 @@ class TestCustomBuilder(BuilderTest):
             submodules=submodules_required
         )
         self.check_build(builder, submodules=['sub'], usage={
-            'name': 'foo', 'type': 'pkg_config',
+            'name': 'foo[sub]', 'type': 'pkg_config',
             'path': [self.pkgconfdir('foo')], 'pcfiles': ['bar', 'foo_sub'],
             'extra_args': [],
         })
@@ -224,7 +225,7 @@ class TestCustomBuilder(BuilderTest):
             submodules=submodules_optional
         )
         self.check_build(builder, submodules=['sub'], usage={
-            'name': 'foo', 'type': 'pkg_config',
+            'name': 'foo[sub]', 'type': 'pkg_config',
             'path': [self.pkgconfdir('foo')], 'pcfiles': ['bar', 'foo_sub'],
             'extra_args': [],
         })

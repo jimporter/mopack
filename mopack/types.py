@@ -360,6 +360,11 @@ def url(field, value):
     return value
 
 
+def dependency_string(package, submodules):
+    return ('{}[{}]'.format(package, ','.join(submodules)) if submodules
+            else package)
+
+
 def shell_args(none_ok=False, escapes=False):
     def check_item(field, value):
         with ensure_field_error(field):

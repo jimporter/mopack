@@ -9,6 +9,7 @@ from .. import *
 
 from mopack.iterutils import listify
 from mopack.platforms import platform_name
+from mopack.types import dependency_string
 
 
 # Also supported: 'apt', 'mingw-cross'
@@ -303,10 +304,10 @@ class IntegrationTest(SubprocessTestCase):
         if pcfiles is None:
             pcfiles = [name]
 
-        self.assertUsage(name, {'name': name, 'type': 'pkg_config',
-                                'path': path, 'pcfiles': pcfiles,
-                                'extra_args': extra_args},
-                         submodules=submodules)
+        self.assertUsage(name, {
+            'name': dependency_string(name, submodules), 'type': 'pkg_config',
+            'path': path, 'pcfiles': pcfiles, 'extra_args': extra_args,
+        }, submodules=submodules)
 
     def assertPathUsage(self, name, *, type='path', auto_link=False,
                         include_path=[], library_path=[], headers=[],
@@ -316,8 +317,9 @@ class IntegrationTest(SubprocessTestCase):
             libraries = [name]
         pkgconfdir = os.path.join(self.stage, 'mopack', 'pkgconfig')
         self.assertUsage(name, {
-            'name': name, 'type': type, 'path': [pkgconfdir],
-            'pcfiles': [name], 'generated': True, 'auto_link': auto_link,
+            'name': dependency_string(name, submodules), 'type': type,
+            'generated': True, 'auto_link': auto_link, 'path': [pkgconfdir],
+            'pcfiles': [name],
         }, submodules=submodules)
 
         self.assertCountEqual(

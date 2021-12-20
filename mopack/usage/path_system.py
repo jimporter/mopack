@@ -15,7 +15,7 @@ from ..pkg_config import generated_pkg_config_dir, write_pkg_config
 from ..placeholder import placeholder, PlaceholderFD
 from ..platforms import package_library_name
 from ..shell import ShellArguments, split_paths
-from ..types import Unset
+from ..types import dependency_string, Unset
 
 
 # XXX: Getting build configuration like this from the environment is a bit
@@ -314,8 +314,7 @@ class PathUsage(Usage):
                 yield from getattr(i, key)
 
         pkgconfdir = generated_pkg_config_dir(pkgdir)
-        pcname = ('{}[{}]'.format(pkg.name, ','.join(submodules))
-                  if submodules else pkg.name)
+        pcname = dependency_string(pkg.name, submodules)
         pcpath = os.path.join(pkgconfdir, pcname + '.pc')
 
         include_dirs = self._include_dirs(
@@ -348,8 +347,8 @@ class PathUsage(Usage):
                                  libs=libs, variables=path_vars)
 
         return self._usage(
-            pkg, path=[pkgconfdir], pcfiles=[pcname], generated=True,
-            auto_link=self.auto_link
+            pkg, submodules, generated=True, auto_link=self.auto_link,
+            path=[pkgconfdir], pcfiles=[pcname],
         )
 
 
@@ -377,7 +376,7 @@ class SystemUsage(PathUsage):
             subprocess.run(pkg_config + [self.pcfile], check=True,
                            stdout=subprocess.DEVNULL,
                            stderr=subprocess.DEVNULL)
-            return self._usage(pkg, path=[], pcfiles=[self.pcfile],
+            return self._usage(pkg, submodules, path=[], pcfiles=[self.pcfile],
                                extra_args=[])
         except (OSError, subprocess.CalledProcessError):
             return super().get_usage(pkg, submodules, pkgdir, srcdir, builddir)

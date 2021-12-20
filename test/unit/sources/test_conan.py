@@ -12,6 +12,7 @@ from mopack.shell import ShellArguments
 from mopack.sources import Package, PackageOptions
 from mopack.sources.apt import AptPackage
 from mopack.sources.conan import ConanPackage
+from mopack.types import dependency_string
 
 
 def mock_open_write():
@@ -56,9 +57,9 @@ class TestConan(SourceTest):
                        [pkg.name])
             pcfiles.extend('{}_{}'.format(pkg.name, i)
                            for i in iterate(submodules))
-            usage = {'name': pkg.name, 'type': 'pkg_config',
-                     'path': [self.pkgconfdir], 'pcfiles': pcfiles,
-                     'extra_args': []}
+            usage = {'name': dependency_string(pkg.name, submodules),
+                     'type': 'pkg_config', 'path': [self.pkgconfdir],
+                     'pcfiles': pcfiles, 'extra_args': []}
         self.assertEqual(pkg.get_usage(submodules, self.pkgdir), usage)
 
     def test_basic(self):
@@ -229,8 +230,9 @@ class TestConan(SourceTest):
                                        'pcfile': 'bar'},
                                 submodules=submodules_required)
         self.check_usage(pkg, submodules=['sub'], usage={
-            'name': 'foo', 'type': 'pkg_config', 'path': [self.pkgconfdir],
-            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
+            'name': 'foo[sub]', 'type': 'pkg_config',
+            'path': [self.pkgconfdir], 'pcfiles': ['bar', 'foo_sub'],
+            'extra_args': [],
         })
 
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
@@ -242,8 +244,9 @@ class TestConan(SourceTest):
                                        'pcfile': 'bar'},
                                 submodules=submodules_optional)
         self.check_usage(pkg, submodules=['sub'], usage={
-            'name': 'foo', 'type': 'pkg_config', 'path': [self.pkgconfdir],
-            'pcfiles': ['bar', 'foo_sub'], 'extra_args': [],
+            'name': 'foo[sub]', 'type': 'pkg_config',
+            'path': [self.pkgconfdir], 'pcfiles': ['bar', 'foo_sub'],
+            'extra_args': [],
         })
 
     def test_invalid_submodule(self):

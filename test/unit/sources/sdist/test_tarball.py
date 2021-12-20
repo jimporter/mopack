@@ -181,9 +181,9 @@ class TestTarball(SDistTestCase):
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):  # noqa
             self.check_resolve(pkg, usage={
-                'name': 'foo', 'type': 'system',
-                'path': [self.pkgconfdir(None)], 'pcfiles': ['foo'],
-                'generated': True, 'auto_link': False,
+                'name': 'foo', 'type': 'system', 'generated': True,
+                'auto_link': False, 'path': [self.pkgconfdir(None)],
+                'pcfiles': ['foo'],
             })
 
     def test_infer_build_override(self):
@@ -247,8 +247,9 @@ class TestTarball(SDistTestCase):
 
         self.check_fetch(pkg)
         self.check_resolve(pkg, usage={
-            'name': 'foo', 'type': 'path', 'path': [self.pkgconfdir(None)],
-            'pcfiles': ['foo'], 'generated': True, 'auto_link': False,
+            'name': 'foo', 'type': 'path', 'generated': True,
+            'auto_link': False, 'path': [self.pkgconfdir(None)],
+            'pcfiles': ['foo'],
         })
 
         with mock.patch('subprocess.run') as mrun:
@@ -269,7 +270,7 @@ class TestTarball(SDistTestCase):
                                 submodules=submodules_required)
         self.check_fetch(pkg)
         self.check_resolve(pkg, submodules=['sub'], usage={
-            'name': 'foo', 'type': 'pkg_config',
+            'name': 'foo[sub]', 'type': 'pkg_config',
             'path': [self.pkgconfdir('foo')], 'pcfiles': ['bar', 'foo_sub'],
             'extra_args': [],
         })
@@ -284,7 +285,7 @@ class TestTarball(SDistTestCase):
                                 submodules=submodules_optional)
         self.check_fetch(pkg)
         self.check_resolve(pkg, submodules=['sub'], usage={
-            'name': 'foo', 'type': 'pkg_config',
+            'name': 'foo[sub]', 'type': 'pkg_config',
             'path': [self.pkgconfdir('foo')], 'pcfiles': ['bar', 'foo_sub'],
             'extra_args': [],
         })

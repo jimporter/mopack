@@ -119,5 +119,5 @@ class PkgConfigUsage(Usage):
             if i.pcfile:
                 pcfiles.append(i.pcfile)
 
-        return self._usage(pkg, path=path, pcfiles=pcfiles,
+        return self._usage(pkg, submodules, path=path, pcfiles=pcfiles,
                            extra_args=extra_args)

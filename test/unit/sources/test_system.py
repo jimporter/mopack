@@ -6,12 +6,11 @@ from unittest import mock
 from . import SourceTest
 from ... import call_pkg_config, test_stage_dir
 
-from mopack.iterutils import iterate
 from mopack.path import Path
 from mopack.sources import Package
 from mopack.sources.apt import AptPackage
 from mopack.sources.system import SystemPackage
-from mopack.types import FieldKeyError
+from mopack.types import dependency_string, FieldKeyError
 
 
 class TestSystemPackage(SourceTest):
@@ -33,12 +32,11 @@ class TestSystemPackage(SourceTest):
             p = os.path.normcase(p.string(**variables))
             return p.startswith(os.path.normcase(abspath('/mock')) + os.sep)
 
-        pcname = ('{}[{}]'.format(pkg.name, ','.join(iterate(submodules)))
-                  if submodules else pkg.name)
         if expected is None:
-            expected = {'name': pkg.name, 'type': 'system',
-                        'path': [self.pkgconfdir], 'pcfiles': [pcname],
-                        'generated': True, 'auto_link': False}
+            depname = dependency_string(pkg.name, submodules)
+            expected = {'name': depname, 'type': 'system', 'generated': True,
+                        'auto_link': False, 'path': [self.pkgconfdir],
+                        'pcfiles': [depname]}
 
         self.clear_pkgdir()
         side_effect = None if find_pkg_config else OSError()
@@ -56,8 +54,7 @@ class TestSystemPackage(SourceTest):
             self.assertEqual(pkg.get_usage(submodules, self.pkgdir), expected)
 
     def check_pkg_config(self, name, submodules, expected={}):
-        pcname = ('{}[{}]'.format(name, ','.join(iterate(submodules)))
-                  if submodules else name)
+        pcname = dependency_string(name, submodules)
         self.assertCountEqual(
             call_pkg_config(pcname, ['--cflags'], path=self.pkgconfdir),
             expected.get('cflags', [])
@@ -93,8 +90,8 @@ class TestSystemPackage(SourceTest):
         pkg = self.make_package('foo', auto_link=True)
         pkg.resolve(self.pkgdir)
         self.check_get_usage(pkg, None, {
-            'name': 'foo', 'type': 'system', 'path': [self.pkgconfdir],
-            'pcfiles': ['foo'], 'generated': True, 'auto_link': True,
+            'name': 'foo', 'type': 'system', 'generated': True,
+            'auto_link': True, 'path': [self.pkgconfdir], 'pcfiles': ['foo'],
         })
         self.check_pkg_config('foo', None, {
             'libs': ['-L' + abspath('/mock/lib')],
@@ -155,27 +152,27 @@ class TestSystemPackage(SourceTest):
         submodules_optional = {'names': '*', 'required': False}
 
         pkg = self.make_package('foo', submodules=submodules_required)
-        self.check_get_usage(pkg, 'sub')
+        self.check_get_usage(pkg, ['sub'])
         self.check_pkg_config('foo', ['sub'], {
             'libs': ['-L' + abspath('/mock/lib'), '-lfoo_sub'],
         })
 
         pkg = self.make_package('foo', libraries='bar',
                                 submodules=submodules_required)
-        self.check_get_usage(pkg, 'sub')
+        self.check_get_usage(pkg, ['sub'])
         self.check_pkg_config('foo', ['sub'], {
             'libs': ['-L' + abspath('/mock/lib'), '-lbar', '-lfoo_sub'],
         })
 
         pkg = self.make_package('foo', submodules=submodules_optional)
-        self.check_get_usage(pkg, 'sub')
+        self.check_get_usage(pkg, ['sub'])
         self.check_pkg_config('foo', ['sub'], {
             'libs': ['-L' + abspath('/mock/lib'), '-lfoo', '-lfoo_sub'],
         })
 
         pkg = self.make_package('foo', libraries='bar',
                                 submodules=submodules_optional)
-        self.check_get_usage(pkg, 'sub')
+        self.check_get_usage(pkg, ['sub'])
         self.check_pkg_config('foo', ['sub'], {
             'libs': ['-L' + abspath('/mock/lib'), '-lbar', '-lfoo_sub'],
         })

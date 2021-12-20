@@ -1,10 +1,11 @@
 import os
 from unittest import mock
 
-from mopack.iterutils import iterate
-
 from .. import SourceTest, through_json  # noqa: F401
 from ... import mock_open_log
+
+from mopack.iterutils import iterate
+from mopack.types import dependency_string
 
 mock_bfgclean = 'mopack.builders.bfg9000.Bfg9000Builder.clean'
 
@@ -24,9 +25,9 @@ class SDistTestCase(SourceTest):
             pcfiles = ([] if pkg.submodules and pkg.submodules['required'] else
                        ['foo'])
             pcfiles.extend('foo_{}'.format(i) for i in iterate(submodules))
-            usage = {'name': pkg.name, 'type': 'pkg_config',
-                     'path': [self.pkgconfdir('foo')], 'pcfiles': pcfiles,
-                     'extra_args': []}
+            usage = {'name': dependency_string(pkg.name, submodules),
+                     'type': 'pkg_config', 'path': [self.pkgconfdir('foo')],
+                     'pcfiles': pcfiles, 'extra_args': []}
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \

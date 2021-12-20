@@ -9,6 +9,7 @@ from mopack.iterutils import iterate
 from mopack.sources import Package
 from mopack.sources.apt import AptPackage
 from mopack.sources.conan import ConanPackage
+from mopack.types import dependency_string
 
 
 def mock_run(args, **kwargs):
@@ -51,16 +52,15 @@ class TestApt(SourceTest):
 
     def check_usage(self, pkg, *, submodules=None, usage=None):
         if usage is None:
-            pcname = ('{}[{}]'.format(pkg.name, ','.join(submodules))
-                      if submodules else pkg.name)
+            depname = dependency_string(pkg.name, submodules)
             libs = ([] if pkg.submodules and pkg.submodules['required']
                     else [pkg.name])
             libs.extend('{}_{}'.format(pkg.name, i)
                         for i in iterate(submodules))
 
-            usage = {'name': pkg.name, 'type': 'system',
-                     'path': [self.pkgconfdir], 'pcfiles': [pcname],
-                     'generated': True, 'auto_link': False}
+            usage = {'name': depname, 'type': 'system', 'generated': True,
+                     'auto_link': False, 'path': [self.pkgconfdir],
+                     'pcfiles': [depname]}
 
         with mock.patch('subprocess.run', mock_run), \
              mock.patch('mopack.usage.path_system.PathUsage._filter_path',
@@ -187,8 +187,9 @@ class TestApt(SourceTest):
         )
         self.check_resolve_all([pkg], ['libfoo-dev'])
         self.check_usage(pkg, submodules=['sub'], usage={
-            'name': 'foo', 'type': 'system', 'path': [self.pkgconfdir],
-            'pcfiles': ['foo[sub]'], 'generated': True, 'auto_link': False,
+            'name': 'foo[sub]', 'type': 'system', 'generated': True,
+            'auto_link': False, 'path': [self.pkgconfdir],
+            'pcfiles': ['foo[sub]'],
         })
 
         pkg = self.make_package('foo', submodules=submodules_optional)
@@ -201,8 +202,9 @@ class TestApt(SourceTest):
         )
         self.check_resolve_all([pkg], ['libfoo-dev'])
         self.check_usage(pkg, submodules=['sub'], usage={
-            'name': 'foo', 'type': 'system', 'path': [self.pkgconfdir],
-            'pcfiles': ['foo[sub]'], 'generated': True, 'auto_link': False,
+            'name': 'foo[sub]', 'type': 'system', 'generated': True,
+            'auto_link': False, 'path': [self.pkgconfdir],
+            'pcfiles': ['foo[sub]'],
         })
 
     def test_invalid_submodule(self):
