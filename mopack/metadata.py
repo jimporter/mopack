@@ -76,8 +76,10 @@ class Metadata:
         return metadata
 
     @classmethod
-    def try_load(cls, pkgdir):
+    def try_load(cls, pkgdir, strict=False):
         try:
             return Metadata.load(pkgdir)
         except FileNotFoundError:
+            if strict:
+                raise
             return Metadata()

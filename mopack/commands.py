@@ -142,27 +142,16 @@ def deploy(pkgdir):
 
 
 def usage(pkgdir, name, submodules=None, strict=False):
-    try:
-        metadata = Metadata.load(pkgdir)
-    except FileNotFoundError:
-        if strict:
-            raise
-        metadata = Metadata()
-
+    metadata = Metadata.try_load(pkgdir, strict)
     package = metadata.get_package(name, strict)
     return package.get_usage(submodules, pkgdir)
 
 
 def list_files(pkgdir, implicit=False, strict=False):
-    try:
-        metadata = Metadata.load(pkgdir)
-        if implicit:
-            return metadata.files + metadata.implicit_files
-        return metadata.files
-    except FileNotFoundError:
-        if strict:
-            raise
-        return []
+    metadata = Metadata.try_load(pkgdir, strict)
+    if implicit:
+        return metadata.files + metadata.implicit_files
+    return metadata.files
 
 
 def list_packages(pkgdir, flat=False):
