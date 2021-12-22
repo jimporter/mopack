@@ -29,20 +29,6 @@ class Builder(OptionsHolder):
         super().__init__(_options)
         self.name = name
 
-    def _builddir(self, pkgdir):
-        return os.path.abspath(os.path.join(pkgdir, 'build', self.name))
-
-    @property
-    def _expr_symbols(self):
-        path_vars = {i: placeholder(Path('', i)) for i in self._path_bases}
-        return dict(**self._options.expr_symbols, **path_vars)
-
-    def version(self, pkg, pkgdir, srcdir):
-        return self.usage.version(pkg, pkgdir, srcdir, self._builddir(pkgdir))
-
-    def clean(self, pkgdir):
-        shutil.rmtree(self._builddir(pkgdir), ignore_errors=True)
-
     def set_usage(self, usage, **kwargs):
         # We set the usage separately since, even though the builder owns the
         # usage, they're siblings in the mopack.yml file. This would confuse
@@ -50,6 +36,20 @@ class Builder(OptionsHolder):
         # were "inside" the builder. Thus, the separate `set_usage` call.
         self.usage = make_usage(self.name, usage, _options=self._options,
                                 _path_bases=self._path_bases, **kwargs)
+
+    @property
+    def _expr_symbols(self):
+        path_vars = {i: placeholder(Path('', i)) for i in self._path_bases}
+        return dict(**self._options.expr_symbols, **path_vars)
+
+    def _builddir(self, pkgdir):
+        return os.path.abspath(os.path.join(pkgdir, 'build', self.name))
+
+    def version(self, pkg, pkgdir, srcdir):
+        return self.usage.version(pkg, pkgdir, srcdir, self._builddir(pkgdir))
+
+    def clean(self, pkgdir):
+        shutil.rmtree(self._builddir(pkgdir), ignore_errors=True)
 
     def get_usage(self, pkg, submodules, pkgdir, srcdir):
         return self.usage.get_usage(

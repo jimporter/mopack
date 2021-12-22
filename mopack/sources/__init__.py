@@ -58,17 +58,17 @@ class Package(OptionsHolder):
         T.deploy(types.boolean, dest_field='should_deploy')
 
     @property
+    def _expr_symbols(self):
+        return dict(**self._options.expr_symbols,
+                    cfgdir=placeholder(Path('', 'cfgdir')))
+
+    @property
     def config_dir(self):
         return os.path.dirname(self.config_file)
 
     @property
     def needs_dependencies(self):
         return False
-
-    @property
-    def _expr_symbols(self):
-        return dict(**self._options.expr_symbols,
-                    cfgdir=placeholder(Path('', 'cfgdir')))
 
     def guessed_version(self, pkgdir):
         return None

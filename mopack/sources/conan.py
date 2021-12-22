@@ -128,12 +128,12 @@ class ConanPackage(BinaryPackage):
         for i in packages:
             i.resolved = True
 
-    def _get_usage(self, submodules, pkgdir):
-        return self.usage.get_usage(
-            self, submodules, pkgdir, None, self._installdir(pkgdir)
-        )
-
     @staticmethod
     def deploy_all(packages, pkgdir):
         if any(i.should_deploy for i in packages):
             warnings.warn('deploying not yet supported for conan packages')
+
+    def _get_usage(self, submodules, pkgdir):
+        return self.usage.get_usage(
+            self, submodules, pkgdir, None, self._installdir(pkgdir)
+        )

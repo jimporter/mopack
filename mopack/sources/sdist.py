@@ -45,6 +45,13 @@ class SDistPackage(Package):
             )
             self.builder.set_usage(usage, submodules=self.submodules)
 
+    def dehydrate(self):
+        if hasattr(self, 'pending_usage'):
+            raise types.ConfigurationError(
+                'cannot dehydrate until `pending_usage` is finalized'
+            )
+        return super().dehydrate()
+
     @property
     def needs_dependencies(self):
         return True
@@ -56,13 +63,6 @@ class SDistPackage(Package):
                 'cannot get builder types until builder is finalized'
             )
         return [self.builder.type]
-
-    def dehydrate(self):
-        if hasattr(self, 'pending_usage'):
-            raise types.ConfigurationError(
-                'cannot dehydrate until `pending_usage` is finalized'
-            )
-        return super().dehydrate()
 
     def _find_mopack(self, parent_config, srcdir):
         config = ChildConfig([srcdir], parent_config=parent_config,
