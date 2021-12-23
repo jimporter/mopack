@@ -281,8 +281,8 @@ class PathUsage(Usage):
         else:
             return pkg.guessed_version(pkgdir)
 
-    def version(self, pkg, pkgdir, srcdir, builddir):
-        path_vars = {'srcdir': srcdir, 'builddir': builddir}
+    def version(self, pkg, pkgdir):
+        path_vars = pkg.path_vars(pkgdir)
         try:
             include_dirs = self._include_dirs(
                 self.headers, self.include_path, path_vars
@@ -296,8 +296,8 @@ class PathUsage(Usage):
 
         return self._get_version(pkg, pkgdir, include_dirs, path_vars)
 
-    def get_usage(self, pkg, submodules, pkgdir, srcdir, builddir):
-        path_vars = {'srcdir': srcdir, 'builddir': builddir}
+    def get_usage(self, pkg, submodules, pkgdir):
+        path_vars = pkg.path_vars(pkgdir)
 
         if submodules and self.submodule_map:
             path_bases = tuple(k for k, v in path_vars.items()
@@ -359,7 +359,7 @@ class SystemUsage(PathUsage):
         super().__init__(name, **kwargs)
         self.pcfile = name
 
-    def version(self, pkg, pkgdir, srcdir, builddir):
+    def version(self, pkg, pkgdir):
         pkg_config = get_pkg_config(self._common_options.env)
         try:
             return subprocess.run(
@@ -368,9 +368,9 @@ class SystemUsage(PathUsage):
                 universal_newlines=True
             ).stdout.strip()
         except (OSError, subprocess.CalledProcessError):
-            return super().version(pkg, pkgdir, srcdir, builddir)
+            return super().version(pkg, pkgdir)
 
-    def get_usage(self, pkg, submodules, pkgdir, srcdir, builddir):
+    def get_usage(self, pkg, submodules, pkgdir):
         pkg_config = get_pkg_config(self._common_options.env)
         try:
             subprocess.run(pkg_config + [self.pcfile], check=True,
@@ -379,4 +379,4 @@ class SystemUsage(PathUsage):
             return self._usage(pkg, submodules, path=[], pcfiles=[self.pcfile],
                                extra_args=[])
         except (OSError, subprocess.CalledProcessError):
-            return super().get_usage(pkg, submodules, pkgdir, srcdir, builddir)
+            return super().get_usage(pkg, submodules, pkgdir)

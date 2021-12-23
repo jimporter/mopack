@@ -34,7 +34,7 @@ class Usage(OptionsHolder):
         path_vars = {i: placeholder(Path('', i)) for i in path_bases}
         return dict(**self._options.expr_symbols, **path_vars)
 
-    def version(self, pkgdir, srcdir, builddir):
+    def version(self, pkg, pkgdir):
         raise NotImplementedError('Usage.version not implemented')
 
     def _usage(self, pkg, submodules, **kwargs):

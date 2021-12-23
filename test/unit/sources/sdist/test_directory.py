@@ -472,10 +472,14 @@ class TestDirectory(SDistTestCase):
 
     def test_upgrade(self):
         opts = self.make_options()
-        data = {'source': 'directory', '_version': 0, 'name': 'foo',
-                'path': {'base': 'cfgdir', 'path': '.'},
-                'build': {'type': None, '_version': 0},
-                'usage': {'type': 'system', '_version': 0}}
+        data = {
+            'source': 'directory', '_version': 0, 'name': 'foo',
+            'path': {'base': 'cfgdir', 'path': '.'},
+            'build': {
+                'type': None, '_version': 0,
+                'usage': {'type': 'system', '_version': 0},
+            },
+        }
         with mock.patch.object(DirectoryPackage, 'upgrade',
                                side_effect=DirectoryPackage.upgrade) as m:
             pkg = Package.rehydrate(data, _options=opts)

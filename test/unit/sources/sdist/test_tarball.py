@@ -538,11 +538,15 @@ class TestTarball(SDistTestCase):
 
     def test_upgrade(self):
         opts = self.make_options()
-        data = {'source': 'tarball', '_version': 0, 'name': 'foo',
-                'path': {'base': 'cfgdir', 'path': 'foo.tar.gz'}, 'url': None,
-                'files': [], 'srcdir': '.',
-                'patch': None, 'build': {'type': 'none', '_version': 0},
-                'usage': {'type': 'system', '_version': 0}}
+        data = {
+            'source': 'tarball', '_version': 0, 'name': 'foo',
+            'path': {'base': 'cfgdir', 'path': 'foo.tar.gz'}, 'url': None,
+            'files': [], 'srcdir': '.', 'patch': None,
+            'build': {
+                'type': 'none', '_version': 0,
+                'usage': {'type': 'system', '_version': 0},
+            },
+        }
         with mock.patch.object(TarballPackage, 'upgrade',
                                side_effect=TarballPackage.upgrade) as m:
             pkg = Package.rehydrate(data, _options=opts)

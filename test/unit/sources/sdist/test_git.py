@@ -561,11 +561,15 @@ class TestGit(SDistTestCase):
 
     def test_upgrade(self):
         opts = self.make_options()
-        data = {'source': 'git', '_version': 0, 'name': 'foo',
-                'repository': 'repo', 'tag': None, 'branch': None,
-                'commit': None, 'srcdir': '.',
-                'build': {'type': 'none', '_version': 0},
-                'usage': {'type': 'system', '_version': 0}}
+        data = {
+            'source': 'git', '_version': 0, 'name': 'foo',
+            'repository': 'repo', 'tag': None, 'branch': None, 'commit': None,
+            'srcdir': '.',
+            'build': {
+                'type': 'none', '_version': 0,
+                'usage': {'type': 'system', '_version': 0},
+            },
+        }
         with mock.patch.object(GitPackage, 'upgrade',
                                side_effect=GitPackage.upgrade) as m:
             pkg = Package.rehydrate(data, _options=opts)

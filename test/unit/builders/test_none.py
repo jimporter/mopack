@@ -29,9 +29,11 @@ class TestNoneBuilder(BuilderTest):
         with mock.patch('subprocess.run') as mcall:
             builder.build(self.pkgdir, self.srcdir)
             mcall.assert_not_called()
-        self.assertEqual(builder.get_usage(
-            MockPackage(), submodules, self.pkgdir, self.srcdir
-        ), usage)
+
+        pkg = MockPackage(srcdir=self.srcdir,
+                          builddir=builder._builddir(self.pkgdir))
+        self.assertEqual(builder.usage.get_usage(pkg, submodules, self.pkgdir),
+                         usage)
 
     def test_basic(self):
         builder = self.make_builder('foo', usage='pkg_config')

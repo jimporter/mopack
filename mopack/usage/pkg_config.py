@@ -87,8 +87,9 @@ class PkgConfigUsage(Usage):
                 extra_symbols=submod.expr_symbols
             ), evaluate=False)
 
-    def version(self, pkg, pkgdir, srcdir, builddir):
-        path = [i.string(srcdir=srcdir, builddir=builddir) for i in self.path]
+    def version(self, pkg, pkgdir):
+        path_vars = pkg.path_vars(pkgdir)
+        path = [i.string(**path_vars) for i in self.path]
         env = self._common_options.env.copy()
         env['PKG_CONFIG_PATH'] = join_paths(path)
         pkg_config = get_pkg_config(self._common_options.env)
@@ -105,9 +106,10 @@ class PkgConfigUsage(Usage):
         except KeyError:
             return self.submodule_map['*'].fill(submodule)
 
-    def get_usage(self, pkg, submodules, pkgdir, srcdir, builddir):
-        path = [i.string(srcdir=srcdir, builddir=builddir) for i in self.path]
-        extra_args = self.extra_args.fill(srcdir=srcdir, builddir=builddir)
+    def get_usage(self, pkg, submodules, pkgdir):
+        path_vars = pkg.path_vars(pkgdir)
+        path = [i.string(**path_vars) for i in self.path]
+        extra_args = self.extra_args.fill(**path_vars)
 
         if submodules and self.submodule_map:
             mappings = [self._get_submodule_mapping(i) for i in submodules]

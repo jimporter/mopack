@@ -37,9 +37,14 @@ def mock_open_files(files):
 
 
 class MockPackage:
-    def __init__(self, name='foo', version=None):
+    def __init__(self, name='foo', version=None, srcdir=None, builddir=None):
         self.name = name
         self._version = version
+        self._srcdir = srcdir
+        self._builddir = builddir
+
+    def path_vars(self, pkgdir):
+        return {'srcdir': self._srcdir, 'builddir': self._builddir}
 
     def guessed_version(self, pkgdir):
         return self._version

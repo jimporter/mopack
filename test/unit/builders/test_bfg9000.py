@@ -42,9 +42,11 @@ class TestBfg9000Builder(BuilderTest):
                 ['ninja'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                 universal_newlines=True, check=True
             )
-        self.assertEqual(builder.get_usage(
-            MockPackage(), submodules, self.pkgdir, self.srcdir
-        ), usage)
+
+        pkg = MockPackage(srcdir=self.srcdir,
+                          builddir=builder._builddir(self.pkgdir))
+        self.assertEqual(builder.usage.get_usage(pkg, submodules, self.pkgdir),
+                         usage)
 
     def test_basic(self):
         builder = self.make_builder('foo')

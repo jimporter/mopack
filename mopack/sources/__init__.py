@@ -111,7 +111,8 @@ class Package(OptionsHolder):
         pass  # pragma: no cover
 
     def get_usage(self, submodules, pkgdir):
-        return self._get_usage(self._check_submodules(submodules), pkgdir)
+        return self.usage.get_usage(self, self._check_submodules(submodules),
+                                    pkgdir)
 
     def __repr__(self):
         return '<{}({!r})>'.format(type(self).__name__, self.name)
@@ -134,11 +135,11 @@ class BinaryPackage(Package):
                                 submodules=self.submodules, _options=_options,
                                 _path_bases=_path_bases)
 
-    def version(self, pkgdir):
-        return self.usage.version(self, pkgdir, None, None)
+    def path_vars(self, pkgdir):
+        return {'srcdir': None, 'builddir': None}
 
-    def _get_usage(self, submodules, pkgdir):
-        return self.usage.get_usage(self, submodules, pkgdir, None, None)
+    def version(self, pkgdir):
+        return self.usage.version(self, pkgdir)
 
 
 class PackageOptions(FreezeDried, BaseOptions):

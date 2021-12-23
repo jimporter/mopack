@@ -45,16 +45,8 @@ class Builder(OptionsHolder):
     def _builddir(self, pkgdir):
         return os.path.abspath(os.path.join(pkgdir, 'build', self.name))
 
-    def version(self, pkg, pkgdir, srcdir):
-        return self.usage.version(pkg, pkgdir, srcdir, self._builddir(pkgdir))
-
     def clean(self, pkgdir):
         shutil.rmtree(self._builddir(pkgdir), ignore_errors=True)
-
-    def get_usage(self, pkg, submodules, pkgdir, srcdir):
-        return self.usage.get_usage(
-            pkg, submodules, pkgdir, srcdir, self._builddir(pkgdir)
-        )
 
     def __repr__(self):
         return '<{}({!r})>'.format(type(self).__name__, self.name)

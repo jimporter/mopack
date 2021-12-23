@@ -70,6 +70,9 @@ class ConanPackage(BinaryPackage):
     def remote_name(self):
         return self.remote.split('/')[0]
 
+    def path_vars(self, pkgdir):
+        return {'srcdir': None, 'builddir': self._installdir(pkgdir)}
+
     def version(self, pkgdir):
         # Inspect the local conan cache to get the package's version.
         # XXX: There might be a better way to do this...
@@ -132,8 +135,3 @@ class ConanPackage(BinaryPackage):
     def deploy_all(packages, pkgdir):
         if any(i.should_deploy for i in packages):
             warnings.warn('deploying not yet supported for conan packages')
-
-    def _get_usage(self, submodules, pkgdir):
-        return self.usage.get_usage(
-            self, submodules, pkgdir, None, self._installdir(pkgdir)
-        )

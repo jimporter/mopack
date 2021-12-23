@@ -64,6 +64,14 @@ class SDistPackage(Package):
             )
         return [self.builder.type]
 
+    @property
+    def usage(self):
+        return self.builder.usage
+
+    def path_vars(self, pkgdir):
+        return {'srcdir': self._srcdir(pkgdir),
+                'builddir': self.builder._builddir(pkgdir)}
+
     def _find_mopack(self, parent_config, srcdir):
         config = ChildConfig([srcdir], parent_config=parent_config,
                              parent_package=self)
@@ -131,12 +139,7 @@ class SDistPackage(Package):
             self.builder.deploy(pkgdir, self._srcdir(pkgdir))
 
     def version(self, pkgdir):
-        return self.builder.version(self, pkgdir, self._srcdir(pkgdir))
-
-    def _get_usage(self, submodules, pkgdir):
-        return self.builder.get_usage(
-            self, submodules, pkgdir, self._srcdir(pkgdir)
-        )
+        return self.builder.usage.version(self, pkgdir)
 
 
 @FreezeDried.fields(rehydrate={'path': Path})
