@@ -2,7 +2,6 @@ import os
 import shutil
 import sys
 import warnings
-from os.path import abspath
 from textwrap import dedent
 from unittest import mock
 
@@ -15,6 +14,12 @@ from mopack.shell import ShellArguments
 from mopack.types import dependency_string, FieldValueError
 from mopack.usage import Usage
 from mopack.usage.path_system import PathUsage, SystemUsage
+
+
+def abspath(p):
+    # Make sure that paths are a canonical case on case-insensitive filesystems
+    # so that they compare equal.
+    return os.path.normcase(os.path.abspath(p))
 
 
 def abspathobj(p):
@@ -507,16 +512,16 @@ class TestPath(UsageTest):
 
         usage = self.make_usage('foo', submodule_map={
             'sub': {
-                'include_path': '/mock/incdir/$submodule',
-                'library_path': '/mock/libdir/$submodule',
+                'include_path': '$srcdir/$submodule',
+                'library_path': '$builddir/$submodule',
                 'headers': '$submodule/file.hpp',
                 'libraries': '$submodule',
                 'compile_flags': '-D$submodule',
                 'link_flags': '-Wl,-$submodule',
             },
             '*': {
-                'include_path': '/mock/incdir/star/$submodule',
-                'library_path': '/mock/libdir/star/$submodule',
+                'include_path': '$srcdir/star/$submodule',
+                'library_path': '$builddir/star/$submodule',
                 'headers': 'star/$submodule/file.hpp',
                 'libraries': 'star$submodule',
                 'compile_flags': '-Dstar$submodule',
@@ -524,16 +529,18 @@ class TestPath(UsageTest):
             },
         }, submodules=submodules_required)
         self.check_usage(usage, libraries=[])
-        self.check_get_usage(usage, 'foo', ['sub'], None, None)
+        self.check_get_usage(usage, 'foo', ['sub'], self.srcdir, self.builddir)
         self.check_pkg_config('foo', ['sub'], {
-            'cflags': ['-Dsub', '-I' + abspath('/mock/incdir/sub')],
-            'libs': ['-L' + abspath('/mock/libdir/sub'), '-Wl,-sub', '-lsub'],
+            'cflags': ['-Dsub', '-I' + abspath('/mock/srcdir/sub')],
+            'libs': ['-L' + abspath('/mock/builddir/sub'), '-Wl,-sub',
+                     '-lsub'],
         })
-        self.check_get_usage(usage, 'foo', ['sub2'], None, None)
+        self.check_get_usage(usage, 'foo', ['sub2'], self.srcdir,
+                             self.builddir)
         self.check_pkg_config('foo', ['sub2'], {
-            'cflags': ['-Dstarsub2', '-I' + abspath('/mock/incdir/star/sub2')],
-            'libs': ['-L' + abspath('/mock/libdir/star/sub2'), '-Wl,-starsub2',
-                     '-lstarsub2'],
+            'cflags': ['-Dstarsub2', '-I' + abspath('/mock/srcdir/star/sub2')],
+            'libs': ['-L' + abspath('/mock/builddir/star/sub2'),
+                     '-Wl,-starsub2', '-lstarsub2'],
         })
 
     def test_boost(self):

@@ -130,46 +130,12 @@ def placeholder(value):
     return PlaceholderString(PlaceholderValue(value))
 
 
-def map_recursive(value, fn):
+def map_placeholder(value, fn):
     if isinstance(value, list):
-        return [map_recursive(i, fn) for i in value]
+        return [map_placeholder(i, fn) for i in value]
     elif isinstance(value, dict):
-        return {k: map_recursive(v, fn) for k, v in value.items()}
+        return {k: map_placeholder(v, fn) for k, v in value.items()}
     elif isinstance(value, PlaceholderString):
         return fn(value)
     else:
         return value
-
-
-class PlaceholderFD:
-    def __init__(self, *args):
-        self._placeholders = args
-
-    def _dehydrate_placeholder(self, value):
-        if isinstance(value, PlaceholderValue):
-            for i, ph in enumerate(self._placeholders):
-                if value.value == ph:
-                    return i
-            raise ValueError('unrecognized placeholder {!r}'.format(value))
-        return value
-
-    def _rehydrate_placeholder(self, value):
-        if isinstance(value, int):
-            return PlaceholderValue(self._placeholders[value])
-        return value
-
-    def dehydrate(self, value):
-        return map_recursive(value, lambda value: {'#phs#': [
-            self._dehydrate_placeholder(i) for i in value.bits
-        ]})
-
-    def rehydrate(self, value, **kwargs):
-        if isinstance(value, dict):
-            if list(value.keys()) == ['#phs#']:
-                return PlaceholderString(*[self._rehydrate_placeholder(i)
-                                           for i in value['#phs#']])
-            return {k: self.rehydrate(v, **kwargs) for k, v in value.items()}
-        elif isinstance(value, list):
-            return [self.rehydrate(i, **kwargs) for i in value]
-        else:
-            return value

@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from . import expression as expr, iterutils
 from .exceptions import ConfigurationError
 from .path import Path
-from .placeholder import map_recursive, PlaceholderString
+from .placeholder import map_placeholder, PlaceholderString
 from .shell import ShellArguments, split_posix
 from .yaml_tools import MarkedDict, MarkedYAMLOffsetError
 
@@ -152,7 +152,7 @@ class TypeCheck:
         return data
 
     def __call__(self, field, check, *, dest=None, dest_field=None,
-                 extend=False, extra_symbols=None):
+                 extend=False, extra_symbols=None, evaluate=True):
         if dest is None:
             dest = self.__dest
         if dest_field is None:
@@ -165,8 +165,10 @@ class TypeCheck:
         else:
             symbols = dict(**self.__symbols, **extra_symbols)
 
-        value = check(field, self.__evaluate(field, self.__context[field],
-                                             symbols))
+        value = self.__context[field]
+        if evaluate:
+            value = self.__evaluate(field, value, symbols)
+        value = check(field, value)
 
         if extend:
             d = (dest[dest_field] if isinstance(dest, dict)
@@ -391,20 +393,9 @@ def shell_args(none_ok=False, escapes=False):
     return check
 
 
-def placeholder_check(other, placeholder, fill_value='VALUE'):
-    def check(field, value):
-        filled = map_recursive(value, lambda value: value.replace(
-            placeholder, fill_value, simplify=True
-        ))
-        other(field, filled)
-        return value
-
-    return check
-
-
 def placeholder_fill(other, placeholder, fill_value):
     def check(field, value):
-        value = map_recursive(value, lambda value: value.replace(
+        value = map_placeholder(value, lambda value: value.replace(
             placeholder, fill_value, simplify=True
         ))
         return other(field, value)

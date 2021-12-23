@@ -6,18 +6,20 @@ from ..placeholder import placeholder
 from ..types import FieldValueError, dependency_string, wrap_field_error
 
 
-class _SubmodulePlaceholder:
-    pass
-
-
-submodule_placeholder = _SubmodulePlaceholder()
-
-
 def _get_usage_type(type, field='type'):
     try:
         return load_entry_point('mopack', 'mopack.usage', type)
     except ImportError:
         raise FieldValueError('unknown usage {!r}'.format(type), field)
+
+
+def preferred_path_base(preferred, path_bases):
+    if preferred in path_bases:
+        return preferred
+    elif len(path_bases) > 0:
+        return path_bases[0]
+    else:
+        return None
 
 
 class Usage(OptionsHolder):
@@ -31,14 +33,6 @@ class Usage(OptionsHolder):
     def _expr_symbols(self, path_bases):
         path_vars = {i: placeholder(Path('', i)) for i in path_bases}
         return dict(**self._options.expr_symbols, **path_vars)
-
-    def _preferred_base(self, preferred, path_bases):
-        if preferred in path_bases:
-            return preferred
-        elif len(path_bases) > 0:
-            return path_bases[0]
-        else:
-            return None
 
     def version(self, pkgdir, srcdir, builddir):
         raise NotImplementedError('Usage.version not implemented')

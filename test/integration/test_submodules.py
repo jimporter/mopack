@@ -37,7 +37,7 @@ class TestSubmodules(IntegrationTest):
                         usage=cfg_pkg_config_usage(
                             pcfile=None,
                             submodule_map={
-                                '*': {'pcfile': {'#phs#': ['hello_', 0]}},
+                                '*': {'pcfile': 'hello_$submodule'},
                             }
                         )
                     )

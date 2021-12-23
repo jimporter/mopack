@@ -161,15 +161,6 @@ class TestTypeCheck(TypeTestCase):
         with self.assertFieldError(('field', 'foo')):
             Thing({'foo': '$undef'})
 
-    def test_no_evaluate(self):
-        class Thing:
-            def __init__(self, field):
-                T = TypeCheck(locals())
-                T.field(string)
-
-        self.assertEqual(Thing('foo').field, 'foo')
-        self.assertEqual(Thing('$variable').field, '$variable')
-
     def test_evaluate_extra_symbols(self):
         symbols = {'variable': 'value', 'bad': 1}
 
@@ -187,6 +178,28 @@ class TestTypeCheck(TypeTestCase):
                 T.field(string, extra_symbols={'extra': 'goat'})
 
         self.assertEqual(ThingNoSymbols('$extra').field, 'goat')
+
+    def test_no_evaluate(self):
+        class Thing:
+            def __init__(self, field):
+                T = TypeCheck(locals())
+                T.field(string)
+
+        self.assertEqual(Thing('foo').field, 'foo')
+        self.assertEqual(Thing('$variable').field, '$variable')
+
+    def test_no_evaluate_override(self):
+        symbols = {'variable': 'value', 'bad': 1}
+
+        class Thing:
+            def __init__(self, field, field2):
+                T = TypeCheck(locals(), symbols)
+                T.field(string)
+                T.field2(string, evaluate=False)
+
+        t = Thing('$variable', '$variable')
+        self.assertEqual(t.field, 'value')
+        self.assertEqual(t.field2, '$variable')
 
 
 class TestMaybe(TypeTestCase):
@@ -621,33 +634,6 @@ class TestShellArgs(TypeTestCase):
             shell_args()('field', [1])
         with self.assertFieldError(('field',)):
             shell_args()('field', '"foo')
-
-
-class TestPlaceholderCheck(TypeTestCase):
-    p = placeholder(1)
-
-    def test_simple(self):
-        check = placeholder_check(string, 1)
-        self.assertEqual(check('field', 'foo'), 'foo')
-        self.assertEqual(check('field', self.p), self.p)
-        self.assertEqual(check('field', 'foo' + self.p), 'foo' + self.p)
-
-        with self.assertFieldError(('field',), 'expected a string'):
-            check('field', 1)
-
-    def test_dict(self):
-        check = placeholder_check(dict_shape({'foo': string}, 'a foo dict'), 1)
-        self.assertEqual(check('field', {'foo': 'bar'}), {'foo': 'bar'})
-        self.assertEqual(check('field', {'foo': self.p}), {'foo': self.p})
-        self.assertEqual(check('field', {'foo': 'bar' + self.p}),
-                         {'foo': 'bar' + self.p})
-
-        with self.assertFieldError(('field', 'bad'), 'unexpected key'):
-            check('field', {'bad': self.p})
-
-    def test_invalid_type(self):
-        with self.assertFieldError(('field',), 'expected a boolean'):
-            placeholder_check(boolean, 1)('field', self.p)
 
 
 class TestPlaceholderFill(TypeTestCase):

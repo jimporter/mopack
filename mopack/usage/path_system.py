@@ -3,7 +3,8 @@ import re
 import subprocess
 from itertools import chain
 
-from . import submodule_placeholder, Usage
+from . import preferred_path_base, Usage
+from . import submodules as submod
 from .. import types
 from ..commands import Metadata
 from ..environment import get_pkg_config
@@ -12,7 +13,6 @@ from ..iterutils import listify
 from ..package_defaults import DefaultResolver
 from ..path import file_outdated, isfile, Path
 from ..pkg_config import generated_pkg_config_dir, write_pkg_config
-from ..placeholder import placeholder, PlaceholderFD
 from ..platforms import package_library_name
 from ..shell import ShellArguments, split_paths
 from ..types import dependency_string, Unset
@@ -69,37 +69,37 @@ _version_def = types.one_of(
 _list_of_headers = types.list_of(types.string, listify=True)
 _list_of_libraries = types.list_of(_library, listify=True)
 
-_SubmoduleFD = PlaceholderFD(submodule_placeholder)
 _PathListFD = ListFreezeDryer(Path)
 
 
-@FreezeDried.fields(rehydrate={
-    'include_path': _SubmoduleFD, 'library_path': _SubmoduleFD,
-    'headers': _SubmoduleFD, 'libraries': _SubmoduleFD,
-    'compile_flags': _SubmoduleFD, 'link_flags': _SubmoduleFD,
-})
 class _SubmoduleMapping(FreezeDried):
-    def __init__(self, srcbase, buildbase, *, include_path=None,
+    def __init__(self, symbols, path_bases, *, include_path=None,
                  library_path=None, headers=None, libraries=None,
                  compile_flags=None, link_flags=None):
-        def P(other):
-            return types.placeholder_check(other, submodule_placeholder)
+        # Just check that we can fill submodule values correctly.
+        self._fill(locals(), symbols, path_bases)
 
-        T = types.TypeCheck(locals())
-        T.include_path(P(_list_of_paths(srcbase)))
-        T.library_path(P(_list_of_paths(buildbase)))
-        T.headers(P(_list_of_headers))
-        T.libraries(P(_list_of_libraries))
-        T.compile_flags(P(types.shell_args(none_ok=True)))
-        T.link_flags(P(types.shell_args(none_ok=True)))
+        # Since we need to delay evaluating symbols until we know what the
+        # selected submodule is, just store these values unevaluated. We'll
+        # evaluate them later during `mopack usage` via the fill() function.
+        self.include_path = include_path
+        self.library_path = library_path
+        self.headers = headers
+        self.libraries = libraries
+        self.compile_flags = compile_flags
+        self.link_flags = link_flags
 
-    def fill(self, submodule_name, srcbase, buildbase):
+    def _fill(self, context, symbols, path_bases, submodule_name='SUBMODULE'):
         def P(other):
-            return types.placeholder_fill(other, submodule_placeholder,
+            return types.placeholder_fill(other, submod.placeholder,
                                           submodule_name)
 
+        srcbase = preferred_path_base('srcdir', path_bases)
+        buildbase = preferred_path_base('builddir', path_bases)
+        symbols = {**symbols, **submod.expr_symbols}
+
         result = type(self).__new__(type(self))
-        T = types.TypeCheck(self.__dict__, dest=result)
+        T = types.TypeCheck(context, symbols, dest=result)
         T.include_path(P(_list_of_paths(srcbase)))
         T.library_path(P(_list_of_paths(buildbase)))
         T.headers(P(_list_of_headers))
@@ -108,11 +108,14 @@ class _SubmoduleMapping(FreezeDried):
         T.link_flags(P(types.shell_args(none_ok=True)))
         return result
 
+    def fill(self, symbols, path_bases, submodule_name):
+        return self._fill(self.__dict__, symbols, path_bases, submodule_name)
 
-def _submodule_map(srcbase, buildbase):
+
+def _submodule_map(symbols, path_bases):
     def check_item(field, value):
         with types.wrap_field_error(field):
-            return _SubmoduleMapping(srcbase, buildbase, **value)
+            return _SubmoduleMapping(symbols, path_bases, **value)
 
     def check(field, value):
         try:
@@ -148,8 +151,8 @@ class PathUsage(Usage):
         super().__init__(inherit_defaults=inherit_defaults, _options=_options)
         symbols = self._expr_symbols(_path_bases)
         pkg_default = DefaultResolver(self, symbols, inherit_defaults, name)
-        srcbase = self._preferred_base('srcdir', _path_bases)
-        buildbase = self._preferred_base('builddir', _path_bases)
+        srcbase = preferred_path_base('srcdir', _path_bases)
+        buildbase = preferred_path_base('builddir', _path_bases)
 
         T = types.TypeCheck(locals(), symbols)
         # XXX: Maybe have the compiler tell *us* if it supports auto-linking,
@@ -180,20 +183,18 @@ class PathUsage(Usage):
         T.link_flags(types.shell_args(none_ok=True))
 
         if submodules:
-            submodule_var = placeholder(submodule_placeholder)
-            extra_symbols = {'submodule': submodule_var}
             T.submodule_map(pkg_default(
-                types.maybe(_submodule_map(srcbase, buildbase)),
-                default=name + '_' + submodule_var,
-                extra_symbols=extra_symbols
-            ), extra_symbols=extra_symbols)
+                types.maybe(_submodule_map(symbols, _path_bases)),
+                default=name + '_$submodule',
+                extra_symbols=submod.expr_symbols
+            ), evaluate=False)
 
-    def _get_submodule_mapping(self, submodule, srcbase, buildbase):
+    def _get_submodule_mapping(self, symbols, path_bases, submodule):
         try:
             mapping = self.submodule_map[submodule]
         except KeyError:
             mapping = self.submodule_map['*']
-        return mapping.fill(submodule, srcbase, buildbase)
+        return mapping.fill(symbols, path_bases, submodule)
 
     def _get_library(self, lib):
         if isinstance(lib, dict) and lib['type'] == 'guess':
@@ -301,9 +302,8 @@ class PathUsage(Usage):
         if submodules and self.submodule_map:
             path_bases = tuple(k for k, v in path_vars.items()
                                if v is not None)
-            srcbase = self._preferred_base('srcdir', path_bases)
-            buildbase = self._preferred_base('builddir', path_bases)
-            mappings = [self._get_submodule_mapping(i, srcbase, buildbase)
+            symbols = self._expr_symbols(path_bases)
+            mappings = [self._get_submodule_mapping(symbols, path_bases, i)
                         for i in submodules]
         else:
             mappings = []
