@@ -98,7 +98,7 @@ class SDistPackage(Package):
         else:
             # Note: If this fails and `pending_usage` is a string, this won't
             # report any line number information for the error, since we've
-            # lost that info in by now in that case.
+            # lost that info by now in that case.
             with to_parse_error(self.config_file):
                 with types.try_load_config(self.pending_usage, context,
                                            self.source):
