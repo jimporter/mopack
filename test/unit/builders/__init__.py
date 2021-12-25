@@ -25,11 +25,15 @@ class BuilderTest(OptionsTest):
                      deploy_paths=None, usage=None, **kwargs):
         if len(args) == 1:
             builder_type = self.builder_type
-            name = args[0]
+            pkg = args[0]
         else:
-            builder_type, name = args
+            builder_type, pkg = args
 
-        opts = self.make_options(builder_type, common_options=common_options,
-                                 this_options=this_options,
-                                 deploy_paths=deploy_paths)
-        return builder_type(name, _options=opts, **kwargs)
+        if isinstance(pkg, str):
+            options = self.make_options(
+                builder_type, common_options=common_options,
+                this_options=this_options, deploy_paths=deploy_paths
+            )
+            pkg = MockPackage(pkg, srcdir=self.srcdir, _options=options)
+
+        return builder_type(pkg, **kwargs)

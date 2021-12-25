@@ -36,7 +36,7 @@ class TestDirectory(SDistTestCase):
     def test_resolve(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000')
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
@@ -49,7 +49,7 @@ class TestDirectory(SDistTestCase):
                                 usage='pkg_config')
         self.assertEqual(pkg.path, Path(self.srcpath))
         self.assertEqual(pkg.builder, self.make_builder(
-            Bfg9000Builder, 'foo', extra_args='--extra'
+            Bfg9000Builder, pkg, extra_args='--extra'
         ))
         self.assertEqual(pkg.should_deploy, True)
 
@@ -135,7 +135,7 @@ class TestDirectory(SDistTestCase):
             self.assertEqual(config.export.submodules,
                              ['french', 'english'])
             self.assertEqual(pkg.builder, self.make_builder(
-                Bfg9000Builder, 'foo'
+                Bfg9000Builder, pkg
             ))
         self.check_resolve(pkg, submodules=['french'])
 
@@ -150,13 +150,12 @@ class TestDirectory(SDistTestCase):
             self.assertEqual(config.export.submodules,
                              ['french', 'english'])
             self.assertEqual(pkg.builder, self.make_builder(
-                Bfg9000Builder, 'foo'
+                Bfg9000Builder, pkg
             ))
         self.check_resolve(pkg, submodules=['sub'])
 
     def test_infer_build_invalid(self):
         pkg = self.make_package('foo', path=self.srcpath)
-
         child = ''
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
@@ -164,6 +163,7 @@ class TestDirectory(SDistTestCase):
              self.assertRaises(ConfigurationError):  # noqa
             pkg.fetch(self.config, self.pkgdir)
 
+        pkg = self.make_package('foo', path=self.srcpath)
         child = 'export:\n  build: unknown'
         loc = 'line 2, column 10'
         with mock.patch('os.path.isdir', mock_isdir), \
@@ -173,6 +173,7 @@ class TestDirectory(SDistTestCase):
              self.assertRaisesRegex(YamlParseError, loc):  # noqa
             pkg.fetch(self.config, self.pkgdir)
 
+        pkg = self.make_package('foo', path=self.srcpath)
         child = 'export:\n  build:\n    type: bfg9000\n    unknown: blah'
         loc = 'line 4, column 5'
         with mock.patch('os.path.isdir', mock_isdir), \
@@ -181,6 +182,7 @@ class TestDirectory(SDistTestCase):
              self.assertRaisesRegex(YamlParseError, loc):  # noqa
             pkg.fetch(self.config, self.pkgdir)
 
+        pkg = self.make_package('foo', path=self.srcpath)
         child = 'export:\n  build: bfg9000\n  usage: unknown'
         loc = 'line 3, column 10'
         with mock.patch('os.path.isdir', mock_isdir), \
@@ -189,6 +191,7 @@ class TestDirectory(SDistTestCase):
              self.assertRaises(YamlParseError):  # noqa
             pkg.fetch(self.config, self.pkgdir)
 
+        pkg = self.make_package('foo', path=self.srcpath)
         child = ('export:\n  build: bfg9000\n  usage:\n' +
                  '    type: pkg_config\n    unknown: blah')
         loc = 'line 5, column 5'
@@ -223,7 +226,7 @@ class TestDirectory(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 usage='pkg_config')
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
 
         pkg.fetch(self.config, self.pkgdir)
         self.check_resolve(pkg)
@@ -240,7 +243,7 @@ class TestDirectory(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 usage=usage)
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
 
         pkg.fetch(self.config, self.pkgdir)
         self.check_resolve(pkg, usage={
@@ -253,7 +256,7 @@ class TestDirectory(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 usage=usage)
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
 
         pkg.fetch(self.config, self.pkgdir)
         self.check_resolve(pkg, usage={

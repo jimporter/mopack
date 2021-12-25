@@ -2,7 +2,7 @@ import os
 import subprocess
 from unittest import mock
 
-from . import BuilderTest, OptionsTest, through_json
+from . import BuilderTest, MockPackage, OptionsTest, through_json
 from .. import mock_open_log
 
 from mopack.builders import Builder, BuilderOptions
@@ -96,7 +96,8 @@ class TestCMakeBuilder(BuilderTest):
 
     def test_rehydrate(self):
         opts = self.make_options()
-        builder = CMakeBuilder('foo', extra_args='--extra args', _options=opts)
+        builder = CMakeBuilder(MockPackage('foo', _options=opts),
+                               extra_args='--extra args')
         data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(data, _options=opts))
 

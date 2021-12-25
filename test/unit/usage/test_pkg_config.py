@@ -259,14 +259,13 @@ class TestPkgConfig(UsageTest):
 
     def test_rehydrate(self):
         opts = self.make_options()
-        path_bases = ('srcdir', 'builddir')
-        usage = PkgConfigUsage('foo', submodules=None, _options=opts,
-                               _path_bases=path_bases)
+        pkg = MockPackage('foo', srcdir=self.srcdir, builddir=self.builddir,
+                          _options=opts)
+        usage = PkgConfigUsage(pkg)
         data = through_json(usage.dehydrate())
         self.assertEqual(usage, Usage.rehydrate(data, _options=opts))
 
-        usage = PkgConfigUsage('foo', submodules=None, extra_args=['foo'],
-                               _options=opts, _path_bases=path_bases)
+        usage = PkgConfigUsage(pkg, extra_args=['foo'])
         data = through_json(usage.dehydrate())
         self.assertEqual(usage, Usage.rehydrate(data, _options=opts))
 
@@ -281,13 +280,15 @@ class TestPkgConfig(UsageTest):
             m.assert_called_once()
 
     def test_invalid_usage(self):
+        opts = self.make_options()
+        pkg = MockPackage('foo', builddir=self.builddir, _options=opts)
         with self.assertRaises(FieldError):
-            self.make_usage('foo', path='$srcdir/pkgconf',
-                            _path_bases=('builddir',))
+            self.make_usage(pkg, path='$srcdir/pkgconf')
 
+        pkg = MockPackage('foo', srcdir=self.srcdir, _options=opts)
         with self.assertRaises(FieldError):
-            self.make_usage('foo', path='$builddir/pkgconf',
-                            _path_bases=('srcdir',))
+            self.make_usage(pkg, path='$builddir/pkgconf')
 
+        pkg = MockPackage('foo', _options=opts)
         with self.assertRaises(FieldError):
-            self.make_usage('foo', _path_bases=())
+            self.make_usage(pkg)

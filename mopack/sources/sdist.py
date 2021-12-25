@@ -41,14 +41,8 @@ class SDistPackage(Package):
             pkg_default = DefaultResolver(self, symbols, inherit_defaults,
                                           name)
             T.submodules(pkg_default(submodules_type))
-            self.builder = make_builder(name, build, _options=_options)
-            self.usage = self._make_usage(usage, self.builder,
-                                          submodules=self.submodules)
-
-    def _make_usage(self, usage, builder, **kwargs):
-        return make_usage(self.name, builder.filter_usage(usage),
-                          _options=self._options,
-                          _path_bases=builder._path_bases, **kwargs)
+            self.builder = make_builder(self, build)
+            self.usage = self._make_usage(usage)
 
     def dehydrate(self):
         if hasattr(self, 'pending_usage'):
@@ -69,9 +63,19 @@ class SDistPackage(Package):
             )
         return [self.builder.type]
 
-    def path_vars(self, pkgdir):
+    def path_bases(self, *, builder=None):
+        if builder is True:
+            builder = self.builder
+        return ('srcdir',) + (builder.path_bases() if builder else ())
+
+    def path_values(self, pkgdir, *, builder=None):
+        if builder is True:
+            builder = self.builder
         return {'srcdir': self._srcdir(pkgdir),
-                'builddir': self.builder._builddir(pkgdir)}
+                **(builder.path_values(pkgdir) if builder else {})}
+
+    def _make_usage(self, usage, **kwargs):
+        return make_usage(self, self.builder.filter_usage(usage), **kwargs)
 
     def _find_mopack(self, parent_config, srcdir):
         config = ChildConfig([srcdir], parent_config=parent_config,
@@ -87,23 +91,20 @@ class SDistPackage(Package):
             ).format(self.name))
         export = config.export
 
-        if hasattr(self, 'submodules'):
-            submodules = self.submodules
         if not hasattr(self, 'submodules'):
             with to_parse_error(export.config_file):
-                submodules = submodules_type('submodules', export.submodules)
+                self.submodules = submodules_type('submodules',
+                                                  export.submodules)
 
         context = 'while constructing package {!r}'.format(self.name)
         with to_parse_error(export.config_file):
             with types.try_load_config(export.data, context, self.source):
-                builder = make_builder(self.name, export.build,
-                                       _options=self._options)
+                self.builder = make_builder(self, export.build)
 
         if not self.pending_usage and export.usage:
             with to_parse_error(export.config_file):
                 with types.try_load_config(export.data, context, self.source):
-                    usage = self._make_usage(export.usage, builder,
-                                             submodules=submodules)
+                    self.usage = self._make_usage(export.usage)
         else:
             # Note: If this fails and `pending_usage` is a string, this won't
             # report any line number information for the error, since we've
@@ -111,13 +112,9 @@ class SDistPackage(Package):
             with to_parse_error(self.config_file):
                 with types.try_load_config(self.pending_usage, context,
                                            self.source):
-                    usage = self._make_usage(self.pending_usage, builder,
-                                             field=None, submodules=submodules)
+                    self.usage = self._make_usage(self.pending_usage,
+                                                  field=None)
 
-        self.builder = builder
-        self.usage = usage
-        if not hasattr(self, 'submodules'):
-            self.submodules = submodules
         del self.pending_usage
         return config
 

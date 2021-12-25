@@ -727,20 +727,20 @@ class TestPath(UsageTest):
 
     def test_rehydrate(self):
         opts = self.make_options()
-        path_bases = ('srcdir', 'builddir')
-        usage = self.usage_type('foo', submodules=None, _options=opts,
-                                _path_bases=path_bases)
+        pkg = MockPackage('foo', _options=opts)
+        usage = self.usage_type(pkg)
         data = usage.dehydrate()
         self.assertEqual(usage, Usage.rehydrate(data, _options=opts))
 
-        usage = self.usage_type('foo', submodules=None,
-                                compile_flags=['compile'], link_flags=['link'],
-                                _options=opts, _path_bases=path_bases)
+        usage = self.usage_type(pkg, compile_flags=['compile'],
+                                link_flags=['link'])
         data = through_json(usage.dehydrate())
         self.assertEqual(usage, Usage.rehydrate(data, _options=opts))
 
-        submodules = {'names': '*', 'required': False}
-        usage = self.usage_type('foo', submodules=submodules, submodule_map={
+        pkg = MockPackage('foo', srcdir=self.srcdir, builddir=self.builddir,
+                          submodules={'names': '*', 'required': False},
+                          _options=opts)
+        usage = self.usage_type(pkg, submodule_map={
             'foosub': {
                 'include_path': 'include',
                 'library_path': 'lib',
@@ -749,7 +749,7 @@ class TestPath(UsageTest):
                 'compile_flags': 'compile',
                 'link_flags': 'link',
             },
-        }, _options=opts, _path_bases=path_bases)
+        })
         data = through_json(usage.dehydrate())
         self.assertEqual(usage, Usage.rehydrate(data, _options=opts))
 
@@ -764,16 +764,18 @@ class TestPath(UsageTest):
             m.assert_called_once()
 
     def test_invalid_usage(self):
+        opts = self.make_options()
+        pkg = MockPackage('foo', builddir=self.builddir, _options=opts)
         with self.assertRaises(FieldValueError):
-            self.make_usage('foo', include_path='$builddir/include',
-                            _path_bases=('srcdir',))
+            self.make_usage(pkg, library_path='$srcdir/lib')
 
+        pkg = MockPackage('foo', srcdir=self.srcdir, _options=opts)
         with self.assertRaises(FieldValueError):
-            self.make_usage('foo', library_path='$srcdir/lib',
-                            _path_bases=('builddir',))
+            self.make_usage(pkg, include_path='$builddir/include')
 
+        pkg = MockPackage('foo', _options=opts)
         with self.assertRaises(FieldValueError):
-            self.make_usage('foo', include_path='include', _path_bases=())
+            self.make_usage(pkg, include_path='include')
 
 
 class TestSystem(TestPath):

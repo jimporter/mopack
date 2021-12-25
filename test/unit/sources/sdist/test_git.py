@@ -48,7 +48,7 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcurl)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
@@ -60,7 +60,7 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
@@ -73,7 +73,7 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['tag', 'v1.0'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
@@ -86,7 +86,7 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'mybranch'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
@@ -99,7 +99,7 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['commit', 'abcdefg'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
@@ -128,7 +128,7 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, 'dir')
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
@@ -141,7 +141,7 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
         self.assertEqual(pkg.builder, self.make_builder(
-            Bfg9000Builder, 'foo', extra_args='--extra'
+            Bfg9000Builder, pkg, extra_args='--extra'
         ))
 
         self.check_fetch(pkg)
@@ -220,7 +220,7 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
@@ -239,7 +239,7 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
 
         self.check_fetch(pkg)
         self.check_resolve(pkg, usage={
@@ -254,7 +254,7 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
 
         self.check_fetch(pkg)
         self.check_resolve(pkg, usage={

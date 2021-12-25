@@ -163,7 +163,7 @@ class TypeCheck:
         elif self.__symbols is None:
             symbols = extra_symbols
         else:
-            symbols = dict(**self.__symbols, **extra_symbols)
+            symbols = {**self.__symbols, **extra_symbols}
 
         value = self.__context[field]
         if evaluate:

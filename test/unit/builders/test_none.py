@@ -1,7 +1,7 @@
 import os
 from unittest import mock
 
-from . import BuilderTest, through_json
+from . import BuilderTest, MockPackage, through_json
 
 from mopack.builders import Builder
 from mopack.builders.none import NoneBuilder
@@ -44,7 +44,7 @@ class TestNoneBuilder(BuilderTest):
 
     def test_rehydrate(self):
         opts = self.make_options()
-        builder = NoneBuilder('foo', _options=opts)
+        builder = NoneBuilder(MockPackage('foo', _options=opts))
         data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(data, _options=opts))
 

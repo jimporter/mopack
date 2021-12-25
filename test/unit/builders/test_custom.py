@@ -2,7 +2,7 @@ import os
 import subprocess
 from unittest import mock
 
-from . import BuilderTest, through_json
+from . import BuilderTest, MockPackage, through_json
 from .. import mock_open_log
 
 from mopack.builders import Builder
@@ -145,7 +145,8 @@ class TestCustomBuilder(BuilderTest):
 
     def test_rehydrate(self):
         opts = self.make_options()
-        builder = CustomBuilder('foo', build_commands=['make'], _options=opts)
+        builder = CustomBuilder(MockPackage('foo', _options=opts),
+                                build_commands=['make'])
         data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(data, _options=opts))
 

@@ -143,16 +143,18 @@ class PathUsage(Usage):
     def upgrade(config, version):
         return config
 
-    def __init__(self, name, *, auto_link=Unset, version=Unset,
+    def __init__(self, pkg, *, auto_link=Unset, version=Unset,
                  include_path=Unset, library_path=Unset, headers=Unset,
                  libraries=Unset, compile_flags=Unset, link_flags=Unset,
-                 submodule_map=Unset, inherit_defaults=False, submodules,
-                 _options, _path_bases):
-        super().__init__(inherit_defaults=inherit_defaults, _options=_options)
-        symbols = self._expr_symbols(_path_bases)
-        pkg_default = DefaultResolver(self, symbols, inherit_defaults, name)
-        srcbase = preferred_path_base('srcdir', _path_bases)
-        buildbase = preferred_path_base('builddir', _path_bases)
+                 submodule_map=Unset, inherit_defaults=False):
+        super().__init__(pkg, inherit_defaults=inherit_defaults)
+
+        path_bases = pkg.path_bases(builder=True)
+        symbols = self._expr_symbols(path_bases)
+        pkg_default = DefaultResolver(self, symbols, inherit_defaults,
+                                      pkg.name)
+        srcbase = preferred_path_base('srcdir', path_bases)
+        buildbase = preferred_path_base('builddir', path_bases)
 
         T = types.TypeCheck(locals(), symbols)
         # XXX: Maybe have the compiler tell *us* if it supports auto-linking,
@@ -169,23 +171,23 @@ class PathUsage(Usage):
 
         T.headers(pkg_default(_list_of_headers))
 
-        if self.auto_link or submodules and submodules['required']:
+        if self.auto_link or pkg.submodules and pkg.submodules['required']:
             # If auto-linking or if submodules are required, default to an
             # empty list of libraries, since we likely don't have a "base"
             # library that always needs linking to.
             libs_checker = types.maybe(_list_of_libraries, default=[])
         else:
             libs_checker = pkg_default(
-                _list_of_libraries, default={'type': 'guess', 'name': name}
+                _list_of_libraries, default={'type': 'guess', 'name': pkg.name}
             )
         T.libraries(libs_checker)
         T.compile_flags(types.shell_args(none_ok=True))
         T.link_flags(types.shell_args(none_ok=True))
 
-        if submodules:
+        if pkg.submodules:
             T.submodule_map(pkg_default(
-                types.maybe(_submodule_map(symbols, _path_bases)),
-                default=name + '_$submodule',
+                types.maybe(_submodule_map(symbols, path_bases)),
+                default=pkg.name + '_$submodule',
                 extra_symbols=submod.expr_symbols
             ), evaluate=False)
 
@@ -282,10 +284,10 @@ class PathUsage(Usage):
             return pkg.guessed_version(pkgdir)
 
     def version(self, pkg, pkgdir):
-        path_vars = pkg.path_vars(pkgdir)
+        path_values = pkg.path_values(pkgdir, builder=True)
         try:
             include_dirs = self._include_dirs(
-                self.headers, self.include_path, path_vars
+                self.headers, self.include_path, path_values
             )
         except ValueError:  # pragma: no cover
             # XXX: This is a hack to work around the fact that we currently
@@ -294,14 +296,11 @@ class PathUsage(Usage):
             # smarter way and then remove this.
             include_dirs = []
 
-        return self._get_version(pkg, pkgdir, include_dirs, path_vars)
+        return self._get_version(pkg, pkgdir, include_dirs, path_values)
 
     def get_usage(self, pkg, submodules, pkgdir):
-        path_vars = pkg.path_vars(pkgdir)
-
         if submodules and self.submodule_map:
-            path_bases = tuple(k for k, v in path_vars.items()
-                               if v is not None)
+            path_bases = pkg.path_bases(builder=True)
             symbols = self._expr_symbols(path_bases)
             mappings = [self._get_submodule_mapping(symbols, path_bases, i)
                         for i in submodules]
@@ -313,16 +312,17 @@ class PathUsage(Usage):
             for i in mappings:
                 yield from getattr(i, key)
 
+        path_values = pkg.path_values(pkgdir, builder=True)
         pkgconfdir = generated_pkg_config_dir(pkgdir)
         pcname = dependency_string(pkg.name, submodules)
         pcpath = os.path.join(pkgconfdir, pcname + '.pc')
 
         include_dirs = self._include_dirs(
-            chain_attr('headers'), chain_attr('include_path'), path_vars
+            chain_attr('headers'), chain_attr('include_path'), path_values
         )
         libraries = [self._get_library(i) for i in chain_attr('libraries')]
         library_dirs = self._library_dirs(
-            self.auto_link, libraries, chain_attr('library_path'), path_vars
+            self.auto_link, libraries, chain_attr('library_path'), path_values
         )
 
         cflags = (
@@ -334,7 +334,8 @@ class PathUsage(Usage):
             ShellArguments(chain_attr('link_flags')) +
             chain.from_iterable(self._link_library(i) for i in libraries)
         )
-        version = self._get_version(pkg, pkgdir, include_dirs, path_vars) or ''
+        version = (self._get_version(pkg, pkgdir, include_dirs, path_values) or
+                   '')
 
         metadata_path = os.path.join(pkgdir, Metadata.metadata_filename)
         if file_outdated(pcpath, metadata_path):
@@ -344,7 +345,7 @@ class PathUsage(Usage):
                 # submodule instead of writing a single file for all the
                 # requested submodules.
                 write_pkg_config(f, pcname, version=version, cflags=cflags,
-                                 libs=libs, variables=path_vars)
+                                 libs=libs, variables=path_values)
 
         return self._usage(
             pkg, submodules, generated=True, auto_link=self.auto_link,
@@ -355,9 +356,9 @@ class PathUsage(Usage):
 class SystemUsage(PathUsage):
     type = 'system'
 
-    def __init__(self, name, **kwargs):
-        super().__init__(name, **kwargs)
-        self.pcfile = name
+    def __init__(self, pkg, **kwargs):
+        super().__init__(pkg, **kwargs)
+        self.pcfile = pkg.name
 
     def version(self, pkg, pkgdir):
         pkg_config = get_pkg_config(self._common_options.env)

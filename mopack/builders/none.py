@@ -4,14 +4,19 @@ from . import Builder
 class NoneBuilder(Builder):
     type = 'none'
     _version = 1
-    _path_bases = ('srcdir',)
 
     @staticmethod
     def upgrade(config, version):
         return config
 
+    def path_bases(self):
+        return ()
+
+    def path_values(self, pkgdir):
+        return {}
+
     def _builddir(self, pkgdir):
-        return None
+        raise NotImplementedError()
 
     def clean(self, pkgdir):
         pass

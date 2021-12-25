@@ -120,7 +120,7 @@ class DefaultResolver:
 
     def __call__(self, other, field=None, default=None, extra_symbols=None):
         forced_field = field
-        symbols = dict(**self.symbols, **(extra_symbols or {}))
+        symbols = {**self.symbols, **(extra_symbols or {})}
 
         def check(field, value):
             if value is types.Unset:

@@ -59,8 +59,8 @@ class Package(OptionsHolder):
 
     @property
     def _expr_symbols(self):
-        return dict(**self._options.expr_symbols,
-                    cfgdir=placeholder(Path('', 'cfgdir')))
+        return {**self._options.expr_symbols,
+                'cfgdir': placeholder(Path('', 'cfgdir'))}
 
     @property
     def config_dir(self):
@@ -124,8 +124,8 @@ class Package(OptionsHolder):
 @FreezeDried.fields(rehydrate={'usage': Usage})
 class BinaryPackage(Package):
     def __init__(self, name, *, submodules=types.Unset, usage,
-                 inherit_defaults=False, _options, _path_bases=(),
-                 _usage_field='usage', **kwargs):
+                 inherit_defaults=False, _options, _usage_field='usage',
+                 **kwargs):
         super().__init__(name, inherit_defaults=inherit_defaults,
                          _options=_options, **kwargs)
 
@@ -134,12 +134,13 @@ class BinaryPackage(Package):
         T = types.TypeCheck(locals(), symbols)
         T.submodules(pkg_default(submodules_type))
 
-        self.usage = make_usage(name, usage, field=_usage_field,
-                                submodules=self.submodules, _options=_options,
-                                _path_bases=_path_bases)
+        self.usage = make_usage(self, usage, field=_usage_field)
 
-    def path_vars(self, pkgdir):
-        return {'srcdir': None, 'builddir': None}
+    def path_bases(self, *, builder=None):
+        return ()
+
+    def path_values(self, pkgdir, *, builder=None):
+        return {}
 
 
 class PackageOptions(FreezeDried, BaseOptions):

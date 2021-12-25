@@ -43,8 +43,7 @@ class ConanPackage(BinaryPackage):
     def __init__(self, name, remote, build=False, options=None, usage=None,
                  **kwargs):
         usage = usage or {'type': 'pkg_config', 'path': ''}
-        super().__init__(name, usage=usage, _path_bases=('builddir',),
-                         **kwargs)
+        super().__init__(name, usage=usage, **kwargs)
 
         T = types.TypeCheck(locals(), self._expr_symbols)
         T.remote(types.string)
@@ -70,8 +69,11 @@ class ConanPackage(BinaryPackage):
     def remote_name(self):
         return self.remote.split('/')[0]
 
-    def path_vars(self, pkgdir):
-        return {'srcdir': None, 'builddir': self._installdir(pkgdir)}
+    def path_bases(self, *, builder=None):
+        return ('builddir',) if builder else ()
+
+    def path_values(self, pkgdir, *, builder=None):
+        return {'builddir': self._installdir(pkgdir)} if builder else {}
 
     def version(self, pkgdir):
         # Inspect the local conan cache to get the package's version.

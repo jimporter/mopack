@@ -42,12 +42,12 @@ class CommonOptions(FreezeDried, BaseOptions):
         deploy_vars = {k: placeholder(Path(v)) for k, v in
                        self.deploy_paths.items()}
 
-        return dict(
-            host_platform=platform_name(),
-            target_platform=self.target_platform,
-            env=self.env,
-            deploy_paths=deploy_vars,
-        )
+        return {
+            'host_platform': platform_name(),
+            'target_platform': self.target_platform,
+            'env': self.env,
+            'deploy_paths': deploy_vars,
+        }
 
     def __eq__(self, rhs):
         return (self.target_platform == rhs.target_platform and

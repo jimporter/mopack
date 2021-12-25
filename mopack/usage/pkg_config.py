@@ -60,36 +60,39 @@ class PkgConfigUsage(Usage):
     def upgrade(config, version):
         return config
 
-    def __init__(self, name, *, path='pkgconfig', pcfile=types.Unset,
+    def __init__(self, pkg, *, path='pkgconfig', pcfile=types.Unset,
                  extra_args=None, submodule_map=types.Unset,
-                 inherit_defaults=False, submodules, _options, _path_bases):
-        super().__init__(inherit_defaults=inherit_defaults, _options=_options)
-        symbols = self._expr_symbols(_path_bases)
-        pkg_default = DefaultResolver(self, symbols, inherit_defaults, name)
-        buildbase = preferred_path_base('builddir', _path_bases)
-        if submodules and submodules['required']:
+                 inherit_defaults=False):
+        super().__init__(pkg, inherit_defaults=inherit_defaults)
+
+        path_bases = pkg.path_bases(builder=True)
+        symbols = self._expr_symbols(path_bases)
+        pkg_default = DefaultResolver(self, symbols, inherit_defaults,
+                                      pkg.name)
+        buildbase = preferred_path_base('builddir', path_bases)
+        if pkg.submodules and pkg.submodules['required']:
             # If submodules are required, default to an empty .pc file, since
             # we should usually have .pc files for the submodules that handle
             # everything for us.
             default_pcfile = None
         else:
-            default_pcfile = name
+            default_pcfile = pkg.name
 
         T = types.TypeCheck(locals(), symbols)
         T.path(types.list_of(types.abs_or_inner_path(buildbase), listify=True))
         T.pcfile(types.maybe(types.string, default=default_pcfile))
         T.extra_args(types.shell_args(none_ok=True))
 
-        if submodules:
+        if pkg.submodules:
             T.submodule_map(pkg_default(
                 types.maybe(_submodule_map),
-                default=name + '_$submodule',
+                default=pkg.name + '_$submodule',
                 extra_symbols=submod.expr_symbols
             ), evaluate=False)
 
     def version(self, pkg, pkgdir):
-        path_vars = pkg.path_vars(pkgdir)
-        path = [i.string(**path_vars) for i in self.path]
+        path_values = pkg.path_values(pkgdir, builder=True)
+        path = [i.string(**path_values) for i in self.path]
         env = self._common_options.env.copy()
         env['PKG_CONFIG_PATH'] = join_paths(path)
         pkg_config = get_pkg_config(self._common_options.env)
@@ -107,9 +110,9 @@ class PkgConfigUsage(Usage):
             return self.submodule_map['*'].fill(submodule)
 
     def get_usage(self, pkg, submodules, pkgdir):
-        path_vars = pkg.path_vars(pkgdir)
-        path = [i.string(**path_vars) for i in self.path]
-        extra_args = self.extra_args.fill(**path_vars)
+        path_values = pkg.path_values(pkgdir, builder=True)
+        path = [i.string(**path_values) for i in self.path]
+        extra_args = self.extra_args.fill(**path_values)
 
         if submodules and self.submodule_map:
             mappings = [self._get_submodule_mapping(i) for i in submodules]

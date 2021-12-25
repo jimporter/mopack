@@ -16,7 +16,6 @@ _known_install_types = ('prefix', 'bindir', 'libdir', 'includedir')
 class CMakeBuilder(Builder):
     type = 'cmake'
     _version = 1
-    _path_bases = ('srcdir', 'builddir')
 
     class Options(BuilderOptions):
         type = 'cmake'
@@ -40,10 +39,11 @@ class CMakeBuilder(Builder):
     def upgrade(config, version):
         return config
 
-    def __init__(self, name, *, extra_args=None, **kwargs):
-        super().__init__(name, **kwargs)
+    def __init__(self, pkg, *, extra_args=None, **kwargs):
+        super().__init__(pkg, **kwargs)
 
-        T = types.TypeCheck(locals(), self._expr_symbols)
+        symbols = self._expr_symbols(pkg.path_bases(builder=self))
+        T = types.TypeCheck(locals(), symbols)
         T.extra_args(types.shell_args(none_ok=True))
 
     def _toolchain_args(self, toolchain):

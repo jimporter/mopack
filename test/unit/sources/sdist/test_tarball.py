@@ -43,7 +43,7 @@ class TestTarball(SDistTestCase):
         self.assertEqual(pkg.url, self.srcurl)
         self.assertEqual(pkg.path, None)
         self.assertEqual(pkg.patch, None)
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
@@ -55,7 +55,7 @@ class TestTarball(SDistTestCase):
         self.assertEqual(pkg.url, None)
         self.assertEqual(pkg.path, Path(self.srcpath))
         self.assertEqual(pkg.patch, None)
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
@@ -67,7 +67,7 @@ class TestTarball(SDistTestCase):
         pkg = self.make_package('foo', build='bfg9000', path=srcpath)
         self.assertEqual(pkg.url, None)
         self.assertEqual(pkg.path, Path(srcpath))
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
@@ -134,7 +134,7 @@ class TestTarball(SDistTestCase):
                                 usage='pkg_config')
         self.assertEqual(pkg.path, Path(self.srcpath))
         self.assertEqual(pkg.builder, self.make_builder(
-            Bfg9000Builder, 'foo', extra_args='--extra'
+            Bfg9000Builder, pkg, extra_args='--extra'
         ))
 
         self.check_fetch(pkg)
@@ -207,7 +207,7 @@ class TestTarball(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 usage='pkg_config')
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
@@ -224,7 +224,7 @@ class TestTarball(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 usage=usage)
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
 
         self.check_fetch(pkg)
         self.check_resolve(pkg, usage={
@@ -237,7 +237,7 @@ class TestTarball(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 usage=usage)
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
 
         self.check_fetch(pkg)
         self.check_resolve(pkg, usage={

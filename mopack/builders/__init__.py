@@ -23,14 +23,19 @@ class Builder(OptionsHolder):
 
     Options = None
 
-    def __init__(self, name, *, _options):
-        super().__init__(_options)
-        self.name = name
+    def __init__(self, pkg):
+        super().__init__(pkg._options)
+        self.name = pkg.name
 
-    @property
-    def _expr_symbols(self):
-        path_vars = {i: placeholder(Path('', i)) for i in self._path_bases}
-        return dict(**self._options.expr_symbols, **path_vars)
+    def _expr_symbols(self, path_bases):
+        path_vars = {i: placeholder(Path('', i)) for i in path_bases}
+        return {**self._options.expr_symbols, **path_vars}
+
+    def path_bases(self):
+        return ('builddir',)
+
+    def path_values(self, pkgdir):
+        return {'builddir': self._builddir(pkgdir)}
 
     def filter_usage(self, usage):
         return usage
@@ -57,7 +62,7 @@ class BuilderOptions(FreezeDried, BaseOptions):
         return _get_builder_type(type).Options
 
 
-def make_builder(name, config, *, field='build', **kwargs):
+def make_builder(pkg, config, *, field='build', **kwargs):
     if config is None:
         raise TypeError('builder not specified')
 
@@ -71,7 +76,7 @@ def make_builder(name, config, *, field='build', **kwargs):
         type = config.pop('type')
 
     with wrap_field_error(field, type):
-        return _get_builder_type(type, type_field)(name, **config, **kwargs)
+        return _get_builder_type(type, type_field)(pkg, **config, **kwargs)
 
 
 def make_builder_options(type):

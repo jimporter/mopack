@@ -18,19 +18,19 @@ CommandsFD = ListFreezeDryer(ShellArguments)
 class CustomBuilder(Builder):
     type = 'custom'
     _version = 1
-    _path_bases = ('srcdir', 'builddir')
 
     @staticmethod
     def upgrade(config, version):
         return config
 
-    def __init__(self, name, *, build_commands, deploy_commands=None,
+    def __init__(self, pkg, *, build_commands, deploy_commands=None,
                  **kwargs):
-        super().__init__(name, **kwargs)
+        super().__init__(pkg, **kwargs)
 
+        symbols = self._expr_symbols(pkg.path_bases(builder=self))
         cmds_type = types.maybe(types.list_of(types.shell_args()), default=[])
 
-        T = types.TypeCheck(locals(), self._expr_symbols)
+        T = types.TypeCheck(locals(), symbols)
         T.build_commands(cmds_type)
         T.deploy_commands(cmds_type)
 

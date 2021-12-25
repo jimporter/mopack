@@ -36,15 +36,40 @@ def mock_open_files(files):
     return wrapper
 
 
-class MockPackage:
-    def __init__(self, name='foo', version=None, srcdir=None, builddir=None):
-        self.name = name
-        self._version = version
-        self._srcdir = srcdir
+class MockBuilder:
+    def __init__(self, builddir):
         self._builddir = builddir
 
-    def path_vars(self, pkgdir):
-        return {'srcdir': self._srcdir, 'builddir': self._builddir}
+    def path_bases(self):
+        return ('builddir',)
+
+    def path_values(self, pkgdir):
+        return {'builddir': self._builddir}
+
+
+class MockPackage:
+    def __init__(self, name='foo', version=None, srcdir=None, builddir=None,
+                 submodules=None, _options=None):
+        self.name = name
+        self.submodules = submodules
+        self.builder = MockBuilder(builddir) if builddir else None
+        self._version = version
+        self._srcdir = srcdir
+        self._options = _options
+
+    def path_bases(self, *, builder=None):
+        if builder is True:
+            builder = self.builder
+        return ( (('srcdir',) if self._srcdir else ()) +
+                 (builder.path_bases() if builder else ()) )
+
+    def path_values(self, pkgdir, *, builder=None):
+        if builder is True:
+            builder = self.builder
+        return {
+            **({'srcdir': self._srcdir} if self._srcdir else {}),
+            **(builder.path_values(pkgdir) if builder else {}),
+        }
 
     def guessed_version(self, pkgdir):
         return self._version
