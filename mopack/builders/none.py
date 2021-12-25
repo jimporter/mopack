@@ -10,9 +10,6 @@ class NoneBuilder(Builder):
     def upgrade(config, version):
         return config
 
-    def __init__(self, name, *, submodules, **kwargs):
-        super().__init__(name, **kwargs)
-
     def _builddir(self, pkgdir):
         return None
 

@@ -40,7 +40,8 @@ class TestDirectory(SDistTest):
                 cfg_directory_pkg(
                     'hello', config,
                     path={'base': 'cfgdir', 'path': 'hello-bfg'},
-                    builder=cfg_bfg9000_builder('hello')
+                    builder=cfg_bfg9000_builder('hello'),
+                    usage=cfg_pkg_config_usage(pcfile='hello')
                 ),
             ],
         })
@@ -67,7 +68,8 @@ class TestDirectory(SDistTest):
                 cfg_directory_pkg(
                     'hello', config,
                     path={'base': 'cfgdir', 'path': 'hello-bfg'},
-                    builder=cfg_bfg9000_builder('hello')
+                    builder=cfg_bfg9000_builder('hello'),
+                    usage=cfg_pkg_config_usage(pcfile='hello')
                 ),
             ],
         })
@@ -100,7 +102,8 @@ class TestTarball(SDistTest):
                     'hello', config,
                     path={'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
                     guessed_srcdir='hello-bfg',
-                    builder=cfg_bfg9000_builder('hello')
+                    builder=cfg_bfg9000_builder('hello'),
+                    usage=cfg_pkg_config_usage(pcfile='hello')
                 ),
             ],
         })
@@ -141,7 +144,8 @@ class TestTarballPatch(SDistTest):
                     path={'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
                     guessed_srcdir='hello-bfg',
                     patch={'base': 'cfgdir', 'path': 'hello-bfg.patch'},
-                    builder=cfg_bfg9000_builder('hello')
+                    builder=cfg_bfg9000_builder('hello'),
+                    usage=cfg_pkg_config_usage(pcfile='hello')
                 ),
             ],
         })
@@ -183,6 +187,7 @@ class TestGit(SDistTest):
                     repository='https://github.com/jimporter/bencode.hpp.git',
                     rev=['tag', 'v0.2.1'],
                     builder=cfg_bfg9000_builder('bencodehpp'),
+                    usage=cfg_pkg_config_usage(pcfile='bencodehpp')
                 ),
             ],
         })

@@ -93,18 +93,19 @@ def _cfg_package(source, api_version, name, config_file, parent=None,
     }
 
 
-def cfg_directory_pkg(name, config_file, *, path, builder, **kwargs):
+def cfg_directory_pkg(name, config_file, *, path, builder, usage, **kwargs):
     result = _cfg_package('directory', 1, name, config_file, **kwargs)
     result.update({
         'path': path,
         'builder': builder,
+        'usage': usage,
     })
     return result
 
 
 def cfg_tarball_pkg(name, config_file, *, path=None, url=None, files=[],
                     srcdir=None, guessed_srcdir=None, patch=None, builder,
-                    **kwargs):
+                    usage, **kwargs):
     result = _cfg_package('tarball', 1, name, config_file, **kwargs)
     result.update({
         'path': path,
@@ -114,18 +115,20 @@ def cfg_tarball_pkg(name, config_file, *, path=None, url=None, files=[],
         'guessed_srcdir': guessed_srcdir,
         'patch': patch,
         'builder': builder,
+        'usage': usage,
     })
     return result
 
 
 def cfg_git_pkg(name, config_file, *, repository, rev, srcdir='.', builder,
-                **kwargs):
+                usage, **kwargs):
     result = _cfg_package('git', 1, name, config_file, **kwargs)
     result.update({
         'repository': repository,
         'rev': rev,
         'srcdir': srcdir,
         'builder': builder,
+        'usage': usage,
     })
     return result
 
@@ -153,37 +156,31 @@ def cfg_conan_pkg(name, config_file, *, remote, build=False, options={}, usage,
     return result
 
 
-def cfg_bfg9000_builder(name, *, extra_args=[], usage=None):
-    if usage is None:
-        usage = cfg_pkg_config_usage(pcfile=name)
+def cfg_bfg9000_builder(name, *, extra_args=[]):
     return {
         'type': 'bfg9000',
         '_version': 1,
         'name': name,
         'extra_args': extra_args,
-        'usage': usage
     }
 
 
-def cfg_cmake_builder(name, *, extra_args=[], usage):
+def cfg_cmake_builder(name, *, extra_args=[]):
     return {
         'type': 'cmake',
         '_version': 1,
         'name': name,
         'extra_args': extra_args,
-        'usage': usage
     }
 
 
-def cfg_custom_builder(name, *, build_commands=[], deploy_commands=[],
-                       usage):
+def cfg_custom_builder(name, *, build_commands=[], deploy_commands=[]):
     return {
         'type': 'custom',
         '_version': 1,
         'name': name,
         'build_commands': build_commands,
         'deploy_commands': deploy_commands,
-        'usage': usage
     }
 
 

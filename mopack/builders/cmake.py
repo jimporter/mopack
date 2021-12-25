@@ -40,7 +40,7 @@ class CMakeBuilder(Builder):
     def upgrade(config, version):
         return config
 
-    def __init__(self, name, *, extra_args=None, submodules, **kwargs):
+    def __init__(self, name, *, extra_args=None, **kwargs):
         super().__init__(name, **kwargs)
 
         T = types.TypeCheck(locals(), self._expr_symbols)

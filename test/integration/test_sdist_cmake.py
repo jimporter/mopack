@@ -38,23 +38,22 @@ class TestInnerCMake(IntegrationTest):
                 cfg_directory_pkg(
                     'hello', config,
                     path={'base': 'cfgdir', 'path': 'hello-cmake'},
-                    builder=cfg_cmake_builder(
-                        'hello',
-                        usage=cfg_path_usage(
-                            explicit_version='1.0',
-                            compile_flags=[[
-                                '-I', {'base': 'srcdir', 'path': ''},
-                                '/include'
-                            ]],
-                            library_path=[{'base': 'builddir', 'path': ''}],
-                            libraries=[{'type': 'guess', 'name': 'hello'}]
-                        )
+                    builder=cfg_cmake_builder('hello'),
+                    usage=cfg_path_usage(
+                        explicit_version='1.0',
+                        compile_flags=[[
+                            '-I', {'base': 'srcdir', 'path': ''},
+                            '/include'
+                        ]],
+                        library_path=[{'base': 'builddir', 'path': ''}],
+                        libraries=[{'type': 'guess', 'name': 'hello'}]
                     )
                 ),
                 cfg_directory_pkg(
                     'greeter', config,
                     path={'base': 'cfgdir', 'path': 'greeter-bfg'},
                     builder=cfg_bfg9000_builder('greeter'),
+                    usage=cfg_pkg_config_usage(pcfile='greeter')
                 ),
             ],
         })
@@ -104,21 +103,20 @@ class TestOuterCMake(IntegrationTest):
                           'path': os.path.join('..', 'hello-bfg.tar.gz')},
                     guessed_srcdir='hello-bfg',
                     builder=cfg_bfg9000_builder('hello'),
+                    usage=cfg_pkg_config_usage(pcfile='hello')
                 ),
                 cfg_directory_pkg(
                     'greeter', config,
                     path={'base': 'cfgdir', 'path': 'greeter-cmake'},
-                    builder=cfg_cmake_builder(
-                        'greeter',
-                        usage=cfg_path_usage(
-                            explicit_version='1.0',
-                            compile_flags=[[
-                                '-I', {'base': 'srcdir', 'path': ''},
-                                '/include'
-                            ]],
-                            library_path=[{'base': 'builddir', 'path': ''}],
-                            libraries=[{'type': 'guess', 'name': 'greeter'}],
-                        )
+                    builder=cfg_cmake_builder('greeter'),
+                    usage=cfg_path_usage(
+                        explicit_version='1.0',
+                        compile_flags=[[
+                            '-I', {'base': 'srcdir', 'path': ''},
+                            '/include'
+                        ]],
+                        library_path=[{'base': 'builddir', 'path': ''}],
+                        libraries=[{'type': 'guess', 'name': 'greeter'}],
                     )
                 ),
             ],

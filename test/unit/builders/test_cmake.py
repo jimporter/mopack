@@ -2,29 +2,20 @@ import os
 import subprocess
 from unittest import mock
 
-from . import BuilderTest, MockPackage, OptionsTest, through_json
+from . import BuilderTest, OptionsTest, through_json
 from .. import mock_open_log
 
 from mopack.builders import Builder, BuilderOptions
 from mopack.builders.cmake import CMakeBuilder
-from mopack.iterutils import iterate
 from mopack.shell import ShellArguments
-from mopack.usage.pkg_config import PkgConfigUsage
-from mopack.types import dependency_string, Unset
+from mopack.sources.sdist import DirectoryPackage
+from mopack.types import Unset
 
 
 class TestCMakeBuilder(BuilderTest):
     builder_type = CMakeBuilder
 
-    def check_build(self, builder, extra_args=[], *, submodules=None,
-                    usage=None):
-        if usage is None:
-            pcfiles = ['foo']
-            pcfiles.extend('foo_{}'.format(i) for i in iterate(submodules))
-            usage = {'name': dependency_string('foo', submodules),
-                     'type': 'pkg_config', 'path': [self.pkgconfdir('foo')],
-                     'pcfiles': pcfiles, 'extra_args': []}
-
+    def check_build(self, builder, extra_args=[]):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.cmake.pushd'), \
              mock.patch('subprocess.run') as mcall:  # noqa
@@ -42,20 +33,10 @@ class TestCMakeBuilder(BuilderTest):
                 universal_newlines=True, check=True
             )
 
-        pkg = MockPackage(srcdir=self.srcdir,
-                          builddir=builder._builddir(self.pkgdir))
-        self.assertEqual(builder.usage.get_usage(pkg, submodules, self.pkgdir),
-                         usage)
-
     def test_basic(self):
-        builder = self.make_builder('foo', usage='pkg_config')
+        builder = self.make_builder('foo')
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, ShellArguments())
-        self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, _options=self.make_options(),
-            _path_bases=self.path_bases
-        ))
-
         self.check_build(builder)
 
         with mock_open_log() as mopen, \
@@ -72,82 +53,18 @@ class TestCMakeBuilder(BuilderTest):
             )
 
     def test_extra_args(self):
-        builder = self.make_builder('foo', extra_args='--extra args',
-                                    usage='pkg_config')
+        builder = self.make_builder('foo', extra_args='--extra args')
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args,
                          ShellArguments(['--extra', 'args']))
-        self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, _options=self.make_options(),
-            _path_bases=self.path_bases
-        ))
-
         self.check_build(builder, extra_args=['--extra', 'args'])
-
-    def test_usage_full(self):
-        usage = {'type': 'pkg_config', 'path': 'pkgconf'}
-        builder = self.make_builder('foo', usage=usage)
-        self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.extra_args, ShellArguments())
-        self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', path='pkgconf', submodules=None,
-            _options=self.make_options(), _path_bases=self.path_bases
-        ))
-
-        self.check_build(builder, usage={
-            'name': 'foo', 'type': 'pkg_config',
-            'path': [self.pkgconfdir('foo', 'pkgconf')], 'pcfiles': ['foo'],
-            'extra_args': [],
-        })
-
-    def test_submodules(self):
-        submodules_required = {'names': '*', 'required': True}
-        submodules_optional = {'names': '*', 'required': False}
-
-        builder = self.make_builder('foo', usage='pkg_config',
-                                    submodules=submodules_required)
-        self.check_build(builder, submodules=['sub'], usage={
-            'name': 'foo[sub]', 'type': 'pkg_config',
-            'path': [self.pkgconfdir('foo')], 'pcfiles': ['foo_sub'],
-            'extra_args': [],
-        })
-
-        builder = self.make_builder(
-            'foo', usage={'type': 'pkg_config', 'pcfile': 'bar'},
-            submodules=submodules_required
-        )
-        self.check_build(builder, submodules=['sub'], usage={
-            'name': 'foo[sub]', 'type': 'pkg_config',
-            'path': [self.pkgconfdir('foo')], 'pcfiles': ['bar', 'foo_sub'],
-            'extra_args': [],
-        })
-
-        builder = self.make_builder('foo', usage='pkg_config',
-                                    submodules=submodules_optional)
-        self.check_build(builder, submodules=['sub'])
-
-        builder = self.make_builder(
-            'foo', usage={'type': 'pkg_config', 'pcfile': 'bar'},
-            submodules=submodules_optional
-        )
-        self.check_build(builder, submodules=['sub'], usage={
-            'name': 'foo[sub]', 'type': 'pkg_config',
-            'path': [self.pkgconfdir('foo')], 'pcfiles': ['bar', 'foo_sub'],
-            'extra_args': [],
-        })
 
     def test_toolchain(self):
         builder = self.make_builder(
-            'foo', usage={'type': 'pkg_config'},
-            this_options={'toolchain': 'toolchain.cmake'}
+            'foo', this_options={'toolchain': 'toolchain.cmake'}
         )
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, ShellArguments())
-        self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, _options=self.make_options(),
-            _path_bases=self.path_bases
-        ))
-
         self.check_build(builder, extra_args=[
             '-DCMAKE_TOOLCHAIN_FILE=' +
             os.path.join(self.config_dir, 'toolchain.cmake')
@@ -155,40 +72,38 @@ class TestCMakeBuilder(BuilderTest):
 
     def test_deploy_paths(self):
         deploy_paths = {'prefix': '/usr/local', 'goofy': '/foo/bar'}
-        builder = self.make_builder('foo', usage='pkg_config',
-                                    deploy_paths=deploy_paths)
+        builder = self.make_builder('foo', deploy_paths=deploy_paths)
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, ShellArguments())
-        self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, _options=self.make_options(),
-            _path_bases=self.path_bases
-        ))
-
         self.check_build(builder, extra_args=[
             '-DCMAKE_INSTALL_PREFIX:PATH=' + os.path.abspath('/usr/local')
         ])
 
     def test_clean(self):
-        builder = self.make_builder('foo', usage='pkg_config')
+        builder = self.make_builder('foo')
         srcdir = os.path.join(self.pkgdir, 'build', 'foo')
 
         with mock.patch('shutil.rmtree') as mrmtree:
             builder.clean(self.pkgdir)
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
+    def test_usage(self):
+        opts = self.make_options()
+        pkg = DirectoryPackage('foo', path=self.srcdir, build='cmake',
+                               usage='pkg_config', _options=opts,
+                               config_file=self.config_file)
+        pkg.get_usage(None, self.pkgdir)
+
     def test_rehydrate(self):
         opts = self.make_options()
-        builder = CMakeBuilder('foo', extra_args='--extra args',
-                               submodules=None, _options=opts)
-        builder.set_usage({'type': 'pkg_config', 'path': 'pkgconf'},
-                          submodules=None)
+        builder = CMakeBuilder('foo', extra_args='--extra args', _options=opts)
         data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(data, _options=opts))
 
     def test_upgrade(self):
         opts = self.make_options()
         data = {'type': 'cmake', '_version': 0, 'name': 'foo',
-                'extra_args': [], 'usage': {'type': 'system', '_version': 0}}
+                'extra_args': []}
         with mock.patch.object(CMakeBuilder, 'upgrade',
                                side_effect=CMakeBuilder.upgrade) as m:
             pkg = Builder.rehydrate(data, _options=opts)

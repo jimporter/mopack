@@ -28,13 +28,15 @@ class TestConditional(IntegrationTest):
                 'hello', config,
                 path={'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
                 guessed_srcdir='hello-bfg',
-                builder=cfg_bfg9000_builder('hello')
+                builder=cfg_bfg9000_builder('hello'),
+                usage=cfg_pkg_config_usage(pcfile='hello')
             )
         else:
             hellopkg = cfg_directory_pkg(
                 'hello', config,
                 path={'base': 'cfgdir', 'path': 'hello-bfg'},
-                builder=cfg_bfg9000_builder('hello')
+                builder=cfg_bfg9000_builder('hello'),
+                usage=cfg_pkg_config_usage(pcfile='hello')
             )
         self.assertEqual(output['metadata'], {
             'options': cfg_options(bfg9000={}),

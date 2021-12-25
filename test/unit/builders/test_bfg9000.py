@@ -2,29 +2,20 @@ import os
 import subprocess
 from unittest import mock
 
-from . import BuilderTest, MockPackage, OptionsTest, through_json
+from . import BuilderTest, OptionsTest, through_json
 from .. import mock_open_log
 
 from mopack.builders import Builder, BuilderOptions
 from mopack.builders.bfg9000 import Bfg9000Builder
-from mopack.iterutils import iterate
 from mopack.shell import ShellArguments
-from mopack.usage.pkg_config import PkgConfigUsage
-from mopack.types import dependency_string, Unset
+from mopack.sources.sdist import DirectoryPackage
+from mopack.types import Unset
 
 
 class TestBfg9000Builder(BuilderTest):
     builder_type = Bfg9000Builder
 
-    def check_build(self, builder, extra_args=[], *, submodules=None,
-                    usage=None):
-        if usage is None:
-            pcfiles = ['foo']
-            pcfiles.extend('foo_{}'.format(i) for i in iterate(submodules))
-            usage = {'name': dependency_string('foo', submodules),
-                     'type': 'pkg_config', 'path': [self.pkgconfdir('foo')],
-                     'pcfiles': pcfiles, 'extra_args': []}
-
+    def check_build(self, builder, extra_args=[]):
         builddir = os.path.join(self.pkgdir, 'build', 'foo')
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
@@ -43,20 +34,10 @@ class TestBfg9000Builder(BuilderTest):
                 universal_newlines=True, check=True
             )
 
-        pkg = MockPackage(srcdir=self.srcdir,
-                          builddir=builder._builddir(self.pkgdir))
-        self.assertEqual(builder.usage.get_usage(pkg, submodules, self.pkgdir),
-                         usage)
-
     def test_basic(self):
         builder = self.make_builder('foo')
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, ShellArguments())
-        self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, _options=self.make_options(),
-            _path_bases=self.path_bases
-        ))
-
         self.check_build(builder)
 
         with mock_open_log() as mopen, \
@@ -77,73 +58,7 @@ class TestBfg9000Builder(BuilderTest):
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args,
                          ShellArguments(['--extra', 'args']))
-        self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, _options=self.make_options(),
-            _path_bases=self.path_bases
-        ))
-
         self.check_build(builder, extra_args=['--extra', 'args'])
-
-    def test_usage_str(self):
-        builder = self.make_builder('foo', usage='pkg_config')
-        self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.extra_args, ShellArguments())
-        self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, _options=self.make_options(),
-            _path_bases=self.path_bases
-        ))
-
-        self.check_build(builder)
-
-    def test_usage_full(self):
-        usage = {'type': 'pkg_config', 'path': 'pkgconf'}
-        builder = self.make_builder('foo', usage=usage)
-        self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.extra_args, ShellArguments())
-        self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', path='pkgconf', submodules=None,
-            _options=self.make_options(), _path_bases=self.path_bases
-        ))
-
-        self.check_build(builder, usage={
-            'name': 'foo', 'type': 'pkg_config',
-            'path': [self.pkgconfdir('foo', 'pkgconf')], 'pcfiles': ['foo'],
-            'extra_args': [],
-        })
-
-    def test_submodules(self):
-        submodules_required = {'names': '*', 'required': True}
-        submodules_optional = {'names': '*', 'required': False}
-
-        builder = self.make_builder('foo', submodules=submodules_required)
-        self.check_build(builder, submodules=['sub'], usage={
-            'name': 'foo[sub]', 'type': 'pkg_config',
-            'path': [self.pkgconfdir('foo')], 'pcfiles': ['foo_sub'],
-            'extra_args': [],
-        })
-
-        builder = self.make_builder(
-            'foo', usage={'type': 'pkg_config', 'pcfile': 'bar'},
-            submodules=submodules_required
-        )
-        self.check_build(builder, submodules=['sub'], usage={
-            'name': 'foo[sub]', 'type': 'pkg_config',
-            'path': [self.pkgconfdir('foo')], 'pcfiles': ['bar', 'foo_sub'],
-            'extra_args': [],
-        })
-
-        builder = self.make_builder('foo', submodules=submodules_optional)
-        self.check_build(builder, submodules=['sub'])
-
-        builder = self.make_builder(
-            'foo', usage={'type': 'pkg_config', 'pcfile': 'bar'},
-            submodules=submodules_optional
-        )
-        self.check_build(builder, submodules=['sub'], usage={
-            'name': 'foo[sub]', 'type': 'pkg_config',
-            'path': [self.pkgconfdir('foo')], 'pcfiles': ['bar', 'foo_sub'],
-            'extra_args': [],
-        })
 
     def test_toolchain(self):
         builder = self.make_builder('foo', this_options={
@@ -151,11 +66,6 @@ class TestBfg9000Builder(BuilderTest):
         })
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, ShellArguments())
-        self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, _options=self.make_options(),
-            _path_bases=self.path_bases
-        ))
-
         self.check_build(builder, extra_args=[
             '--toolchain', os.path.join(self.config_dir, 'toolchain.bfg')
         ])
@@ -165,11 +75,6 @@ class TestBfg9000Builder(BuilderTest):
         builder = self.make_builder('foo', deploy_paths=deploy_paths)
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, ShellArguments())
-        self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, _options=self.make_options(),
-            _path_bases=self.path_bases
-        ))
-
         self.check_build(builder, extra_args=['--prefix', '/usr/local'])
 
     def test_clean(self):
@@ -180,19 +85,23 @@ class TestBfg9000Builder(BuilderTest):
             builder.clean(self.pkgdir)
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
+    def test_usage(self):
+        opts = self.make_options()
+        pkg = DirectoryPackage('foo', path=self.srcdir, build='bfg9000',
+                               _options=opts, config_file=self.config_file)
+        pkg.get_usage(None, self.pkgdir)
+
     def test_rehydrate(self):
         opts = self.make_options()
         builder = Bfg9000Builder('foo', extra_args='--extra args',
-                                 submodules=None, _options=opts)
-        builder.set_usage({'type': 'pkg_config', 'path': 'pkgconf'},
-                          submodules=None)
+                                 _options=opts)
         data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(data, _options=opts))
 
     def test_upgrade(self):
         opts = self.make_options()
         data = {'type': 'bfg9000', '_version': 0, 'name': 'foo',
-                'extra_args': [], 'usage': {'type': 'system', '_version': 0}}
+                'extra_args': []}
         with mock.patch.object(Bfg9000Builder, 'upgrade',
                                side_effect=Bfg9000Builder.upgrade) as m:
             pkg = Builder.rehydrate(data, _options=opts)

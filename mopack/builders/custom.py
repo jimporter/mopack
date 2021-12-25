@@ -25,7 +25,7 @@ class CustomBuilder(Builder):
         return config
 
     def __init__(self, name, *, build_commands, deploy_commands=None,
-                 submodules, **kwargs):
+                 **kwargs):
         super().__init__(name, **kwargs)
 
         cmds_type = types.maybe(types.list_of(types.shell_args()), default=[])

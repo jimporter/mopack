@@ -7,7 +7,6 @@ from ..freezedried import FreezeDried
 from ..path import Path
 from ..placeholder import placeholder
 from ..types import FieldValueError, wrap_field_error
-from ..usage import make_usage, Usage
 
 
 def _get_builder_type(type, field='type'):
@@ -17,7 +16,6 @@ def _get_builder_type(type, field='type'):
         raise FieldValueError('unknown builder {!r}'.format(type), field)
 
 
-@FreezeDried.fields(rehydrate={'usage': Usage})
 class Builder(OptionsHolder):
     _options_type = 'builders'
     _type_field = 'type'
@@ -29,18 +27,13 @@ class Builder(OptionsHolder):
         super().__init__(_options)
         self.name = name
 
-    def set_usage(self, usage, **kwargs):
-        # We set the usage separately since, even though the builder owns the
-        # usage, they're siblings in the mopack.yml file. This would confuse
-        # the FieldError wrapping, making errors in usage appear as if they
-        # were "inside" the builder. Thus, the separate `set_usage` call.
-        self.usage = make_usage(self.name, usage, _options=self._options,
-                                _path_bases=self._path_bases, **kwargs)
-
     @property
     def _expr_symbols(self):
         path_vars = {i: placeholder(Path('', i)) for i in self._path_bases}
         return dict(**self._options.expr_symbols, **path_vars)
+
+    def filter_usage(self, usage):
+        return usage
 
     def _builddir(self, pkgdir):
         return os.path.abspath(os.path.join(pkgdir, 'build', self.name))

@@ -13,10 +13,11 @@ from ..glob import filter_glob
 from ..log import LogFile
 from ..package_defaults import DefaultResolver
 from ..path import Path, pushd
+from ..usage import make_usage, Usage
 from ..yaml_tools import to_parse_error
 
 
-@FreezeDried.fields(rehydrate={'builder': Builder},
+@FreezeDried.fields(rehydrate={'builder': Builder, 'usage': Usage},
                     skip_compare={'pending_usage'})
 class SDistPackage(Package):
     @staticmethod
@@ -34,16 +35,20 @@ class SDistPackage(Package):
             if submodules is not types.Unset:
                 T.submodules(submodules_type)
             self.builder = None
+            self.usage = None
             self.pending_usage = usage
         else:
             pkg_default = DefaultResolver(self, symbols, inherit_defaults,
                                           name)
             T.submodules(pkg_default(submodules_type))
-            self.builder = make_builder(
-                name, build, submodules=self.submodules,
-                _options=_options
-            )
-            self.builder.set_usage(usage, submodules=self.submodules)
+            self.builder = make_builder(name, build, _options=_options)
+            self.usage = self._make_usage(usage, self.builder,
+                                          submodules=self.submodules)
+
+    def _make_usage(self, usage, builder, **kwargs):
+        return make_usage(self.name, builder.filter_usage(usage),
+                          _options=self._options,
+                          _path_bases=builder._path_bases, **kwargs)
 
     def dehydrate(self):
         if hasattr(self, 'pending_usage'):
@@ -63,10 +68,6 @@ class SDistPackage(Package):
                 'cannot get builder types until builder is finalized'
             )
         return [self.builder.type]
-
-    @property
-    def usage(self):
-        return self.builder.usage
 
     def path_vars(self, pkgdir):
         return {'srcdir': self._srcdir(pkgdir),
@@ -96,13 +97,13 @@ class SDistPackage(Package):
         with to_parse_error(export.config_file):
             with types.try_load_config(export.data, context, self.source):
                 builder = make_builder(self.name, export.build,
-                                       submodules=submodules,
                                        _options=self._options)
 
         if not self.pending_usage and export.usage:
             with to_parse_error(export.config_file):
                 with types.try_load_config(export.data, context, self.source):
-                    builder.set_usage(export.usage, submodules=submodules)
+                    usage = self._make_usage(export.usage, builder,
+                                             submodules=submodules)
         else:
             # Note: If this fails and `pending_usage` is a string, this won't
             # report any line number information for the error, since we've
@@ -110,10 +111,11 @@ class SDistPackage(Package):
             with to_parse_error(self.config_file):
                 with types.try_load_config(self.pending_usage, context,
                                            self.source):
-                    builder.set_usage(self.pending_usage, field=None,
-                                      submodules=submodules)
+                    usage = self._make_usage(self.pending_usage, builder,
+                                             field=None, submodules=submodules)
 
         self.builder = builder
+        self.usage = usage
         if not hasattr(self, 'submodules'):
             self.submodules = submodules
         del self.pending_usage
@@ -137,9 +139,6 @@ class SDistPackage(Package):
         if self.should_deploy:
             log.pkg_deploy(self.name)
             self.builder.deploy(pkgdir, self._srcdir(pkgdir))
-
-    def version(self, pkgdir):
-        return self.builder.usage.version(self, pkgdir)
 
 
 @FreezeDried.fields(rehydrate={'path': Path})

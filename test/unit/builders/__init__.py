@@ -6,7 +6,6 @@ from .. import OptionsTest, MockPackage, through_json  # noqa: F401
 class BuilderTest(OptionsTest):
     srcdir = os.path.abspath('/path/to/src')
     pkgdir = os.path.abspath('/path/to/builddir/mopack')
-    path_bases = ('srcdir', 'builddir')
 
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         return os.path.join(self.pkgdir, 'build', name, pkgconfig)
@@ -23,7 +22,7 @@ class BuilderTest(OptionsTest):
         return options
 
     def make_builder(self, *args, common_options=None, this_options=None,
-                     deploy_paths=None, submodules=None, usage=None, **kwargs):
+                     deploy_paths=None, usage=None, **kwargs):
         if len(args) == 1:
             builder_type = self.builder_type
             name = args[0]
@@ -33,7 +32,4 @@ class BuilderTest(OptionsTest):
         opts = self.make_options(builder_type, common_options=common_options,
                                  this_options=this_options,
                                  deploy_paths=deploy_paths)
-        builder = builder_type(name, submodules=submodules, _options=opts,
-                               **kwargs)
-        builder.set_usage(usage, submodules=submodules)
-        return builder
+        return builder_type(name, _options=opts, **kwargs)

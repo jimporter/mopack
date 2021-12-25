@@ -135,9 +135,7 @@ class TestDirectory(SDistTestCase):
             self.assertEqual(config.export.submodules,
                              ['french', 'english'])
             self.assertEqual(pkg.builder, self.make_builder(
-                Bfg9000Builder, 'foo', submodules={
-                    'names': ['french', 'english'], 'required': True
-                }
+                Bfg9000Builder, 'foo'
             ))
         self.check_resolve(pkg, submodules=['french'])
 
@@ -152,9 +150,7 @@ class TestDirectory(SDistTestCase):
             self.assertEqual(config.export.submodules,
                              ['french', 'english'])
             self.assertEqual(pkg.builder, self.make_builder(
-                Bfg9000Builder, 'foo', submodules={
-                    'names': ['sub'], 'required': True
-                }
+                Bfg9000Builder, 'foo'
             ))
         self.check_resolve(pkg, submodules=['sub'])
 
@@ -227,9 +223,7 @@ class TestDirectory(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 usage='pkg_config')
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builder, self.make_builder(
-            Bfg9000Builder, 'foo', usage='pkg_config'
-        ))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
 
         pkg.fetch(self.config, self.pkgdir)
         self.check_resolve(pkg)
@@ -246,9 +240,7 @@ class TestDirectory(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 usage=usage)
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builder, self.make_builder(
-            Bfg9000Builder, 'foo', usage=usage
-        ))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
 
         pkg.fetch(self.config, self.pkgdir)
         self.check_resolve(pkg, usage={
@@ -261,9 +253,7 @@ class TestDirectory(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 usage=usage)
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builder, self.make_builder(
-            Bfg9000Builder, 'foo', usage=usage
-        ))
+        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, 'foo'))
 
         pkg.fetch(self.config, self.pkgdir)
         self.check_resolve(pkg, usage={

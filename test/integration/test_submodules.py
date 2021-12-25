@@ -32,14 +32,12 @@ class TestSubmodules(IntegrationTest):
                         'required': True,
                     },
                     path={'base': 'cfgdir', 'path': 'hello-multi-bfg'},
-                    builder=cfg_bfg9000_builder(
-                        'hello',
-                        usage=cfg_pkg_config_usage(
-                            pcfile=None,
-                            submodule_map={
-                                '*': {'pcfile': 'hello_$submodule'},
-                            }
-                        )
+                    builder=cfg_bfg9000_builder('hello'),
+                    usage=cfg_pkg_config_usage(
+                        pcfile=None,
+                        submodule_map={
+                            '*': {'pcfile': 'hello_$submodule'},
+                        }
                     )
                 ),
             ],

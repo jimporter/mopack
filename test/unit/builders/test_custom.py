@@ -2,29 +2,20 @@ import os
 import subprocess
 from unittest import mock
 
-from . import BuilderTest, MockPackage, through_json
+from . import BuilderTest, through_json
 from .. import mock_open_log
 
 from mopack.builders import Builder
 from mopack.builders.custom import CustomBuilder
-from mopack.iterutils import iterate
 from mopack.path import Path
 from mopack.shell import ShellArguments
-from mopack.usage.pkg_config import PkgConfigUsage
-from mopack.types import dependency_string
+from mopack.sources.sdist import DirectoryPackage
 
 
 class TestCustomBuilder(BuilderTest):
     builder_type = CustomBuilder
 
-    def check_build(self, builder, build_commands=None, *, submodules=None,
-                    usage=None):
-        if usage is None:
-            pcfiles = ['foo']
-            pcfiles.extend('foo_{}'.format(i) for i in iterate(submodules))
-            usage = {'name': dependency_string('foo', submodules),
-                     'type': 'pkg_config', 'path': [self.pkgconfdir('foo')],
-                     'pcfiles': pcfiles, 'extra_args': []}
+    def check_build(self, builder, build_commands=None):
         if build_commands is None:
             builddir = os.path.join(self.pkgdir, 'build', builder.name)
             build_commands = [i.fill(srcdir=self.srcdir, builddir=builddir)
@@ -42,62 +33,41 @@ class TestCustomBuilder(BuilderTest):
                                       stderr=subprocess.STDOUT,
                                       universal_newlines=True, check=True)
 
-        pkg = MockPackage(srcdir=self.srcdir,
-                          builddir=builder._builddir(self.pkgdir))
-        self.assertEqual(builder.usage.get_usage(pkg, submodules, self.pkgdir),
-                         usage)
-
     def test_basic(self):
         builder = self.make_builder('foo', build_commands=[
             'configure', 'make'
-        ], usage='pkg_config')
+        ])
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.build_commands, [
             ShellArguments(['configure']),
             ShellArguments(['make']),
         ])
         self.assertEqual(builder.deploy_commands, [])
-        self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, _options=self.make_options(),
-            _path_bases=self.path_bases
-        ))
-
         self.check_build(builder)
 
     def test_build_list(self):
         builder = self.make_builder('foo', build_commands=[
             ['configure', '--foo'], ['make', '-j2']
-        ], usage='pkg_config')
+        ])
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.build_commands, [
             ShellArguments(['configure', '--foo']),
             ShellArguments(['make', '-j2']),
         ])
         self.assertEqual(builder.deploy_commands, [])
-        self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, _options=self.make_options(),
-            _path_bases=self.path_bases
-        ))
-
         self.check_build(builder)
 
     def test_path_objects(self):
-        opts = self.make_options()
-
         builder = self.make_builder('foo', build_commands=[
             'configure $srcdir/build',
             ['make', '-C', '$builddir'],
-        ], usage='pkg_config')
+        ])
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.build_commands, [
             ShellArguments(['configure', (Path('', 'srcdir'), '/build')]),
             ShellArguments(['make', '-C', Path('', 'builddir')]),
         ])
         self.assertEqual(builder.deploy_commands, [])
-        self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, _options=opts, _path_bases=self.path_bases
-        ))
-
         self.check_build(builder, build_commands=[
             ['configure', self.srcdir + '/build'],
             ['make', '-C', os.path.join(self.pkgdir, 'build', 'foo')],
@@ -114,11 +84,6 @@ class TestCustomBuilder(BuilderTest):
         self.assertEqual(builder.deploy_commands, [
             ShellArguments(['make', 'install']),
         ])
-        self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, _options=self.make_options(),
-            _path_bases=self.path_bases
-        ))
-
         self.check_build(builder)
 
         with mock_open_log() as mopen, \
@@ -135,22 +100,17 @@ class TestCustomBuilder(BuilderTest):
             )
 
     def test_cd(self):
-        opts = self.make_options()
-
         builder = self.make_builder('foo', build_commands=[
             'configure $srcdir/build',
             'cd $builddir',
             'make',
-        ], usage='pkg_config')
+        ])
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.build_commands, [
             ShellArguments(['configure', (Path('', 'srcdir'), '/build')]),
             ShellArguments(['cd', Path('', 'builddir')]),
             ShellArguments(['make']),
         ])
-        self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', submodules=None, _options=opts, _path_bases=self.path_bases
-        ))
 
         with mock.patch('os.chdir') as mcd:
             builddir = os.path.join(self.pkgdir, 'build', 'foo')
@@ -161,100 +121,38 @@ class TestCustomBuilder(BuilderTest):
             mcd.assert_called_once_with(builddir)
 
     def test_cd_invalid(self):
-        builder = self.make_builder('foo', build_commands=[
-            'cd foo bar',
-        ], usage='pkg_config')
+        builder = self.make_builder('foo', build_commands=['cd foo bar'])
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.custom.pushd'), \
              self.assertRaises(RuntimeError):  # noqa
             builder.build(self.pkgdir, self.srcdir)
 
-    def test_usage_full(self):
-        builder = self.make_builder(
-            'foo', build_commands=['make'],
-            usage={'type': 'pkg_config', 'path': 'pkgconf'}
-        )
-        self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.build_commands, [
-            ShellArguments(['make']),
-        ])
-        self.assertEqual(builder.usage, PkgConfigUsage(
-            'foo', path='pkgconf', submodules=None,
-            _options=self.make_options(), _path_bases=self.path_bases
-        ))
-
-        self.check_build(builder, usage={
-            'name': 'foo', 'type': 'pkg_config',
-            'path': [self.pkgconfdir('foo', 'pkgconf')], 'pcfiles': ['foo'],
-            'extra_args': [],
-        })
-
-    def test_submodules(self):
-        submodules_required = {'names': '*', 'required': True}
-        submodules_optional = {'names': '*', 'required': False}
-
-        builder = self.make_builder(
-            'foo', build_commands=['make'], usage='pkg_config',
-            submodules=submodules_required
-        )
-        self.check_build(builder, submodules=['sub'], usage={
-            'name': 'foo[sub]', 'type': 'pkg_config',
-            'path': [self.pkgconfdir('foo')], 'pcfiles': ['foo_sub'],
-            'extra_args': [],
-        })
-
-        builder = self.make_builder(
-            'foo', build_commands=['make'],
-            usage={'type': 'pkg_config', 'pcfile': 'bar'},
-            submodules=submodules_required
-        )
-        self.check_build(builder, submodules=['sub'], usage={
-            'name': 'foo[sub]', 'type': 'pkg_config',
-            'path': [self.pkgconfdir('foo')], 'pcfiles': ['bar', 'foo_sub'],
-            'extra_args': [],
-        })
-
-        builder = self.make_builder(
-            'foo', build_commands=['make'], usage='pkg_config',
-            submodules=submodules_optional
-        )
-        self.check_build(builder, submodules=['sub'])
-
-        builder = self.make_builder(
-            'foo', build_commands=['make'],
-            usage={'type': 'pkg_config', 'pcfile': 'bar'},
-            submodules=submodules_optional
-        )
-        self.check_build(builder, submodules=['sub'], usage={
-            'name': 'foo[sub]', 'type': 'pkg_config',
-            'path': [self.pkgconfdir('foo')], 'pcfiles': ['bar', 'foo_sub'],
-            'extra_args': [],
-        })
-
     def test_clean(self):
-        builder = self.make_builder('foo', build_commands=['make'],
-                                    usage='pkg_config')
+        builder = self.make_builder('foo', build_commands=['make'])
         srcdir = os.path.join(self.pkgdir, 'build', 'foo')
 
         with mock.patch('shutil.rmtree') as mrmtree:
             builder.clean(self.pkgdir)
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
+    def test_usage(self):
+        opts = self.make_options()
+        pkg = DirectoryPackage('foo', path=self.srcdir, build={
+            'type': 'custom', 'build_commands': ['make'],
+        }, usage='pkg_config', _options=opts, config_file=self.config_file)
+        pkg.get_usage(None, self.pkgdir)
+
     def test_rehydrate(self):
         opts = self.make_options()
-        builder = CustomBuilder('foo', build_commands=['make'],
-                                submodules=None, _options=opts)
-        builder.set_usage({'type': 'pkg_config', 'path': 'pkgconf'},
-                          submodules=None)
+        builder = CustomBuilder('foo', build_commands=['make'], _options=opts)
         data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(data, _options=opts))
 
     def test_upgrade(self):
         opts = self.make_options()
         data = {'type': 'custom', '_version': 0, 'name': 'foo',
-                'build_commands': [], 'deploy_commands': None,
-                'usage': {'type': 'system', '_version': 0}}
+                'build_commands': [], 'deploy_commands': None}
         with mock.patch.object(CustomBuilder, 'upgrade',
                                side_effect=CustomBuilder.upgrade) as m:
             pkg = Builder.rehydrate(data, _options=opts)

@@ -41,15 +41,11 @@ class SDistTestCase(SourceTest):
                         return_value=False):
             self.assertEqual(pkg.get_usage(submodules, self.pkgdir), usage)
 
-    def make_builder(self, builder_type, name, *, submodules=None,
-                     options=None, usage=None, **kwargs):
+    def make_builder(self, builder_type, name, *, options=None, **kwargs):
         if options is None:
             options = self.make_options()
 
-        builder = builder_type(name, submodules=submodules, _options=options,
-                               **kwargs)
-        builder.set_usage(usage, submodules=submodules)
-        return builder
+        return builder_type(name, _options=options, **kwargs)
 
 
 def mock_open_after_first(*args, **kwargs):

@@ -73,6 +73,9 @@ class Package(OptionsHolder):
     def guessed_version(self, pkgdir):
         return None
 
+    def version(self, pkgdir):
+        return self.usage.version(self, pkgdir)
+
     def _check_submodules(self, wanted_submodules):
         if self.submodules:
             if self.submodules['required'] and not wanted_submodules:
@@ -137,9 +140,6 @@ class BinaryPackage(Package):
 
     def path_vars(self, pkgdir):
         return {'srcdir': None, 'builddir': None}
-
-    def version(self, pkgdir):
-        return self.usage.version(self, pkgdir)
 
 
 class PackageOptions(FreezeDried, BaseOptions):

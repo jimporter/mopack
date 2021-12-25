@@ -40,16 +40,16 @@ class Bfg9000Builder(Builder):
     def upgrade(config, version):
         return config
 
-    def __init__(self, name, *, extra_args=None, submodules, **kwargs):
+    def __init__(self, name, *, extra_args=None, **kwargs):
         super().__init__(name, **kwargs)
 
         T = types.TypeCheck(locals(), self._expr_symbols)
         T.extra_args(types.shell_args(none_ok=True))
 
-    def set_usage(self, usage=None, **kwargs):
+    def filter_usage(self, usage):
         if usage is None:
-            usage = 'pkg_config'
-        super().set_usage(usage, **kwargs)
+            return 'pkg_config'
+        return usage
 
     def _toolchain_args(self, toolchain):
         return ['--toolchain', toolchain] if toolchain else []
