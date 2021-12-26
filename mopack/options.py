@@ -11,6 +11,17 @@ from .sources import make_package_options, PackageOptions
 from .types import Unset
 
 
+class ExprSymbols(dict):
+    def augment(self, *, paths=[], symbols={}):
+        if not paths and not symbols:
+            return self
+        return ExprSymbols(
+            **self,
+            **({i: placeholder(Path('', i)) for i in paths}),
+            **symbols,
+        )
+
+
 class CommonOptions(FreezeDried, BaseOptions):
     _context = 'while adding common options'
     type = 'common'
@@ -42,12 +53,12 @@ class CommonOptions(FreezeDried, BaseOptions):
         deploy_vars = {k: placeholder(Path(v)) for k, v in
                        self.deploy_paths.items()}
 
-        return {
-            'host_platform': platform_name(),
-            'target_platform': self.target_platform,
-            'env': self.env,
-            'deploy_paths': deploy_vars,
-        }
+        return ExprSymbols(
+            host_platform=platform_name(),
+            target_platform=self.target_platform,
+            env=self.env,
+            deploy_paths=deploy_vars,
+        )
 
     def __eq__(self, rhs):
         return (self.target_platform == rhs.target_platform and

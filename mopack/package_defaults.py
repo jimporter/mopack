@@ -118,9 +118,9 @@ class DefaultResolver:
         self.symbols = symbols
         self.get_defaults = get_defaults
 
-    def __call__(self, other, field=None, default=None, extra_symbols=None):
+    def __call__(self, other, field=None, default=None, extra_symbols={}):
         forced_field = field
-        symbols = {**self.symbols, **(extra_symbols or {})}
+        symbols = self.symbols.augment(symbols=extra_symbols)
 
         def check(field, value):
             if value is types.Unset:

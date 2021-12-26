@@ -27,7 +27,8 @@ class CustomBuilder(Builder):
                  **kwargs):
         super().__init__(pkg, **kwargs)
 
-        symbols = self._expr_symbols(pkg.path_bases(builder=self))
+        path_bases = pkg.path_bases(builder=self)
+        symbols = self._options.expr_symbols.augment(paths=path_bases)
         cmds_type = types.maybe(types.list_of(types.shell_args()), default=[])
 
         T = types.TypeCheck(locals(), symbols)

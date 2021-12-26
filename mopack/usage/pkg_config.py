@@ -66,7 +66,7 @@ class PkgConfigUsage(Usage):
         super().__init__(pkg, inherit_defaults=inherit_defaults)
 
         path_bases = pkg.path_bases(builder=True)
-        symbols = self._expr_symbols(path_bases)
+        symbols = self._options.expr_symbols.augment(paths=path_bases)
         pkg_default = DefaultResolver(self, symbols, inherit_defaults,
                                       pkg.name)
         buildbase = preferred_path_base('builddir', path_bases)

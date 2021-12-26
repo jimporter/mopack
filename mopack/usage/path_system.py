@@ -96,7 +96,7 @@ class _SubmoduleMapping(FreezeDried):
 
         srcbase = preferred_path_base('srcdir', path_bases)
         buildbase = preferred_path_base('builddir', path_bases)
-        symbols = {**symbols, **submod.expr_symbols}
+        symbols = symbols.augment(symbols=submod.expr_symbols)
 
         result = type(self).__new__(type(self))
         T = types.TypeCheck(context, symbols, dest=result)
@@ -150,7 +150,7 @@ class PathUsage(Usage):
         super().__init__(pkg, inherit_defaults=inherit_defaults)
 
         path_bases = pkg.path_bases(builder=True)
-        symbols = self._expr_symbols(path_bases)
+        symbols = self._options.expr_symbols.augment(paths=path_bases)
         pkg_default = DefaultResolver(self, symbols, inherit_defaults,
                                       pkg.name)
         srcbase = preferred_path_base('srcdir', path_bases)
@@ -301,7 +301,7 @@ class PathUsage(Usage):
     def get_usage(self, pkg, submodules, pkgdir):
         if submodules and self.submodule_map:
             path_bases = pkg.path_bases(builder=True)
-            symbols = self._expr_symbols(path_bases)
+            symbols = self._options.expr_symbols.augment(paths=path_bases)
             mappings = [self._get_submodule_mapping(symbols, path_bases, i)
                         for i in submodules]
         else:

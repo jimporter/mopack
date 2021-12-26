@@ -6,8 +6,6 @@ from ..base_options import BaseOptions, OptionsHolder
 from ..freezedried import FreezeDried
 from ..iterutils import listify
 from ..package_defaults import DefaultResolver
-from ..path import Path
-from ..placeholder import placeholder
 from ..types import FieldKeyError, FieldValueError, try_load_config
 from ..usage import Usage, make_usage
 
@@ -59,8 +57,7 @@ class Package(OptionsHolder):
 
     @property
     def _expr_symbols(self):
-        return {**self._options.expr_symbols,
-                'cfgdir': placeholder(Path('', 'cfgdir'))}
+        return self._options.expr_symbols.augment(paths=['cfgdir'])
 
     @property
     def config_dir(self):

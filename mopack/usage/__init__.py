@@ -1,8 +1,6 @@
 from pkg_resources import load_entry_point
 
 from ..base_options import OptionsHolder
-from ..path import Path
-from ..placeholder import placeholder
 from ..types import FieldValueError, dependency_string, wrap_field_error
 
 
@@ -29,10 +27,6 @@ class Usage(OptionsHolder):
 
     def __init__(self, pkg, *, inherit_defaults=False):
         super().__init__(pkg._options)
-
-    def _expr_symbols(self, path_bases):
-        path_vars = {i: placeholder(Path('', i)) for i in path_bases}
-        return {**self._options.expr_symbols, **path_vars}
 
     def version(self, pkg, pkgdir):
         raise NotImplementedError('Usage.version not implemented')

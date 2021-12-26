@@ -4,8 +4,6 @@ from pkg_resources import load_entry_point
 
 from ..base_options import BaseOptions, OptionsHolder
 from ..freezedried import FreezeDried
-from ..path import Path
-from ..placeholder import placeholder
 from ..types import FieldValueError, wrap_field_error
 
 
@@ -26,10 +24,6 @@ class Builder(OptionsHolder):
     def __init__(self, pkg):
         super().__init__(pkg._options)
         self.name = pkg.name
-
-    def _expr_symbols(self, path_bases):
-        path_vars = {i: placeholder(Path('', i)) for i in path_bases}
-        return {**self._options.expr_symbols, **path_vars}
 
     def path_bases(self):
         return ('builddir',)

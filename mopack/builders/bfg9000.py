@@ -42,7 +42,8 @@ class Bfg9000Builder(Builder):
     def __init__(self, pkg, *, extra_args=None, **kwargs):
         super().__init__(pkg, **kwargs)
 
-        symbols = self._expr_symbols(pkg.path_bases(builder=self))
+        path_bases = pkg.path_bases(builder=self)
+        symbols = self._options.expr_symbols.augment(paths=path_bases)
         T = types.TypeCheck(locals(), symbols)
         T.extra_args(types.shell_args(none_ok=True))
 
