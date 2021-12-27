@@ -35,6 +35,9 @@ class Usage(OptionsHolder):
         return {'name': dependency_string(pkg.name, submodules),
                 'type': self.type, **kwargs}
 
+    def get_usage(self, pkg, submodules, pkgdir):
+        raise NotImplementedError('Usage.get_usage not implemented')
+
     def __repr__(self):
         return '<{}, {}>'.format(type(self).__name__, self.__dict__)
 
