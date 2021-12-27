@@ -456,21 +456,21 @@ class TestGit(SDistTestCase):
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_post(newpkg1, self.pkgdir), True)
             mlog.assert_called_once()
-            mclean.assert_called_once_with(self.pkgdir)
+            mclean.assert_called_once_with(oldpkg, self.pkgdir)
 
         # Git -> Apt
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_post(newpkg2, self.pkgdir), True)
             mlog.assert_called_once()
-            mclean.assert_called_once_with(self.pkgdir)
+            mclean.assert_called_once_with(oldpkg, self.pkgdir)
 
         # Git -> nothing
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_post(None, self.pkgdir), True)
             mlog.assert_called_once()
-            mclean.assert_called_once_with(self.pkgdir)
+            mclean.assert_called_once_with(oldpkg, self.pkgdir)
 
     def test_clean_all(self):
         otherssh = 'git@github.com:user/other.git'
@@ -500,7 +500,7 @@ class TestGit(SDistTestCase):
             self.assertEqual(oldpkg.clean_all(newpkg1, self.pkgdir),
                              (True, True))
             self.assertEqual(mlog.call_count, 2)
-            mclean.assert_called_once_with(self.pkgdir)
+            mclean.assert_called_once_with(oldpkg, self.pkgdir)
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
         # Git -> Apt
@@ -510,7 +510,7 @@ class TestGit(SDistTestCase):
             self.assertEqual(oldpkg.clean_all(newpkg2, self.pkgdir),
                              (True, True))
             self.assertEqual(mlog.call_count, 2)
-            mclean.assert_called_once_with(self.pkgdir)
+            mclean.assert_called_once_with(oldpkg, self.pkgdir)
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
         # Git -> nothing
@@ -520,7 +520,7 @@ class TestGit(SDistTestCase):
             self.assertEqual(oldpkg.clean_all(None, self.pkgdir),
                              (True, True))
             self.assertEqual(mlog.call_count, 2)
-            mclean.assert_called_once_with(self.pkgdir)
+            mclean.assert_called_once_with(oldpkg, self.pkgdir)
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
     def test_equality(self):

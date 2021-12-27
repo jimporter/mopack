@@ -371,28 +371,28 @@ class TestDirectory(SDistTestCase):
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_post(newpkg1, self.pkgdir), True)
             mlog.assert_called_once()
-            mclean.assert_called_once_with(self.pkgdir)
+            mclean.assert_called_once_with(oldpkg, self.pkgdir)
 
         # Directory -> Apt
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_post(newpkg2, self.pkgdir), True)
             mlog.assert_called_once()
-            mclean.assert_called_once_with(self.pkgdir)
+            mclean.assert_called_once_with(oldpkg, self.pkgdir)
 
         # Directory -> nothing
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_post(None, self.pkgdir), True)
             mlog.assert_called_once()
-            mclean.assert_called_once_with(self.pkgdir)
+            mclean.assert_called_once_with(oldpkg, self.pkgdir)
 
         # Directory -> nothing (quiet)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_post(None, self.pkgdir, True), True)
             mlog.assert_not_called()
-            mclean.assert_called_once_with(self.pkgdir)
+            mclean.assert_called_once_with(oldpkg, self.pkgdir)
 
     def test_clean_all(self):
         otherpath = os.path.join(test_data_dir, 'other_project')
@@ -414,7 +414,7 @@ class TestDirectory(SDistTestCase):
             self.assertEqual(oldpkg.clean_all(newpkg1, self.pkgdir),
                              (False, True))
             mlog.assert_called_once()
-            mclean.assert_called_once_with(self.pkgdir)
+            mclean.assert_called_once_with(oldpkg, self.pkgdir)
 
         # Directory -> Apt
         with mock.patch('mopack.log.pkg_clean') as mlog, \
@@ -422,7 +422,7 @@ class TestDirectory(SDistTestCase):
             self.assertEqual(oldpkg.clean_all(newpkg2, self.pkgdir),
                              (False, True))
             mlog.assert_called_once()
-            mclean.assert_called_once_with(self.pkgdir)
+            mclean.assert_called_once_with(oldpkg, self.pkgdir)
 
         # Directory -> nothing
         with mock.patch('mopack.log.pkg_clean') as mlog, \
@@ -430,7 +430,7 @@ class TestDirectory(SDistTestCase):
             self.assertEqual(oldpkg.clean_all(None, self.pkgdir),
                              (False, True))
             mlog.assert_called_once()
-            mclean.assert_called_once_with(self.pkgdir)
+            mclean.assert_called_once_with(oldpkg, self.pkgdir)
 
     def test_equality(self):
         otherpath = os.path.join(test_data_dir, 'other_project')

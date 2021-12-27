@@ -35,9 +35,9 @@ class CustomBuilder(Builder):
         T.build_commands(cmds_type)
         T.deploy_commands(cmds_type)
 
-    def _execute(self, logfile, commands, **kwargs):
+    def _execute(self, logfile, commands, path_values):
         for line in commands:
-            line = line.fill(**kwargs)
+            line = line.fill(**path_values)
             if line[0] == 'cd':
                 with logfile.synthetic_command(line):
                     if len(line) != 2:
@@ -46,18 +46,16 @@ class CustomBuilder(Builder):
             else:
                 logfile.check_call(line)
 
-    def build(self, pkgdir, srcdir):
-        builddir = self._builddir(pkgdir)
+    def build(self, pkg, pkgdir):
+        path_values = pkg.path_values(pkgdir, builder=self)
 
         with LogFile.open(pkgdir, self.name) as logfile:
-            with pushd(srcdir):
-                self._execute(logfile, self.build_commands, srcdir=srcdir,
-                              builddir=builddir)
+            with pushd(path_values['srcdir']):
+                self._execute(logfile, self.build_commands, path_values)
 
-    def deploy(self, pkgdir, srcdir):
-        builddir = self._builddir(pkgdir)
+    def deploy(self, pkg, pkgdir):
+        path_values = pkg.path_values(pkgdir, builder=self)
 
         with LogFile.open(pkgdir, self.name, kind='deploy') as logfile:
-            with pushd(builddir):
-                self._execute(logfile, self.deploy_commands, srcdir=srcdir,
-                              builddir=builddir)
+            with pushd(path_values['builddir']):
+                self._execute(logfile, self.deploy_commands, path_values)

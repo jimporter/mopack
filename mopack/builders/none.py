@@ -15,14 +15,11 @@ class NoneBuilder(Builder):
     def path_values(self, pkgdir):
         return {}
 
-    def _builddir(self, pkgdir):
-        raise NotImplementedError()
-
-    def clean(self, pkgdir):
+    def clean(self, pkg, pkgdir):
         pass
 
-    def build(self, pkgdir, srcdir):
+    def build(self, pkg, pkgdir):
         pass
 
-    def deploy(self, pkgdir, srcdir):
+    def deploy(self, pkg, pkgdir):
         pass

@@ -15,12 +15,14 @@ from mopack.types import Unset
 class TestBfg9000Builder(BuilderTest):
     builder_type = Bfg9000Builder
 
-    def check_build(self, builder, extra_args=[]):
+    def check_build(self, builder, extra_args=[], *, pkg=None):
+        if pkg is None:
+            pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
         builddir = os.path.join(self.pkgdir, 'build', 'foo')
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.run') as mcall:  # noqa
-            builder.build(self.pkgdir, self.srcdir)
+            builder.build(pkg, self.pkgdir)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')
@@ -35,7 +37,8 @@ class TestBfg9000Builder(BuilderTest):
             )
 
     def test_basic(self):
-        builder = self.make_builder('foo')
+        pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
+        builder = self.make_builder(pkg)
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, ShellArguments())
         self.check_build(builder)
@@ -43,7 +46,7 @@ class TestBfg9000Builder(BuilderTest):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.run') as mcall:  # noqa
-            builder.deploy(self.pkgdir, self.srcdir)
+            builder.deploy(pkg, self.pkgdir)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'deploy', 'foo.log'
             ), 'a')
@@ -78,12 +81,13 @@ class TestBfg9000Builder(BuilderTest):
         self.check_build(builder, extra_args=['--prefix', '/usr/local'])
 
     def test_clean(self):
-        builder = self.make_builder('foo')
-        srcdir = os.path.join(self.pkgdir, 'build', 'foo')
+        pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
+        builder = self.make_builder(pkg)
+        builddir = os.path.join(self.pkgdir, 'build', 'foo')
 
         with mock.patch('shutil.rmtree') as mrmtree:
-            builder.clean(self.pkgdir)
-            mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
+            builder.clean(pkg, self.pkgdir)
+            mrmtree.assert_called_once_with(builddir, ignore_errors=True)
 
     def test_usage(self):
         opts = self.make_options()

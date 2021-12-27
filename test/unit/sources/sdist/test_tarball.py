@@ -408,28 +408,28 @@ class TestTarball(SDistTestCase):
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_post(newpkg1, self.pkgdir), True)
             mlog.assert_called_once()
-            mclean.assert_called_once_with(self.pkgdir)
+            mclean.assert_called_once_with(oldpkg, self.pkgdir)
 
         # Tarball -> Apt
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_post(newpkg2, self.pkgdir), True)
             mlog.assert_called_once()
-            mclean.assert_called_once_with(self.pkgdir)
+            mclean.assert_called_once_with(oldpkg, self.pkgdir)
 
         # Tarball -> nothing
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_post(None, self.pkgdir), True)
             mlog.assert_called_once()
-            mclean.assert_called_once_with(self.pkgdir)
+            mclean.assert_called_once_with(oldpkg, self.pkgdir)
 
         # Tarball -> nothing (quiet)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch(mock_bfgclean) as mclean:  # noqa
             self.assertEqual(oldpkg.clean_post(None, self.pkgdir, True), True)
             mlog.assert_not_called()
-            mclean.assert_called_once_with(self.pkgdir)
+            mclean.assert_called_once_with(oldpkg, self.pkgdir)
 
     def test_clean_all(self):
         otherpath = os.path.join(test_data_dir, 'other_project.tar.gz')
@@ -458,7 +458,7 @@ class TestTarball(SDistTestCase):
             self.assertEqual(oldpkg.clean_all(newpkg1, self.pkgdir),
                              (True, True))
             self.assertEqual(mlog.call_count, 2)
-            mclean.assert_called_once_with(self.pkgdir)
+            mclean.assert_called_once_with(oldpkg, self.pkgdir)
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
         # Tarball -> Apt
@@ -468,7 +468,7 @@ class TestTarball(SDistTestCase):
             self.assertEqual(oldpkg.clean_all(newpkg2, self.pkgdir),
                              (True, True))
             self.assertEqual(mlog.call_count, 2)
-            mclean.assert_called_once_with(self.pkgdir)
+            mclean.assert_called_once_with(oldpkg, self.pkgdir)
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
         # Tarball -> nothing
@@ -478,7 +478,7 @@ class TestTarball(SDistTestCase):
             self.assertEqual(oldpkg.clean_all(None, self.pkgdir),
                              (True, True))
             self.assertEqual(mlog.call_count, 2)
-            mclean.assert_called_once_with(self.pkgdir)
+            mclean.assert_called_once_with(oldpkg, self.pkgdir)
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
         # Tarball -> nothing (quiet)
@@ -488,7 +488,7 @@ class TestTarball(SDistTestCase):
             self.assertEqual(oldpkg.clean_all(None, self.pkgdir, True),
                              (True, True))
             mlog.assert_not_called()
-            mclean.assert_called_once_with(self.pkgdir)
+            mclean.assert_called_once_with(oldpkg, self.pkgdir)
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 
     def test_equality(self):

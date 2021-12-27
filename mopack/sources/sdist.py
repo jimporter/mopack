@@ -124,18 +124,18 @@ class SDistPackage(Package):
 
         if not quiet:
             log.pkg_clean(self.name)
-        self.builder.clean(pkgdir)
+        self.builder.clean(self, pkgdir)
         return True
 
     def resolve(self, pkgdir):
         log.pkg_resolve(self.name)
-        self.builder.build(pkgdir, self._srcdir(pkgdir))
+        self.builder.build(self, pkgdir)
         self.resolved = True
 
     def deploy(self, pkgdir):
         if self.should_deploy:
             log.pkg_deploy(self.name)
-            self.builder.deploy(pkgdir, self._srcdir(pkgdir))
+            self.builder.deploy(self, pkgdir)
 
 
 @FreezeDried.fields(rehydrate={'path': Path})

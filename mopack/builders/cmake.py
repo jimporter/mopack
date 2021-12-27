@@ -58,23 +58,25 @@ class CMakeBuilder(Builder):
                             .format(k.upper(), os.path.abspath(v)))
         return args
 
-    def build(self, pkgdir, srcdir):
-        builddir = self._builddir(pkgdir)
+    def build(self, pkg, pkgdir):
+        path_values = pkg.path_values(pkgdir, builder=self)
 
         cmake = get_cmd(self._common_options.env, 'CMAKE', 'cmake')
         ninja = get_cmd(self._common_options.env, 'NINJA', 'ninja')
         with LogFile.open(pkgdir, self.name) as logfile:
-            with pushd(builddir, makedirs=True, exist_ok=True):
+            with pushd(path_values['builddir'], makedirs=True, exist_ok=True):
                 logfile.check_call(
-                    cmake + [srcdir, '-G', 'Ninja'] +
+                    cmake + [path_values['srcdir'], '-G', 'Ninja'] +
                     self._toolchain_args(self._this_options.toolchain) +
                     self._install_args(self._common_options.deploy_paths) +
-                    self.extra_args.fill(srcdir=srcdir, builddir=builddir)
+                    self.extra_args.fill(**path_values)
                 )
                 logfile.check_call(ninja)
 
-    def deploy(self, pkgdir, srcdir):
+    def deploy(self, pkg, pkgdir):
+        path_values = pkg.path_values(pkgdir, builder=self)
+
         ninja = get_cmd(self._common_options.env, 'NINJA', 'ninja')
         with LogFile.open(pkgdir, self.name, kind='deploy') as logfile:
-            with pushd(self._builddir(pkgdir)):
+            with pushd(path_values['builddir']):
                 logfile.check_call(ninja + ['install'])

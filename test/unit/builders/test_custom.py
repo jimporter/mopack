@@ -15,7 +15,9 @@ from mopack.sources.sdist import DirectoryPackage
 class TestCustomBuilder(BuilderTest):
     builder_type = CustomBuilder
 
-    def check_build(self, builder, build_commands=None):
+    def check_build(self, builder, build_commands=None, *, pkg=None):
+        if pkg is None:
+            pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
         if build_commands is None:
             builddir = os.path.join(self.pkgdir, 'build', builder.name)
             build_commands = [i.fill(srcdir=self.srcdir, builddir=builddir)
@@ -24,7 +26,7 @@ class TestCustomBuilder(BuilderTest):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.custom.pushd'), \
              mock.patch('subprocess.run') as mcall:  # noqa
-            builder.build(self.pkgdir, self.srcdir)
+            builder.build(pkg, self.pkgdir)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')
@@ -35,7 +37,7 @@ class TestCustomBuilder(BuilderTest):
 
     def test_basic(self):
         builder = self.make_builder('foo', build_commands=[
-            'configure', 'make'
+            'configure', 'make',
         ])
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.build_commands, [
@@ -74,9 +76,9 @@ class TestCustomBuilder(BuilderTest):
         ])
 
     def test_deploy(self):
-        builder = self.make_builder('foo', build_commands=['make'],
-                                    deploy_commands=['make install'],
-                                    usage='pkg_config')
+        pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
+        builder = self.make_builder(pkg, build_commands=['make'],
+                                    deploy_commands=['make install'])
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.build_commands, [
             ShellArguments(['make']),
@@ -89,7 +91,7 @@ class TestCustomBuilder(BuilderTest):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.custom.pushd'), \
              mock.patch('subprocess.run') as mcall:  # noqa
-            builder.deploy(self.pkgdir, self.srcdir)
+            builder.deploy(pkg, self.pkgdir)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'deploy', 'foo.log'
             ), 'a')
@@ -121,20 +123,22 @@ class TestCustomBuilder(BuilderTest):
             mcd.assert_called_once_with(builddir)
 
     def test_cd_invalid(self):
-        builder = self.make_builder('foo', build_commands=['cd foo bar'])
+        pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
+        builder = self.make_builder(pkg, build_commands=['cd foo bar'])
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.custom.pushd'), \
              self.assertRaises(RuntimeError):  # noqa
-            builder.build(self.pkgdir, self.srcdir)
+            builder.build(pkg, self.pkgdir)
 
     def test_clean(self):
-        builder = self.make_builder('foo', build_commands=['make'])
-        srcdir = os.path.join(self.pkgdir, 'build', 'foo')
+        pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
+        builder = self.make_builder(pkg, build_commands=['make'])
+        builddir = os.path.join(self.pkgdir, 'build', 'foo')
 
         with mock.patch('shutil.rmtree') as mrmtree:
-            builder.clean(self.pkgdir)
-            mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
+            builder.clean(pkg, self.pkgdir)
+            mrmtree.assert_called_once_with(builddir, ignore_errors=True)
 
     def test_usage(self):
         opts = self.make_options()

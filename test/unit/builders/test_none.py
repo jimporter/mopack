@@ -20,19 +20,21 @@ class TestNoneBuilder(BuilderTest):
             mcall.assert_not_called()
 
     def test_basic(self):
-        builder = self.make_builder('foo')
+        pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
+        builder = self.make_builder(pkg)
         self.assertEqual(builder.name, 'foo')
         self.check_build(builder)
 
         with mock.patch('subprocess.run') as mcall:
-            builder.deploy(self.pkgdir, self.srcdir)
+            builder.deploy(pkg, self.pkgdir)
             mcall.assert_not_called()
 
     def test_clean(self):
-        builder = self.make_builder('foo')
+        pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
+        builder = self.make_builder(pkg)
 
         with mock.patch('shutil.rmtree') as mrmtree:
-            builder.clean(self.pkgdir)
+            builder.clean(pkg, self.pkgdir)
             mrmtree.assert_not_called()
 
     def test_usage(self):
