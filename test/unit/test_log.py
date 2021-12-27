@@ -103,7 +103,7 @@ class TestInit(TestCase):
     def test_colors(self):
         with mock.patch('logging.addLevelName'), \
              mock.patch('logging.root.addHandler'), \
-             mock.patch('logging.root.setLevel'):  # noqa
+             mock.patch('logging.root.setLevel'):
             with mock.patch('colorama.init') as mcolorama:
                 log.init()
                 mcolorama.assert_called_once_with()
@@ -120,7 +120,7 @@ class TestInit(TestCase):
         with mock.patch('logging.addLevelName'), \
              mock.patch('logging.root.addHandler'), \
              mock.patch('logging.root.setLevel'), \
-             mock.patch('colorama.init'):  # noqa
+             mock.patch('colorama.init'):
             with mock.patch('warnings.filterwarnings') as mwarning:
                 log.init()
                 mwarning.assert_called_once_with('default')
@@ -135,7 +135,7 @@ class TestInit(TestCase):
     def test_debug(self):
         with mock.patch('logging.addLevelName'), \
              mock.patch('logging.root.addHandler'), \
-             mock.patch('colorama.init'):  # noqa
+             mock.patch('colorama.init'):
             with mock.patch('logging.root.setLevel') as mlevel:
                 log.init()
                 mlevel.assert_called_once_with(log.INFO)
@@ -161,7 +161,7 @@ class TestLogFile(TestCase):
     def test_check_call(self):
         comp_proc = CompletedProcess(None, 0, stdout='stdout')
         with mock.patch('builtins.open', mock.mock_open()) as mopen, \
-             mock.patch('subprocess.run', return_value=comp_proc):  # noqa
+             mock.patch('subprocess.run', return_value=comp_proc):
             with log.LogFile.open('pkgdir', 'package') as logfile:
                 logfile.check_call(['cmd', '--arg'])
                 output = ''.join(i[-2][0] for i in mopen().write.mock_calls)
@@ -172,7 +172,7 @@ class TestLogFile(TestCase):
         msg = "Command 'cmd --arg' returned non-zero exit status 1"
 
         with mock.patch('builtins.open', mock.mock_open()) as mopen, \
-             mock.patch('subprocess.run', side_effect=err):  # noqa
+             mock.patch('subprocess.run', side_effect=err):
             with log.LogFile.open('pkgdir', 'package') as logfile:
                 with self.assertRaises(SubprocessError, msg=msg):
                     logfile.check_call(['cmd', '--arg'])
@@ -185,7 +185,7 @@ class TestLogFile(TestCase):
                '  stdout\n  stdout')
 
         with mock.patch('builtins.open', mock.mock_open()) as mopen, \
-             mock.patch('subprocess.run', side_effect=err):  # noqa
+             mock.patch('subprocess.run', side_effect=err):
             with log.LogFile.open('pkgdir', 'package') as logfile:
                 with self.assertRaises(SubprocessError, msg=msg):
                     logfile.check_call(['cmd', '--arg'])
@@ -197,7 +197,7 @@ class TestLogFile(TestCase):
         msg = "Command 'cmd --arg' failed:\n  bad"
 
         with mock.patch('builtins.open', mock.mock_open()) as mopen, \
-             mock.patch('subprocess.run', side_effect=err):  # noqa
+             mock.patch('subprocess.run', side_effect=err):
             with log.LogFile.open('pkgdir', 'package') as logfile:
                 with self.assertRaises(OSError, msg=msg):
                     logfile.check_call(['cmd', '--arg'])

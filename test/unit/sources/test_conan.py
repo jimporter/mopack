@@ -39,7 +39,7 @@ class TestConan(SourceTest):
 
     def check_resolve_all(self, pkgs, conanfile, extra_args=[]):
         with mock_open_log(mock_open_write()) as mopen, \
-             mock.patch('subprocess.run') as mrun:  # noqa
+             mock.patch('subprocess.run') as mrun:
             ConanPackage.resolve_all(pkgs, self.pkgdir)
 
             self.assertEqual(mopen.mock_file.getvalue(), conanfile)
@@ -288,14 +288,14 @@ class TestConan(SourceTest):
 
         # Conan -> Conan
         with mock.patch('mopack.log.pkg_clean') as mlog, \
-             mock.patch('os.remove') as mremove:  # noqa
+             mock.patch('os.remove') as mremove:
             self.assertEqual(oldpkg.clean_post(newpkg1, self.pkgdir), False)
             mlog.assert_not_called()
             mremove.assert_not_called()
 
         # Conan -> Apt
         with mock.patch('mopack.log.pkg_clean') as mlog, \
-             mock.patch('os.remove') as mremove:  # noqa
+             mock.patch('os.remove') as mremove:
             self.assertEqual(oldpkg.clean_post(newpkg2, self.pkgdir), True)
             mlog.assert_called_once()
             mremove.assert_called_once_with(os.path.join(
@@ -304,7 +304,7 @@ class TestConan(SourceTest):
 
         # Conan -> nothing
         with mock.patch('mopack.log.pkg_clean') as mlog, \
-             mock.patch('os.remove') as mremove:  # noqa
+             mock.patch('os.remove') as mremove:
             self.assertEqual(oldpkg.clean_post(None, self.pkgdir), True)
             mlog.assert_called_once()
             mremove.assert_called_once_with(os.path.join(
@@ -313,7 +313,7 @@ class TestConan(SourceTest):
 
         # Conan -> nothing (quiet)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
-             mock.patch('os.remove') as mremove:  # noqa
+             mock.patch('os.remove') as mremove:
             self.assertEqual(oldpkg.clean_post(None, self.pkgdir, True), True)
             mlog.assert_not_called()
             mremove.assert_called_once_with(os.path.join(
@@ -322,8 +322,7 @@ class TestConan(SourceTest):
 
         # Error deleting
         with mock.patch('mopack.log.pkg_clean') as mlog, \
-             mock.patch('os.remove',
-                        side_effect=FileNotFoundError) as mremove:  # noqa
+             mock.patch('os.remove', side_effect=FileNotFoundError) as mremove:
             self.assertEqual(oldpkg.clean_post(None, self.pkgdir), True)
             mlog.assert_called_once()
             mremove.assert_called_once_with(os.path.join(
@@ -337,7 +336,7 @@ class TestConan(SourceTest):
 
         # Conan -> Conan
         with mock.patch('mopack.log.pkg_clean') as mlog, \
-             mock.patch('os.remove') as mremove:  # noqa
+             mock.patch('os.remove') as mremove:
             self.assertEqual(oldpkg.clean_all(newpkg1, self.pkgdir),
                              (False, False))
             mlog.assert_not_called()
@@ -345,7 +344,7 @@ class TestConan(SourceTest):
 
         # Conan -> Apt
         with mock.patch('mopack.log.pkg_clean') as mlog, \
-             mock.patch('os.remove') as mremove:  # noqa
+             mock.patch('os.remove') as mremove:
             self.assertEqual(oldpkg.clean_all(newpkg2, self.pkgdir),
                              (False, True))
             mlog.assert_called_once()
@@ -355,7 +354,7 @@ class TestConan(SourceTest):
 
         # Conan -> nothing
         with mock.patch('mopack.log.pkg_clean') as mlog, \
-             mock.patch('os.remove') as mremove:  # noqa
+             mock.patch('os.remove') as mremove:
             self.assertEqual(oldpkg.clean_all(None, self.pkgdir),
                              (False, True))
             mlog.assert_called_once()
@@ -365,8 +364,7 @@ class TestConan(SourceTest):
 
         # Error deleting
         with mock.patch('mopack.log.pkg_clean') as mlog, \
-             mock.patch('os.remove',
-                        side_effect=FileNotFoundError) as mremove:  # noqa
+             mock.patch('os.remove', side_effect=FileNotFoundError) as mremove:
             self.assertEqual(oldpkg.clean_all(None, self.pkgdir),
                              (False, True))
             mlog.assert_called_once()

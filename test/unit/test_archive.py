@@ -14,17 +14,17 @@ class TestArchive(TestCase):
             mtar.assert_called_once_with(mode='r:tar', fileobj=f)
 
         with mock.patch('tarfile.open') as mtar, \
-             mock.patch('zipfile.is_zipfile', return_value=False):  # noqa
+             mock.patch('zipfile.is_zipfile', return_value=False):
             archive.open(f, 'r:*')
             mtar.assert_called_once_with(mode='r:*', fileobj=f)
 
         with mock.patch('tarfile.open') as mtar, \
-             mock.patch('zipfile.is_zipfile', return_value=False):  # noqa
+             mock.patch('zipfile.is_zipfile', return_value=False):
             archive.open(f, 'r')
             mtar.assert_called_once_with(mode='r:*', fileobj=f)
 
         with mock.patch('tarfile.open') as mtar, \
-             mock.patch('zipfile.is_zipfile', return_value=False):  # noqa
+             mock.patch('zipfile.is_zipfile', return_value=False):
             archive.open(f)
             mtar.assert_called_once_with(mode='r:*', fileobj=f)
 
@@ -35,17 +35,17 @@ class TestArchive(TestCase):
             mzip.assert_called_once_with(f, 'r')
 
         with mock.patch('zipfile.ZipFile') as mzip, \
-             mock.patch('zipfile.is_zipfile', return_value=True):  # noqa
+             mock.patch('zipfile.is_zipfile', return_value=True):
             archive.open(f, 'r:*')
             mzip.assert_called_once_with(f, 'r')
 
         with mock.patch('zipfile.ZipFile') as mzip, \
-             mock.patch('zipfile.is_zipfile', return_value=True):  # noqa
+             mock.patch('zipfile.is_zipfile', return_value=True):
             archive.open(f, 'r')
             mzip.assert_called_once_with(f, 'r')
 
         with mock.patch('zipfile.ZipFile') as mzip, \
-             mock.patch('zipfile.is_zipfile', return_value=True):  # noqa
+             mock.patch('zipfile.is_zipfile', return_value=True):
             archive.open(f)
             mzip.assert_called_once_with(f, 'r')
 
@@ -71,7 +71,7 @@ class TestArchive(TestCase):
     def test_extract(self):
         f = mock.MagicMock()
         with mock.patch('tarfile.open') as mtar, \
-             mock.patch('tarfile.TarFile', type(mtar())):  # noqa
+             mock.patch('tarfile.TarFile', type(mtar())):
             with archive.open(f, 'r:tar') as arc:
                 arc.extract('file.txt')
                 arc.extract('file2.txt', 'path')
@@ -96,7 +96,7 @@ class TestArchive(TestCase):
     def test_extractall(self):
         f = mock.MagicMock()
         with mock.patch('tarfile.open') as mtar, \
-             mock.patch('tarfile.TarFile', type(mtar())):  # noqa
+             mock.patch('tarfile.TarFile', type(mtar())):
             with archive.open(f, 'r:tar') as arc:
                 arc.extractall()
                 arc.extractall('path')

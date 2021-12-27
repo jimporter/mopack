@@ -11,7 +11,7 @@ class TestPushd(TestCase):
         with mock.patch('os.getcwd', return_value='dir'), \
              mock.patch('os.chdir') as mchdir, \
              mock.patch('os.makedirs') as mmakedirs, \
-             pushd('foo'):  # noqa
+             pushd('foo'):
             pass
 
         self.assertEqual(mchdir.mock_calls, [mock.call('foo'),
@@ -22,7 +22,7 @@ class TestPushd(TestCase):
         with mock.patch('os.getcwd', return_value='dir'), \
              mock.patch('os.chdir') as mchdir, \
              mock.patch('os.makedirs') as mmakedirs, \
-             pushd('foo', makedirs=True):  # noqa
+             pushd('foo', makedirs=True):
             pass
 
         self.assertEqual(mchdir.mock_calls, [mock.call('foo'),
@@ -125,7 +125,7 @@ class TestPath(TestCase):
             Path('foo', Path.Base.absolute)
 
         with mock.patch('os.path', ntpath), \
-             self.assertRaises(ValueError):  # noqa
+             self.assertRaises(ValueError):
             Path('C:foo', Path.Base.cfgdir)
 
     def test_ensure_path(self):

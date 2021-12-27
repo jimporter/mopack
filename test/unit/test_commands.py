@@ -33,7 +33,7 @@ class TestFetch(CommandsTestCase):
         cfg = self.make_empty_config()
         with mock.patch('os.path.exists', return_value=False), \
              mock.patch('builtins.open',
-                        side_effect=FileNotFoundError()):  # noqa
+                        side_effect=FileNotFoundError()):
             metadata = commands.fetch(cfg, self.pkgdir)
             self.assertEqual(metadata.files, [])
             self.assertEqual(metadata.implicit_files, [])
@@ -43,7 +43,7 @@ class TestFetch(CommandsTestCase):
         cfg = self.make_apt_config()
         with mock.patch('os.path.exists', return_value=False), \
              mock.patch('builtins.open', side_effect=FileNotFoundError()), \
-             mock.patch.object(AptPackage, 'fetch') as mfetch:  # noqa
+             mock.patch.object(AptPackage, 'fetch') as mfetch:
             metadata = commands.fetch(cfg, self.pkgdir)
             self.assertEqual(metadata.files, [os.path.abspath('mopack.yml')])
             self.assertEqual(metadata.implicit_files, [])
@@ -85,7 +85,7 @@ class TestFetch(CommandsTestCase):
              mock.patch('mopack.commands.Metadata.try_load',
                         return_value=old_metadata), \
              mock.patch.object(AptPackage, 'fetch') as mfetch, \
-             mock.patch.object(AptPackage, 'clean_post') as mclean:  # noqa
+             mock.patch.object(AptPackage, 'clean_post') as mclean:
             metadata = commands.fetch(cfg, self.pkgdir)
             self.assertEqual(metadata.files, [os.path.abspath('mopack.yml')])
             self.assertEqual(metadata.implicit_files, [])
@@ -100,7 +100,7 @@ class TestFetch(CommandsTestCase):
 class TestResolve(CommandsTestCase):
     def test_empty(self):
         with mock.patch('mopack.log.info') as mlog, \
-             mock.patch.object(commands.Metadata, 'save') as msave:  # noqa
+             mock.patch.object(commands.Metadata, 'save') as msave:
             commands.resolve(self.make_empty_config(), self.pkgdir)
             mlog.assert_called_once_with('no inputs')
             msave.assert_not_called()
@@ -117,7 +117,7 @@ class TestResolve(CommandsTestCase):
 
         with mock.patch('mopack.commands.fetch', return_value=metadata), \
              mock.patch.object(DirectoryPackage, 'resolve') as mresolve, \
-             mock.patch.object(commands.Metadata, 'save') as msave:  # noqa
+             mock.patch.object(commands.Metadata, 'save') as msave:
             commands.resolve(cfg, self.pkgdir)
             mresolve.assert_called_once()
             self.assertEqual(msave.call_count, 2)
@@ -136,7 +136,7 @@ class TestResolve(CommandsTestCase):
              mock.patch.object(DirectoryPackage, 'needs_dependencies',
                                False), \
              mock.patch.object(DirectoryPackage, 'resolve') as mresolve, \
-             mock.patch.object(commands.Metadata, 'save') as msave:  # noqa
+             mock.patch.object(commands.Metadata, 'save') as msave:
             commands.resolve(cfg, self.pkgdir)
             mresolve.assert_called_once()
             msave.assert_called_once()
@@ -155,7 +155,7 @@ class TestResolve(CommandsTestCase):
              mock.patch.object(DirectoryPackage, 'resolve',
                                side_effect=RuntimeError()) as mresolve, \
              mock.patch.object(DirectoryPackage, 'clean_post') as mclean, \
-             mock.patch.object(commands.Metadata, 'save') as msave:  # noqa
+             mock.patch.object(commands.Metadata, 'save') as msave:
             with self.assertRaises(RuntimeError):
                 commands.resolve(cfg, self.pkgdir)
             mresolve.assert_called_once()
@@ -173,7 +173,7 @@ class TestResolve(CommandsTestCase):
 
         with mock.patch('mopack.commands.fetch', return_value=metadata), \
              mock.patch.object(AptPackage, 'resolve_all') as mresolve, \
-             mock.patch.object(commands.Metadata, 'save') as msave:  # noqa
+             mock.patch.object(commands.Metadata, 'save') as msave:
             commands.resolve(cfg, self.pkgdir)
             mresolve.assert_called_once()
             msave.assert_called_once()
@@ -191,7 +191,7 @@ class TestResolve(CommandsTestCase):
              mock.patch.object(AptPackage, 'resolve_all',
                                side_effect=RuntimeError()) as mresolve, \
              mock.patch.object(AptPackage, 'clean_post') as mclean, \
-             mock.patch.object(commands.Metadata, 'save') as msave:  # noqa
+             mock.patch.object(commands.Metadata, 'save') as msave:
             with self.assertRaises(RuntimeError):
                 commands.resolve(cfg, self.pkgdir)
             mresolve.assert_called_once()

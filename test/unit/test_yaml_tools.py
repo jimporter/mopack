@@ -194,13 +194,13 @@ class TestLoadFile(TestCase):
 
     def test_parse_error(self):
         with mock.patch('builtins.open', mock_open_data('&')), \
-             self.assertRaises(YamlParseError):  # noqa
+             self.assertRaises(YamlParseError):
             with load_file('file.yml'):
                 pass
 
     def test_user_error(self):
         with mock.patch('builtins.open', mock_open_data(self.yaml_data)), \
-             self.assertRaises(YamlParseError):  # noqa
+             self.assertRaises(YamlParseError):
             with load_file('file.yml', Loader=SafeLineLoader) as data:
                 raise MarkedYAMLError('context', data.mark.start, 'problem',
                                       data.marks['zoo'].start)

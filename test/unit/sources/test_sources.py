@@ -79,7 +79,7 @@ class TestMakePackage(SourceTest):
              mock.patch('mopack.usage.path_system.file_outdated',
                         return_value=True), \
              mock.patch('os.makedirs'), \
-             mock.patch('builtins.open'):  # noqa
+             mock.patch('builtins.open'):
             self.assertEqual(pkg.get_usage(['sub'], self.pkgdir), {
                 'name': 'foo[sub]', 'type': 'system', 'generated': True,
                 'auto_link': False, 'path': [self.pkgconfdir(None)],
@@ -102,7 +102,7 @@ class TestMakePackage(SourceTest):
              mock.patch('mopack.usage.path_system.file_outdated',
                         return_value=True), \
              mock.patch('os.makedirs'), \
-             mock.patch('builtins.open'):  # noqa
+             mock.patch('builtins.open'):
             self.assertEqual(pkg.get_usage(['sub'], self.pkgdir), {
                 'name': 'foo[sub]', 'type': 'system', 'generated': True,
                 'auto_link': False, 'path': [self.pkgconfdir(None)],
@@ -128,7 +128,7 @@ class TestMakePackage(SourceTest):
              mock.patch('mopack.usage.path_system.file_outdated',
                         return_value=True), \
              mock.patch('os.makedirs'), \
-             mock.patch('builtins.open'):  # noqa
+             mock.patch('builtins.open'):
             self.assertEqual(pkg.get_usage(['sub'], self.pkgdir), {
                 'name': 'foo[sub]', 'type': 'system', 'generated': True,
                 'auto_link': False, 'path': [self.pkgconfdir(None)],
@@ -140,7 +140,7 @@ class TestMakePackage(SourceTest):
              mock.patch('mopack.usage.path_system.file_outdated',
                         return_value=True), \
              mock.patch('os.makedirs'), \
-             mock.patch('builtins.open'):  # noqa
+             mock.patch('builtins.open'):
             self.assertEqual(pkg.get_usage(None, self.pkgdir), {
                 'name': 'foo', 'type': 'system', 'generated': True,
                 'auto_link': False, 'path': [self.pkgconfdir(None)],

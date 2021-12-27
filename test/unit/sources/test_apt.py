@@ -26,7 +26,7 @@ class TestApt(SourceTest):
 
     def check_resolve_all(self, packages, remotes):
         with mock_open_log() as mopen, \
-             mock.patch('subprocess.run') as mrun:  # noqa
+             mock.patch('subprocess.run') as mrun:
             AptPackage.resolve_all(packages, self.pkgdir)
 
             mopen.assert_called_with(os.path.join(
@@ -68,7 +68,7 @@ class TestApt(SourceTest):
              mock.patch('mopack.usage.path_system.file_outdated',
                         return_value=True), \
              mock.patch('os.makedirs'), \
-             mock.patch('builtins.open'):  # noqa
+             mock.patch('builtins.open'):
             self.assertEqual(pkg.get_usage(submodules, self.pkgdir), usage)
 
     def test_basic(self):

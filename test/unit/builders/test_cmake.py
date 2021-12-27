@@ -20,7 +20,7 @@ class TestCMakeBuilder(BuilderTest):
             pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.cmake.pushd'), \
-             mock.patch('subprocess.run') as mcall:  # noqa
+             mock.patch('subprocess.run') as mcall:
             builder.build(pkg, self.pkgdir)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
@@ -44,7 +44,7 @@ class TestCMakeBuilder(BuilderTest):
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.cmake.pushd'), \
-             mock.patch('subprocess.run') as mcall:  # noqa
+             mock.patch('subprocess.run') as mcall:
             builder.deploy(pkg, self.pkgdir)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'deploy', 'foo.log'

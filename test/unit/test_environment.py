@@ -41,18 +41,18 @@ class TestWhich(TestCase):
         env = {'PATH': '/usr/bin', 'PATHEXT': '.exe'}
         with mock.patch('mopack.environment.platform_name',
                         return_value='windows'), \
-             mock.patch('os.path.exists', side_effect=[False, True]):  # noqa
+             mock.patch('os.path.exists', side_effect=[False, True]):
             self.assertEqual(which('python', env=env), ['python'])
 
         with mock.patch('mopack.environment.platform_name',
                         return_value='windows'), \
-             mock.patch('os.path.exists', side_effect=[False, True]):  # noqa
+             mock.patch('os.path.exists', side_effect=[False, True]):
             self.assertEqual(which('python', env=env, resolve=True),
                              [os.path.normpath('/usr/bin/python.exe')])
 
         with mock.patch('mopack.environment.platform_name',
                         return_value='windows'), \
-             mock.patch('os.path.exists', side_effect=[False, True]):  # noqa
+             mock.patch('os.path.exists', side_effect=[False, True]):
             self.assertEqual(
                 which([['python', '--foo']], env=env, resolve=True),
                 [os.path.normpath('/usr/bin/python.exe'), '--foo']

@@ -21,7 +21,7 @@ class TestBfg9000Builder(BuilderTest):
         builddir = os.path.join(self.pkgdir, 'build', 'foo')
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
-             mock.patch('subprocess.run') as mcall:  # noqa
+             mock.patch('subprocess.run') as mcall:
             builder.build(pkg, self.pkgdir)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
@@ -45,7 +45,7 @@ class TestBfg9000Builder(BuilderTest):
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
-             mock.patch('subprocess.run') as mcall:  # noqa
+             mock.patch('subprocess.run') as mcall:
             builder.deploy(pkg, self.pkgdir)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'deploy', 'foo.log'

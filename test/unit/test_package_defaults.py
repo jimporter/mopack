@@ -95,13 +95,13 @@ class TestDefaultConfig(TestCase):
     def test_invalid_conditional(self):
         data = ('source:\n  foo:\n    - field: goat\n    - field: panda')
         with mock.patch('builtins.open', mock_open(data)), \
-             self.assertRaises(YamlParseError):  # noqa
+             self.assertRaises(YamlParseError):
             DefaultConfig('file.yml')
 
     def test_invalid_genus(self):
         data = ('goofy:\n  foo:\n    field: value')
         with mock.patch('builtins.open', mock_open(data)), \
-             self.assertRaises(YamlParseError):  # noqa
+             self.assertRaises(YamlParseError):
             DefaultConfig('file.yml')
 
         data = ('source:\n  foo:\n    field: value')

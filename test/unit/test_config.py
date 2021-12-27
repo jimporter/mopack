@@ -78,7 +78,7 @@ class TestConfig(TestCase):
                  'mopack-foobar.yml': foobar_cfg}
         with mock.patch('os.path.isdir', exists), \
              mock.patch('os.path.exists', return_value=True), \
-             mock.patch('builtins.open', mock_open_files(files)):  # noqa
+             mock.patch('builtins.open', mock_open_files(files)):
             # Filenames are in reversed order from file data, since Config
             # loads last-to-first.
             cfg = Config(['dir', 'mopack-foobar.yml'])
@@ -164,7 +164,7 @@ class TestConfig(TestCase):
         """)
         files = {'mopack.yml': data}
         with self.assertRaises(YamlParseError), \
-             mock.patch('builtins.open', mock_open_files(files)):  # noqa
+             mock.patch('builtins.open', mock_open_files(files)):
             Config(['mopack.yml'])
 
     def test_empty_options(self):

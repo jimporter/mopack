@@ -114,7 +114,7 @@ class TestPath(UsageTest):
              mock.patch('mopack.usage.path_system._system_lib_names',
                         return_value=['lib{}.so']), \
              mock.patch('mopack.usage.path_system.isfile',
-                        mock_isfile):  # noqa
+                        mock_isfile):
             self.assertEqual(usage.get_usage(
                 pkg, submodules, self.pkgdir
             ), expected)

@@ -25,7 +25,7 @@ class TestCustomBuilder(BuilderTest):
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.custom.pushd'), \
-             mock.patch('subprocess.run') as mcall:  # noqa
+             mock.patch('subprocess.run') as mcall:
             builder.build(pkg, self.pkgdir)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
@@ -90,7 +90,7 @@ class TestCustomBuilder(BuilderTest):
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.custom.pushd'), \
-             mock.patch('subprocess.run') as mcall:  # noqa
+             mock.patch('subprocess.run') as mcall:
             builder.deploy(pkg, self.pkgdir)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'deploy', 'foo.log'
@@ -126,9 +126,9 @@ class TestCustomBuilder(BuilderTest):
         pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
         builder = self.make_builder(pkg, build_commands=['cd foo bar'])
 
-        with mock_open_log() as mopen, \
+        with mock_open_log(), \
              mock.patch('mopack.builders.custom.pushd'), \
-             self.assertRaises(RuntimeError):  # noqa
+             self.assertRaises(RuntimeError):
             builder.build(pkg, self.pkgdir)
 
     def test_clean(self):

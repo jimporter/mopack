@@ -23,13 +23,13 @@ class TestPlatformName(TestCase):
             raise OSError()
 
         with mock.patch('platform.system', return_value='Windows'), \
-             mock.patch('subprocess.check_output', mock_execute):  # noqa:
+             mock.patch('subprocess.check_output', mock_execute):
             self.assertEqual(platforms.platform_name(), 'windows')
 
     def test_windows_with_uname(self):
         with mock.patch('platform.system', return_value='Windows'), \
              mock.patch('subprocess.check_output',
-                        return_value='foobar'):  # noqa:
+                        return_value='foobar'):
             self.assertEqual(platforms.platform_name(), 'windows')
 
     def test_cygwin(self):
@@ -39,7 +39,7 @@ class TestPlatformName(TestCase):
     def test_cygwin_native_python(self):
         with mock.patch('platform.system', return_value='Windows'), \
              mock.patch('subprocess.check_output',
-                        return_value='CYGWIN_NT-6.1-WOW64'):  # noqa
+                        return_value='CYGWIN_NT-6.1-WOW64'):
             self.assertEqual(platforms.platform_name(), 'cygwin')
 
     def test_unknown(self):

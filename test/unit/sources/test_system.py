@@ -50,7 +50,7 @@ class TestSystemPackage(SourceTest):
              mock.patch('mopack.usage.path_system._system_lib_names',
                         return_value=['lib{}.so']), \
              mock.patch('mopack.usage.path_system.isfile',
-                        mock_isfile):  # noqa
+                        mock_isfile):
             self.assertEqual(pkg.get_usage(submodules, self.pkgdir), expected)
 
     def check_pkg_config(self, name, submodules, expected={}):

@@ -230,7 +230,7 @@ class TarballPackage(SDistPackage):
                 log.pkg_patch(self.name, 'with {}'.format(patch))
                 with LogFile.open(pkgdir, self.name) as logfile, \
                      open(patch) as f, \
-                     pushd(self._srcdir(pkgdir)):  # noqa
+                     pushd(self._srcdir(pkgdir)):
                     logfile.check_call(patch_cmd + ['-p1'], stdin=f)
 
         return self._find_mopack(parent_config, self._srcdir(pkgdir))
