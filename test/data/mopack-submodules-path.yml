@@ -1,0 +1,14 @@
+packages:
+  hello:
+    source: directory
+    path: hello-multi-bfg
+    build: bfg9000
+    submodules: ['french', 'english']
+    usage:
+      type: path
+      include_path: include
+      library_path: .
+      submodule_map:
+        '*':
+          headers: hello_$submodule.hpp
+          libraries: hello_$submodule

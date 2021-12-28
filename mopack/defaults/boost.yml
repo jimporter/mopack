@@ -18,23 +18,31 @@ usage:
         ${{ env['BOOST_INCLUDEDIR'] || (
           env['BOOST_ROOT'] ? env['BOOST_ROOT'] + '/include' : null
         ) }}
-      library_path: >-
-        ${{ env['BOOST_LIBRARYDIR'] || (
-          env['BOOST_ROOT'] ? env['BOOST_ROOT'] + '/lib' : null
-        ) }}
       headers: [boost/version.hpp]
       libraries: null
       submodule_map: null
     - <<: *path_usage
       if: true
       auto_link: false
+      library_path: >-
+        ${{ env['BOOST_LIBRARYDIR'] || (
+          env['BOOST_ROOT'] ? env['BOOST_ROOT'] + '/lib' : null
+        ) }}
       submodule_map:
+        '*':
+          &submodule_map
+          # Include library_path again here since the base boost package
+          # doesn't have any libraries (unless the user overrides it), so
+          # the base library_path usually won't be used.
+          library_path: >-
+            ${{ env['BOOST_LIBRARYDIR'] || (
+              env['BOOST_ROOT'] ? env['BOOST_ROOT'] + '/lib' : null
+            ) }}
+          libraries: boost_$submodule
         thread:
-          libraries: boost_thread
+          <<: *submodule_map
           compile_flags: -pthread
           link_flags: "${{ target_platform == 'darwin' ? '' : '-pthread' }}"
-        '*':
-          libraries: boost_$submodule
   system: *path_system_usage
   pkg_config:
     submodule_map: null

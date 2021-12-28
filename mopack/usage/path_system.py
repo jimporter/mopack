@@ -298,58 +298,77 @@ class PathUsage(Usage):
 
         return self._get_version(pkg, pkgdir, include_dirs, path_values)
 
-    def get_usage(self, pkg, submodules, pkgdir):
-        if submodules and self.submodule_map:
-            path_bases = pkg.path_bases(builder=True)
-            symbols = self._options.expr_symbols.augment(paths=path_bases)
-            mappings = [self._get_submodule_mapping(symbols, path_bases, i)
-                        for i in submodules]
-        else:
-            mappings = []
+    def _write_pkg_config(self, pkg, submodule, pkgdir, requires=[],
+                          mappings=None):
+        if mappings is None:
+            mappings = [self]
 
         def chain_attr(key):
-            yield from getattr(self, key)
             for i in mappings:
                 yield from getattr(i, key)
 
         path_values = pkg.path_values(pkgdir, builder=True)
         pkgconfdir = generated_pkg_config_dir(pkgdir)
-        pcname = dependency_string(pkg.name, submodules)
+        pcname = dependency_string(pkg.name, listify(submodule))
         pcpath = os.path.join(pkgconfdir, pcname + '.pc')
-
-        include_dirs = self._include_dirs(
-            chain_attr('headers'), chain_attr('include_path'), path_values
-        )
-        libraries = [self._get_library(i) for i in chain_attr('libraries')]
-        library_dirs = self._library_dirs(
-            self.auto_link, libraries, chain_attr('library_path'), path_values
-        )
-
-        cflags = (
-            [('-I', i) for i in include_dirs] +
-            ShellArguments(chain_attr('compile_flags'))
-        )
-        libs = (
-            [('-L', i) for i in library_dirs] +
-            ShellArguments(chain_attr('link_flags')) +
-            chain.from_iterable(self._link_library(i) for i in libraries)
-        )
-        version = (self._get_version(pkg, pkgdir, include_dirs, path_values) or
-                   '')
 
         metadata_path = os.path.join(pkgdir, Metadata.metadata_filename)
         if file_outdated(pcpath, metadata_path):
+            # Generate the pkg-config data...
+            include_dirs = self._include_dirs(
+                chain_attr('headers'), chain_attr('include_path'), path_values
+            )
+            libraries = [self._get_library(i) for i in chain_attr('libraries')]
+            library_dirs = self._library_dirs(
+                self.auto_link, libraries, chain_attr('library_path'),
+                path_values
+            )
+
+            cflags = (
+                [('-I', i) for i in include_dirs] +
+                ShellArguments(chain_attr('compile_flags'))
+            )
+            libs = (
+                [('-L', i) for i in library_dirs] +
+                ShellArguments(chain_attr('link_flags')) +
+                chain.from_iterable(self._link_library(i) for i in libraries)
+            )
+            version = self._get_version(pkg, pkgdir, include_dirs, path_values)
+
+            # ... and write it.
             os.makedirs(pkgconfdir, exist_ok=True)
             with open(pcpath, 'w') as f:
-                # XXX: It would be nice to write one pkg-config .pc file per
-                # submodule instead of writing a single file for all the
-                # requested submodules.
-                write_pkg_config(f, pcname, version=version, cflags=cflags,
-                                 libs=libs, variables=path_values)
+                write_pkg_config(f, pcname, version=version or '',
+                                 requires=requires, cflags=cflags, libs=libs,
+                                 variables=path_values)
+        return pcname
+
+    def get_usage(self, pkg, submodules, pkgdir):
+        if submodules and self.submodule_map:
+            if pkg.submodules['required']:
+                # Don't make a base .pc file; just include the data from the
+                # base in each submodule's .pc file.
+                mappings = [self]
+                requires = []
+            else:
+                mappings = []
+                requires = [self._write_pkg_config(pkg, None, pkgdir)]
+
+            path_bases = pkg.path_bases(builder=True)
+            symbols = self._options.expr_symbols.augment(paths=path_bases)
+
+            pcnames = []
+            for i in submodules:
+                mapping = self._get_submodule_mapping(symbols, path_bases, i)
+                pcnames.append(self._write_pkg_config(
+                    pkg, i, pkgdir, requires, mappings + [mapping]
+                ))
+        else:
+            pcnames = [self._write_pkg_config(pkg, None, pkgdir)]
 
         return self._usage(
             pkg, submodules, generated=True, auto_link=self.auto_link,
-            path=[pkgconfdir], pcfiles=[pcname],
+            path=[generated_pkg_config_dir(pkgdir)], pcfiles=pcnames
         )
 
 

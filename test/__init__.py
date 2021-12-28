@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 
+from mopack.iterutils import listify
 from mopack.shell import split_posix_str
 
 
@@ -30,8 +31,9 @@ def call_pkg_config(package, options, *, path=None, split=True):
         env['PKG_CONFIG_PATH'] = path
         extra_kwargs['env'] = env
 
+    pkg_config = os.environ.get('PKG_CONFIG', 'pkg-config')
     output = subprocess.run(
-        [os.environ.get('PKG_CONFIG', 'pkg-config'), package] + options,
+        [pkg_config] + listify(package) + options,
         check=True, universal_newlines=True, stdout=subprocess.PIPE,
         **extra_kwargs
     ).stdout.strip()

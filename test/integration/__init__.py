@@ -184,22 +184,44 @@ def cfg_custom_builder(name, *, build_commands=[], deploy_commands=[]):
     }
 
 
-def cfg_pkg_config_usage(*, path=[{'base': 'builddir', 'path': 'pkgconfig'}],
-                         pcfile, extra_args=[], **kwargs):
+def _cfg_pkg_config_submodule_map(*, pcfile=None):
     return {
+        'pcfile': pcfile,
+    }
+
+
+def cfg_pkg_config_usage(*, path=[{'base': 'builddir', 'path': 'pkgconfig'}],
+                         pcfile, extra_args=[], submodule_map=None):
+    result = {
         'type': 'pkg_config',
         '_version': 1,
         'path': path,
         'pcfile': pcfile,
         'extra_args': extra_args,
-        **kwargs
+    }
+    if submodule_map:
+        result['submodule_map'] = {k: _cfg_pkg_config_submodule_map(**v)
+                                   for k, v in submodule_map.items()}
+    return result
+
+
+def _cfg_path_submodule_map(*, include_path=None, library_path=None,
+                            headers=None, libraries=None, compile_flags=None,
+                            link_flags=None):
+    return {
+        'include_path': include_path,
+        'library_path': library_path,
+        'headers': headers,
+        'libraries': libraries,
+        'compile_flags': compile_flags,
+        'link_flags': link_flags,
     }
 
 
 def cfg_path_usage(*, auto_link=False, explicit_version=None, include_path=[],
                    library_path=[], headers=[], libraries=[], compile_flags=[],
-                   link_flags=[], **kwargs):
-    return {
+                   link_flags=[], submodule_map=None):
+    result = {
         'type': 'path',
         '_version': 1,
         'auto_link': auto_link,
@@ -210,8 +232,11 @@ def cfg_path_usage(*, auto_link=False, explicit_version=None, include_path=[],
         'libraries': libraries,
         'compile_flags': compile_flags,
         'link_flags': link_flags,
-        **kwargs
     }
+    if submodule_map:
+        result['submodule_map'] = {k: _cfg_path_submodule_map(**v)
+                                   for k, v in submodule_map.items()}
+    return result
 
 
 def cfg_system_usage(*, pcfile=None, **kwargs):
@@ -294,8 +319,8 @@ class IntegrationTest(SubprocessTestCase):
             self.assertEqual(loader[format](output), usage)
         return output
 
-    def assertPkgConfigUsage(self, name, *, path=['pkgconfig'], pcfiles=None,
-                             extra_args=[], submodules=[]):
+    def assertPkgConfigUsage(self, name, submodules=[], *, path=['pkgconfig'],
+                             pcfiles=None, extra_args=[]):
         path = [(i if os.path.isabs(i) else
                  os.path.join(self.pkgbuilddir, name, i)) for i in path]
         if pcfiles is None:
@@ -306,30 +331,33 @@ class IntegrationTest(SubprocessTestCase):
             'path': path, 'pcfiles': pcfiles, 'extra_args': extra_args,
         }, submodules=submodules)
 
-    def assertPathUsage(self, name, *, type='path', auto_link=False,
-                        include_path=[], library_path=[], headers=[],
-                        libraries=None, compile_flags=[], link_flags=[],
-                        submodules=[], version=''):
+    def assertPathUsage(self, name, submodules=[], *, type='path', version='',
+                        auto_link=False, include_path=[], library_path=[],
+                        headers=[], libraries=None, compile_flags=[],
+                        link_flags=[]):
         if libraries is None:
             libraries = [name]
+
         pkgconfdir = os.path.join(self.stage, 'mopack', 'pkgconfig')
+        pcfiles = ([dependency_string(name, [i]) for i in submodules]
+                   if submodules else [name])
         self.assertUsage(name, {
             'name': dependency_string(name, submodules), 'type': type,
             'generated': True, 'auto_link': auto_link, 'path': [pkgconfdir],
-            'pcfiles': [name],
+            'pcfiles': pcfiles,
         }, submodules=submodules)
 
         self.assertCountEqual(
-            call_pkg_config(name, ['--cflags'], path=pkgconfdir),
+            call_pkg_config(pcfiles, ['--cflags'], path=pkgconfdir),
             ['-I' + i for i in include_path] + compile_flags
         )
         self.assertCountEqual(
-            call_pkg_config(name, ['--libs'], path=pkgconfdir),
+            call_pkg_config(pcfiles, ['--libs'], path=pkgconfdir),
             (['-L' + i for i in library_path] + link_flags +
              ['-l' + i for i in libraries])
         )
         self.assertEqual(
-            call_pkg_config(name, ['--modversion'], path=pkgconfdir,
+            call_pkg_config(pcfiles, ['--modversion'], path=pkgconfdir,
                             split=False),
             version
         )
