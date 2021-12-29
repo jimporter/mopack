@@ -87,7 +87,8 @@ class PkgConfigUsage(Usage):
             T.submodule_map(pkg_default(
                 types.maybe(_submodule_map),
                 default=pkg.name + '_$submodule',
-                extra_symbols=submod.expr_symbols
+                extra_symbols=submod.expr_symbols,
+                evaluate=False
             ), evaluate=False)
 
     def version(self, pkg, pkgdir):

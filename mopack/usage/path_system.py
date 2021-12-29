@@ -188,7 +188,8 @@ class PathUsage(Usage):
             T.submodule_map(pkg_default(
                 types.maybe(_submodule_map(symbols, path_bases)),
                 default=pkg.name + '_$submodule',
-                extra_symbols=submod.expr_symbols
+                extra_symbols=submod.expr_symbols,
+                evaluate=False
             ), evaluate=False)
 
     def _get_submodule_mapping(self, symbols, path_bases, submodule):
@@ -298,8 +299,8 @@ class PathUsage(Usage):
 
         return self._get_version(pkg, pkgdir, include_dirs, path_values)
 
-    def _write_pkg_config(self, pkg, submodule, pkgdir, requires=[],
-                          mappings=None):
+    def _write_pkg_config(self, pkg, submodule, pkgdir, version=None,
+                          requires=[], mappings=None, *, get_version=False):
         if mappings is None:
             mappings = [self]
 
@@ -313,11 +314,19 @@ class PathUsage(Usage):
         pcpath = os.path.join(pkgconfdir, pcname + '.pc')
 
         metadata_path = os.path.join(pkgdir, Metadata.metadata_filename)
-        if file_outdated(pcpath, metadata_path):
-            # Generate the pkg-config data...
+        should_write = file_outdated(pcpath, metadata_path)
+
+        if should_write or get_version:
+            # Get the version so we can sync it across all submodules.
             include_dirs = self._include_dirs(
                 chain_attr('headers'), chain_attr('include_path'), path_values
             )
+            if get_version or version is None:
+                version = self._get_version(pkg, pkgdir, include_dirs,
+                                            path_values)
+
+        if should_write:
+            # Generate the pkg-config data...
             libraries = [self._get_library(i) for i in chain_attr('libraries')]
             library_dirs = self._library_dirs(
                 self.auto_link, libraries, chain_attr('library_path'),
@@ -333,7 +342,6 @@ class PathUsage(Usage):
                 ShellArguments(chain_attr('link_flags')) +
                 chain.from_iterable(self._link_library(i) for i in libraries)
             )
-            version = self._get_version(pkg, pkgdir, include_dirs, path_values)
 
             # ... and write it.
             os.makedirs(pkgconfdir, exist_ok=True)
@@ -341,7 +349,10 @@ class PathUsage(Usage):
                 write_pkg_config(f, pcname, version=version or '',
                                  requires=requires, cflags=cflags, libs=libs,
                                  variables=path_values)
-        return pcname
+
+        if get_version:
+            return [pcname], version
+        return [pcname]
 
     def get_usage(self, pkg, submodules, pkgdir):
         if submodules and self.submodule_map:
@@ -350,9 +361,11 @@ class PathUsage(Usage):
                 # base in each submodule's .pc file.
                 mappings = [self]
                 requires = []
+                version = None
             else:
                 mappings = []
-                requires = [self._write_pkg_config(pkg, None, pkgdir)]
+                requires, version = self._write_pkg_config(pkg, None, pkgdir,
+                                                           get_version=True)
 
             path_bases = pkg.path_bases(builder=True)
             symbols = self._options.expr_symbols.augment(paths=path_bases)
@@ -360,11 +373,11 @@ class PathUsage(Usage):
             pcnames = []
             for i in submodules:
                 mapping = self._get_submodule_mapping(symbols, path_bases, i)
-                pcnames.append(self._write_pkg_config(
-                    pkg, i, pkgdir, requires, mappings + [mapping]
+                pcnames.extend(self._write_pkg_config(
+                    pkg, i, pkgdir, version, requires, mappings + [mapping]
                 ))
         else:
-            pcnames = [self._write_pkg_config(pkg, None, pkgdir)]
+            pcnames = self._write_pkg_config(pkg, None, pkgdir)
 
         return self._usage(
             pkg, submodules, generated=True, auto_link=self.auto_link,
