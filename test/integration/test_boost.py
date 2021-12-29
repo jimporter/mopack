@@ -6,7 +6,6 @@ from . import *
 
 @skipIf('boost' not in test_features, 'skipping test requiring boost')
 class TestBoost(IntegrationTest):
-    maxDiff = None
     name = 'boost'
 
     def test_resolve(self):
