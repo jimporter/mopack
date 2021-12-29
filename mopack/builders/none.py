@@ -12,14 +12,14 @@ class NoneBuilder(Builder):
     def path_bases(self):
         return ()
 
-    def path_values(self, pkgdir):
+    def path_values(self, metadata):
         return {}
 
-    def clean(self, pkg, pkgdir):
+    def clean(self, metadata, pkg):
         pass
 
-    def build(self, pkg, pkgdir):
+    def build(self, metadata, pkg):
         pass
 
-    def deploy(self, pkg, pkgdir):
+    def deploy(self, metadata, pkg):
         pass

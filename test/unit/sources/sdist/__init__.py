@@ -12,7 +12,6 @@ mock_bfgclean = 'mopack.builders.bfg9000.Bfg9000Builder.clean'
 
 class SDistTestCase(SourceTest):
     config_file = os.path.abspath('/path/to/mopack.yml')
-    pkgdir = os.path.abspath('/path/to/builddir/mopack')
 
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         if name is None:
@@ -32,14 +31,14 @@ class SDistTestCase(SourceTest):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.run'):
-            pkg.resolve(self.pkgdir)
+            pkg.resolve(self.metadata)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')
 
         with mock.patch('mopack.usage.path_system.file_outdated',
                         return_value=False):
-            self.assertEqual(pkg.get_usage(submodules, self.pkgdir), usage)
+            self.assertEqual(pkg.get_usage(self.metadata, submodules), usage)
 
     def make_builder(self, builder_type, pkg, **kwargs):
         return builder_type(pkg, **kwargs)

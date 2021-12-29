@@ -6,7 +6,6 @@ from itertools import chain
 from . import preferred_path_base, Usage
 from . import submodules as submod
 from .. import types
-from ..commands import Metadata
 from ..environment import get_pkg_config
 from ..freezedried import DictFreezeDryer, FreezeDried, ListFreezeDryer
 from ..iterutils import ismapping, listify
@@ -262,7 +261,7 @@ class PathUsage(Usage):
         else:
             return True, re.sub(ex[0], ex[1], line)
 
-    def _get_version(self, pkg, pkgdir, include_dirs, path_vars):
+    def _get_version(self, metadata, pkg, include_dirs, path_vars):
         if ismapping(self.explicit_version):
             version = self.explicit_version
             for path in include_dirs:
@@ -282,10 +281,10 @@ class PathUsage(Usage):
         elif self.explicit_version is not None:
             return self.explicit_version
         else:
-            return pkg.guessed_version(pkgdir)
+            return pkg.guessed_version(metadata)
 
-    def version(self, pkg, pkgdir):
-        path_values = pkg.path_values(pkgdir, builder=True)
+    def version(self, metadata, pkg):
+        path_values = pkg.path_values(metadata, builder=True)
         try:
             include_dirs = self._include_dirs(
                 self.headers, self.include_path, path_values
@@ -297,9 +296,9 @@ class PathUsage(Usage):
             # smarter way and then remove this.
             include_dirs = []
 
-        return self._get_version(pkg, pkgdir, include_dirs, path_values)
+        return self._get_version(metadata, pkg, include_dirs, path_values)
 
-    def _write_pkg_config(self, pkg, submodule, pkgdir, version=None,
+    def _write_pkg_config(self, metadata, pkg, submodule=None, version=None,
                           requires=[], mappings=None, *, get_version=False):
         if mappings is None:
             mappings = [self]
@@ -308,13 +307,12 @@ class PathUsage(Usage):
             for i in mappings:
                 yield from getattr(i, key)
 
-        path_values = pkg.path_values(pkgdir, builder=True)
-        pkgconfdir = generated_pkg_config_dir(pkgdir)
+        path_values = pkg.path_values(metadata, builder=True)
+        pkgconfdir = generated_pkg_config_dir(metadata.pkgdir)
         pcname = dependency_string(pkg.name, listify(submodule))
         pcpath = os.path.join(pkgconfdir, pcname + '.pc')
 
-        metadata_path = os.path.join(pkgdir, Metadata.metadata_filename)
-        should_write = file_outdated(pcpath, metadata_path)
+        should_write = file_outdated(pcpath, metadata.path)
 
         if should_write or get_version:
             # Get the version so we can sync it across all submodules.
@@ -322,7 +320,7 @@ class PathUsage(Usage):
                 chain_attr('headers'), chain_attr('include_path'), path_values
             )
             if get_version or version is None:
-                version = self._get_version(pkg, pkgdir, include_dirs,
+                version = self._get_version(metadata, pkg, include_dirs,
                                             path_values)
 
         if should_write:
@@ -354,7 +352,7 @@ class PathUsage(Usage):
             return [pcname], version
         return [pcname]
 
-    def get_usage(self, pkg, submodules, pkgdir):
+    def get_usage(self, metadata, pkg, submodules):
         if submodules and self.submodule_map:
             if pkg.submodules['required']:
                 # Don't make a base .pc file; just include the data from the
@@ -364,7 +362,7 @@ class PathUsage(Usage):
                 version = None
             else:
                 mappings = []
-                requires, version = self._write_pkg_config(pkg, None, pkgdir,
+                requires, version = self._write_pkg_config(metadata, pkg,
                                                            get_version=True)
 
             path_bases = pkg.path_bases(builder=True)
@@ -374,14 +372,14 @@ class PathUsage(Usage):
             for i in submodules:
                 mapping = self._get_submodule_mapping(symbols, path_bases, i)
                 pcnames.extend(self._write_pkg_config(
-                    pkg, i, pkgdir, version, requires, mappings + [mapping]
+                    metadata, pkg, i, version, requires, mappings + [mapping]
                 ))
         else:
-            pcnames = self._write_pkg_config(pkg, None, pkgdir)
+            pcnames = self._write_pkg_config(metadata, pkg)
 
         return self._usage(
             pkg, submodules, generated=True, auto_link=self.auto_link,
-            path=[generated_pkg_config_dir(pkgdir)], pcfiles=pcnames
+            path=[generated_pkg_config_dir(metadata.pkgdir)], pcfiles=pcnames
         )
 
 
@@ -392,7 +390,7 @@ class SystemUsage(PathUsage):
         super().__init__(pkg, **kwargs)
         self.pcfile = pkg.name
 
-    def version(self, pkg, pkgdir):
+    def version(self, metadata, pkg):
         pkg_config = get_pkg_config(self._common_options.env)
         try:
             return subprocess.run(
@@ -401,9 +399,9 @@ class SystemUsage(PathUsage):
                 universal_newlines=True
             ).stdout.strip()
         except (OSError, subprocess.CalledProcessError):
-            return super().version(pkg, pkgdir)
+            return super().version(metadata, pkg)
 
-    def get_usage(self, pkg, submodules, pkgdir):
+    def get_usage(self, metadata, pkg, submodules):
         pkg_config = get_pkg_config(self._common_options.env)
         try:
             subprocess.run(pkg_config + [self.pcfile], check=True,
@@ -412,4 +410,4 @@ class SystemUsage(PathUsage):
             return self._usage(pkg, submodules, path=[], pcfiles=[self.pcfile],
                                extra_args=[])
         except (OSError, subprocess.CalledProcessError):
-            return super().get_usage(pkg, submodules, pkgdir)
+            return super().get_usage(metadata, pkg, submodules)

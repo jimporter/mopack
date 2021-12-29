@@ -2,11 +2,17 @@ import os
 
 from .. import OptionsTest, MockPackage, through_json  # noqa: F401
 
+from mopack.metadata import Metadata
+
 
 class UsageTest(OptionsTest):
     pkgdir = os.path.abspath('/builddir/mopack')
     srcdir = os.path.abspath('/srcdir')
     builddir = os.path.abspath('/builddir')
+
+    def setUp(self):
+        super().setUp()
+        self.metadata = Metadata(self.pkgdir)
 
     def make_usage(self, *args, common_options=None, deploy_paths=None,
                    submodules=None, **kwargs):

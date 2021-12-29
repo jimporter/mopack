@@ -26,7 +26,7 @@ class AptPackage(BinaryPackage):
         ))
         T.repository(types.maybe(types.string))
 
-    def guessed_version(self, pkgdir):
+    def guessed_version(self, metadata):
         # XXX: Maybe try to de-munge the version into something not
         # apt-specific?
         dpkgq = get_cmd(self._common_options.env, 'DPKG_QUERY', 'dpkg-query')
@@ -36,7 +36,7 @@ class AptPackage(BinaryPackage):
         ).stdout
 
     @classmethod
-    def resolve_all(cls, packages, pkgdir):
+    def resolve_all(cls, metadata, packages):
         for i in packages:
             log.pkg_resolve(i.name, 'from {}'.format(cls.source))
 
@@ -47,7 +47,7 @@ class AptPackage(BinaryPackage):
         remotes = list(chain.from_iterable(i.remote for i in packages))
         repositories = uniques(i.repository for i in packages if i.repository)
 
-        with log.LogFile.open(pkgdir, 'apt') as logfile:
+        with log.LogFile.open(metadata.pkgdir, 'apt') as logfile:
             for i in repositories:
                 logfile.check_call(aptrepo + ['-y', i])
             logfile.check_call(apt + ['update'])
@@ -57,5 +57,5 @@ class AptPackage(BinaryPackage):
             i.resolved = True
 
     @staticmethod
-    def deploy_all(packages, pkgdir):
+    def deploy_all(metadata, packages):
         pass

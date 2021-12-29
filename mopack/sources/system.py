@@ -31,11 +31,11 @@ class SystemPackage(BinaryPackage):
             _usage_field=None, **kwargs
         )
 
-    def resolve(self, pkgdir):
+    def resolve(self, metadata):
         log.pkg_resolve(self.name, 'from {}'.format(self.source))
         self.resolved = True
 
-    def deploy(self, pkgdir):
+    def deploy(self, metadata):
         pass
 
 

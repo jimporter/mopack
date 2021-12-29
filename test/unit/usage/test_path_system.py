@@ -56,6 +56,7 @@ class TestPath(UsageTest):
     builddir = abspath('/mock/builddir')
 
     def setUp(self):
+        super().setUp()
         self.clear_pkgdir()
 
     def clear_pkgdir(self):
@@ -90,7 +91,7 @@ class TestPath(UsageTest):
                         return_value=[Path('/mock/include')]), \
              mock.patch('mopack.usage.path_system.isfile', mock_isfile), \
              mock.patch('builtins.open', **open_args):
-            self.assertEqual(usage.version(pkg, self.pkgdir), expected)
+            self.assertEqual(usage.version(self.metadata, pkg), expected)
 
     def check_get_usage(self, usage, name, submodules, expected=None, *,
                         pkg=None, write_pkg_config=True):
@@ -116,7 +117,7 @@ class TestPath(UsageTest):
              mock.patch('mopack.usage.path_system.isfile',
                         mock_isfile):
             self.assertEqual(usage.get_usage(
-                pkg, submodules, self.pkgdir
+                self.metadata, pkg, submodules
             ), expected)
 
     def check_pkg_config(self, name, submodules, expected={}):

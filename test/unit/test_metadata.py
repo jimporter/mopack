@@ -9,10 +9,11 @@ from mopack.sources.system import SystemPackage
 
 
 class TestMetadata(TestCase):
+    pkgdir = '/path/to/builddir/mopack'
     config_file = '/path/to/mopack.yml'
 
     def test_get_package(self):
-        metadata = Metadata()
+        metadata = Metadata(self.pkgdir)
         pkg = AptPackage('foo', _options=metadata.options,
                          config_file=self.config_file)
         pkg.resolved = True
@@ -20,7 +21,7 @@ class TestMetadata(TestCase):
         self.assertIs(metadata.get_package('foo'), pkg)
 
     def test_get_package_fallback(self):
-        metadata = Metadata()
+        metadata = Metadata(self.pkgdir)
         self.assertEqual(
             metadata.get_package('foo'),
             SystemPackage('foo', _options=metadata.options,
@@ -28,7 +29,7 @@ class TestMetadata(TestCase):
         )
 
     def test_get_package_unresolved(self):
-        metadata = Metadata()
+        metadata = Metadata(self.pkgdir)
         pkg = AptPackage('foo', _options=metadata.options,
                          config_file=self.config_file)
         metadata.add_package(pkg)
@@ -36,7 +37,7 @@ class TestMetadata(TestCase):
             metadata.get_package('foo')
 
     def test_get_package_strict(self):
-        metadata = Metadata()
+        metadata = Metadata(self.pkgdir)
         with self.assertRaises(ValueError):
             metadata.get_package('foo', strict=True)
 
@@ -44,12 +45,12 @@ class TestMetadata(TestCase):
         out = Stream('')
         with mock.patch('os.makedirs'), \
              mock.patch('builtins.open', return_value=out):
-            metadata = Metadata()
+            metadata = Metadata(self.pkgdir)
             pkg = AptPackage('foo', _options=metadata.options,
                              config_file=self.config_file)
             pkg.resolved = True
             metadata.add_package(pkg)
-            metadata.save(self.config_file)
+            metadata.save()
 
         # Test round-tripping a package.
         with mock.patch('builtins.open',
@@ -66,4 +67,4 @@ class TestMetadata(TestCase):
         with mock.patch('builtins.open',
                         mock.mock_open(read_data=json.dumps(data))):
             with self.assertRaises(MetadataVersionError):
-                Metadata.load(self.config_file)
+                Metadata.load(self.pkgdir)

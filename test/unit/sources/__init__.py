@@ -1,7 +1,18 @@
+import os
+
 from .. import OptionsTest, through_json  # noqa: F401
+
+from mopack.metadata import Metadata
 
 
 class SourceTest(OptionsTest):
+    config_file = os.path.abspath('/path/to/mopack.yml')
+    pkgdir = os.path.abspath('/path/to/builddir/mopack')
+
+    def setUp(self):
+        super().setUp()
+        self.metadata = Metadata(self.pkgdir)
+
     def make_options(self, pkg_type=None, *, common_options=None,
                      this_options=None, deploy_paths=None, config_file=None):
         options = super().make_options(common_options, deploy_paths)

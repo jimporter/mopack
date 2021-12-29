@@ -14,9 +14,11 @@ class TestNoneBuilder(BuilderTest):
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         return os.path.join(self.srcdir, pkgconfig)
 
-    def check_build(self, builder, extra_args=[]):
+    def check_build(self, builder, extra_args=[], *, pkg=None):
+        if pkg is None:
+            pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
         with mock.patch('subprocess.run') as mcall:
-            builder.build(self.pkgdir, self.srcdir)
+            builder.build(self.metadata, pkg)
             mcall.assert_not_called()
 
     def test_basic(self):
@@ -26,7 +28,7 @@ class TestNoneBuilder(BuilderTest):
         self.check_build(builder)
 
         with mock.patch('subprocess.run') as mcall:
-            builder.deploy(pkg, self.pkgdir)
+            builder.deploy(self.metadata, pkg)
             mcall.assert_not_called()
 
     def test_clean(self):
@@ -34,7 +36,7 @@ class TestNoneBuilder(BuilderTest):
         builder = self.make_builder(pkg)
 
         with mock.patch('shutil.rmtree') as mrmtree:
-            builder.clean(pkg, self.pkgdir)
+            builder.clean(self.metadata, pkg)
             mrmtree.assert_not_called()
 
     def test_usage(self):
@@ -42,7 +44,7 @@ class TestNoneBuilder(BuilderTest):
         pkg = DirectoryPackage('foo', path=self.srcdir, build='none',
                                usage='pkg_config', _options=opts,
                                config_file=self.config_file)
-        pkg.get_usage(None, self.pkgdir)
+        pkg.get_usage(self.metadata, None)
 
     def test_rehydrate(self):
         opts = self.make_options()

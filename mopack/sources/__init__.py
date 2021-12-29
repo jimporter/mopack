@@ -67,11 +67,11 @@ class Package(OptionsHolder):
     def needs_dependencies(self):
         return False
 
-    def guessed_version(self, pkgdir):
+    def guessed_version(self, metadata):
         return None
 
-    def version(self, pkgdir):
-        return self.usage.version(self, pkgdir)
+    def version(self, metadata):
+        return self.usage.version(metadata, self)
 
     def _check_submodules(self, wanted_submodules):
         if self.submodules:
@@ -97,22 +97,23 @@ class Package(OptionsHolder):
     def builder_types(self):
         return []
 
-    def clean_pre(self, new_package, pkgdir, quiet=False):
+    def clean_pre(self, metadata, new_package, quiet=False):
         return False
 
-    def clean_post(self, new_package, pkgdir, quiet=False):
+    def clean_post(self, metadata, new_package, quiet=False):
         return False
 
-    def clean_all(self, new_package, pkgdir, quiet=False):
-        return (self.clean_pre(new_package, pkgdir, quiet),
-                self.clean_post(new_package, pkgdir, quiet))
+    def clean_all(self, metadata, new_package, quiet=False):
+        return (self.clean_pre(metadata, new_package, quiet),
+                self.clean_post(metadata, new_package, quiet))
 
-    def fetch(self, parent_config, pkgdir):
+    def fetch(self, metadata, parent_config):
         pass  # pragma: no cover
 
-    def get_usage(self, submodules, pkgdir):
-        return self.usage.get_usage(self, self._check_submodules(submodules),
-                                    pkgdir)
+    def get_usage(self, metadata, submodules):
+        return self.usage.get_usage(
+            metadata, self, self._check_submodules(submodules)
+        )
 
     def __repr__(self):
         return '<{}({!r})>'.format(type(self).__name__, self.name)
@@ -136,7 +137,7 @@ class BinaryPackage(Package):
     def path_bases(self, *, builder=None):
         return ()
 
-    def path_values(self, pkgdir, *, builder=None):
+    def path_values(self, metadata, *, builder=None):
         return {}
 
 

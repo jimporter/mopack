@@ -23,7 +23,7 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.extra_args, ShellArguments())
 
         with mock.patch('subprocess.run') as mrun:
-            usage.version(pkg, self.pkgdir)
+            usage.version(self.metadata, pkg)
             mrun.assert_called_once_with(
                 ['pkg-config', 'foo', '--modversion'],
                 check=True, env={'PKG_CONFIG_PATH': self.pkgconfdir},
@@ -31,7 +31,7 @@ class TestPkgConfig(UsageTest):
             )
 
         self.assertEqual(
-            usage.get_usage(pkg, None, self.pkgdir),
+            usage.get_usage(self.metadata, pkg, None),
             {'name': 'foo', 'type': 'pkg_config', 'path': [self.pkgconfdir],
              'pcfiles': ['foo'], 'extra_args': []}
         )
@@ -43,7 +43,7 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.extra_args, ShellArguments())
         self.assertEqual(
-            usage.get_usage(pkg, None, self.pkgdir),
+            usage.get_usage(self.metadata, pkg, None),
             {'name': 'foo', 'type': 'pkg_config',
              'path': [os.path.join(self.builddir, 'pkgconf')],
              'pcfiles': ['foo'], 'extra_args': []}
@@ -56,7 +56,7 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.extra_args, ShellArguments())
         self.assertEqual(
-            usage.get_usage(pkg, None, self.pkgdir),
+            usage.get_usage(self.metadata, pkg, None),
             {'name': 'foo', 'type': 'pkg_config',
              'path': [os.path.join(self.srcdir, 'pkgconf')],
              'pcfiles': ['foo'], 'extra_args': []}
@@ -69,7 +69,7 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.extra_args, ShellArguments())
         self.assertEqual(
-            usage.get_usage(pkg, None, self.pkgdir),
+            usage.get_usage(self.metadata, pkg, None),
             {'name': 'foo', 'type': 'pkg_config',
              'path': [os.path.join(self.builddir, 'pkgconf')],
              'pcfiles': ['foo'], 'extra_args': []}
@@ -82,7 +82,7 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.extra_args, ShellArguments(['--static']))
         self.assertEqual(
-            usage.get_usage(pkg, None, self.pkgdir),
+            usage.get_usage(self.metadata, pkg, None),
             {'name': 'foo', 'type': 'pkg_config', 'path': [self.pkgconfdir],
              'pcfiles': ['foo'], 'extra_args': ['--static']}
         )
@@ -92,7 +92,7 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.extra_args, ShellArguments(['--static']))
         self.assertEqual(
-            usage.get_usage(pkg, None, self.pkgdir),
+            usage.get_usage(self.metadata, pkg, None),
             {'name': 'foo', 'type': 'pkg_config', 'path': [self.pkgconfdir],
              'pcfiles': ['foo'], 'extra_args': ['--static']}
         )
@@ -107,7 +107,7 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.pcfile, None)
         self.assertEqual(usage.extra_args, ShellArguments())
         self.assertEqual(
-            usage.get_usage(pkg, ['sub'], self.pkgdir),
+            usage.get_usage(self.metadata, pkg, ['sub']),
             {'name': 'foo[sub]', 'type': 'pkg_config',
              'path': [self.pkgconfdir], 'pcfiles': ['foo_sub'],
              'extra_args': []}
@@ -119,7 +119,7 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.pcfile, 'bar')
         self.assertEqual(usage.extra_args, ShellArguments())
         self.assertEqual(
-            usage.get_usage(pkg, ['sub'], self.pkgdir),
+            usage.get_usage(self.metadata, pkg, ['sub']),
             {'name': 'foo[sub]', 'type': 'pkg_config',
              'path': [self.pkgconfdir], 'pcfiles': ['bar', 'foo_sub'],
              'extra_args': []}
@@ -130,7 +130,7 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.extra_args, ShellArguments())
         self.assertEqual(
-            usage.get_usage(pkg, ['sub'], self.pkgdir),
+            usage.get_usage(self.metadata, pkg, ['sub']),
             {'name': 'foo[sub]', 'type': 'pkg_config',
              'path': [self.pkgconfdir], 'pcfiles': ['foo', 'foo_sub'],
              'extra_args': []}
@@ -142,7 +142,7 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.pcfile, 'bar')
         self.assertEqual(usage.extra_args, ShellArguments())
         self.assertEqual(
-            usage.get_usage(pkg, ['sub'], self.pkgdir),
+            usage.get_usage(self.metadata, pkg, ['sub']),
             {'name': 'foo[sub]', 'type': 'pkg_config',
              'path': [self.pkgconfdir], 'pcfiles': ['bar', 'foo_sub'],
              'extra_args': []}
@@ -158,7 +158,7 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.pcfile, None)
         self.assertEqual(usage.extra_args, ShellArguments())
         self.assertEqual(
-            usage.get_usage(pkg, ['sub'], self.pkgdir),
+            usage.get_usage(self.metadata, pkg, ['sub']),
             {'name': 'foo[sub]', 'type': 'pkg_config',
              'path': [self.pkgconfdir], 'pcfiles': ['sub'], 'extra_args': []}
         )
@@ -170,7 +170,7 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.pcfile, None)
         self.assertEqual(usage.extra_args, ShellArguments())
         self.assertEqual(
-            usage.get_usage(pkg, ['sub'], self.pkgdir),
+            usage.get_usage(self.metadata, pkg, ['sub']),
             {'name': 'foo[sub]', 'type': 'pkg_config',
              'path': [self.pkgconfdir], 'pcfiles': ['sub'], 'extra_args': []}
         )
@@ -184,18 +184,18 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.pcfile, None)
         self.assertEqual(usage.extra_args, ShellArguments())
         self.assertEqual(
-            usage.get_usage(pkg, ['sub'], self.pkgdir),
+            usage.get_usage(self.metadata, pkg, ['sub']),
             {'name': 'foo[sub]', 'type': 'pkg_config',
              'path': [self.pkgconfdir], 'pcfiles': ['foopc'], 'extra_args': []}
         )
         self.assertEqual(
-            usage.get_usage(pkg, ['sub2'], self.pkgdir),
+            usage.get_usage(self.metadata, pkg, ['sub2']),
             {'name': 'foo[sub2]', 'type': 'pkg_config',
              'path': [self.pkgconfdir], 'pcfiles': ['sub2pc'],
              'extra_args': []}
         )
         self.assertEqual(
-            usage.get_usage(pkg, ['subfoo'], self.pkgdir),
+            usage.get_usage(self.metadata, pkg, ['subfoo']),
             {'name': 'foo[subfoo]', 'type': 'pkg_config',
              'path': [self.pkgconfdir], 'pcfiles': ['starsubfoopc'],
              'extra_args': []}
@@ -210,13 +210,13 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.pcfile, 'foo')
         self.assertEqual(usage.extra_args, ShellArguments())
         self.assertEqual(
-            usage.get_usage(pkg, ['sub'], self.pkgdir),
+            usage.get_usage(self.metadata, pkg, ['sub']),
             {'name': 'foo[sub]', 'type': 'pkg_config',
              'path': [self.pkgconfdir], 'pcfiles': ['foo', 'subpc'],
              'extra_args': []}
         )
         self.assertEqual(
-            usage.get_usage(pkg, ['sub2'], self.pkgdir),
+            usage.get_usage(self.metadata, pkg, ['sub2']),
             {'name': 'foo[sub2]', 'type': 'pkg_config',
              'path': [self.pkgconfdir], 'pcfiles': ['foo'], 'extra_args': []}
         )
@@ -230,12 +230,12 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.path, [Path('pkgconfig', 'builddir')])
         self.assertEqual(usage.pcfile, 'boost')
         self.assertEqual(
-            usage.get_usage(pkg, None, self.pkgdir),
+            usage.get_usage(self.metadata, pkg, None),
             {'name': 'boost', 'type': 'pkg_config', 'path': [self.pkgconfdir],
              'pcfiles': ['boost'], 'extra_args': []}
         )
         self.assertEqual(
-            usage.get_usage(pkg, ['thread'], self.pkgdir),
+            usage.get_usage(self.metadata, pkg, ['thread']),
             {'name': 'boost[thread]', 'type': 'pkg_config',
              'path': [self.pkgconfdir], 'pcfiles': ['boost'], 'extra_args': []}
         )
@@ -246,12 +246,12 @@ class TestPkgConfig(UsageTest):
         self.assertEqual(usage.path, [Path('pkgconfig', 'builddir')])
         self.assertEqual(usage.pcfile, 'boost')
         self.assertEqual(
-            usage.get_usage(pkg, None, self.pkgdir),
+            usage.get_usage(self.metadata, pkg, None),
             {'name': 'boost', 'type': 'pkg_config', 'path': [self.pkgconfdir],
              'pcfiles': ['boost'], 'extra_args': []}
         )
         self.assertEqual(
-            usage.get_usage(pkg, ['thread'], self.pkgdir),
+            usage.get_usage(self.metadata, pkg, ['thread']),
             {'name': 'boost[thread]', 'type': 'pkg_config',
              'path': [self.pkgconfdir], 'pcfiles': ['boost', 'boost_thread'],
              'extra_args': []}

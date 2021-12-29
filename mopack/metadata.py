@@ -16,11 +16,16 @@ class Metadata:
     metadata_filename = 'mopack.json'
     version = 1
 
-    def __init__(self, options=None, files=None, implicit_files=None):
+    def __init__(self, pkgdir, options=None, files=None, implicit_files=None):
+        self.pkgdir = pkgdir
         self.options = options or Options.default()
         self.files = files or []
         self.implicit_files = implicit_files or []
         self.packages = {}
+
+    @property
+    def path(self):
+        return os.path.join(self.pkgdir, self.metadata_filename)
 
     def add_package(self, package):
         self.packages[package.name] = package
@@ -38,9 +43,9 @@ class Metadata:
                              .format(name))
         return package
 
-    def save(self, pkgdir):
-        os.makedirs(pkgdir, exist_ok=True)
-        with open(os.path.join(pkgdir, self.metadata_filename), 'w') as f:
+    def save(self):
+        os.makedirs(self.pkgdir, exist_ok=True)
+        with open(os.path.join(self.path), 'w') as f:
             json.dump({
                 'version': self.version,
                 'config_files': {
@@ -65,6 +70,7 @@ class Metadata:
             )
 
         metadata = Metadata.__new__(Metadata)
+        metadata.pkgdir = pkgdir
         metadata.files = state['config_files']['explicit']
         metadata.implicit_files = state['config_files']['implicit']
 
@@ -82,4 +88,4 @@ class Metadata:
         except FileNotFoundError:
             if strict:
                 raise
-            return Metadata()
+            return Metadata(pkgdir)

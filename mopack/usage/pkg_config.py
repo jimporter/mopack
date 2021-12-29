@@ -91,8 +91,8 @@ class PkgConfigUsage(Usage):
                 evaluate=False
             ), evaluate=False)
 
-    def version(self, pkg, pkgdir):
-        path_values = pkg.path_values(pkgdir, builder=True)
+    def version(self, metadata, pkg):
+        path_values = pkg.path_values(metadata, builder=True)
         path = [i.string(**path_values) for i in self.path]
         env = self._common_options.env.copy()
         env['PKG_CONFIG_PATH'] = join_paths(path)
@@ -110,8 +110,8 @@ class PkgConfigUsage(Usage):
         except KeyError:
             return self.submodule_map['*'].fill(submodule)
 
-    def get_usage(self, pkg, submodules, pkgdir):
-        path_values = pkg.path_values(pkgdir, builder=True)
+    def get_usage(self, metadata, pkg, submodules):
+        path_values = pkg.path_values(metadata, builder=True)
         path = [i.string(**path_values) for i in self.path]
         extra_args = self.extra_args.fill(**path_values)
 

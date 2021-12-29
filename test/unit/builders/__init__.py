@@ -2,10 +2,16 @@ import os
 
 from .. import OptionsTest, MockPackage, through_json  # noqa: F401
 
+from mopack.metadata import Metadata
+
 
 class BuilderTest(OptionsTest):
     srcdir = os.path.abspath('/path/to/src')
     pkgdir = os.path.abspath('/path/to/builddir/mopack')
+
+    def setUp(self):
+        super().setUp()
+        self.metadata = Metadata(self.pkgdir)
 
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         return os.path.join(self.pkgdir, 'build', name, pkgconfig)

@@ -15,8 +15,6 @@ from mopack.yaml_tools import SafeLineLoader
 
 
 class TestMakePackage(SourceTest):
-    pkgdir = os.path.abspath('/path/to/builddir/mopack')
-
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         if name is None:
             return os.path.join(self.pkgdir, pkgconfig)
@@ -35,13 +33,13 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.path, Path('/path'))
         self.assertEqual(pkg.builder.type, 'bfg9000')
 
-        self.assertEqual(pkg.get_usage(None, self.pkgdir), {
+        self.assertEqual(pkg.get_usage(self.metadata, None), {
             'name': 'foo', 'type': 'pkg_config',
             'path': [self.pkgconfdir('foo')], 'pcfiles': ['foo'],
             'extra_args': [],
         })
         with self.assertRaises(ValueError):
-            pkg.get_usage(['sub'], self.pkgdir)
+            pkg.get_usage(self.metadata, ['sub'])
 
     def test_make_no_deploy(self):
         pkg = make_package('foo', {
@@ -56,13 +54,13 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.path, Path('/path'))
         self.assertEqual(pkg.builder.type, 'bfg9000')
 
-        self.assertEqual(pkg.get_usage(None, self.pkgdir), {
+        self.assertEqual(pkg.get_usage(self.metadata, None), {
             'name': 'foo', 'type': 'pkg_config',
             'path': [self.pkgconfdir('foo')], 'pcfiles': ['foo'],
             'extra_args': [],
         })
         with self.assertRaises(ValueError):
-            pkg.get_usage(['sub'], self.pkgdir)
+            pkg.get_usage(self.metadata, ['sub'])
 
     def test_make_submodules(self):
         pkg = make_package('foo', {
@@ -80,13 +78,13 @@ class TestMakePackage(SourceTest):
                         return_value=True), \
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):
-            self.assertEqual(pkg.get_usage(['sub'], self.pkgdir), {
+            self.assertEqual(pkg.get_usage(self.metadata, ['sub']), {
                 'name': 'foo[sub]', 'type': 'system', 'generated': True,
                 'auto_link': False, 'path': [self.pkgconfdir(None)],
                 'pcfiles': ['foo[sub]'],
             })
         with self.assertRaises(ValueError):
-            pkg.get_usage(None, self.pkgdir)
+            pkg.get_usage(self.metadata, None)
 
         pkg = make_package('foo', {
             'source': 'system', 'submodules': ['sub'],
@@ -103,15 +101,15 @@ class TestMakePackage(SourceTest):
                         return_value=True), \
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):
-            self.assertEqual(pkg.get_usage(['sub'], self.pkgdir), {
+            self.assertEqual(pkg.get_usage(self.metadata, ['sub']), {
                 'name': 'foo[sub]', 'type': 'system', 'generated': True,
                 'auto_link': False, 'path': [self.pkgconfdir(None)],
                 'pcfiles': ['foo[sub]'],
             })
         with self.assertRaises(ValueError):
-            pkg.get_usage(['bar'], self.pkgdir)
+            pkg.get_usage(self.metadata, ['bar'])
         with self.assertRaises(ValueError):
-            pkg.get_usage(None, self.pkgdir)
+            pkg.get_usage(self.metadata, None)
 
         pkg = make_package('foo', {
             'source': 'system',
@@ -129,7 +127,7 @@ class TestMakePackage(SourceTest):
                         return_value=True), \
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):
-            self.assertEqual(pkg.get_usage(['sub'], self.pkgdir), {
+            self.assertEqual(pkg.get_usage(self.metadata, ['sub']), {
                 'name': 'foo[sub]', 'type': 'system', 'generated': True,
                 'auto_link': False, 'path': [self.pkgconfdir(None)],
                 'pcfiles': ['foo[sub]'],
@@ -141,13 +139,13 @@ class TestMakePackage(SourceTest):
                         return_value=True), \
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):
-            self.assertEqual(pkg.get_usage(None, self.pkgdir), {
+            self.assertEqual(pkg.get_usage(self.metadata, None), {
                 'name': 'foo', 'type': 'system', 'generated': True,
                 'auto_link': False, 'path': [self.pkgconfdir(None)],
                 'pcfiles': ['foo'],
             })
         with self.assertRaises(ValueError):
-            pkg.get_usage(['bar'], self.pkgdir)
+            pkg.get_usage(self.metadata, ['bar'])
 
     def test_boost(self):
         pkg = make_package('boost', {

@@ -22,7 +22,7 @@ class TestBfg9000Builder(BuilderTest):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.run') as mcall:
-            builder.build(pkg, self.pkgdir)
+            builder.build(self.metadata, pkg)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')
@@ -46,7 +46,7 @@ class TestBfg9000Builder(BuilderTest):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.run') as mcall:
-            builder.deploy(pkg, self.pkgdir)
+            builder.deploy(self.metadata, pkg)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'deploy', 'foo.log'
             ), 'a')
@@ -86,14 +86,14 @@ class TestBfg9000Builder(BuilderTest):
         builddir = os.path.join(self.pkgdir, 'build', 'foo')
 
         with mock.patch('shutil.rmtree') as mrmtree:
-            builder.clean(pkg, self.pkgdir)
+            builder.clean(self.metadata, pkg)
             mrmtree.assert_called_once_with(builddir, ignore_errors=True)
 
     def test_usage(self):
         opts = self.make_options()
         pkg = DirectoryPackage('foo', path=self.srcdir, build='bfg9000',
                                _options=opts, config_file=self.config_file)
-        pkg.get_usage(None, self.pkgdir)
+        pkg.get_usage(self.metadata, None)
 
     def test_rehydrate(self):
         opts = self.make_options()

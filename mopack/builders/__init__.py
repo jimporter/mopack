@@ -28,15 +28,16 @@ class Builder(OptionsHolder):
     def path_bases(self):
         return ('builddir',)
 
-    def path_values(self, pkgdir):
-        builddir = os.path.abspath(os.path.join(pkgdir, 'build', self.name))
+    def path_values(self, metadata):
+        builddir = os.path.abspath(os.path.join(metadata.pkgdir, 'build',
+                                                self.name))
         return {'builddir': builddir}
 
     def filter_usage(self, usage):
         return usage
 
-    def clean(self, pkg, pkgdir):
-        path_values = pkg.path_values(pkgdir, builder=self)
+    def clean(self, metadata, pkg):
+        path_values = pkg.path_values(metadata, builder=self)
         shutil.rmtree(path_values['builddir'], ignore_errors=True)
 
     def __repr__(self):

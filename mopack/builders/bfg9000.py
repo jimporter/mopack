@@ -62,12 +62,12 @@ class Bfg9000Builder(Builder):
                 args.extend(['--' + k, v])
         return args
 
-    def build(self, pkg, pkgdir):
-        path_values = pkg.path_values(pkgdir, builder=self)
+    def build(self, metadata, pkg):
+        path_values = pkg.path_values(metadata, builder=self)
 
         bfg9000 = get_cmd(self._common_options.env, 'BFG9000', 'bfg9000')
         ninja = get_cmd(self._common_options.env, 'NINJA', 'ninja')
-        with LogFile.open(pkgdir, self.name) as logfile:
+        with LogFile.open(metadata.pkgdir, self.name) as logfile:
             with pushd(path_values['srcdir']):
                 logfile.check_call(
                     bfg9000 + ['configure', path_values['builddir']] +
@@ -78,10 +78,11 @@ class Bfg9000Builder(Builder):
             with pushd(path_values['builddir']):
                 logfile.check_call(ninja)
 
-    def deploy(self, pkg, pkgdir):
-        path_values = pkg.path_values(pkgdir, builder=self)
+    def deploy(self, metadata, pkg):
+        path_values = pkg.path_values(metadata, builder=self)
 
         ninja = get_cmd(self._common_options.env, 'NINJA', 'ninja')
-        with LogFile.open(pkgdir, self.name, kind='deploy') as logfile:
+        with LogFile.open(metadata.pkgdir, self.name,
+                          kind='deploy') as logfile:
             with pushd(path_values['builddir']):
                 logfile.check_call(ninja + ['install'])

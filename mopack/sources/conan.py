@@ -53,8 +53,8 @@ class ConanPackage(BinaryPackage):
         T.options(types.maybe(types.dict_of(types.string, value_type), {}))
 
     @staticmethod
-    def _installdir(pkgdir):
-        return os.path.join(pkgdir, 'conan')
+    def _installdir(metadata):
+        return os.path.join(metadata.pkgdir, 'conan')
 
     @staticmethod
     def _build_opts(value):
@@ -72,10 +72,10 @@ class ConanPackage(BinaryPackage):
     def path_bases(self, *, builder=None):
         return ('builddir',) if builder else ()
 
-    def path_values(self, pkgdir, *, builder=None):
-        return {'builddir': self._installdir(pkgdir)} if builder else {}
+    def path_values(self, metadata, *, builder=None):
+        return {'builddir': self._installdir(metadata)} if builder else {}
 
-    def version(self, pkgdir):
+    def version(self, metadata):
         # Inspect the local conan cache to get the package's version.
         # XXX: There might be a better way to do this...
         conan = get_cmd(self._common_options.env, 'CONAN', 'conan')
@@ -84,7 +84,7 @@ class ConanPackage(BinaryPackage):
             check=True, stdout=subprocess.PIPE, universal_newlines=True
         ).stdout
 
-    def clean_post(self, new_package, pkgdir, quiet=False):
+    def clean_post(self, metadata, new_package, quiet=False):
         if new_package and self.source == new_package.source:
             return False
 
@@ -93,19 +93,21 @@ class ConanPackage(BinaryPackage):
 
         try:
             # Remove generated pkg-config file.
-            os.remove(os.path.join(pkgdir, 'conan', self.name + '.pc'))
+            os.remove(os.path.join(self._installdir(metadata),
+                                   self.name + '.pc'))
         except FileNotFoundError:
             pass
         return True
 
     @classmethod
-    def resolve_all(cls, packages, pkgdir):
+    def resolve_all(cls, metadata, packages):
         for i in packages:
             log.pkg_resolve(i.name, 'from {}'.format(cls.source))
 
         options = packages[0]._this_options
-        os.makedirs(pkgdir, exist_ok=True)
-        with open(os.path.join(pkgdir, 'conanfile.txt'), 'w') as conan:
+        os.makedirs(metadata.pkgdir, exist_ok=True)
+        with open(os.path.join(metadata.pkgdir, 'conanfile.txt'),
+                  'w') as conan:
             print('[requires]', file=conan)
             for i in packages:
                 print(i.remote, file=conan)
@@ -123,17 +125,17 @@ class ConanPackage(BinaryPackage):
         build = [i.remote_name for i in packages if i.build]
 
         conan = get_cmd(packages[0]._common_options.env, 'CONAN', 'conan')
-        with log.LogFile.open(pkgdir, 'conan') as logfile:
+        with log.LogFile.open(metadata.pkgdir, 'conan') as logfile:
             logfile.check_call(
-                conan + ['install', '-if', cls._installdir(pkgdir)] +
+                conan + ['install', '-if', cls._installdir(metadata)] +
                 cls._build_opts(uniques(options.build + build)) +
-                options.extra_args.fill() + ['--', pkgdir]
+                options.extra_args.fill() + ['--', metadata.pkgdir]
             )
 
         for i in packages:
             i.resolved = True
 
     @staticmethod
-    def deploy_all(packages, pkgdir):
+    def deploy_all(metadata, packages):
         if any(i.should_deploy for i in packages):
             warnings.warn('deploying not yet supported for conan packages')

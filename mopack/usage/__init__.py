@@ -28,14 +28,14 @@ class Usage(OptionsHolder):
     def __init__(self, pkg, *, inherit_defaults=False):
         super().__init__(pkg._options)
 
-    def version(self, pkg, pkgdir):
+    def version(self, metadata, pkg):
         raise NotImplementedError('Usage.version not implemented')
 
     def _usage(self, pkg, submodules, **kwargs):
         return {'name': dependency_string(pkg.name, submodules),
                 'type': self.type, **kwargs}
 
-    def get_usage(self, pkg, submodules, pkgdir):
+    def get_usage(self, metadata, pkg, submodules):
         raise NotImplementedError('Usage.get_usage not implemented')
 
     def __repr__(self):

@@ -68,11 +68,11 @@ class SDistPackage(Package):
             builder = self.builder
         return ('srcdir',) + (builder.path_bases() if builder else ())
 
-    def path_values(self, pkgdir, *, builder=None):
+    def path_values(self, metadata, *, builder=None):
         if builder is True:
             builder = self.builder
-        return {'srcdir': self._srcdir(pkgdir),
-                **(builder.path_values(pkgdir) if builder else {})}
+        return {'srcdir': self._srcdir(metadata),
+                **(builder.path_values(metadata) if builder else {})}
 
     def _make_usage(self, usage, **kwargs):
         return make_usage(self, self.builder.filter_usage(usage), **kwargs)
@@ -118,24 +118,24 @@ class SDistPackage(Package):
         del self.pending_usage
         return config
 
-    def clean_post(self, new_package, pkgdir, quiet=False):
+    def clean_post(self, metadata, new_package, quiet=False):
         if self == new_package:
             return False
 
         if not quiet:
             log.pkg_clean(self.name)
-        self.builder.clean(self, pkgdir)
+        self.builder.clean(metadata, self)
         return True
 
-    def resolve(self, pkgdir):
+    def resolve(self, metadata):
         log.pkg_resolve(self.name)
-        self.builder.build(self, pkgdir)
+        self.builder.build(metadata, self)
         self.resolved = True
 
-    def deploy(self, pkgdir):
+    def deploy(self, metadata):
         if self.should_deploy:
             log.pkg_deploy(self.name)
-            self.builder.deploy(self, pkgdir)
+            self.builder.deploy(metadata, self)
 
 
 @FreezeDried.fields(rehydrate={'path': Path})
@@ -149,10 +149,10 @@ class DirectoryPackage(SDistPackage):
         T = types.TypeCheck(locals(), self._expr_symbols)
         T.path(types.any_path('cfgdir'))
 
-    def _srcdir(self, pkgdir):
+    def _srcdir(self, metadata):
         return self.path.string(cfgdir=self.config_dir)
 
-    def fetch(self, parent_config, pkgdir):
+    def fetch(self, metadata, parent_config):
         path = self.path.string(cfgdir=self.config_dir)
         log.pkg_fetch(self.name, 'from {}'.format(path))
         return self._find_mopack(parent_config, path)
@@ -178,18 +178,18 @@ class TarballPackage(SDistPackage):
             raise TypeError('exactly one of `path` or `url` must be specified')
         self.guessed_srcdir = None  # Set in fetch().
 
-    def _base_srcdir(self, pkgdir):
-        return os.path.join(pkgdir, 'src', self.name)
+    def _base_srcdir(self, metadata):
+        return os.path.join(metadata.pkgdir, 'src', self.name)
 
-    def _srcdir(self, pkgdir):
-        return os.path.join(self._base_srcdir(pkgdir),
+    def _srcdir(self, metadata):
+        return os.path.join(self._base_srcdir(metadata),
                             self.srcdir or self.guessed_srcdir)
 
     def _urlopen(self, url):
         with urlopen(url) as f:
             return BytesIO(f.read())
 
-    def clean_pre(self, new_package, pkgdir, quiet=False):
+    def clean_pre(self, metadata, new_package, quiet=False):
         if self.equal(new_package, skip_fields={'builder'}):
             # Since both package objects have the same configuration, pass the
             # guessed srcdir on to the new package instance. That way, we don't
@@ -199,11 +199,11 @@ class TarballPackage(SDistPackage):
 
         if not quiet:
             log.pkg_clean(self.name, 'sources')
-        shutil.rmtree(self._base_srcdir(pkgdir), ignore_errors=True)
+        shutil.rmtree(self._base_srcdir(metadata), ignore_errors=True)
         return True
 
-    def fetch(self, parent_config, pkgdir):
-        base_srcdir = self._base_srcdir(pkgdir)
+    def fetch(self, metadata, parent_config):
+        base_srcdir = self._base_srcdir(metadata)
         if os.path.exists(base_srcdir):
             log.pkg_fetch(self.name, 'already fetched')
         else:
@@ -228,12 +228,12 @@ class TarballPackage(SDistPackage):
                 patch_cmd = get_cmd(self._common_options.env, 'PATCH', 'patch')
                 patch = self.patch.string(cfgdir=self.config_dir)
                 log.pkg_patch(self.name, 'with {}'.format(patch))
-                with LogFile.open(pkgdir, self.name) as logfile, \
+                with LogFile.open(metadata.pkgdir, self.name) as logfile, \
                      open(patch) as f, \
-                     pushd(self._srcdir(pkgdir)):
+                     pushd(self._srcdir(metadata)):
                     logfile.check_call(patch_cmd + ['-p1'], stdin=f)
 
-        return self._find_mopack(parent_config, self._srcdir(pkgdir))
+        return self._find_mopack(parent_config, self._srcdir(metadata))
 
 
 class GitPackage(SDistPackage):
@@ -267,26 +267,26 @@ class GitPackage(SDistPackage):
         else:
             self.rev = ['branch', 'master']
 
-    def _base_srcdir(self, pkgdir):
-        return os.path.join(pkgdir, 'src', self.name)
+    def _base_srcdir(self, metadata):
+        return os.path.join(metadata.pkgdir, 'src', self.name)
 
-    def _srcdir(self, pkgdir):
-        return os.path.join(self._base_srcdir(pkgdir), self.srcdir)
+    def _srcdir(self, metadata):
+        return os.path.join(self._base_srcdir(metadata), self.srcdir)
 
-    def clean_pre(self, new_package, pkgdir, quiet=False):
+    def clean_pre(self, metadata, new_package, quiet=False):
         if self.equal(new_package, skip_fields={'builder'}):
             return False
 
         if not quiet:
             log.pkg_clean(self.name, 'sources')
-        shutil.rmtree(self._base_srcdir(pkgdir), ignore_errors=True)
+        shutil.rmtree(self._base_srcdir(metadata), ignore_errors=True)
         return True
 
-    def fetch(self, parent_config, pkgdir):
-        base_srcdir = self._base_srcdir(pkgdir)
+    def fetch(self, metadata, parent_config):
+        base_srcdir = self._base_srcdir(metadata)
         git = get_cmd(self._common_options.env, 'GIT', 'git')
 
-        with LogFile.open(pkgdir, self.name) as logfile:
+        with LogFile.open(metadata.pkgdir, self.name) as logfile:
             if os.path.exists(base_srcdir):
                 if self.rev[0] == 'branch':
                     with pushd(base_srcdir):
@@ -305,4 +305,4 @@ class GitPackage(SDistPackage):
                     raise ValueError('unknown revision type {!r}'
                                      .format(self.rev[0]))
 
-        return self._find_mopack(parent_config, self._srcdir(pkgdir))
+        return self._find_mopack(parent_config, self._srcdir(metadata))

@@ -34,13 +34,19 @@ def _do_fetch(config, old_metadata, pkgdir):
 
         # Clean out the old package sources if needed.
         if pkg.name in old_metadata.packages:
-            old_metadata.packages[pkg.name].clean_pre(pkg, pkgdir)
+            old_metadata.packages[pkg.name].clean_pre(old_metadata, pkg)
 
         # Fetch the new package and check for child mopack configs.
         try:
-            child_config = pkg.fetch(config, pkgdir)
+            # XXX: Since this is a new package, maybe it would be more sensible
+            # to pass the *new* metadata object to it. However, in the current
+            # implementation, the new metadata object hasn't been created yet.
+            # Currently, this doesn't cause any real issues though, since the
+            # pkgdir should be the same either way, and fetch() shouldn't need
+            # any other info.
+            child_config = pkg.fetch(old_metadata, config)
         except Exception:
-            pkg.clean_pre(None, pkgdir, quiet=True)
+            pkg.clean_pre(old_metadata, None, quiet=True)
             raise
 
         if child_config:
@@ -49,9 +55,10 @@ def _do_fetch(config, old_metadata, pkgdir):
     config.add_children(child_configs)
 
 
-def _fill_metadata(config):
+def _fill_metadata(config, pkgdir):
     config.finalize()
-    metadata = Metadata(config.options, config.files, config.implicit_files)
+    metadata = Metadata(pkgdir, config.options, config.files,
+                        config.implicit_files)
     for pkg in config.packages.values():
         metadata.add_package(pkg)
     return metadata
@@ -66,20 +73,20 @@ def fetch(config, pkgdir):
     except ConfigurationError:
         raise
     except Exception:
-        _fill_metadata(config).save(pkgdir)
+        _fill_metadata(config, pkgdir).save()
         raise
 
-    metadata = _fill_metadata(config)
+    metadata = _fill_metadata(config, pkgdir)
 
     # Clean out old package data if needed.
     for pkg in config.packages.values():
         old = old_metadata.packages.pop(pkg.name, None)
         if old:
-            old.clean_post(pkg, pkgdir)
+            old.clean_post(old_metadata, pkg)
 
     # Clean removed packages.
     for pkg in old_metadata.packages.values():
-        pkg.clean_all(None, pkgdir)
+        pkg.clean_all(old_metadata, None)
 
     return metadata
 
@@ -100,25 +107,25 @@ def resolve(config, pkgdir):
 
     for t, pkgs in batch_packages.items():
         try:
-            t.resolve_all(pkgs, pkgdir)
+            t.resolve_all(metadata, pkgs)
         except Exception:
             for i in pkgs:
-                i.clean_post(None, pkgdir, quiet=True)
-            metadata.save(pkgdir)
+                i.clean_post(metadata, None, quiet=True)
+            metadata.save()
             raise
 
     for pkg in packages:
         try:
             # Ensure metadata is up-to-date for packages that need it.
             if pkg.needs_dependencies:
-                metadata.save(pkgdir)
-            pkg.resolve(pkgdir)
+                metadata.save()
+            pkg.resolve(metadata)
         except Exception:
-            pkg.clean_post(None, pkgdir, quiet=True)
-            metadata.save(pkgdir)
+            pkg.clean_post(metadata, None, quiet=True)
+            metadata.save()
             raise
 
-    metadata.save(pkgdir)
+    metadata.save()
 
 
 def deploy(pkgdir):
@@ -136,15 +143,15 @@ def deploy(pkgdir):
             packages.append(pkg)
 
     for t, pkgs in batch_packages.items():
-        t.deploy_all(pkgs, pkgdir)
+        t.deploy_all(metadata, pkgs)
     for pkg in packages:
-        pkg.deploy(pkgdir)
+        pkg.deploy(metadata)
 
 
 def usage(pkgdir, name, submodules=None, strict=False):
     metadata = Metadata.try_load(pkgdir, strict)
     package = metadata.get_package(name, strict)
-    return package.get_usage(submodules, pkgdir)
+    return package.get_usage(metadata, submodules)
 
 
 def list_files(pkgdir, implicit=False, strict=False):
@@ -158,13 +165,13 @@ def list_packages(pkgdir, flat=False):
     metadata = Metadata.load(pkgdir)
 
     if flat:
-        return [PackageTreeItem(pkg, pkg.version(pkgdir)) for pkg in
+        return [PackageTreeItem(pkg, pkg.version(metadata)) for pkg in
                 metadata.packages.values()]
 
     packages = []
     pending = {}
     for pkg in metadata.packages.values():
-        item = PackageTreeItem(pkg, pkg.version(pkgdir),
+        item = PackageTreeItem(pkg, pkg.version(metadata),
                                pending.pop(pkg.name, None))
         if pkg.parent:
             pending.setdefault(pkg.parent, []).append(item)

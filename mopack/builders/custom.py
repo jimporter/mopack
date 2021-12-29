@@ -46,16 +46,17 @@ class CustomBuilder(Builder):
             else:
                 logfile.check_call(line)
 
-    def build(self, pkg, pkgdir):
-        path_values = pkg.path_values(pkgdir, builder=self)
+    def build(self, metadata, pkg):
+        path_values = pkg.path_values(metadata, builder=self)
 
-        with LogFile.open(pkgdir, self.name) as logfile:
+        with LogFile.open(metadata.pkgdir, self.name) as logfile:
             with pushd(path_values['srcdir']):
                 self._execute(logfile, self.build_commands, path_values)
 
-    def deploy(self, pkg, pkgdir):
-        path_values = pkg.path_values(pkgdir, builder=self)
+    def deploy(self, metadata, pkg):
+        path_values = pkg.path_values(metadata, builder=self)
 
-        with LogFile.open(pkgdir, self.name, kind='deploy') as logfile:
+        with LogFile.open(metadata.pkgdir, self.name,
+                          kind='deploy') as logfile:
             with pushd(path_values['builddir']):
                 self._execute(logfile, self.deploy_commands, path_values)

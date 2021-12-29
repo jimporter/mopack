@@ -15,11 +15,11 @@ from mopack.types import dependency_string, FieldKeyError
 
 class TestSystemPackage(SourceTest):
     pkg_type = SystemPackage
-    config_file = abspath('/path/to/mopack.yml')
     pkgdir = os.path.join(test_stage_dir, 'sources')
     pkgconfdir = os.path.join(pkgdir, 'pkgconfig')
 
     def setUp(self):
+        super().setUp()
         self.clear_pkgdir()
 
     def clear_pkgdir(self):
@@ -51,7 +51,8 @@ class TestSystemPackage(SourceTest):
                         return_value=['lib{}.so']), \
              mock.patch('mopack.usage.path_system.isfile',
                         mock_isfile):
-            self.assertEqual(pkg.get_usage(submodules, self.pkgdir), expected)
+            self.assertEqual(pkg.get_usage(self.metadata, submodules),
+                             expected)
 
     def check_pkg_config(self, name, submodules, expected={}):
         pcname = dependency_string(name, submodules)
@@ -66,14 +67,14 @@ class TestSystemPackage(SourceTest):
 
     def test_resolve_path(self):
         pkg = self.make_package('foo')
-        pkg.resolve(self.pkgdir)
-        self.assertEqual(pkg.version(self.pkgdir), None)
+        pkg.resolve(self.metadata)
+        self.assertEqual(pkg.version(self.metadata), None)
         self.check_get_usage(pkg, None)
         self.check_pkg_config('foo', None)
 
     def test_resolve_pkg_config(self):
         pkg = self.make_package('foo')
-        pkg.resolve(self.pkgdir)
+        pkg.resolve(self.metadata)
         self.check_get_usage(pkg, None, {
             'name': 'foo', 'type': 'system', 'path': [], 'pcfiles': ['foo'],
             'extra_args': [],
@@ -81,14 +82,14 @@ class TestSystemPackage(SourceTest):
 
     def test_explicit_version(self):
         pkg = self.make_package('foo', version='2.0')
-        pkg.resolve(self.pkgdir)
-        self.assertEqual(pkg.version(self.pkgdir), '2.0')
+        pkg.resolve(self.metadata)
+        self.assertEqual(pkg.version(self.metadata), '2.0')
         self.check_get_usage(pkg, None)
         self.check_pkg_config('foo', None)
 
     def test_auto_link(self):
         pkg = self.make_package('foo', auto_link=True)
-        pkg.resolve(self.pkgdir)
+        pkg.resolve(self.metadata)
         self.check_get_usage(pkg, None, {
             'name': 'foo', 'type': 'system', 'generated': True,
             'auto_link': True, 'path': [self.pkgconfdir], 'pcfiles': ['foo'],
@@ -101,27 +102,27 @@ class TestSystemPackage(SourceTest):
         incdir = abspath('/mock/path/to/include')
         pkg = self.make_package('foo', include_path='/mock/path/to/include',
                                 headers=['foo.hpp'])
-        pkg.resolve(self.pkgdir)
+        pkg.resolve(self.metadata)
         self.check_get_usage(pkg, None)
         self.check_pkg_config('foo', None, {'cflags': ['-I' + incdir]})
 
     def test_library_path(self):
         libdir = abspath('/mock/path/to/lib')
         pkg = self.make_package('foo', library_path='/mock/path/to/lib')
-        pkg.resolve(self.pkgdir)
+        pkg.resolve(self.metadata)
         self.check_get_usage(pkg, None)
         self.check_pkg_config('foo', None, {'libs': ['-L' + libdir, '-lfoo']})
 
     def test_headers(self):
         pkg = self.make_package('foo', headers='foo.hpp')
-        pkg.resolve(self.pkgdir)
+        pkg.resolve(self.metadata)
         self.check_get_usage(pkg, None)
         self.check_pkg_config('foo', None, {
             'cflags': ['-I' + abspath('/mock/include')],
         })
 
         pkg = self.make_package('foo', headers=['foo.hpp'])
-        pkg.resolve(self.pkgdir)
+        pkg.resolve(self.metadata)
         self.check_get_usage(pkg, None)
         self.check_pkg_config('foo', None, {
             'cflags': ['-I' + abspath('/mock/include')],
@@ -129,21 +130,21 @@ class TestSystemPackage(SourceTest):
 
     def test_libraries(self):
         pkg = self.make_package('foo', libraries='bar')
-        pkg.resolve(self.pkgdir)
+        pkg.resolve(self.metadata)
         self.check_get_usage(pkg, None)
         self.check_pkg_config('foo', None, {
             'libs': ['-L' + abspath('/mock/lib'), '-lbar'],
         })
 
         pkg = self.make_package('foo', libraries=['foo', 'bar'])
-        pkg.resolve(self.pkgdir)
+        pkg.resolve(self.metadata)
         self.check_get_usage(pkg, None)
         self.check_pkg_config('foo', None, {
             'libs': ['-L' + abspath('/mock/lib'), '-lfoo', '-lbar'],
         })
 
         pkg = self.make_package('foo', libraries=None)
-        pkg.resolve(self.pkgdir)
+        pkg.resolve(self.metadata)
         self.check_get_usage(pkg, None)
         self.check_pkg_config('foo', None, {'libs': []})
 
@@ -182,7 +183,7 @@ class TestSystemPackage(SourceTest):
             'names': ['sub'], 'required': True
         })
         with self.assertRaises(ValueError):
-            pkg.get_usage(['invalid'], self.pkgdir)
+            pkg.get_usage(self.metadata, ['invalid'])
 
     def test_invalid_usage(self):
         with self.assertRaises(FieldKeyError):
@@ -191,37 +192,38 @@ class TestSystemPackage(SourceTest):
     def test_deploy(self):
         pkg = self.make_package('foo')
         # This is a no-op; just make sure it executes ok.
-        pkg.deploy(self.pkgdir)
+        pkg.deploy(self.metadata)
 
     def test_clean_pre(self):
         oldpkg = self.make_package('foo')
         newpkg = self.make_package(AptPackage, 'foo')
 
         # System -> Apt
-        self.assertEqual(oldpkg.clean_pre(self.pkgdir, newpkg), False)
+        self.assertEqual(oldpkg.clean_pre(self.metadata, newpkg), False)
 
         # Apt -> nothing
-        self.assertEqual(oldpkg.clean_pre(self.pkgdir, None), False)
+        self.assertEqual(oldpkg.clean_pre(self.metadata, None), False)
 
     def test_clean_post(self):
         oldpkg = self.make_package('foo')
         newpkg = self.make_package(AptPackage, 'foo')
 
         # System -> Apt
-        self.assertEqual(oldpkg.clean_post(self.pkgdir, newpkg), False)
+        self.assertEqual(oldpkg.clean_post(self.metadata, newpkg), False)
 
         # Apt -> nothing
-        self.assertEqual(oldpkg.clean_post(self.pkgdir, None), False)
+        self.assertEqual(oldpkg.clean_post(self.metadata, None), False)
 
     def test_clean_all(self):
         oldpkg = self.make_package('foo')
         newpkg = self.make_package(AptPackage, 'foo')
 
         # System -> Apt
-        self.assertEqual(oldpkg.clean_all(self.pkgdir, newpkg), (False, False))
+        self.assertEqual(oldpkg.clean_all(self.metadata, newpkg),
+                         (False, False))
 
         # Apt -> nothing
-        self.assertEqual(oldpkg.clean_all(self.pkgdir, None), (False, False))
+        self.assertEqual(oldpkg.clean_all(self.metadata, None), (False, False))
 
     def test_equality(self):
         pkg = self.make_package('foo')

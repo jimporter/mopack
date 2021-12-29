@@ -20,14 +20,12 @@ def mock_run(args, **kwargs):
 
 class TestApt(SourceTest):
     pkg_type = AptPackage
-    config_file = '/path/to/mopack.yml'
-    pkgdir = '/path/to/builddir/mopack'
-    pkgconfdir = os.path.join(pkgdir, 'pkgconfig')
+    pkgconfdir = os.path.join(SourceTest.pkgdir, 'pkgconfig')
 
     def check_resolve_all(self, packages, remotes):
         with mock_open_log() as mopen, \
              mock.patch('subprocess.run') as mrun:
-            AptPackage.resolve_all(packages, self.pkgdir)
+            AptPackage.resolve_all(self.metadata, packages)
 
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'apt.log'
@@ -69,7 +67,7 @@ class TestApt(SourceTest):
                         return_value=True), \
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):
-            self.assertEqual(pkg.get_usage(submodules, self.pkgdir), usage)
+            self.assertEqual(pkg.get_usage(self.metadata, submodules), usage)
 
     def test_basic(self):
         pkg = self.make_package('foo')
@@ -80,7 +78,7 @@ class TestApt(SourceTest):
         self.check_resolve_all([pkg], ['libfoo-dev'])
 
         with mock.patch('subprocess.run', side_effect=mock_run) as mrun:
-            self.assertEqual(pkg.version(self.pkgdir), '1.2.3')
+            self.assertEqual(pkg.version(self.metadata), '1.2.3')
             mrun.assert_has_calls([
                 mock.call(
                     ['pkg-config', 'foo', '--modversion'], check=True,
@@ -102,7 +100,7 @@ class TestApt(SourceTest):
         self.check_resolve_all([pkg], ['foo-dev'])
 
         with mock.patch('subprocess.run', side_effect=mock_run) as mrun:
-            self.assertEqual(pkg.version(self.pkgdir), '1.2.3')
+            self.assertEqual(pkg.version(self.metadata), '1.2.3')
             mrun.assert_has_calls([
                 mock.call(
                     ['pkg-config', 'foo', '--modversion'], check=True,
@@ -123,7 +121,7 @@ class TestApt(SourceTest):
         self.check_resolve_all([pkg], ['foo-dev', 'bar-dev'])
 
         with mock.patch('subprocess.run', side_effect=mock_run) as mrun:
-            pkg.version(self.pkgdir)
+            pkg.version(self.metadata)
             mrun.assert_has_calls([
                 mock.call(
                     ['pkg-config', 'foo', '--modversion'], check=True,
@@ -157,7 +155,7 @@ class TestApt(SourceTest):
         self.check_resolve_all([pkg], ['libfoo-dev'])
 
         with mock.patch('subprocess.run', side_effect=mock_run) as mrun:
-            self.assertEqual(pkg.version(self.pkgdir), '2.0')
+            self.assertEqual(pkg.version(self.metadata), '2.0')
             mrun.assert_called_once_with(
                 ['pkg-config', 'foo', '--modversion'], check=True,
                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
@@ -212,12 +210,12 @@ class TestApt(SourceTest):
             'names': ['sub'], 'required': True
         })
         with self.assertRaises(ValueError):
-            pkg.get_usage(['invalid'], self.pkgdir)
+            pkg.get_usage(self.metadata, ['invalid'])
 
     def test_deploy(self):
         pkg = self.make_package('foo')
         # This is a no-op; just make sure it executes ok.
-        AptPackage.deploy_all([pkg], self.pkgdir)
+        AptPackage.deploy_all(self.metadata, [pkg])
 
     def test_clean_pre(self):
         oldpkg = self.make_package('foo')
@@ -225,10 +223,10 @@ class TestApt(SourceTest):
                                    remote='foo/1.2.4@conan/stable')
 
         # Apt -> Conan
-        self.assertEqual(oldpkg.clean_pre(newpkg, self.pkgdir), False)
+        self.assertEqual(oldpkg.clean_pre(self.metadata, newpkg), False)
 
         # Apt -> nothing
-        self.assertEqual(oldpkg.clean_pre(None, self.pkgdir), False)
+        self.assertEqual(oldpkg.clean_pre(self.metadata, None), False)
 
     def test_clean_post(self):
         oldpkg = self.make_package('foo')
@@ -236,10 +234,10 @@ class TestApt(SourceTest):
                                    remote='foo/1.2.4@conan/stable')
 
         # Apt -> Conan
-        self.assertEqual(oldpkg.clean_post(newpkg, self.pkgdir), False)
+        self.assertEqual(oldpkg.clean_post(self.metadata, newpkg), False)
 
         # Apt -> nothing
-        self.assertEqual(oldpkg.clean_post(None, self.pkgdir), False)
+        self.assertEqual(oldpkg.clean_post(self.metadata, None), False)
 
     def test_clean_all(self):
         oldpkg = self.make_package('foo')
@@ -247,10 +245,11 @@ class TestApt(SourceTest):
                                    remote='foo/1.2.4@conan/stable')
 
         # Apt -> Conan
-        self.assertEqual(oldpkg.clean_all(newpkg, self.pkgdir), (False, False))
+        self.assertEqual(oldpkg.clean_all(self.metadata, newpkg),
+                         (False, False))
 
         # Apt -> nothing
-        self.assertEqual(oldpkg.clean_all(None, self.pkgdir), (False, False))
+        self.assertEqual(oldpkg.clean_all(self.metadata, None), (False, False))
 
     def test_equality(self):
         pkg = self.make_package('foo')
