@@ -1,3 +1,4 @@
+import copy
 import re
 import yaml
 from io import StringIO
@@ -227,15 +228,38 @@ class TestMarkedList(TestCase):
         self.assertEqual(m.marks, ['mark1'])
         self.assertEqual(m.value_marks, ['mark1'])
 
-        m[-1:] = [1, 2, 3]
-        self.assertEqual(m, [1, 2, 3])
-        self.assertEqual(m.marks, ['mark1'])
-        self.assertEqual(m.value_marks, ['mark1'])
+        m.append(2, 'mark2')
+        self.assertEqual(m, [1, 2])
+        self.assertEqual(m.marks, ['mark1', 'mark2'])
+        self.assertEqual(m.value_marks, ['mark1', 'mark2'])
 
-        m.append(4, 'mark4')
-        self.assertEqual(m, [1, 2, 3, 4])
-        self.assertEqual(m.marks, ['mark1', None, None, 'mark4'])
-        self.assertEqual(m.value_marks, ['mark1', None, None, 'mark4'])
+        m.append(3)
+        self.assertEqual(m, [1, 2, 3])
+        self.assertEqual(m.marks, ['mark1', 'mark2', None])
+        self.assertEqual(m.value_marks, ['mark1', 'mark2', None])
+
+    def test_get_setitem(self):
+        m = MarkedList()
+        m.append(1, 'mark1')
+        self.assertEqual(m[0], 1)
+
+        m[0] = 2
+        self.assertEqual(m[0], 2)
+
+    def test_compare(self):
+        m = MarkedList()
+        m.append(1, 'mark1')
+
+        m2 = MarkedList('mark')
+        m2.append(1)
+
+        m3 = MarkedList()
+        m3.append(2)
+
+        self.assertTrue(m == m2)
+        self.assertFalse(m != m2)
+        self.assertFalse(m == m3)
+        self.assertTrue(m != m3)
 
     def test_extend(self):
         m = MarkedList()
@@ -262,10 +286,35 @@ class TestMarkedList(TestCase):
 
     def test_copy(self):
         m = MarkedList('mark')
-        m.append(1, 'mark1')
+        m.append([1], 'mark1')
 
         m2 = m.copy()
-        self.assertEqual(m2, [1])
+        self.assertIsNot(m, m2)
+        self.assertIs(m[0], m2[0])
+
+        self.assertEqual(m2, [[1]])
+        self.assertEqual(m2.mark, 'mark')
+        self.assertEqual(m2.marks, ['mark1'])
+        self.assertEqual(m2.value_marks, ['mark1'])
+
+        m3 = copy.copy(m)
+        self.assertIsNot(m, m3)
+        self.assertIs(m[0], m3[0])
+
+        self.assertEqual(m3, [[1]])
+        self.assertEqual(m3.mark, 'mark')
+        self.assertEqual(m3.marks, ['mark1'])
+        self.assertEqual(m3.value_marks, ['mark1'])
+
+    def test_deepcopy(self):
+        m = MarkedList('mark')
+        m.append([1], 'mark1')
+
+        m2 = copy.deepcopy(m)
+        self.assertIsNot(m, m2)
+        self.assertIsNot(m[0], m2[0])
+
+        self.assertEqual(m2, [[1]])
         self.assertEqual(m2.mark, 'mark')
         self.assertEqual(m2.marks, ['mark1'])
         self.assertEqual(m2.value_marks, ['mark1'])
@@ -297,6 +346,34 @@ class TestMarkedDict(TestCase):
         self.assertEqual(m.marks, {'key1': 'kmark1'})
         self.assertEqual(m.value_marks, {'key1': 'vmark1'})
 
+        m['key3'] = 3
+        self.assertEqual(m, {'key1': 1, 'key2': 2, 'key3': 3})
+        self.assertEqual(m.marks, {'key1': 'kmark1'})
+        self.assertEqual(m.value_marks, {'key1': 'vmark1'})
+
+    def test_get_setitem(self):
+        m = MarkedDict()
+        m.add('key1', 1, 'kmark1', 'vmark1')
+        self.assertEqual(m['key1'], 1)
+
+        m['key1'] = 2
+        self.assertEqual(m['key1'], 2)
+
+    def test_compare(self):
+        m = MarkedDict()
+        m.add('key1', 1, 'mark1')
+
+        m2 = MarkedDict('mark')
+        m2['key1'] = 1
+
+        m3 = MarkedDict()
+        m3['key1'] = 2
+
+        self.assertTrue(m == m2)
+        self.assertFalse(m != m2)
+        self.assertFalse(m == m3)
+        self.assertTrue(m != m3)
+
     def test_pop(self):
         m = MarkedDict()
         m.add('key1', 1, 'mark1')
@@ -312,26 +389,31 @@ class TestMarkedDict(TestCase):
 
     def test_update(self):
         m = MarkedDict()
-        m.update({'key1': 1, 'key2': 2})
-        self.assertEqual(m, {'key1': 1, 'key2': 2})
-        self.assertEqual(m.mark, None)
-        self.assertEqual(m.marks, {})
-        self.assertEqual(m.value_marks, {})
 
         m2 = MarkedDict('mark')
-        m.add('key3', 3, 'kmark3', 'vmark3')
+        m2.add('key1', 1, 'kmark1', 'vmark1')
         m.update(m2)
-        self.assertEqual(m, {'key1': 1, 'key2': 2, 'key3': 3})
+        self.assertEqual(m, {'key1': 1})
         self.assertEqual(m.mark, 'mark')
-        self.assertEqual(m.marks, {'key3': 'kmark3'})
-        self.assertEqual(m.value_marks, {'key3': 'vmark3'})
+        self.assertEqual(m.marks, {'key1': 'kmark1'})
+        self.assertEqual(m.value_marks, {'key1': 'vmark1'})
+
+        m.update({'key1': -1, 'key2': 2})
+        self.assertEqual(m, {'key1': -1, 'key2': 2})
+        self.assertEqual(m.mark, 'mark')
+        self.assertEqual(m.marks, {'key1': 'kmark1', 'key2': None})
+        self.assertEqual(m.value_marks, {'key1': 'vmark1', 'key2': None})
 
         m3 = MarkedDict('badmark')
+        m3.add('key1', 1.1, 'kmark1.1', 'vmark1.1')
+        m3.add('key3', 3, 'kmark3', 'vmark3')
         m.update(m3)
-        self.assertEqual(m, {'key1': 1, 'key2': 2, 'key3': 3})
+        self.assertEqual(m, {'key1': 1.1, 'key2': 2, 'key3': 3})
         self.assertEqual(m.mark, 'mark')
-        self.assertEqual(m.marks, {'key3': 'kmark3'})
-        self.assertEqual(m.value_marks, {'key3': 'vmark3'})
+        self.assertEqual(m.marks, {'key1': 'kmark1.1', 'key2': None,
+                                   'key3': 'kmark3'})
+        self.assertEqual(m.value_marks, {'key1': 'vmark1.1', 'key2': None,
+                                         'key3': 'vmark3'})
 
     def test_update_kwargs(self):
         m = MarkedDict()
@@ -343,10 +425,35 @@ class TestMarkedDict(TestCase):
 
     def test_copy(self):
         m = MarkedDict('mark')
-        m.add('key1', 1, 'kmark1', 'vmark1')
+        m.add('key1', [1], 'kmark1', 'vmark1')
 
         m2 = m.copy()
-        self.assertEqual(m2, {'key1': 1})
+        self.assertIsNot(m, m2)
+        self.assertIs(m['key1'], m2['key1'])
+
+        self.assertEqual(m2, {'key1': [1]})
+        self.assertEqual(m2.mark, 'mark')
+        self.assertEqual(m2.marks, {'key1': 'kmark1'})
+        self.assertEqual(m2.value_marks, {'key1': 'vmark1'})
+
+        m3 = copy.copy(m)
+        self.assertIsNot(m, m3)
+        self.assertIs(m['key1'], m3['key1'])
+
+        self.assertEqual(m3, {'key1': [1]})
+        self.assertEqual(m3.mark, 'mark')
+        self.assertEqual(m3.marks, {'key1': 'kmark1'})
+        self.assertEqual(m3.value_marks, {'key1': 'vmark1'})
+
+    def test_deepcopy(self):
+        m = MarkedDict('mark')
+        m.add('key1', [1], 'kmark1', 'vmark1')
+
+        m2 = copy.deepcopy(m)
+        self.assertIsNot(m, m2)
+        self.assertIsNot(m['key1'], m2['key1'])
+
+        self.assertEqual(m2, {'key1': [1]})
         self.assertEqual(m2.mark, 'mark')
         self.assertEqual(m2.marks, {'key1': 'kmark1'})
         self.assertEqual(m2.value_marks, {'key1': 'vmark1'})

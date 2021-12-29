@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from enum import Enum
 
 from .freezedried import FreezeDried
+from .iterutils import ismapping
 from .placeholder import PlaceholderString
 
 __all__ = ['file_outdated', 'Path', 'pushd']
@@ -93,7 +94,7 @@ class Path(FreezeDried):
 
     @classmethod
     def rehydrate(cls, config, **kwargs):
-        if not isinstance(config, dict):
+        if not ismapping(config):
             raise TypeError('expected a dict')
         return cls(config['path'], cls.Base[config['base']])
 

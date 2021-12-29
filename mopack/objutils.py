@@ -1,11 +1,11 @@
 import functools
-from .iterutils import isiterable
+from .iterutils import isiterable, ismapping
 
 __all__ = ['hashify', 'memoize', 'memoize_method']
 
 
 def hashify(thing):
-    if isinstance(thing, dict):
+    if ismapping(thing):
         return tuple((hashify(k), hashify(v)) for k, v in thing.items())
     elif isiterable(thing):
         return tuple(hashify(i) for i in thing)

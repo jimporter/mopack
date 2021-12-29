@@ -2,14 +2,21 @@ from collections import namedtuple
 from unittest import TestCase
 
 from mopack import iterutils
+from mopack.yaml_tools import MarkedDict, MarkedList
 
 
 class TestIsIterable(TestCase):
     def test_list(self):
         self.assertTrue(iterutils.isiterable([]))
 
+    def test_marked_list(self):
+        self.assertTrue(iterutils.isiterable(MarkedList()))
+
     def test_dict(self):
         self.assertFalse(iterutils.isiterable({}))
+
+    def test_marked_dict(self):
+        self.assertFalse(iterutils.isiterable(MarkedDict()))
 
     def test_generator(self):
         gen = (i for i in range(10))
@@ -22,12 +29,38 @@ class TestIsIterable(TestCase):
         self.assertFalse(iterutils.isiterable(None))
 
 
+class TestIsSequence(TestCase):
+    def test_list(self):
+        self.assertTrue(iterutils.issequence([]))
+
+    def test_marked_list(self):
+        self.assertTrue(iterutils.issequence(MarkedList()))
+
+    def test_dict(self):
+        self.assertFalse(iterutils.issequence({}))
+
+    def test_marked_dict(self):
+        self.assertFalse(iterutils.issequence(MarkedDict()))
+
+    def test_string(self):
+        self.assertFalse(iterutils.issequence('foo'))
+
+    def test_none(self):
+        self.assertFalse(iterutils.issequence(None))
+
+
 class TestIsMapping(TestCase):
     def test_list(self):
         self.assertFalse(iterutils.ismapping([]))
 
+    def test_marked_list(self):
+        self.assertFalse(iterutils.ismapping(MarkedList()))
+
     def test_dict(self):
         self.assertTrue(iterutils.ismapping({}))
+
+    def test_marked_dict(self):
+        self.assertTrue(iterutils.ismapping(MarkedDict()))
 
     def test_string(self):
         self.assertFalse(iterutils.ismapping('foo'))

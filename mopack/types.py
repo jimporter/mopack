@@ -142,7 +142,8 @@ class TypeCheck:
             with wrap_field_error(field):
                 if isinstance(data, str):
                     return expr.evaluate(symbols, data)
-                elif isinstance(data, (dict, list)):
+                elif (iterutils.issequence(data) or
+                      iterutils.ismapping(data)):
                     for k, v in iterutils.iteritems(data):
                         data[k] = self.__evaluate(k, v, symbols)
                     return data
@@ -171,10 +172,10 @@ class TypeCheck:
         value = check(field, value)
 
         if extend:
-            d = (dest[dest_field] if isinstance(dest, dict)
+            d = (dest[dest_field] if iterutils.ismapping(dest)
                  else getattr(dest, dest_field))
             d.extend(value)
-        elif isinstance(dest, dict):
+        elif iterutils.ismapping(dest):
             dest[dest_field] = value
         else:
             setattr(dest, dest_field, value)
@@ -262,7 +263,7 @@ def dict_of(key_type, value_type):
             yield key_type(k, k), value_type(k, v)
 
     def check(field, value):
-        if not isinstance(value, dict):
+        if not iterutils.ismapping(value):
             raise FieldValueError('expected a dict', field)
         with wrap_field_error(field):
             return {k: v for k, v in check_each(value)}
@@ -280,7 +281,7 @@ def dict_shape(shape, desc):
             raise FieldValueError('expected {}'.format(desc), ())
 
     def check(field, value):
-        if not isinstance(value, dict):
+        if not iterutils.ismapping(value):
             raise FieldValueError('expected {}'.format(desc), field)
         with wrap_field_error(field):
             for k in value:

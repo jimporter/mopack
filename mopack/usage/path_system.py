@@ -9,7 +9,7 @@ from .. import types
 from ..commands import Metadata
 from ..environment import get_pkg_config
 from ..freezedried import DictFreezeDryer, FreezeDried, ListFreezeDryer
-from ..iterutils import listify
+from ..iterutils import ismapping, listify
 from ..package_defaults import DefaultResolver
 from ..path import file_outdated, isfile, Path
 from ..pkg_config import generated_pkg_config_dir, write_pkg_config
@@ -199,7 +199,7 @@ class PathUsage(Usage):
         return mapping.fill(symbols, path_bases, submodule)
 
     def _get_library(self, lib):
-        if isinstance(lib, dict) and lib['type'] == 'guess':
+        if ismapping(lib) and lib['type'] == 'guess':
             return package_library_name(
                 self._common_options.target_platform, lib['name']
             )
@@ -262,7 +262,7 @@ class PathUsage(Usage):
             return True, re.sub(ex[0], ex[1], line)
 
     def _get_version(self, pkg, pkgdir, include_dirs, path_vars):
-        if isinstance(self.explicit_version, dict):
+        if ismapping(self.explicit_version):
             version = self.explicit_version
             for path in include_dirs:
                 header = path.append(version['file'])

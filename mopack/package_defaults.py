@@ -39,7 +39,8 @@ class DefaultConfig:
         def parse_recursive(data):
             if isinstance(data, str):
                 return expr.parse(data)
-            elif isinstance(data, (dict, list)):
+            elif (iterutils.issequence(data) or
+                  iterutils.ismapping(data)):
                 for k, v in iterutils.iteritems(data):
                     data[k] = parse_recursive(v)
                 return data
@@ -63,16 +64,16 @@ class DefaultConfig:
     def _evaluate_recursive(cls, symbols, data):
         if isinstance(data, expr.Token):
             return data(symbols)
-        elif isinstance(data, list):
+        elif iterutils.issequence(data):
             return [cls._evaluate_recursive(symbols, i) for i in data]
-        elif isinstance(data, dict):
+        elif iterutils.ismapping(data):
             return {k: cls._evaluate_recursive(symbols, v)
                     for k, v in data.items()}
         return data
 
     @classmethod
     def _select_from_list(cls, symbols, data):
-        if isinstance(data, list):
+        if iterutils.issequence(data):
             for i in data:
                 if cls._if_evaluate(symbols, i.get('if', True)):
                     return i

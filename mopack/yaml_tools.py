@@ -155,78 +155,123 @@ class MarkRange(namedtuple('MarkRange', ['start', 'end'])):
 
 
 class MarkedCollection:
-    pass
-
-
-class MarkedList(list, MarkedCollection):
-    def __init__(self, mark=None):
-        super().__init__(self)
+    def __init__(self, data, mark, marks):
+        self.data = data
         self.mark = mark
-        self.marks = []
+        self.marks = marks
 
-    def _fill_marks(self):
-        # Ensure we have the same number of marks as we do elements.
-        # Note: this doesn't account for deletions or anything fancy like that,
-        # but those shouldn't happen anyway.
-        for i in range(len(self.marks), len(self)):
-            self.marks.append(None)
+    def __getitem__(self, index):
+        return self.data[index]
 
-    @property
-    def value_marks(self):
-        return self.marks
+    def __setitem__(self, index, value):
+        self.data[index] = value
 
-    def append(self, value, mark):
-        self._fill_marks()
-        super().append(value)
-        self.marks.append(mark)
+    def __len__(self):
+        return len(self.data)
 
-    def extend(self, rhs):
-        self._fill_marks()
-        super().extend(rhs)
+    def __iter__(self):
+        return iter(self.data)
+
+    def __repr__(self):
+        return repr(self.data)
+
+    def __eq__(self, rhs):
+        if isinstance(rhs, MarkedCollection):
+            return self.data == rhs.data
+        return self.data == rhs
+
+
+class MarkedList(MarkedCollection, collections.abc.Sequence):
+    def __init__(self, mark=None):
+        super().__init__([], mark, [])
+
+    def _extend_marks(self, rhs):
         if isinstance(rhs, MarkedCollection):
             if self.mark is None:
                 self.mark = rhs.mark
             self.marks.extend(rhs.marks)
         else:
-            self.marks.extend([None] * len(rhs))
+            for i in range(len(self.marks), len(self.data)):
+                self.marks.append(None)
+
+    @property
+    def value_marks(self):
+        return self.marks
+
+    def append(self, value, mark=None):
+        assert len(self.data) == len(self.marks)
+        self.data.append(value)
+        self.marks.append(mark)
+
+    def extend(self, rhs):
+        assert len(self.data) == len(self.marks)
+        self.data.extend(rhs)
+        self._extend_marks(rhs)
 
     def copy(self):
         result = MarkedList()
         result.extend(self)
         return result
 
+    def __copy__(self):
+        return self.copy()
 
-class MarkedDict(dict, MarkedCollection):
+    def __deepcopy__(self, memo):
+        import copy
+        result = MarkedList()
+        result.data.extend(copy.deepcopy(i, memo) for i in self)
+        result._extend_marks(self)
+        return result
+
+
+class MarkedDict(MarkedCollection, collections.abc.Mapping):
     def __init__(self, mark=None):
-        super().__init__(self)
-        self.mark = mark
-        self.marks = {}
+        super().__init__({}, mark, {})
         self.value_marks = {}
 
+    def _update_marks(self, rhs):
+        if isinstance(rhs, MarkedDict):
+            if self.mark is None:
+                self.mark = rhs.mark
+            self.marks.update(rhs.marks)
+            self.value_marks.update(rhs.value_marks)
+        else:
+            for k in self.data:
+                if k not in self.marks:
+                    self.marks[k] = self.value_marks[k] = None
+
     def add(self, key, value, key_mark=None, value_mark=None):
-        self[key] = value
+        self.data[key] = value
         if key_mark is not None:
             self.marks[key] = key_mark
         if value_mark is not None:
             self.value_marks[key] = value_mark
 
     def pop(self, key, *args):
-        result = super().pop(key, *args)
+        result = self.data.pop(key, *args)
         self.marks.pop(key, None)
         self.value_marks.pop(key, None)
         return result
 
     def update(self, *args, **kwargs):
-        super().update(*args, **kwargs)
-        if len(args) and isinstance(args[0], MarkedDict):
-            if self.mark is None:
-                self.mark = args[0].mark
-                self.marks.update(args[0].marks)
-                self.value_marks.update(args[0].value_marks)
+        self.data.update(*args, **kwargs)
+        if len(args):
+            self._update_marks(args[0])
 
     def copy(self):
         result = MarkedDict()
         result.update(self)
+        return result
+
+    def __copy__(self):
+        return self.copy()
+
+    def __deepcopy__(self, memo):
+        import copy
+        result = MarkedDict()
+        result.data.update({copy.deepcopy(k, memo): copy.deepcopy(v, memo)
+                            for k, v in self.items()})
+        result._update_marks(self)
         return result
 
 

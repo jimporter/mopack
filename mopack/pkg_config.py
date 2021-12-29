@@ -1,5 +1,6 @@
 import os
 
+from .iterutils import issequence
 from .path import Path
 from .shell import quote_native, ShellArguments
 
@@ -22,7 +23,7 @@ def _write_field(out, name, value, var_symbols={}):
             lambda s, orig: quote_native(s, force=isinstance(orig, Path)),
             **var_symbols
         ))
-    elif isinstance(value, list):
+    elif issequence(value):
         value = ' '.join(value)
     elif not isinstance(value, str):
         raise TypeError(type(value))

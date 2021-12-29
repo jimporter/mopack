@@ -1,5 +1,7 @@
 import re
 
+from . import iterutils
+
 
 class PlaceholderValue:
     def __init__(self, value):
@@ -131,9 +133,9 @@ def placeholder(value):
 
 
 def map_placeholder(value, fn):
-    if isinstance(value, list):
+    if iterutils.issequence(value):
         return [map_placeholder(i, fn) for i in value]
-    elif isinstance(value, dict):
+    elif iterutils.ismapping(value):
         return {k: map_placeholder(v, fn) for k, v in value.items()}
     elif isinstance(value, PlaceholderString):
         return fn(value)

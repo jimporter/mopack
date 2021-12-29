@@ -6,7 +6,7 @@ from itertools import chain
 from shlex import shlex
 
 from .freezedried import auto_dehydrate
-from .iterutils import isiterable
+from .iterutils import isiterable, ismapping
 from .path import Path
 from .placeholder import PlaceholderString
 from .platforms import platform_name
@@ -207,7 +207,7 @@ class ShellArguments(MutableSequence):
     @classmethod
     def rehydrate(self, value, **kwargs):
         def rehydrate_each(value):
-            if isinstance(value, dict):
+            if ismapping(value):
                 return Path.rehydrate(value, **kwargs)
             elif isiterable(value):
                 return tuple(rehydrate_each(i) for i in value)

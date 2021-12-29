@@ -1,12 +1,16 @@
 from collections.abc import Iterable, Mapping, Sequence
 
-__all__ = ['isiterable', 'ismapping', 'iterate', 'iteritems', 'listify',
-           'list_view', 'merge_dicts', 'merge_into_dict', 'uniques']
+__all__ = ['isiterable', 'ismapping', 'issequence', 'iterate', 'iteritems',
+           'listify', 'list_view', 'merge_dicts', 'merge_into_dict', 'uniques']
 
 
 def isiterable(thing):
     return (isinstance(thing, Iterable) and not isinstance(thing, str) and
             not ismapping(thing))
+
+
+def issequence(thing):
+    return isinstance(thing, Sequence) and not isinstance(thing, str)
 
 
 def ismapping(thing):

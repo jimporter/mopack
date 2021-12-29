@@ -4,7 +4,7 @@ from pkg_resources import load_entry_point
 from .. import types
 from ..base_options import BaseOptions, OptionsHolder
 from ..freezedried import FreezeDried
-from ..iterutils import listify
+from ..iterutils import ismapping, listify
 from ..package_defaults import DefaultResolver
 from ..types import FieldKeyError, FieldValueError, try_load_config
 from ..usage import Usage, make_usage
@@ -27,7 +27,7 @@ _submodule_dict = types.dict_shape({
 def submodules_type(field, value):
     if value is None:
         return None
-    elif not isinstance(value, dict):
+    elif not ismapping(value):
         value = {
             'names': value,
             'required': True,
