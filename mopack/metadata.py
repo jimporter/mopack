@@ -5,6 +5,7 @@ from .config import Options
 from .freezedried import DictToListFreezeDryer
 from .sources import Package
 from .sources.system import fallback_system_package
+from .yaml_tools import MarkedJSONEncoder
 
 
 class MetadataVersionError(RuntimeError):
@@ -56,7 +57,7 @@ class Metadata:
                     'options': self.options.dehydrate(),
                     'packages': self._PackagesFD.dehydrate(self.packages),
                 }
-            }, f)
+            }, f, cls=MarkedJSONEncoder)
 
     @classmethod
     def load(cls, pkgdir):

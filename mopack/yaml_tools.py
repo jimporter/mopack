@@ -23,6 +23,7 @@
 # SOFTWARE.
 
 import collections.abc
+import json
 import yaml
 from collections import namedtuple
 from contextlib import contextmanager
@@ -34,8 +35,8 @@ from yaml.constructor import ConstructorError
 from .exceptions import ConfigurationError
 
 __all__ = ['load_file', 'make_parse_error', 'to_parse_error', 'MarkedDict',
-           'MarkedList', 'MarkedYAMLOffsetError', 'SafeLineLoader',
-           'YamlParseError']
+           'MarkedJSONEncoder', 'MarkedList', 'MarkedYAMLOffsetError',
+           'SafeLineLoader', 'YamlParseError']
 
 
 class MarkedYAMLOffsetError(MarkedYAMLError):
@@ -273,6 +274,15 @@ class MarkedDict(MarkedCollection, collections.abc.Mapping):
                             for k, v in self.items()})
         result._update_marks(self)
         return result
+
+
+class MarkedJSONEncoder(json.JSONEncoder):
+    def default(self, thing):
+        if isinstance(thing, MarkedList):
+            return list(thing)
+        elif isinstance(thing, MarkedDict):
+            return dict(thing)
+        return super().default(thing)
 
 
 class SafeLineLoader(SafeLoader):

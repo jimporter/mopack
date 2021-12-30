@@ -6,7 +6,7 @@ from textwrap import dedent
 from unittest import mock, TestCase
 from yaml.error import MarkedYAMLError
 
-from . import mock_open_data
+from . import mock_open_data, through_json
 
 from mopack.yaml_tools import *
 from mopack.yaml_tools import _get_offset_mark
@@ -457,6 +457,28 @@ class TestMarkedDict(TestCase):
         self.assertEqual(m2.mark, 'mark')
         self.assertEqual(m2.marks, {'key1': 'kmark1'})
         self.assertEqual(m2.value_marks, {'key1': 'vmark1'})
+
+
+class TestMarkedJSONEncoder(TestCase):
+    def test_basic(self):
+        self.assertEqual(through_json({'foo': [1], 'bar': True},
+                                      cls=MarkedJSONEncoder),
+                         {'foo': [1], 'bar': True})
+
+    def test_marked_list(self):
+        data = MarkedList('mark')
+        data.extend([1, 2, 3])
+        self.assertEqual(through_json(data, cls=MarkedJSONEncoder), [1, 2, 3])
+
+    def test_marked_dict(self):
+        data = MarkedDict('mark')
+        data.update(foo=1, bar=2)
+        self.assertEqual(through_json(data, cls=MarkedJSONEncoder),
+                         {'foo': 1, 'bar': 2})
+
+    def test_invalid(self):
+        with self.assertRaises(TypeError):
+            through_json(object(), cls=MarkedJSONEncoder)
 
 
 class TestSafeLineLoader(TestCase):

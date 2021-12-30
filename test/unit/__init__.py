@@ -75,8 +75,8 @@ class MockPackage:
         return self._version
 
 
-def through_json(data):
-    return json.loads(json.dumps(data))
+def through_json(data, *args, **kwargs):
+    return json.loads(json.dumps(data, *args, **kwargs))
 
 
 class OptionsTest(TestCase):
