@@ -1,3 +1,4 @@
+import copy
 import os
 import re
 from contextlib import contextmanager
@@ -156,13 +157,13 @@ class TypeCheck:
                     return expr.evaluate(symbols, data)
                 elif (iterutils.issequence(data) or
                       iterutils.ismapping(data)):
-                    for k, v in iterutils.iteritems(data):
-                        data[k] = self.__evaluate(k, v, symbols)
-                    return data
+                    result = copy.copy(data)
+                    for k, v in iterutils.iteritems(result):
+                        result[k] = self.__evaluate(k, v, symbols)
+                    return result
+                return data
         except expr.ParseBaseException as e:
             raise FieldValueError(e.msg, field, e.loc)
-
-        return data
 
     def __call__(self, field, check, *, dest=None, dest_field=None,
                  extend=False, extra_symbols=None, evaluate=True):

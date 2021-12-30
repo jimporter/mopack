@@ -56,6 +56,44 @@ class TestTypeCheck(TypeTestCase):
         with self.assertFieldError(('field',)):
             Thing(1)
 
+    def test_dest(self):
+        class Thing:
+            pass
+
+        thing = Thing()
+        field = 'foo'
+        T = TypeCheck(locals(), dest=thing)
+        T.field(string)
+
+        self.assertEqual(thing.field, 'foo')
+
+    def test_dest_dict(self):
+        thing = {}
+        field = 'foo'
+        T = TypeCheck(locals(), dest=thing)
+        T.field(string)
+
+        self.assertEqual(thing['field'], 'foo')
+
+    def test_dest_field(self):
+        class Thing:
+            def __init__(self, field):
+                T = TypeCheck(locals(), {})
+                T.field(string, dest_field='dest')
+
+        self.assertEqual(Thing('foo').dest, 'foo')
+
+    def test_per_field_dest_dict(self):
+        class Thing:
+            def __init__(self, field):
+                self.data = {}
+                T = TypeCheck(locals())
+                T.field(string, dest=self.data)
+
+        self.assertEqual(Thing('foo').data['field'], 'foo')
+        with self.assertFieldError(('field',)):
+            Thing(1)
+
     def test_object_extend(self):
         class Thing:
             def __init__(self):
@@ -71,17 +109,6 @@ class TestTypeCheck(TypeTestCase):
         self.assertEqual(t.field, ['foo', 'bar', 'baz'])
         with self.assertFieldError(('field',)):
             t(1)
-
-    def test_dict(self):
-        class Thing:
-            def __init__(self, field):
-                self.data = {}
-                T = TypeCheck(locals())
-                T.field(string, dest=self.data)
-
-        self.assertEqual(Thing('foo').data['field'], 'foo')
-        with self.assertFieldError(('field',)):
-            Thing(1)
 
     def test_dict_extend(self):
         class Thing:
@@ -99,25 +126,6 @@ class TestTypeCheck(TypeTestCase):
         self.assertEqual(t.data['field'], ['foo', 'bar', 'baz'])
         with self.assertFieldError(('field',)):
             t(1)
-
-    def test_dest(self):
-        class Thing:
-            pass
-
-        thing = Thing()
-        field = 'foo'
-        T = TypeCheck(locals(), dest=thing)
-        T.field(string)
-
-        self.assertEqual(thing.field, 'foo')
-
-    def test_dest_field(self):
-        class Thing:
-            def __init__(self, field):
-                T = TypeCheck(locals(), {})
-                T.field(string, dest_field='dest')
-
-        self.assertEqual(Thing('foo').dest, 'foo')
 
     def test_evaluate(self):
         symbols = {'variable': 'value', 'bad': 1}
@@ -200,6 +208,18 @@ class TestTypeCheck(TypeTestCase):
         t = Thing('$variable', '$variable')
         self.assertEqual(t.field, 'value')
         self.assertEqual(t.field2, '$variable')
+
+    def test_preserve_originals(self):
+        symbols = {'variable': 'value'}
+
+        class Thing:
+            def __init__(self, field):
+                T = TypeCheck(locals(), symbols)
+                T.field(list_of(string))
+
+        data = ['$variable']
+        self.assertEqual(Thing(data).field, ['value'])
+        self.assertEqual(data, ['$variable'])
 
 
 class TestMaybe(TypeTestCase):
