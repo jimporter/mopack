@@ -344,8 +344,8 @@ class PathUsage(Usage):
             # ... and write it.
             os.makedirs(pkgconfdir, exist_ok=True)
             with open(pcpath, 'w') as f:
-                write_pkg_config(f, pcname, version=version or '',
-                                 requires=requires, cflags=cflags, libs=libs,
+                write_pkg_config(f, pcname, version=version, requires=requires,
+                                 cflags=cflags, libs=libs,
                                  variables=path_values)
 
         if get_version:

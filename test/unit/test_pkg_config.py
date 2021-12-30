@@ -20,15 +20,29 @@ class TestWritePkgConfig(TestCase):
     def test_arguments(self):
         out = StringIO()
         write_pkg_config(out, 'mypackage', desc='my package', version='1.0',
-                         cflags=ShellArguments(['-Ifoo']),
-                         libs=ShellArguments(['-lbar']))
+                         requires=['req1', 'req2'],
+                         cflags=ShellArguments(['-Ifoo', '-Ibar']),
+                         libs=ShellArguments(['-lfoo', '-lbar']))
         self.assertRegex(
             out.getvalue(),
             'Name: mypackage\n' +
             'Description: my package\n' +
             'Version: 1.0\n' +
-            'Cflags: -Ifoo\n' +
-            'Libs: -lbar\n$'
+            'Requires: req1 req2',
+            'Cflags: -Ifoo -Ibar\n' +
+            'Libs: -lfoo -lbar\n$'
+        )
+
+    def test_empty_arguments(self):
+        out = StringIO()
+        write_pkg_config(out, 'mypackage', desc=None, version=None,
+                         requires=[], cflags=ShellArguments(),
+                         libs=ShellArguments())
+        self.assertRegex(
+            out.getvalue(),
+            'Name: mypackage\n' +
+            'Description: \n' +
+            'Version: \n$'
         )
 
     def test_variables(self):
