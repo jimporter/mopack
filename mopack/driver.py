@@ -1,9 +1,11 @@
 import os
+import functools
 import json
 import sys
 
 from . import arguments, commands, config, log, yaml_tools
 from .app_version import version
+from .types import dependency
 
 logger = log.getLogger(__name__)
 
@@ -19,6 +21,11 @@ using tarballs directly.
 """
 
 
+@functools.wraps(dependency)
+def dependency_type(s):
+    return dependency(None, s)
+
+
 def resolve(parser, args):
     if os.environ.get(nested_invoke):
         return 3
@@ -32,7 +39,7 @@ def usage(parser, args):
     directory = os.environ.get(nested_invoke, args.directory)
     try:
         usage = commands.usage(commands.get_package_dir(directory),
-                               args.package, args.submodules, args.strict)
+                               *args.dependency, strict=args.strict)
     except Exception as e:
         if not args.json:
             raise
@@ -168,9 +175,6 @@ def main():
         'usage', help='retrieve usage info for a package'
     )
     usage_p.set_defaults(func=usage)
-    usage_p.add_argument('-s', '--submodule', action='append',
-                         dest='submodules',
-                         help='the name of the submodule to use')
     usage_p.add_argument('--directory', default='.', type=os.path.abspath,
                          metavar='PATH', complete='directory',
                          help='directory storing local package data')
@@ -178,7 +182,8 @@ def main():
                          help='display results as JSON')
     usage_p.add_argument('--strict', action='store_true',
                          help='return an error if package is not defined')
-    usage_p.add_argument('package', help='the name of the package to query')
+    usage_p.add_argument('dependency', type=dependency_type,
+                         help='the name of the dependency to query')
 
     deploy_p = subparsers.add_parser(
         'deploy', help='deploy packages'

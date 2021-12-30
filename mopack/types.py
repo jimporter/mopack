@@ -14,6 +14,14 @@ _unexpected_kwarg_ex = re.compile(
     r"got an unexpected keyword argument '(\w+)'$"
 )
 
+_ssh_ex = re.compile(
+    r'^'
+    r'(?:[^@:]+?@)?'  # username (optional)
+    r'[^:]+:'         # host
+    r'.+'             # path
+    r'$'
+)
+
 _url_ex = re.compile(
     r'^'
     r'[A-Za-z0-9+.-]+://'        # scheme
@@ -24,13 +32,17 @@ _url_ex = re.compile(
     r'$'
 )
 
-_ssh_ex = re.compile(
+_dependency_ex = re.compile(
     r'^'
-    r'(?:[^@:]+?@)?'  # username (optional)
-    r'[^:]+:'         # host
-    r'.+'             # path
+    r'([^,[\]]+)'      # package name
+    r'(?:\[('
+    r'[^,[\]]+'        # first submodule
+    r'(?:,[^,[\]]+)*'  # extra submodules
+    r')\])?'
     r'$'
 )
+
+_bad_dependency_ex = re.compile(r'[,[\]]')
 
 
 class FieldError(TypeError, ConfigurationError):
@@ -363,9 +375,28 @@ def url(field, value):
     return value
 
 
+def dependency(field, value):
+    value = string(field, value)
+    m = _dependency_ex.match(value)
+    if not m:
+        raise FieldValueError('expected a dependency', field)
+
+    package, submodules = m.groups()
+    if submodules:
+        submodules = submodules.split(',')
+    return package, submodules
+
+
 def dependency_string(package, submodules):
-    return ('{}[{}]'.format(package, ','.join(submodules)) if submodules
-            else package)
+    def check(s):
+        if not s or _bad_dependency_ex.search(s):
+            raise ValueError('invalid dependency')
+        return s
+
+    submodules_str = ','.join(check(i) for i in iterutils.iterate(submodules))
+    if submodules_str:
+        return '{}[{}]'.format(check(package), submodules_str)
+    return check(package)
 
 
 def shell_args(none_ok=False, escapes=False):

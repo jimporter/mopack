@@ -85,7 +85,7 @@ the Boost package). In this case, you can specify the submodules you want to use
 in a particular situation when invoking `mopack usage`:
 
 ```sh
-$ mopack usage some-package -ssubmodule1 -ssubmodule2
+$ mopack usage 'some-package[submodule1,submodule2]'
 ```
 
 ## Deployment

@@ -324,9 +324,8 @@ class IntegrationTest(SubprocessTestCase):
         }
 
         output = self.assertPopen((
-            ['mopack', 'usage', name] +
+            ['mopack', 'usage', dependency_string(name, submodules)] +
             (['--json'] if format == 'json' else []) +
-            ['-s' + i for i in submodules] +
             extra_args
         ), extra_env=extra_env, returncode=returncode)
         if returncode == 0:
