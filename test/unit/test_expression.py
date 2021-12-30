@@ -70,10 +70,12 @@ class TestEvaluate(TestCase):
         self.assertEvaluate('"foo" * 2', 'foofoo')
         self.assertEvaluate('foo * 2', 'FooFoo')
         self.assertEvaluate('foo * quux[1][0]', 'FooFoo')
+        self.assertEvaluate('2 * 3 * 4', 24)
 
     def test_divide(self):
         self.assertEvaluate('12 / 3', 4)
         self.assertEvaluate('12 / quux[1][0]', 6)
+        self.assertEvaluate('12 / 3 / 2', 2)
 
     def test_mod(self):
         self.assertEvaluate('12 % 5', 2)
@@ -87,10 +89,12 @@ class TestEvaluate(TestCase):
         self.assertEvaluate('"Foo" + bar["baz"]', 'FooBaz')
         self.assertEvaluate('foo + bar["baz"]', 'FooBaz')
         self.assertEvaluate('["foo"] + ["bar"]', ['foo', 'bar'])
+        self.assertEvaluate('1 + 2 + 3', 6)
 
     def test_subtract(self):
         self.assertEvaluate('1 - 2', -1)
         self.assertEvaluate('1 - -2', 3)
+        self.assertEvaluate('3 - 2 - 1', 0)
 
     def test_negative(self):
         self.assertEvaluate('-(1)', -1)
@@ -147,6 +151,10 @@ class TestEvaluate(TestCase):
         self.assertEvaluate('true  ? false ? "foo" : "bar" : "baz"', 'bar')
         self.assertEvaluate('false ? "foo" : true  ? "bar" : "baz"', 'bar')
         self.assertEvaluate('false ? "foo" : false ? "bar" : "baz"', 'baz')
+
+    def test_precedence(self):
+        self.assertEvaluate('1 + 2 * 3 == 7', True)
+        self.assertEvaluate('1 + 2 - 3', 0)
 
     def test_mixed(self):
         self.assertEqual(evaluate(

@@ -135,12 +135,15 @@ class StringOp(Token):
         ))
 
 
-def left_assoc(operands, operator, index=None):
+def left_assoc(operands, operator=None, index=None):
     if index is None:
         index = len(operands) - 1
     if index == 0:
-        return operands[index]
+        return operands[0]
 
+    if operator is None:
+        return BinaryOp(left_assoc(operands, operator, index - 2),
+                        operands[index - 1], operands[index])
     return BinaryOp(left_assoc(operands, operator, index - 1),
                     operator, operands[index])
 
@@ -182,12 +185,12 @@ expr_atom = literal | index | identifier
 expr <<= pp.infix_notation(expr_atom, [
     ('!', 1, pp.opAssoc.RIGHT, lambda t: [UnaryOp(*t[0])]),
     ('-', 1, pp.opAssoc.RIGHT, lambda t: [UnaryOp(*t[0])]),
-    (pp.one_of('* / %'), 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
-    (pp.one_of('+ -'), 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
-    (pp.one_of('> >= < <='), 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
-    (pp.one_of('== !='), 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
-    ('&&', 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
-    ('||', 2, pp.opAssoc.LEFT, lambda t: [BinaryOp(*t[0])]),
+    (pp.one_of('* / %'), 2, pp.opAssoc.LEFT, lambda t: [left_assoc(t[0])]),
+    (pp.one_of('+ -'), 2, pp.opAssoc.LEFT, lambda t: [left_assoc(t[0])]),
+    (pp.one_of('> >= < <='), 2, pp.opAssoc.LEFT, lambda t: [left_assoc(t[0])]),
+    (pp.one_of('== !='), 2, pp.opAssoc.LEFT, lambda t: [left_assoc(t[0])]),
+    ('&&', 2, pp.opAssoc.LEFT, lambda t: [left_assoc(t[0])]),
+    ('||', 2, pp.opAssoc.LEFT, lambda t: [left_assoc(t[0])]),
     (('?', ':'), 3, pp.opAssoc.RIGHT, lambda t: [TernaryOp(*t[0])]),
 ])
 
