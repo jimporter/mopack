@@ -68,7 +68,7 @@ class TestPath(UsageTest):
                     headers=[], libraries=None, compile_flags=[],
                     link_flags=[]):
         if libraries is None:
-            libraries = [{'type': 'guess', 'name': name}]
+            libraries = [name]
         self.assertEqual(usage.auto_link, auto_link)
         self.assertEqual(usage.dependencies, dependencies)
         self.assertEqual(usage.include_path, include_path)
@@ -424,15 +424,6 @@ class TestPath(UsageTest):
         })
 
         usage = self.make_usage('foo', libraries=[
-            {'type': 'guess', 'name': 'bar'},
-        ])
-        self.check_usage(usage, libraries=[{'type': 'guess', 'name': 'bar'}])
-        self.check_get_usage(usage, 'foo', None)
-        self.check_pkg_config('foo', None, {
-            'libs': ['-L' + abspath('/mock/lib'), '-lbar'],
-        })
-
-        usage = self.make_usage('foo', libraries=[
             {'type': 'framework', 'name': 'bar'},
         ])
         self.check_usage(usage, libraries=[
@@ -492,7 +483,7 @@ class TestPath(UsageTest):
         pkg = MockPackage('foo', submodules=submodules_optional,
                           _options=self.make_options())
         usage = self.make_usage(pkg)
-        self.check_usage(usage, libraries=[{'type': 'guess', 'name': 'foo'}])
+        self.check_usage(usage, libraries=['foo'])
         self.check_get_usage(usage, 'foo', ['sub'], pkg=pkg)
         self.check_pkg_config('foo', ['sub'], {
             'libs': ['-L' + abspath('/mock/lib'), '-lfoo', '-lfoo_sub'],
@@ -741,39 +732,36 @@ class TestPath(UsageTest):
             'libs': ['-L{}'.format(boost_lib), '-lboost', '-lboost_regex'],
         })
 
-    def test_target_platform(self):
-        usage = self.make_usage('gl', common_options={
-            'target_platform': 'linux',
-        })
-        self.check_usage(usage, name='gl')
+    def test_gl(self):
+        usage = self.make_usage('gl', inherit_defaults=True,
+                                common_options={'target_platform': 'linux'})
+        self.check_usage(usage, name='gl', libraries=['GL'])
         self.check_get_usage(usage, 'gl', None)
         self.check_pkg_config('gl', None, {
             'libs': ['-L' + abspath('/mock/lib'), '-lGL'],
         })
 
-        usage = self.make_usage('gl', common_options={
-            'target_platform': 'darwin',
-        })
-        self.check_usage(usage, name='gl')
+        usage = self.make_usage('gl', inherit_defaults=True,
+                                common_options={'target_platform': 'darwin'})
+        self.check_usage(usage, name='gl', libraries=[
+            {'type': 'framework', 'name': 'OpenGL'},
+        ])
         self.check_get_usage(usage, 'gl', None)
         self.check_pkg_config('gl', None, {'libs': ['-framework', 'OpenGL']})
 
-        usage = self.make_usage('gl', libraries=['gl'], common_options={
-            'target_platform': 'linux',
+        usage = self.make_usage('gl', inherit_defaults=True,
+                                common_options={'target_platform': 'windows'})
+        self.check_usage(usage, name='gl', libraries=['opengl32'])
+        self.check_get_usage(usage, 'gl', None)
+        self.check_pkg_config('gl', None, {
+            'libs': ['-L' + abspath('/mock/lib'), '-lopengl32'],
         })
+
+        usage = self.make_usage('gl', inherit_defaults=True, libraries=['gl'],
+                                common_options={'target_platform': 'linux'})
         self.check_usage(usage, name='gl', libraries=['gl'])
         self.check_get_usage(usage, 'gl', None)
         self.check_pkg_config('gl', None)
-
-        usage = self.make_usage(
-            'foo', libraries=[{'type': 'guess', 'name': 'gl'}],
-            common_options={'target_platform': 'linux'}
-        )
-        self.check_usage(usage, libraries=[{'type': 'guess', 'name': 'gl'}])
-        self.check_get_usage(usage, 'foo', None)
-        self.check_pkg_config('foo', None, {
-            'libs': ['-L' + abspath('/mock/lib'), '-lGL'],
-        })
 
     def test_rehydrate(self):
         opts = self.make_options()

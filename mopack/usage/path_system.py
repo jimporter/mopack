@@ -12,7 +12,6 @@ from ..iterutils import ismapping, listify, uniques
 from ..package_defaults import DefaultResolver
 from ..path import file_outdated, isfile, Path
 from ..pkg_config import generated_pkg_config_dir, write_pkg_config
-from ..platforms import package_library_name
 from ..shell import ShellArguments, split_paths
 from ..types import dependency_string, Unset
 
@@ -37,7 +36,7 @@ def _library(field, value):
         return types.string(field, value)
     except types.FieldError:
         value = types.dict_shape({
-            'type': types.constant('library', 'guess', 'framework'),
+            'type': types.constant('library', 'framework'),
             'name': types.string
         }, desc='library')(field, value)
         if value['type'] == 'library':
@@ -168,7 +167,7 @@ class PathUsage(Usage):
             libs_checker = types.maybe(_list_of_libraries, default=[])
         else:
             libs_checker = pkg_default(
-                _list_of_libraries, default={'type': 'guess', 'name': pkg.name}
+                _list_of_libraries, default=pkg.name
             )
         T.libraries(libs_checker)
         T.compile_flags(types.shell_args(none_ok=True))
@@ -206,13 +205,6 @@ class PathUsage(Usage):
         except KeyError:
             mapping = self.submodule_map['*']
         return mapping.fill(symbols, path_bases, submodule)
-
-    def _get_library(self, lib):
-        if ismapping(lib) and lib['type'] == 'guess':
-            return package_library_name(
-                self._common_options.target_platform, lib['name']
-            )
-        return lib
 
     @staticmethod
     def _link_library(lib):
@@ -347,7 +339,7 @@ class PathUsage(Usage):
 
         if should_write:
             # Generate the pkg-config data...
-            libraries = [self._get_library(i) for i in chain_attr('libraries')]
+            libraries = list(chain_attr('libraries'))
             library_dirs = self._library_dirs(
                 self.auto_link, libraries, chain_attr('library_path'),
                 path_values

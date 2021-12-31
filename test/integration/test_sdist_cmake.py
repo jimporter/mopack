@@ -46,7 +46,7 @@ class TestInnerCMake(IntegrationTest):
                             '/include'
                         ]],
                         library_path=[{'base': 'builddir', 'path': ''}],
-                        libraries=[{'type': 'guess', 'name': 'hello'}]
+                        libraries=['hello']
                     )
                 ),
                 cfg_directory_pkg(
@@ -116,7 +116,7 @@ class TestOuterCMake(IntegrationTest):
                             '/include'
                         ]],
                         library_path=[{'base': 'builddir', 'path': ''}],
-                        libraries=[{'type': 'guess', 'name': 'greeter'}],
+                        libraries=['greeter'],
                     )
                 ),
             ],
