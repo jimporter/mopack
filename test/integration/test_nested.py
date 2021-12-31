@@ -50,13 +50,13 @@ class TestNested(IntegrationTest):
                           'path': os.path.join('..', 'hello-bfg.tar.gz')},
                     guessed_srcdir='hello-bfg',
                     builder=cfg_bfg9000_builder('hello'),
-                    usage=cfg_pkg_config_usage(pcfile='hello')
+                    usage=cfg_pkg_config_usage(pcname='hello')
                 ),
                 cfg_directory_pkg(
                     'greeter', config,
                     path={'base': 'cfgdir', 'path': 'greeter-bfg'},
                     builder=cfg_bfg9000_builder('greeter'),
-                    usage=cfg_pkg_config_usage(pcfile='greeter')
+                    usage=cfg_pkg_config_usage(pcname='greeter')
                 )
             ],
         })
@@ -111,7 +111,7 @@ class TestNested(IntegrationTest):
                     builder=cfg_bfg9000_builder(
                         'hello', extra_args=['--extra']
                     ),
-                    usage=cfg_pkg_config_usage(pcfile='hello')
+                    usage=cfg_pkg_config_usage(pcname='hello')
                 ),
                 cfg_directory_pkg(
                     'greeter', config,
@@ -119,7 +119,7 @@ class TestNested(IntegrationTest):
                     builder=cfg_bfg9000_builder(
                         'greeter', extra_args=['--extra']
                     ),
-                    usage=cfg_pkg_config_usage(pcfile='greeter')
+                    usage=cfg_pkg_config_usage(pcname='greeter')
                 )
             ],
         })

@@ -51,13 +51,13 @@ class TestConan(SourceTest):
 
     def check_usage(self, pkg, *, submodules=None, usage=None):
         if usage is None:
-            pcfiles = ([] if pkg.submodules and pkg.submodules['required'] else
+            pcnames = ([] if pkg.submodules and pkg.submodules['required'] else
                        [pkg.name])
-            pcfiles.extend('{}_{}'.format(pkg.name, i)
+            pcnames.extend('{}_{}'.format(pkg.name, i)
                            for i in iterate(submodules))
             usage = {'name': dependency_string(pkg.name, submodules),
-                     'type': 'pkg_config', 'path': [self.pkgconfdir],
-                     'pcfiles': pcfiles, 'extra_args': []}
+                     'type': 'pkg_config', 'pcnames': pcnames,
+                     'pkg_config_path': [self.pkgconfdir]}
         self.assertEqual(pkg.get_usage(self.metadata, submodules), usage)
 
     def test_basic(self):
@@ -224,13 +224,13 @@ class TestConan(SourceTest):
         self.check_usage(pkg, submodules=['sub'])
 
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
-                                usage={'type': 'pkg_config', 'path': '.',
-                                       'pcfile': 'bar'},
+                                usage={'type': 'pkg_config', 'pcname': 'bar',
+                                       'pkg_config_path': '.'},
                                 submodules=submodules_required)
         self.check_usage(pkg, submodules=['sub'], usage={
             'name': 'foo[sub]', 'type': 'pkg_config',
-            'path': [self.pkgconfdir], 'pcfiles': ['bar', 'foo_sub'],
-            'extra_args': [],
+            'pcnames': ['bar', 'foo_sub'],
+            'pkg_config_path': [self.pkgconfdir],
         })
 
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
@@ -238,13 +238,13 @@ class TestConan(SourceTest):
         self.check_usage(pkg, submodules=['sub'])
 
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
-                                usage={'type': 'pkg_config', 'path': '.',
-                                       'pcfile': 'bar'},
+                                usage={'type': 'pkg_config', 'pcname': 'bar',
+                                       'pkg_config_path': '.'},
                                 submodules=submodules_optional)
         self.check_usage(pkg, submodules=['sub'], usage={
             'name': 'foo[sub]', 'type': 'pkg_config',
-            'path': [self.pkgconfdir], 'pcfiles': ['bar', 'foo_sub'],
-            'extra_args': [],
+            'pcnames': ['bar', 'foo_sub'],
+            'pkg_config_path': [self.pkgconfdir],
         })
 
     def test_invalid_submodule(self):

@@ -41,7 +41,7 @@ class TestDirectory(SDistTest):
                     'hello', config,
                     path={'base': 'cfgdir', 'path': 'hello-bfg'},
                     builder=cfg_bfg9000_builder('hello'),
-                    usage=cfg_pkg_config_usage(pcfile='hello')
+                    usage=cfg_pkg_config_usage(pcname='hello')
                 ),
             ],
         })
@@ -69,7 +69,7 @@ class TestDirectory(SDistTest):
                     'hello', config,
                     path={'base': 'cfgdir', 'path': 'hello-bfg'},
                     builder=cfg_bfg9000_builder('hello'),
-                    usage=cfg_pkg_config_usage(pcfile='hello')
+                    usage=cfg_pkg_config_usage(pcname='hello')
                 ),
             ],
         })
@@ -103,7 +103,7 @@ class TestTarball(SDistTest):
                     path={'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
                     guessed_srcdir='hello-bfg',
                     builder=cfg_bfg9000_builder('hello'),
-                    usage=cfg_pkg_config_usage(pcfile='hello')
+                    usage=cfg_pkg_config_usage(pcname='hello')
                 ),
             ],
         })
@@ -145,7 +145,7 @@ class TestTarballPatch(SDistTest):
                     guessed_srcdir='hello-bfg',
                     patch={'base': 'cfgdir', 'path': 'hello-bfg.patch'},
                     builder=cfg_bfg9000_builder('hello'),
-                    usage=cfg_pkg_config_usage(pcfile='hello')
+                    usage=cfg_pkg_config_usage(pcname='hello')
                 ),
             ],
         })
@@ -187,7 +187,7 @@ class TestGit(SDistTest):
                     repository='https://github.com/jimporter/bencode.hpp.git',
                     rev=['tag', 'v0.2.1'],
                     builder=cfg_bfg9000_builder('bencodehpp'),
-                    usage=cfg_pkg_config_usage(pcfile='bencodehpp')
+                    usage=cfg_pkg_config_usage(pcname='bencodehpp')
                 ),
             ],
         })

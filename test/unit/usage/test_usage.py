@@ -16,14 +16,16 @@ class TestMakeUsage(UsageTest):
         )
 
     def test_make(self):
-        usage = make_usage(self.pkg, {'type': 'pkg_config', 'path': 'path'})
+        usage = make_usage(self.pkg, {'type': 'pkg_config',
+                                      'pkg_config_path': 'path'})
         self.assertIsInstance(usage, PkgConfigUsage)
-        self.assertEqual(usage.path, [Path('path', 'builddir')])
+        self.assertEqual(usage.pkg_config_path, [Path('path', 'builddir')])
 
     def test_make_string(self):
         usage = make_usage(self.pkg, 'pkg_config')
         self.assertIsInstance(usage, PkgConfigUsage)
-        self.assertEqual(usage.path, [Path('pkgconfig', 'builddir')])
+        self.assertEqual(usage.pkg_config_path,
+                         [Path('pkgconfig', 'builddir')])
 
     def test_unknown_usage(self):
         with self.assertRaises(FieldError):
@@ -39,4 +41,5 @@ class TestMakeUsage(UsageTest):
 
     def test_invalid_values(self):
         with self.assertRaises(FieldError):
-            make_usage(self.pkg, {'type': 'pkg_config', 'path': '..'})
+            make_usage(self.pkg, {'type': 'pkg_config',
+                                  'pkg_config_path': '..'})

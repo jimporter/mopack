@@ -90,7 +90,7 @@ packages:
     source: system
     auto_link: <boolean>
     version: <string>
-    pcfile: <string>
+    pcname: <string>
     dependencies: <dependency-list>
     include_path: <path-list>
     library_path: <path-list>

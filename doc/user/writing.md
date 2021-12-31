@@ -36,7 +36,7 @@ packages:
       extra_args: --extra
     usage:
       type: pkg_config
-      pcfile: foobar
+      pcname: foobar
 ```
 
 Here, instead of a string for `build`, we specify a dictionary indicating the

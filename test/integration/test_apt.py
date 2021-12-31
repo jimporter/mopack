@@ -29,7 +29,7 @@ class TestApt(IntegrationTest):
                     'ogg', config,
                     remote=['libogg-dev'],
                     usage=cfg_system_usage(
-                        pcfile='ogg',
+                        pcname='ogg',
                         libraries=[{'name': 'ogg', 'type': 'guess'}]
                     )
                 ),
@@ -37,7 +37,7 @@ class TestApt(IntegrationTest):
                     'zlib', config,
                     remote=['zlib1g-dev'],
                     usage=cfg_system_usage(
-                        pcfile='zlib',
+                        pcname='zlib',
                         libraries=[{'name': 'zlib', 'type': 'guess'}]
                     )
                 ),

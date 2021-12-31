@@ -8,18 +8,18 @@ from ..freezedried import DictFreezeDryer, FreezeDried, ListFreezeDryer
 from ..iterutils import listify
 from ..package_defaults import DefaultResolver
 from ..path import Path
-from ..shell import join_paths, ShellArguments
+from ..shell import join_paths
 
 
 class _SubmoduleMapping(FreezeDried):
-    def __init__(self, *, pcfile=None):
+    def __init__(self, *, pcname=None):
         # Just check that we can fill submodule values correctly.
         self._fill(locals())
 
         # Since we need to delay evaluating symbols until we know what the
         # selected submodule is, just store these values unevaluated. We'll
         # evaluate them later during `mopack usage` via the fill() function.
-        self.pcfile = pcfile
+        self.pcname = pcname
 
     def _fill(self, context, submodule_name='SUBMODULE'):
         def P(other):
@@ -28,7 +28,7 @@ class _SubmoduleMapping(FreezeDried):
 
         result = type(self).__new__(type(self))
         T = types.TypeCheck(context, submod.expr_symbols, dest=result)
-        T.pcfile(P(types.maybe(types.string)))
+        T.pcname(P(types.maybe(types.string)))
         return result
 
     def fill(self, submodule_name):
@@ -41,7 +41,7 @@ def _submodule_map(field, value):
             return _SubmoduleMapping(**value)
 
     try:
-        value = {'*': {'pcfile': types.placeholder_string(field, value)}}
+        value = {'*': {'pcname': types.placeholder_string(field, value)}}
     except types.FieldError:
         pass
 
@@ -49,7 +49,7 @@ def _submodule_map(field, value):
 
 
 @FreezeDried.fields(rehydrate={
-    'path': ListFreezeDryer(Path), 'extra_args': ShellArguments,
+    'pkg_config_path': ListFreezeDryer(Path),
     'submodule_map': DictFreezeDryer(value_type=_SubmoduleMapping),
 })
 class PkgConfigUsage(Usage):
@@ -60,9 +60,8 @@ class PkgConfigUsage(Usage):
     def upgrade(config, version):
         return config
 
-    def __init__(self, pkg, *, path='pkgconfig', pcfile=types.Unset,
-                 extra_args=None, submodule_map=types.Unset,
-                 inherit_defaults=False):
+    def __init__(self, pkg, *, pcname=types.Unset, pkg_config_path='pkgconfig',
+                 submodule_map=types.Unset, inherit_defaults=False):
         super().__init__(pkg, inherit_defaults=inherit_defaults)
 
         path_bases = pkg.path_bases(builder=True)
@@ -74,15 +73,14 @@ class PkgConfigUsage(Usage):
             # If submodules are required, default to an empty .pc file, since
             # we should usually have .pc files for the submodules that handle
             # everything for us.
-            default_pcfile = None
+            default_pcname = None
         else:
-            default_pcfile = pkg.name
+            default_pcname = pkg.name
 
         T = types.TypeCheck(locals(), symbols)
-        T.path(types.list_of(types.abs_or_inner_path(buildbase), listify=True))
-        T.pcfile(types.maybe(types.string, default=default_pcfile))
-        # XXX: Get rid of this?
-        T.extra_args(types.shell_args(none_ok=True))
+        T.pcname(types.maybe(types.string, default=default_pcname))
+        T.pkg_config_path(types.list_of(types.abs_or_inner_path(buildbase),
+                                        listify=True))
 
         if pkg.submodules:
             T.submodule_map(pkg_default(
@@ -94,13 +92,13 @@ class PkgConfigUsage(Usage):
 
     def version(self, metadata, pkg):
         path_values = pkg.path_values(metadata, builder=True)
-        path = [i.string(**path_values) for i in self.path]
+        pkgconfpath = [i.string(**path_values) for i in self.pkg_config_path]
         env = self._common_options.env.copy()
-        env['PKG_CONFIG_PATH'] = join_paths(path)
+        env['PKG_CONFIG_PATH'] = join_paths(pkgconfpath)
         pkg_config = get_pkg_config(self._common_options.env)
 
         return subprocess.run(
-            pkg_config + [self.pcfile, '--modversion'],
+            pkg_config + [self.pcname, '--modversion'],
             check=True, env=env, stdout=subprocess.PIPE,
             universal_newlines=True,
         ).stdout.strip()
@@ -113,18 +111,17 @@ class PkgConfigUsage(Usage):
 
     def get_usage(self, metadata, pkg, submodules):
         path_values = pkg.path_values(metadata, builder=True)
-        path = [i.string(**path_values) for i in self.path]
-        extra_args = self.extra_args.fill(**path_values)
+        pkgconfpath = [i.string(**path_values) for i in self.pkg_config_path]
 
         if submodules and self.submodule_map:
             mappings = [self._get_submodule_mapping(i) for i in submodules]
         else:
             mappings = []
 
-        pcfiles = listify(self.pcfile)
+        pcnames = listify(self.pcname)
         for i in mappings:
-            if i.pcfile:
-                pcfiles.append(i.pcfile)
+            if i.pcname:
+                pcnames.append(i.pcname)
 
-        return self._usage(pkg, submodules, path=path, pcfiles=pcfiles,
-                           extra_args=extra_args)
+        return self._usage(pkg, submodules, pcnames=pcnames,
+                           pkg_config_path=pkgconfpath)

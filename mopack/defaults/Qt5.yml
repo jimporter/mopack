@@ -7,7 +7,7 @@ usage:
       '*':
         &submodule_map
         dependencies: ['Qt5[Core]']
-        pcfile: Qt5$submodule
+        pcname: Qt5$submodule
         include_path: >-
           ${{ env['QT_INCLUDEDIR'] ?
                 [ env['QT_INCLUDEDIR'],

@@ -101,8 +101,8 @@ class TestPath(UsageTest):
         depname = dependency_string(name, submodules)
         if expected is None:
             expected = {'name': depname, 'type': self.type, 'generated': True,
-                        'auto_link': False, 'path': [self.pkgconfdir],
-                        'pcfiles': [depname]}
+                        'auto_link': False, 'pcnames': [depname],
+                        'pkg_config_path': [self.pkgconfdir]}
 
         if pkg is None:
             pkg = MockPackage(name)
@@ -159,7 +159,8 @@ class TestPath(UsageTest):
         self.check_usage(usage, auto_link=True, libraries=[])
         self.check_get_usage(usage, 'foo', None, {
             'name': 'foo', 'type': self.type, 'generated': True,
-            'auto_link': True, 'path': [self.pkgconfdir], 'pcfiles': ['foo'],
+            'auto_link': True, 'pcnames': ['foo'],
+            'pkg_config_path': [self.pkgconfdir],
         }, pkg=pkg)
         self.check_pkg_config('foo', None, {
             'libs': ['-L' + abspath('/mock/lib')],
@@ -172,7 +173,8 @@ class TestPath(UsageTest):
                          library_path=[abspathobj('/mock/path/to/lib')])
         self.check_get_usage(usage, 'foo', None, {
             'name': 'foo', 'type': self.type, 'generated': True,
-            'auto_link': True, 'path': [self.pkgconfdir], 'pcfiles': ['foo'],
+            'auto_link': True, 'pcnames': ['foo'],
+            'pkg_config_path': [self.pkgconfdir],
         }, pkg=pkg)
         self.check_pkg_config('foo', None, {'libs': ['-L' + libdir]})
 
@@ -240,13 +242,14 @@ class TestPath(UsageTest):
 
         path = '/mock/pkgconfig'
         dep_usage = {'name': 'foo', 'type': self.type, 'generated': True,
-                     'auto_link': True, 'path': [path], 'pcfiles': ['bar']}
+                     'auto_link': True, 'pcnames': ['bar'],
+                     'pkg_config_path': [path]}
         with mock.patch('mopack.sources.Package.get_usage',
                         return_value=dep_usage):
             self.check_get_usage(usage, 'foo', None, {
                 'name': 'foo', 'type': self.type, 'generated': True,
-                'auto_link': True, 'path': [self.pkgconfdir, path],
-                'pcfiles': ['foo'],
+                'auto_link': True, 'pcnames': ['foo'],
+                'pkg_config_path': [self.pkgconfdir, path],
             })
 
     def test_include_path_relative(self):
@@ -613,14 +616,14 @@ class TestPath(UsageTest):
             self.check_version(usage, None, header=header)
             self.check_get_usage(usage, 'boost', None, {
                 'name': 'boost', 'type': self.type, 'generated': True,
-                'auto_link': False, 'path': [self.pkgconfdir],
-                'pcfiles': ['boost'],
+                'auto_link': False, 'pcnames': ['boost'],
+                'pkg_config_path': [self.pkgconfdir],
             }, pkg=pkg)
             self.check_pkg_config('boost', None)
             self.check_get_usage(usage, 'boost', ['thread'], {
                 'name': 'boost[thread]', 'type': self.type, 'generated': True,
-                'auto_link': False, 'path': [self.pkgconfdir],
-                'pcfiles': ['boost[thread]'],
+                'auto_link': False, 'pcnames': ['boost[thread]'],
+                'pkg_config_path': [self.pkgconfdir],
             }, pkg=pkg)
             self.check_pkg_config('boost', ['thread'], {
                 'libs': ['-L' + abspath('/mock/lib'), '-lboost',
@@ -634,8 +637,8 @@ class TestPath(UsageTest):
             self.check_version(usage, '1.23', header=header)
             self.check_get_usage(usage, 'boost', None, {
                 'name': 'boost', 'type': self.type, 'generated': True,
-                'auto_link': plat == 'windows', 'path': [self.pkgconfdir],
-                'pcfiles': ['boost'],
+                'auto_link': plat == 'windows', 'pcnames': ['boost'],
+                'pkg_config_path': [self.pkgconfdir],
             }, pkg=pkg)
             self.check_pkg_config('boost', None, {
                 'cflags': ['-I' + abspath('/mock/include')],
@@ -644,8 +647,9 @@ class TestPath(UsageTest):
             })
             self.check_get_usage(usage, 'boost', ['thread'], {
                 'name': 'boost[thread]', 'type': self.type, 'generated': True,
-                'auto_link': plat == 'windows', 'path': [self.pkgconfdir],
-                'pcfiles': ['boost[thread]' if plat != 'windows' else 'boost'],
+                'auto_link': plat == 'windows',
+                'pcnames': ['boost[thread]' if plat != 'windows' else 'boost'],
+                'pkg_config_path': [self.pkgconfdir],
             }, pkg=pkg)
             sub = ['thread'] if plat != 'windows' else None
             self.check_pkg_config('boost', sub, {
@@ -666,8 +670,8 @@ class TestPath(UsageTest):
             self.check_version(usage, '1.23', header=header)
             self.check_get_usage(usage, 'boost', None, {
                 'name': 'boost', 'type': self.type, 'generated': True,
-                'auto_link': plat == 'windows', 'path': [self.pkgconfdir],
-                'pcfiles': ['boost'],
+                'auto_link': plat == 'windows', 'pcnames': ['boost'],
+                'pkg_config_path': [self.pkgconfdir],
             }, pkg=pkg)
             self.check_pkg_config('boost', None, {
                 'cflags': ['-I' + abspath('/mock/include')]
@@ -675,8 +679,9 @@ class TestPath(UsageTest):
             extra_libs = ['boost_regex'] if plat != 'windows' else []
             self.check_get_usage(usage, 'boost', ['regex'], {
                 'name': 'boost[regex]', 'type': self.type, 'generated': True,
-                'auto_link': plat == 'windows', 'path': [self.pkgconfdir],
-                'pcfiles': ['boost[regex]' if plat != 'windows' else 'boost'],
+                'auto_link': plat == 'windows',
+                'pcnames': ['boost[regex]' if plat != 'windows' else 'boost'],
+                'pkg_config_path': [self.pkgconfdir],
             }, pkg=pkg)
             sub = ['regex'] if plat != 'windows' else None
             self.check_pkg_config('boost', sub, {
@@ -836,11 +841,11 @@ class TestSystem(TestPath):
         super().tearDown()
         self.mock_run.stop()
 
-    def check_usage(self, usage, *, name='foo', pcfile=None, **kwargs):
+    def check_usage(self, usage, *, name='foo', pcname=None, **kwargs):
         super().check_usage(usage, name=name, **kwargs)
-        if pcfile is None:
-            pcfile = name
-        self.assertEqual(usage.pcfile, pcfile)
+        if pcname is None:
+            pcname = name
+        self.assertEqual(usage.pcname, pcname)
 
     def check_get_usage(self, *args, find_pkg_config=False, **kwargs):
         side_effect = None if find_pkg_config else OSError()
@@ -851,17 +856,17 @@ class TestSystem(TestPath):
         usage = self.make_usage('foo')
         self.check_usage(usage)
         self.check_get_usage(usage, 'foo', None, {
-            'name': 'foo', 'type': 'system', 'path': [],
-            'pcfiles': ['foo'], 'extra_args': [],
+            'name': 'foo', 'type': 'system', 'pcnames': ['foo'],
+            'pkg_config_path': [],
         }, find_pkg_config=True)
 
-    def test_pcfile(self):
-        usage = self.make_usage('foo', pcfile='foopc')
-        self.check_usage(usage, pcfile='foopc')
+    def test_pcname(self):
+        usage = self.make_usage('foo', pcname='foopc')
+        self.check_usage(usage, pcname='foopc')
         self.check_get_usage(usage, 'foo', None)
         self.check_get_usage(usage, 'foo', None, {
-            'name': 'foo', 'type': 'system', 'path': [],
-            'pcfiles': ['foopc'], 'extra_args': [],
+            'name': 'foo', 'type': 'system', 'pcnames': ['foopc'],
+            'pkg_config_path': [],
         }, find_pkg_config=True)
 
     def test_system_submodule_map(self):
@@ -870,27 +875,27 @@ class TestSystem(TestPath):
         pkg = MockPackage('foo', submodules=submodules_required,
                           _options=self.make_options())
         usage = self.make_usage(pkg, submodule_map={
-            '*': {'pcfile': '$submodule'},
+            '*': {'pcname': '$submodule'},
         })
         self.check_usage(usage, libraries=[])
         self.check_get_usage(usage, 'foo', ['sub'], {
-            'name': 'foo[sub]', 'type': 'system', 'path': [],
-            'pcfiles': ['sub'], 'extra_args': [],
+            'name': 'foo[sub]', 'type': 'system', 'pcnames': ['sub'],
+            'pkg_config_path': [],
         }, find_pkg_config=True, pkg=pkg)
         self.check_get_usage(usage, 'foo', ['sub'], pkg=pkg)
 
         usage = self.make_usage(pkg, submodule_map={
-            'sub': {'pcfile': 'subpc'},
-            '*': {'pcfile': '$submodule'},
+            'sub': {'pcname': 'subpc'},
+            '*': {'pcname': '$submodule'},
         })
         self.check_usage(usage, libraries=[])
         self.check_get_usage(usage, 'foo', ['sub'], {
-            'name': 'foo[sub]', 'type': 'system', 'path': [],
-            'pcfiles': ['subpc'], 'extra_args': [],
+            'name': 'foo[sub]', 'type': 'system', 'pcnames': ['subpc'],
+            'pkg_config_path': [],
         }, find_pkg_config=True, pkg=pkg)
         self.check_get_usage(usage, 'foo', ['sub'], pkg=pkg)
         self.check_get_usage(usage, 'foo', ['sub2'], {
-            'name': 'foo[sub2]', 'type': 'system', 'path': [],
-            'pcfiles': ['sub2'], 'extra_args': [],
+            'name': 'foo[sub2]', 'type': 'system', 'pcnames': ['sub2'],
+            'pkg_config_path': [],
         }, find_pkg_config=True, pkg=pkg)
         self.check_get_usage(usage, 'foo', ['sub2'], pkg=pkg)

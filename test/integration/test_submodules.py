@@ -17,7 +17,7 @@ class TestSubmodules(IntegrationTest):
 
         for submodules in (['french'], ['english'], ['french', 'english']):
             self.assertPkgConfigUsage(
-                'hello', submodules, pcfiles=['hello_' + i for i in submodules]
+                'hello', submodules, pcnames=['hello_' + i for i in submodules]
             )
         self.assertUsage('hello', returncode=1)
 
@@ -34,9 +34,9 @@ class TestSubmodules(IntegrationTest):
                     path={'base': 'cfgdir', 'path': 'hello-multi-bfg'},
                     builder=cfg_bfg9000_builder('hello'),
                     usage=cfg_pkg_config_usage(
-                        pcfile=None,
+                        pcname=None,
                         submodule_map={
-                            '*': {'pcfile': 'hello_$submodule'},
+                            '*': {'pcname': 'hello_$submodule'},
                         }
                     )
                 ),

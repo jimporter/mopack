@@ -25,8 +25,8 @@ function(mopack_usage package)
     OUTPUT_FILE ${usage_file}
   )
 
-  _jq(${usage_file} QUERY ".path | join(\";\")" OUT pkgconf_path)
-  _jq(${usage_file} QUERY ".pcfiles | join(\" \")" OUT pkgconf_pcfiles)
+  _jq(${usage_file} QUERY ".pkg_config_path | join(\";\")" OUT pkgconf_path)
+  _jq(${usage_file} QUERY ".pcnames | join(\" \")" OUT pkgconf_pcnames)
 
   if(UNIX)
     string(REPLACE ";" ":" pkgconf_path "${pkgconf_path}")
@@ -36,6 +36,6 @@ function(mopack_usage package)
   pkg_check_modules(
     ${package}
     REQUIRED IMPORTED_TARGET
-    ${pkgconf_pcfiles}
+    ${pkgconf_pcnames}
   )
 endfunction()

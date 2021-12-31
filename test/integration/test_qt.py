@@ -22,7 +22,8 @@ class TestQt(IntegrationTest):
                                  version='')
         else:
             self.assertPkgConfigUsage('Qt5', ['Widgets'], type='system',
-                                      path=[], pcfiles=['Qt5Widgets'])
+                                      pcnames=['Qt5Widgets'],
+                                      pkg_config_path=[])
 
         self.assertUsage('Qt5', returncode=1)
 
@@ -34,7 +35,7 @@ class TestQt(IntegrationTest):
                     'Qt5', config,
                     submodules={'names': '*', 'required': True},
                     usage=cfg_system_usage(
-                        pcfile='Qt5',
+                        pcname='Qt5',
                         auto_link=False,
                         explicit_version=None,
                         include_path=AlwaysEqual(),

@@ -34,9 +34,8 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.builder.type, 'bfg9000')
 
         self.assertEqual(pkg.get_usage(self.metadata, None), {
-            'name': 'foo', 'type': 'pkg_config',
-            'path': [self.pkgconfdir('foo')], 'pcfiles': ['foo'],
-            'extra_args': [],
+            'name': 'foo', 'type': 'pkg_config', 'pcnames': ['foo'],
+            'pkg_config_path': [self.pkgconfdir('foo')],
         })
         with self.assertRaises(ValueError):
             pkg.get_usage(self.metadata, ['sub'])
@@ -55,9 +54,8 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.builder.type, 'bfg9000')
 
         self.assertEqual(pkg.get_usage(self.metadata, None), {
-            'name': 'foo', 'type': 'pkg_config',
-            'path': [self.pkgconfdir('foo')], 'pcfiles': ['foo'],
-            'extra_args': [],
+            'name': 'foo', 'type': 'pkg_config', 'pcnames': ['foo'],
+            'pkg_config_path': [self.pkgconfdir('foo')],
         })
         with self.assertRaises(ValueError):
             pkg.get_usage(self.metadata, ['sub'])
@@ -80,8 +78,8 @@ class TestMakePackage(SourceTest):
              mock.patch('builtins.open'):
             self.assertEqual(pkg.get_usage(self.metadata, ['sub']), {
                 'name': 'foo[sub]', 'type': 'system', 'generated': True,
-                'auto_link': False, 'path': [self.pkgconfdir(None)],
-                'pcfiles': ['foo[sub]'],
+                'auto_link': False, 'pcnames': ['foo[sub]'],
+                'pkg_config_path': [self.pkgconfdir(None)],
             })
         with self.assertRaises(ValueError):
             pkg.get_usage(self.metadata, None)
@@ -103,8 +101,8 @@ class TestMakePackage(SourceTest):
              mock.patch('builtins.open'):
             self.assertEqual(pkg.get_usage(self.metadata, ['sub']), {
                 'name': 'foo[sub]', 'type': 'system', 'generated': True,
-                'auto_link': False, 'path': [self.pkgconfdir(None)],
-                'pcfiles': ['foo[sub]'],
+                'auto_link': False, 'pcnames': ['foo[sub]'],
+                'pkg_config_path': [self.pkgconfdir(None)],
             })
         with self.assertRaises(ValueError):
             pkg.get_usage(self.metadata, ['bar'])
@@ -129,8 +127,8 @@ class TestMakePackage(SourceTest):
              mock.patch('builtins.open'):
             self.assertEqual(pkg.get_usage(self.metadata, ['sub']), {
                 'name': 'foo[sub]', 'type': 'system', 'generated': True,
-                'auto_link': False, 'path': [self.pkgconfdir(None)],
-                'pcfiles': ['foo[sub]'],
+                'auto_link': False, 'pcnames': ['foo[sub]'],
+                'pkg_config_path': [self.pkgconfdir(None)],
             })
         with mock.patch('subprocess.run', side_effect=OSError()), \
              mock.patch('mopack.usage.path_system.PathUsage._filter_path',
@@ -141,8 +139,8 @@ class TestMakePackage(SourceTest):
              mock.patch('builtins.open'):
             self.assertEqual(pkg.get_usage(self.metadata, None), {
                 'name': 'foo', 'type': 'system', 'generated': True,
-                'auto_link': False, 'path': [self.pkgconfdir(None)],
-                'pcfiles': ['foo'],
+                'auto_link': False, 'pcnames': ['foo'],
+                'pkg_config_path': [self.pkgconfdir(None)],
             })
         with self.assertRaises(ValueError):
             pkg.get_usage(self.metadata, ['bar'])
@@ -337,11 +335,11 @@ class TestMakePackage(SourceTest):
           source: apt
           usage:
             type: pkg_config
-            path: ..
+            pkg_config_path: ..
         """), Loader=SafeLineLoader)
         with self.assertRaisesRegex(MarkedYAMLError,
-                                    r'line 4, column 9:\n'
-                                    r'      path: ..\n'
-                                    r'            \^$'):
+                                    r'line 4, column 20:\n'
+                                    r'      pkg_config_path: ..\n'
+                                    r'                       \^$'):
             try_make_package('foo', data, _options=self.make_options(),
                              config_file='/path/to/mopack.yml')

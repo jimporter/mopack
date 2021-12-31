@@ -40,7 +40,7 @@ class TestCustomBuilder(IntegrationTest):
                             ['ninja', 'install'],
                         ]
                     ),
-                    usage=cfg_pkg_config_usage(pcfile='hello')
+                    usage=cfg_pkg_config_usage(pcname='hello')
                 ),
             ],
         })
@@ -86,7 +86,7 @@ class TestCustomBuilderDeploy(IntegrationTest):
                             ['ninja', 'install'],
                         ]
                     ),
-                    usage=cfg_pkg_config_usage(pcfile='hello')
+                    usage=cfg_pkg_config_usage(pcname='hello')
                 ),
             ],
         })

@@ -20,7 +20,7 @@ class SystemPackage(BinaryPackage):
             ), 'usage')
 
         usage_kwargs = slice_dict(kwargs, {
-            'auto_link', 'version', 'dependencies', 'include_path',
+            'auto_link', 'version', 'pcname', 'dependencies', 'include_path',
             'library_path', 'headers', 'libraries', 'compile_flags',
             'link_flags', 'submodule_map',
         })

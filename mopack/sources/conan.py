@@ -42,7 +42,7 @@ class ConanPackage(BinaryPackage):
 
     def __init__(self, name, remote, build=False, options=None, usage=None,
                  **kwargs):
-        usage = usage or {'type': 'pkg_config', 'path': ''}
+        usage = usage or {'type': 'pkg_config', 'pkg_config_path': ''}
         super().__init__(name, usage=usage, **kwargs)
 
         T = types.TypeCheck(locals(), self._expr_symbols)

@@ -35,8 +35,8 @@ class TestSystemPackage(SourceTest):
         if expected is None:
             depname = dependency_string(pkg.name, submodules)
             expected = {'name': depname, 'type': 'system', 'generated': True,
-                        'auto_link': False, 'path': [self.pkgconfdir],
-                        'pcfiles': [depname]}
+                        'auto_link': False, 'pcnames': [depname],
+                        'pkg_config_path': [self.pkgconfdir]}
 
         self.clear_pkgdir()
         side_effect = None if find_pkg_config else OSError()
@@ -76,8 +76,8 @@ class TestSystemPackage(SourceTest):
         pkg = self.make_package('foo')
         pkg.resolve(self.metadata)
         self.check_get_usage(pkg, None, {
-            'name': 'foo', 'type': 'system', 'path': [], 'pcfiles': ['foo'],
-            'extra_args': [],
+            'name': 'foo', 'type': 'system', 'pcnames': ['foo'],
+            'pkg_config_path': [],
         }, find_pkg_config=True)
 
     def test_explicit_version(self):
@@ -92,7 +92,8 @@ class TestSystemPackage(SourceTest):
         pkg.resolve(self.metadata)
         self.check_get_usage(pkg, None, {
             'name': 'foo', 'type': 'system', 'generated': True,
-            'auto_link': True, 'path': [self.pkgconfdir], 'pcfiles': ['foo'],
+            'auto_link': True, 'pcnames': ['foo'],
+            'pkg_config_path': [self.pkgconfdir],
         })
         self.check_pkg_config('foo', None, {
             'libs': ['-L' + abspath('/mock/lib')],

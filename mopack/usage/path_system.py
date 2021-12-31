@@ -331,8 +331,8 @@ class PathUsage(Usage):
             usage = metadata.get_package(dep_pkg).get_usage(metadata, dep_sub)
 
             auto_link |= usage.get('auto_link', False)
-            deps_requires.extend(usage.get('pcfiles', []))
-            deps_paths.extend(usage.get('path', []))
+            deps_requires.extend(usage.get('pcnames', []))
+            deps_paths.extend(usage.get('pkg_config_path', []))
 
         should_write = file_outdated(pcpath, metadata.path)
 
@@ -371,8 +371,8 @@ class PathUsage(Usage):
                                  cflags=cflags, libs=libs,
                                  variables=path_values)
 
-        result = {'auto_link': auto_link, 'pcfile': pcname,
-                  'path': uniques(deps_paths)}
+        result = {'auto_link': auto_link, 'pcname': pcname,
+                  'pkg_config_path': uniques(deps_paths)}
         if get_version:
             result['version'] = version
         return result
@@ -391,8 +391,8 @@ class PathUsage(Usage):
                 mappings = []
                 data = self._write_pkg_config(metadata, pkg, get_version=True)
                 auto_link |= data['auto_link']
-                requires.append(data['pcfile'])
-                pkgconfpath.extend(data['path'])
+                requires.append(data['pcname'])
+                pkgconfpath.extend(data['pkg_config_path'])
                 version = data['version']
 
             path_bases = pkg.path_bases(builder=True)
@@ -404,29 +404,29 @@ class PathUsage(Usage):
                 data = self._write_pkg_config(metadata, pkg, i, version,
                                               requires, mappings + [mapping])
                 auto_link |= data['auto_link']
-                pcnames.append(data['pcfile'])
-                pkgconfpath.extend(data['path'])
+                pcnames.append(data['pcname'])
+                pkgconfpath.extend(data['pkg_config_path'])
         else:
             data = self._write_pkg_config(metadata, pkg)
             auto_link = data['auto_link']
-            pcnames = [data['pcfile']]
-            pkgconfpath = data['path']
+            pcnames = [data['pcname']]
+            pkgconfpath = data['pkg_config_path']
 
         return self._usage(
             pkg, submodules, generated=True, auto_link=auto_link,
-            path=uniques(pkgconfpath), pcfiles=pcnames
+            pcnames=pcnames, pkg_config_path=uniques(pkgconfpath)
         )
 
 
 class _SystemSubmoduleMapping(_PathSubmoduleMapping):
-    def __init__(self, *args, pcfile=None, **kwargs):
-        self.pcfile = pcfile
+    def __init__(self, *args, pcname=None, **kwargs):
+        self.pcname = pcname
         super().__init__(*args, **kwargs)
 
     def _fields(self, path_bases):
         result = super()._fields(path_bases)
         result.update({
-            'pcfile': types.maybe(types.string),
+            'pcname': types.maybe(types.string),
         })
         return result
 
@@ -438,7 +438,7 @@ class SystemUsage(PathUsage):
     type = 'system'
     SubmoduleMapping = _SystemSubmoduleMapping
 
-    def __init__(self, pkg, *, pcfile=Unset, inherit_defaults=False, **kwargs):
+    def __init__(self, pkg, *, pcname=Unset, inherit_defaults=False, **kwargs):
         super().__init__(pkg, inherit_defaults=inherit_defaults, **kwargs)
 
         path_bases = pkg.path_bases(builder=True)
@@ -447,13 +447,14 @@ class SystemUsage(PathUsage):
                                       pkg.name)
 
         T = types.TypeCheck(locals(), symbols)
-        T.pcfile(pkg_default(types.string, default=pkg.name))
+        T.pcname(pkg_default(types.string, default=pkg.name))
 
     def version(self, metadata, pkg):
         pkg_config = get_pkg_config(self._common_options.env)
         try:
+            # XXX: Make sure this works when submodules are required.
             return subprocess.run(
-                pkg_config + [self.pcfile, '--modversion'], check=True,
+                pkg_config + [self.pcname, '--modversion'], check=True,
                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
                 universal_newlines=True
             ).stdout.strip()
@@ -462,22 +463,22 @@ class SystemUsage(PathUsage):
 
     def get_usage(self, metadata, pkg, submodules):
         if submodules and self.submodule_map:
-            pcfiles = [] if pkg.submodules['required'] else [self.pcfile]
+            pcnames = [] if pkg.submodules['required'] else [self.pcname]
             path_bases = pkg.path_bases(builder=True)
             symbols = self._options.expr_symbols.augment(paths=path_bases)
             for i in submodules:
                 mapping = self._get_submodule_mapping(symbols, path_bases, i)
-                if mapping.pcfile:
-                    pcfiles.append(mapping.pcfile)
+                if mapping.pcname:
+                    pcnames.append(mapping.pcname)
         else:
-            pcfiles = [self.pcfile]
+            pcnames = [self.pcname]
 
         pkg_config = get_pkg_config(self._common_options.env)
         try:
-            subprocess.run(pkg_config + pcfiles, check=True,
+            subprocess.run(pkg_config + pcnames, check=True,
                            stdout=subprocess.DEVNULL,
                            stderr=subprocess.DEVNULL)
-            return self._usage(pkg, submodules, path=[], pcfiles=pcfiles,
-                               extra_args=[])
+            return self._usage(pkg, submodules, pcnames=pcnames,
+                               pkg_config_path=[])
         except (OSError, subprocess.CalledProcessError):
             return super().get_usage(metadata, pkg, submodules)

@@ -21,12 +21,12 @@ class SDistTestCase(SourceTest):
 
     def check_resolve(self, pkg, *, submodules=None, usage=None):
         if usage is None:
-            pcfiles = ([] if pkg.submodules and pkg.submodules['required'] else
+            pcnames = ([] if pkg.submodules and pkg.submodules['required'] else
                        ['foo'])
-            pcfiles.extend('foo_{}'.format(i) for i in iterate(submodules))
+            pcnames.extend('foo_{}'.format(i) for i in iterate(submodules))
             usage = {'name': dependency_string(pkg.name, submodules),
-                     'type': 'pkg_config', 'path': [self.pkgconfdir('foo')],
-                     'pcfiles': pcfiles, 'extra_args': []}
+                     'type': 'pkg_config', 'pcnames': pcnames,
+                     'pkg_config_path': [self.pkgconfdir('foo')]}
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \

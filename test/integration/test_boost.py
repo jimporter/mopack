@@ -26,7 +26,7 @@ class TestBoost(IntegrationTest):
 
         self.assertPathUsage('boost', ['regex'], type='system',
                              auto_link=platform_name() == 'windows',
-                             pcfiles=(['boost'] if platform_name() == 'windows'
+                             pcnames=(['boost'] if platform_name() == 'windows'
                                       else ['boost[regex]']),
                              include_path=AlwaysEqual(),
                              library_path=AlwaysEqual(),
@@ -42,7 +42,7 @@ class TestBoost(IntegrationTest):
                     'boost', config,
                     submodules={'names': '*', 'required': False},
                     usage=cfg_system_usage(
-                        pcfile='boost',
+                        pcname='boost',
                         auto_link=platform_name() == 'windows',
                         explicit_version={
                             'type': 'regex',
