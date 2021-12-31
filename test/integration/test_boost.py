@@ -54,6 +54,7 @@ class TestBoost(IntegrationTest):
                             ],
                         },
                         include_path=AlwaysEqual(),
+                        library_path=AlwaysEqual(),
                         headers=['boost/version.hpp'],
                         submodule_map=AlwaysEqual(),
                     )

@@ -1,0 +1,3 @@
+packages:
+  Qt5:
+    source: system

@@ -20,8 +20,9 @@ class SystemPackage(BinaryPackage):
             ), 'usage')
 
         usage_kwargs = slice_dict(kwargs, {
-            'version', 'auto_link', 'include_path', 'library_path', 'headers',
-            'libraries', 'compile_flags', 'link_flags', 'submodule_map',
+            'auto_link', 'version', 'dependencies', 'include_path',
+            'library_path', 'headers', 'libraries', 'compile_flags',
+            'link_flags', 'submodule_map',
         })
         usage_kwargs.update({'type': 'system',
                              'inherit_defaults': inherit_defaults})

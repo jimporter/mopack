@@ -24,6 +24,8 @@ packages:
       type: system
       auto_link: <boolean>
       version: <string>
+      pcfile: <string>  # system only
+      dependencies: <dependency-list>
       include_path: <path-list>
       library_path: <path-list>
       headers: <header-list>
@@ -41,5 +43,6 @@ packages:
     usage:
       type: pkg_config
       path: <path-list>
+      pcfile: <string>
       extra_args: <shell-args>
 ```

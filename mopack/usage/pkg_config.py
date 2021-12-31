@@ -81,6 +81,7 @@ class PkgConfigUsage(Usage):
         T = types.TypeCheck(locals(), symbols)
         T.path(types.list_of(types.abs_or_inner_path(buildbase), listify=True))
         T.pcfile(types.maybe(types.string, default=default_pcfile))
+        # XXX: Get rid of this?
         T.extra_args(types.shell_args(none_ok=True))
 
         if pkg.submodules:

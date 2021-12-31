@@ -52,6 +52,7 @@ class TestSubmodules(IntegrationTest):
 
 class TestSubmodulesPath(IntegrationTest):
     name = 'submodules-path'
+    maxDiff = None
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-submodules-path.yml')

@@ -18,16 +18,16 @@ usage:
         ${{ env['BOOST_INCLUDEDIR'] || (
           env['BOOST_ROOT'] ? env['BOOST_ROOT'] + '/include' : null
         ) }}
+      library_path: >-
+        ${{ env['BOOST_LIBRARYDIR'] || (
+          env['BOOST_ROOT'] ? env['BOOST_ROOT'] + '/lib' : null
+        ) }}
       headers: [boost/version.hpp]
       libraries: null
       submodule_map: null
     - <<: *path_usage
       if: true
       auto_link: false
-      library_path: >-
-        ${{ env['BOOST_LIBRARYDIR'] || (
-          env['BOOST_ROOT'] ? env['BOOST_ROOT'] + '/lib' : null
-        ) }}
       submodule_map:
         '*':
           &submodule_map

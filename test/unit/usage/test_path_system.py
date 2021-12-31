@@ -63,11 +63,14 @@ class TestPath(UsageTest):
         if os.path.exists(self.pkgdir):
             shutil.rmtree(self.pkgdir)
 
-    def check_usage(self, usage, *, auto_link=False, include_path=[],
-                    library_path=[], headers=[],
-                    libraries=[{'type': 'guess', 'name': 'foo'}],
-                    compile_flags=[], link_flags=[]):
+    def check_usage(self, usage, *, name='foo', auto_link=False,
+                    dependencies=[], include_path=[], library_path=[],
+                    headers=[], libraries=None, compile_flags=[],
+                    link_flags=[]):
+        if libraries is None:
+            libraries = [{'type': 'guess', 'name': name}]
         self.assertEqual(usage.auto_link, auto_link)
+        self.assertEqual(usage.dependencies, dependencies)
         self.assertEqual(usage.include_path, include_path)
         self.assertEqual(usage.library_path, library_path)
         self.assertEqual(usage.headers, headers)
@@ -226,6 +229,25 @@ class TestPath(UsageTest):
     def test_invalid_version(self):
         with self.assertRaises(FieldValueError):
             self.make_usage('foo', version={'type': 'goofy'})
+
+    def test_dependencies(self):
+        usage = self.make_usage('foo', dependencies=['bar'])
+        self.check_usage(usage, dependencies=[('bar', None)])
+        self.check_get_usage(usage, 'foo', None)
+        self.check_pkg_config('foo', None, {
+            'libs': ['-L' + abspath('/mock/lib'), '-lfoo', '-lbar'],
+        })
+
+        path = '/mock/pkgconfig'
+        dep_usage = {'name': 'foo', 'type': self.type, 'generated': True,
+                     'auto_link': True, 'path': [path], 'pcfiles': ['bar']}
+        with mock.patch('mopack.sources.Package.get_usage',
+                        return_value=dep_usage):
+            self.check_get_usage(usage, 'foo', None, {
+                'name': 'foo', 'type': self.type, 'generated': True,
+                'auto_link': True, 'path': [self.pkgconfdir, path],
+                'pcfiles': ['foo'],
+            })
 
     def test_include_path_relative(self):
         pkg = MockPackage(srcdir=self.srcdir, builddir=self.builddir)
@@ -556,6 +578,28 @@ class TestPath(UsageTest):
                      '-Wl,-starsub2', '-lstarsub2'],
         })
 
+        usage = self.make_usage(pkg, submodule_map={
+            'sub': {
+                'dependencies': 'foo[sub2]',
+                'compile_flags': '-D$submodule',
+            },
+            '*': {
+                'compile_flags': '-Dstar$submodule',
+            },
+        })
+        self.check_usage(usage, libraries=[])
+
+        def mock_pkg_get_usage(self, metadata, submodules):
+            return usage.get_usage(metadata, pkg, submodules)
+
+        with mock.patch('mopack.sources.Package.get_usage',
+                        mock_pkg_get_usage):
+            self.check_get_usage(usage, 'foo', ['sub'], pkg=pkg)
+        self.check_pkg_config('foo', ['sub'], {
+            'cflags': ['-Dsub', '-Dstarsub2'],
+            'libs': [],
+        })
+
     def test_boost(self):
         header = dedent("""\
             #define BOOST_LIB_VERSION "1_23"
@@ -565,9 +609,7 @@ class TestPath(UsageTest):
             opts = self.make_options(common_options={'target_platform': plat})
             pkg = MockPackage('boost', submodules=submodules, _options=opts)
             usage = self.make_usage(pkg)
-            self.check_usage(usage, libraries=[
-                {'type': 'guess', 'name': 'boost'},
-            ])
+            self.check_usage(usage, name='boost')
             self.check_version(usage, None, header=header)
             self.check_get_usage(usage, 'boost', None, {
                 'name': 'boost', 'type': self.type, 'generated': True,
@@ -586,7 +628,8 @@ class TestPath(UsageTest):
             })
 
             usage = self.make_usage(pkg, inherit_defaults=True)
-            self.check_usage(usage, auto_link=(plat == 'windows'),
+            self.check_usage(usage, name='boost',
+                             auto_link=(plat == 'windows'),
                              headers=['boost/version.hpp'], libraries=[])
             self.check_version(usage, '1.23', header=header)
             self.check_get_usage(usage, 'boost', None, {
@@ -615,10 +658,11 @@ class TestPath(UsageTest):
 
             usage = self.make_usage(pkg, inherit_defaults=True,
                                     libraries=['boost'])
-            self.check_usage(usage, auto_link=(plat == 'windows'),
-                             headers=['boost/version.hpp'],
-                             libraries=['boost'], include_path=[],
-                             library_path=[])
+            self.check_usage(
+                usage, name='boost', auto_link=(plat == 'windows'),
+                headers=['boost/version.hpp'], libraries=['boost'],
+                include_path=[], library_path=[]
+            )
             self.check_version(usage, '1.23', header=header)
             self.check_get_usage(usage, 'boost', None, {
                 'name': 'boost', 'type': self.type, 'generated': True,
@@ -661,8 +705,9 @@ class TestPath(UsageTest):
         opts = self.make_options(common_options=common_opts)
         pkg = MockPackage('boost', submodules=submodules, _options=opts)
         usage = self.make_usage(pkg, inherit_defaults=True)
-        self.check_usage(usage, auto_link=False, headers=['boost/version.hpp'],
-                         libraries=[], **pathobjs)
+        self.check_usage(usage, name='boost', auto_link=False,
+                         headers=['boost/version.hpp'], libraries=[],
+                         **pathobjs)
         self.check_get_usage(usage, 'boost', None, pkg=pkg)
         self.check_version(usage, '1.23', header=header)
         self.check_pkg_config('boost', None, {
@@ -676,8 +721,9 @@ class TestPath(UsageTest):
 
         usage = self.make_usage(pkg, inherit_defaults=True,
                                 libraries=['boost'])
-        self.check_usage(usage, auto_link=False, headers=['boost/version.hpp'],
-                         libraries=['boost'], **pathobjs)
+        self.check_usage(usage, name='boost', auto_link=False,
+                         headers=['boost/version.hpp'], libraries=['boost'],
+                         **pathobjs)
         self.check_version(usage, '1.23', header=header)
         self.check_get_usage(usage, 'boost', None, pkg=pkg)
         self.check_pkg_config('boost', None, {
@@ -694,7 +740,7 @@ class TestPath(UsageTest):
         usage = self.make_usage('gl', common_options={
             'target_platform': 'linux',
         })
-        self.check_usage(usage, libraries=[{'type': 'guess', 'name': 'gl'}])
+        self.check_usage(usage, name='gl')
         self.check_get_usage(usage, 'gl', None)
         self.check_pkg_config('gl', None, {
             'libs': ['-L' + abspath('/mock/lib'), '-lGL'],
@@ -703,14 +749,14 @@ class TestPath(UsageTest):
         usage = self.make_usage('gl', common_options={
             'target_platform': 'darwin',
         })
-        self.check_usage(usage, libraries=[{'type': 'guess', 'name': 'gl'}])
+        self.check_usage(usage, name='gl')
         self.check_get_usage(usage, 'gl', None)
         self.check_pkg_config('gl', None, {'libs': ['-framework', 'OpenGL']})
 
         usage = self.make_usage('gl', libraries=['gl'], common_options={
             'target_platform': 'linux',
         })
-        self.check_usage(usage, libraries=['gl'])
+        self.check_usage(usage, name='gl', libraries=['gl'])
         self.check_get_usage(usage, 'gl', None)
         self.check_pkg_config('gl', None)
 
@@ -790,6 +836,12 @@ class TestSystem(TestPath):
         super().tearDown()
         self.mock_run.stop()
 
+    def check_usage(self, usage, *, name='foo', pcfile=None, **kwargs):
+        super().check_usage(usage, name=name, **kwargs)
+        if pcfile is None:
+            pcfile = name
+        self.assertEqual(usage.pcfile, pcfile)
+
     def check_get_usage(self, *args, find_pkg_config=False, **kwargs):
         side_effect = None if find_pkg_config else OSError()
         with mock.patch('subprocess.run', side_effect=side_effect):
@@ -798,8 +850,47 @@ class TestSystem(TestPath):
     def test_pkg_config(self):
         usage = self.make_usage('foo')
         self.check_usage(usage)
-        with mock.patch('subprocess.run'):
-            self.check_get_usage(usage, 'foo', None, {
-                'name': 'foo', 'type': 'system', 'path': [],
-                'pcfiles': ['foo'], 'extra_args': [],
-            }, find_pkg_config=True)
+        self.check_get_usage(usage, 'foo', None, {
+            'name': 'foo', 'type': 'system', 'path': [],
+            'pcfiles': ['foo'], 'extra_args': [],
+        }, find_pkg_config=True)
+
+    def test_pcfile(self):
+        usage = self.make_usage('foo', pcfile='foopc')
+        self.check_usage(usage, pcfile='foopc')
+        self.check_get_usage(usage, 'foo', None)
+        self.check_get_usage(usage, 'foo', None, {
+            'name': 'foo', 'type': 'system', 'path': [],
+            'pcfiles': ['foopc'], 'extra_args': [],
+        }, find_pkg_config=True)
+
+    def test_system_submodule_map(self):
+        submodules_required = {'names': '*', 'required': True}
+
+        pkg = MockPackage('foo', submodules=submodules_required,
+                          _options=self.make_options())
+        usage = self.make_usage(pkg, submodule_map={
+            '*': {'pcfile': '$submodule'},
+        })
+        self.check_usage(usage, libraries=[])
+        self.check_get_usage(usage, 'foo', ['sub'], {
+            'name': 'foo[sub]', 'type': 'system', 'path': [],
+            'pcfiles': ['sub'], 'extra_args': [],
+        }, find_pkg_config=True, pkg=pkg)
+        self.check_get_usage(usage, 'foo', ['sub'], pkg=pkg)
+
+        usage = self.make_usage(pkg, submodule_map={
+            'sub': {'pcfile': 'subpc'},
+            '*': {'pcfile': '$submodule'},
+        })
+        self.check_usage(usage, libraries=[])
+        self.check_get_usage(usage, 'foo', ['sub'], {
+            'name': 'foo[sub]', 'type': 'system', 'path': [],
+            'pcfiles': ['subpc'], 'extra_args': [],
+        }, find_pkg_config=True, pkg=pkg)
+        self.check_get_usage(usage, 'foo', ['sub'], pkg=pkg)
+        self.check_get_usage(usage, 'foo', ['sub2'], {
+            'name': 'foo[sub2]', 'type': 'system', 'path': [],
+            'pcfiles': ['sub2'], 'extra_args': [],
+        }, find_pkg_config=True, pkg=pkg)
+        self.check_get_usage(usage, 'foo', ['sub2'], pkg=pkg)

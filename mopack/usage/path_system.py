@@ -8,7 +8,7 @@ from . import submodules as submod
 from .. import types
 from ..environment import get_pkg_config
 from ..freezedried import DictFreezeDryer, FreezeDried, ListFreezeDryer
-from ..iterutils import ismapping, listify
+from ..iterutils import ismapping, listify, uniques
 from ..package_defaults import DefaultResolver
 from ..path import file_outdated, isfile, Path
 from ..pkg_config import generated_pkg_config_dir, write_pkg_config
@@ -65,22 +65,21 @@ _version_def = types.one_of(
     desc='version definition'
 )
 
+_list_of_dependencies = types.list_of(types.dependency, listify=True)
 _list_of_headers = types.list_of(types.string, listify=True)
 _list_of_libraries = types.list_of(_library, listify=True)
 
 _PathListFD = ListFreezeDryer(Path)
 
 
-class _SubmoduleMapping(FreezeDried):
-    def __init__(self, symbols, path_bases, *, include_path=None,
-                 library_path=None, headers=None, libraries=None,
-                 compile_flags=None, link_flags=None):
-        # Just check that we can fill submodule values correctly.
-        self._fill(locals(), symbols, path_bases)
-
+class _PathSubmoduleMapping(FreezeDried):
+    def __init__(self, symbols, path_bases, *, dependencies=None,
+                 include_path=None, library_path=None, headers=None,
+                 libraries=None, compile_flags=None, link_flags=None):
         # Since we need to delay evaluating symbols until we know what the
         # selected submodule is, just store these values unevaluated. We'll
         # evaluate them later during `mopack usage` via the fill() function.
+        self.dependencies = dependencies
         self.include_path = include_path
         self.library_path = library_path
         self.headers = headers
@@ -88,64 +87,55 @@ class _SubmoduleMapping(FreezeDried):
         self.compile_flags = compile_flags
         self.link_flags = link_flags
 
-    def _fill(self, context, symbols, path_bases, submodule_name='SUBMODULE'):
+        # Just check that we can fill submodule values correctly.
+        self.fill(symbols, path_bases, 'SUBMODULE')
+
+    def fill(self, symbols, path_bases, submodule_name):
         def P(other):
             return types.placeholder_fill(other, submod.placeholder,
                                           submodule_name)
 
-        srcbase = preferred_path_base('srcdir', path_bases)
-        buildbase = preferred_path_base('builddir', path_bases)
         symbols = symbols.augment(symbols=submod.expr_symbols)
 
         result = type(self).__new__(type(self))
-        T = types.TypeCheck(context, symbols, dest=result)
-        T.include_path(P(_list_of_paths(srcbase)))
-        T.library_path(P(_list_of_paths(buildbase)))
-        T.headers(P(_list_of_headers))
-        T.libraries(P(_list_of_libraries))
-        T.compile_flags(P(types.shell_args(none_ok=True)))
-        T.link_flags(P(types.shell_args(none_ok=True)))
+        T = types.TypeCheck(self.__dict__, symbols, dest=result)
+        for field, check in self._fields(path_bases).items():
+            T(field, P(check))
         return result
 
-    def fill(self, symbols, path_bases, submodule_name):
-        return self._fill(self.__dict__, symbols, path_bases, submodule_name)
-
-
-def _submodule_map(symbols, path_bases):
-    def check_item(field, value):
-        with types.wrap_field_error(field):
-            return _SubmoduleMapping(symbols, path_bases, **value)
-
-    def check(field, value):
-        try:
-            value = {'*': {
-                'libraries': types.placeholder_string(field, value)
-            }}
-        except types.FieldError:
-            pass
-
-        return types.dict_of(types.string, check_item)(field, value)
-
-    return check
+    def _fields(self, path_bases):
+        srcbase = preferred_path_base('srcdir', path_bases)
+        buildbase = preferred_path_base('builddir', path_bases)
+        return {
+            'dependencies':  _list_of_dependencies,
+            'include_path':  _list_of_paths(srcbase),
+            'library_path':  _list_of_paths(buildbase),
+            'headers':       _list_of_headers,
+            'libraries':     _list_of_libraries,
+            'compile_flags': types.shell_args(none_ok=True),
+            'link_flags':    types.shell_args(none_ok=True),
+        }
 
 
 @FreezeDried.fields(rehydrate={
     'include_path': _PathListFD, 'library_path': _PathListFD,
     'compile_flags': ShellArguments, 'link_flags': ShellArguments,
-    'submodule_map': DictFreezeDryer(value_type=_SubmoduleMapping),
+    'submodule_map': DictFreezeDryer(value_type=_PathSubmoduleMapping),
 })
 class PathUsage(Usage):
     type = 'path'
     _version = 1
+    SubmoduleMapping = _PathSubmoduleMapping
 
     @staticmethod
     def upgrade(config, version):
         return config
 
     def __init__(self, pkg, *, auto_link=Unset, version=Unset,
-                 include_path=Unset, library_path=Unset, headers=Unset,
-                 libraries=Unset, compile_flags=Unset, link_flags=Unset,
-                 submodule_map=Unset, inherit_defaults=False):
+                 dependencies=Unset, include_path=Unset, library_path=Unset,
+                 headers=Unset, libraries=Unset, compile_flags=Unset,
+                 link_flags=Unset, submodule_map=Unset,
+                 inherit_defaults=False):
         super().__init__(pkg, inherit_defaults=inherit_defaults)
 
         path_bases = pkg.path_bases(builder=True)
@@ -161,6 +151,7 @@ class PathUsage(Usage):
         T.auto_link(pkg_default(types.boolean, default=False))
 
         T.version(pkg_default(_version_def), dest_field='explicit_version')
+        T.dependencies(pkg_default(_list_of_dependencies))
 
         # XXX: These specify the *possible* paths to find headers/libraries.
         # Should there be a way of specifying paths that are *always* passed to
@@ -185,11 +176,29 @@ class PathUsage(Usage):
 
         if pkg.submodules:
             T.submodule_map(pkg_default(
-                types.maybe(_submodule_map(symbols, path_bases)),
+                types.maybe(self._submodule_map(symbols, path_bases)),
                 default=pkg.name + '_$submodule',
                 extra_symbols=submod.expr_symbols,
                 evaluate=False
             ), evaluate=False)
+
+    @classmethod
+    def _submodule_map(cls, symbols, path_bases):
+        def check_item(field, value):
+            with types.wrap_field_error(field):
+                return cls.SubmoduleMapping(symbols, path_bases, **value)
+
+        def check(field, value):
+            try:
+                value = {'*': {
+                    'libraries': types.placeholder_string(field, value)
+                }}
+            except types.FieldError:
+                pass
+
+            return types.dict_of(types.string, check_item)(field, value)
+
+        return check
 
     def _get_submodule_mapping(self, symbols, path_bases, submodule):
         try:
@@ -312,6 +321,19 @@ class PathUsage(Usage):
         pcname = dependency_string(pkg.name, listify(submodule))
         pcpath = os.path.join(pkgconfdir, pcname + '.pc')
 
+        # Ensure all dependencies are up-to-date and get their usages.
+        auto_link = self.auto_link
+        deps_requires = []
+        deps_paths = [pkgconfdir]
+        for dep_pkg, dep_sub in chain_attr('dependencies'):
+            # XXX: Support `strict` from the command line?
+            # XXX: Cache usage so we don't repeatedly process the same package.
+            usage = metadata.get_package(dep_pkg).get_usage(metadata, dep_sub)
+
+            auto_link |= usage.get('auto_link', False)
+            deps_requires.extend(usage.get('pcfiles', []))
+            deps_paths.extend(usage.get('path', []))
+
         should_write = file_outdated(pcpath, metadata.path)
 
         if should_write or get_version:
@@ -344,26 +366,34 @@ class PathUsage(Usage):
             # ... and write it.
             os.makedirs(pkgconfdir, exist_ok=True)
             with open(pcpath, 'w') as f:
-                write_pkg_config(f, pcname, version=version, requires=requires,
+                write_pkg_config(f, pcname, version=version,
+                                 requires=requires + deps_requires,
                                  cflags=cflags, libs=libs,
                                  variables=path_values)
 
+        result = {'auto_link': auto_link, 'pcfile': pcname,
+                  'path': uniques(deps_paths)}
         if get_version:
-            return [pcname], version
-        return [pcname]
+            result['version'] = version
+        return result
 
     def get_usage(self, metadata, pkg, submodules):
         if submodules and self.submodule_map:
+            pkgconfpath, requires = [], []
+            auto_link = False
+            version = None
+
             if pkg.submodules['required']:
                 # Don't make a base .pc file; just include the data from the
                 # base in each submodule's .pc file.
                 mappings = [self]
-                requires = []
-                version = None
             else:
                 mappings = []
-                requires, version = self._write_pkg_config(metadata, pkg,
-                                                           get_version=True)
+                data = self._write_pkg_config(metadata, pkg, get_version=True)
+                auto_link |= data['auto_link']
+                requires.append(data['pcfile'])
+                pkgconfpath.extend(data['path'])
+                version = data['version']
 
             path_bases = pkg.path_bases(builder=True)
             symbols = self._options.expr_symbols.augment(paths=path_bases)
@@ -371,24 +401,53 @@ class PathUsage(Usage):
             pcnames = []
             for i in submodules:
                 mapping = self._get_submodule_mapping(symbols, path_bases, i)
-                pcnames.extend(self._write_pkg_config(
-                    metadata, pkg, i, version, requires, mappings + [mapping]
-                ))
+                data = self._write_pkg_config(metadata, pkg, i, version,
+                                              requires, mappings + [mapping])
+                auto_link |= data['auto_link']
+                pcnames.append(data['pcfile'])
+                pkgconfpath.extend(data['path'])
         else:
-            pcnames = self._write_pkg_config(metadata, pkg)
+            data = self._write_pkg_config(metadata, pkg)
+            auto_link = data['auto_link']
+            pcnames = [data['pcfile']]
+            pkgconfpath = data['path']
 
         return self._usage(
-            pkg, submodules, generated=True, auto_link=self.auto_link,
-            path=[generated_pkg_config_dir(metadata.pkgdir)], pcfiles=pcnames
+            pkg, submodules, generated=True, auto_link=auto_link,
+            path=uniques(pkgconfpath), pcfiles=pcnames
         )
 
 
+class _SystemSubmoduleMapping(_PathSubmoduleMapping):
+    def __init__(self, *args, pcfile=None, **kwargs):
+        self.pcfile = pcfile
+        super().__init__(*args, **kwargs)
+
+    def _fields(self, path_bases):
+        result = super()._fields(path_bases)
+        result.update({
+            'pcfile': types.maybe(types.string),
+        })
+        return result
+
+
+@FreezeDried.fields(rehydrate={
+    'submodule_map': DictFreezeDryer(value_type=_SystemSubmoduleMapping),
+})
 class SystemUsage(PathUsage):
     type = 'system'
+    SubmoduleMapping = _SystemSubmoduleMapping
 
-    def __init__(self, pkg, **kwargs):
-        super().__init__(pkg, **kwargs)
-        self.pcfile = pkg.name
+    def __init__(self, pkg, *, pcfile=Unset, inherit_defaults=False, **kwargs):
+        super().__init__(pkg, inherit_defaults=inherit_defaults, **kwargs)
+
+        path_bases = pkg.path_bases(builder=True)
+        symbols = self._options.expr_symbols.augment(paths=path_bases)
+        pkg_default = DefaultResolver(self, symbols, inherit_defaults,
+                                      pkg.name)
+
+        T = types.TypeCheck(locals(), symbols)
+        T.pcfile(pkg_default(types.string, default=pkg.name))
 
     def version(self, metadata, pkg):
         pkg_config = get_pkg_config(self._common_options.env)
@@ -402,12 +461,23 @@ class SystemUsage(PathUsage):
             return super().version(metadata, pkg)
 
     def get_usage(self, metadata, pkg, submodules):
+        if submodules and self.submodule_map:
+            pcfiles = [] if pkg.submodules['required'] else [self.pcfile]
+            path_bases = pkg.path_bases(builder=True)
+            symbols = self._options.expr_symbols.augment(paths=path_bases)
+            for i in submodules:
+                mapping = self._get_submodule_mapping(symbols, path_bases, i)
+                if mapping.pcfile:
+                    pcfiles.append(mapping.pcfile)
+        else:
+            pcfiles = [self.pcfile]
+
         pkg_config = get_pkg_config(self._common_options.env)
         try:
-            subprocess.run(pkg_config + [self.pcfile], check=True,
+            subprocess.run(pkg_config + pcfiles, check=True,
                            stdout=subprocess.DEVNULL,
                            stderr=subprocess.DEVNULL)
-            return self._usage(pkg, submodules, path=[], pcfiles=[self.pcfile],
+            return self._usage(pkg, submodules, path=[], pcfiles=pcfiles,
                                extra_args=[])
         except (OSError, subprocess.CalledProcessError):
             return super().get_usage(metadata, pkg, submodules)

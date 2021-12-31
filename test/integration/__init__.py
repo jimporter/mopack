@@ -7,13 +7,13 @@ import yaml
 
 from .. import *
 
-from mopack.iterutils import listify
+from mopack.iterutils import iterate, listify
 from mopack.platforms import platform_name
 from mopack.types import dependency_string
 
 
 # Also supported: 'apt', 'mingw-cross'
-test_features = {'boost'}
+test_features = {'boost', 'qt'}
 for i in os.getenv('MOPACK_EXTRA_TESTS', '').split(' '):
     if i:
         test_features.add(i)
@@ -216,10 +216,11 @@ def cfg_pkg_config_usage(*, path=[{'base': 'builddir', 'path': 'pkgconfig'}],
     return result
 
 
-def _cfg_path_submodule_map(*, include_path=None, library_path=None,
-                            headers=None, libraries=None, compile_flags=None,
-                            link_flags=None):
+def _cfg_path_submodule_map(*, dependencies=None, include_path=None,
+                            library_path=None, headers=None, libraries=None,
+                            compile_flags=None, link_flags=None):
     return {
+        'dependencies': dependencies,
         'include_path': include_path,
         'library_path': library_path,
         'headers': headers,
@@ -229,13 +230,14 @@ def _cfg_path_submodule_map(*, include_path=None, library_path=None,
     }
 
 
-def cfg_path_usage(*, auto_link=False, explicit_version=None, include_path=[],
-                   library_path=[], headers=[], libraries=[], compile_flags=[],
-                   link_flags=[], submodule_map=None):
+def cfg_path_usage(*, auto_link=False, explicit_version=None, dependencies=[],
+                   include_path=[], library_path=[], headers=[], libraries=[],
+                   compile_flags=[], link_flags=[], submodule_map=None):
     result = {
         'type': 'path',
         '_version': 1,
         'auto_link': auto_link,
+        'dependencies': dependencies,
         'explicit_version': explicit_version,
         'include_path': include_path,
         'library_path': library_path,
@@ -332,15 +334,15 @@ class IntegrationTest(SubprocessTestCase):
             self.assertEqual(loader[format](output), usage)
         return output
 
-    def assertPkgConfigUsage(self, name, submodules=[], *, path=['pkgconfig'],
-                             pcfiles=None, extra_args=[]):
+    def assertPkgConfigUsage(self, name, submodules=[], *, type='pkg_config',
+                             path=['pkgconfig'], pcfiles=None, extra_args=[]):
         path = [(i if os.path.isabs(i) else
                  os.path.join(self.pkgbuilddir, name, i)) for i in path]
         if pcfiles is None:
             pcfiles = [name]
 
         self.assertUsage(name, {
-            'name': dependency_string(name, submodules), 'type': 'pkg_config',
+            'name': dependency_string(name, submodules), 'type': type,
             'path': path, 'pcfiles': pcfiles, 'extra_args': extra_args,
         }, submodules=submodules)
 
@@ -351,8 +353,8 @@ class IntegrationTest(SubprocessTestCase):
         if libraries is None:
             libraries = [name]
         if pcfiles is None:
-            pcfiles = ([dependency_string(name, [i]) for i in submodules]
-                       if submodules else [name])
+            pcfiles = ([dependency_string(name, [i]) for i in
+                        iterate(submodules)] if submodules else [name])
 
         pkgconfdir = os.path.join(self.stage, 'mopack', 'pkgconfig')
         self.assertUsage(name, {
