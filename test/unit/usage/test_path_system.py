@@ -781,12 +781,12 @@ class TestSystem(TestPath):
     usage_type = SystemUsage
     type = 'system'
 
-    def asetUp(self):
+    def setUp(self):
         self.mock_run = mock.patch('subprocess.run', side_effect=OSError())
         self.mock_run.start()
         super().setUp()
 
-    def atearDown(self):
+    def tearDown(self):
         super().tearDown()
         self.mock_run.stop()
 

@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+from subprocess import run as subprocess_run
 
 from mopack.iterutils import listify
 from mopack.shell import split_posix_str
@@ -32,7 +33,8 @@ def call_pkg_config(package, options, *, path=None, split=True):
         extra_kwargs['env'] = env
 
     pkg_config = os.environ.get('PKG_CONFIG', 'pkg-config')
-    output = subprocess.run(
+    # Use subprocess_run to ensure that we get the real function, not a mock.
+    output = subprocess_run(
         [pkg_config] + listify(package) + options,
         check=True, universal_newlines=True, stdout=subprocess.PIPE,
         **extra_kwargs
