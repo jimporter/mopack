@@ -44,7 +44,7 @@ class CommonOptions(FreezeDried, BaseOptions):
                     env[k] = v
         return env
 
-    def __call__(self, *, target_platform=types.Unset, env=None, **kwargs):
+    def __call__(self, *, target_platform=types.Unset, env=None):
         T = types.TypeCheck(locals())
         if self.target_platform is types.Unset:
             T.target_platform(types.maybe(types.string))
