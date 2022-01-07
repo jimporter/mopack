@@ -166,7 +166,7 @@ class TypeCheck:
             raise FieldValueError(e.msg, field, e.loc)
 
     def __call__(self, field, check, *, dest=None, dest_field=None,
-                 extend=False, extra_symbols=None, evaluate=True):
+                 reducer=None, extra_symbols=None, evaluate=True):
         if dest is None:
             dest = self.__dest
         if dest_field is None:
@@ -184,13 +184,13 @@ class TypeCheck:
             value = self.__evaluate(field, value, symbols)
         value = check(field, value)
 
-        if extend:
-            d = (dest[dest_field] if iterutils.ismapping(dest)
-                 else getattr(dest, dest_field))
-            d.extend(value)
-        elif iterutils.ismapping(dest):
+        if iterutils.ismapping(dest):
+            if reducer:
+                value = reducer(dest[dest_field], value)
             dest[dest_field] = value
         else:
+            if reducer:
+                value = reducer(getattr(dest, dest_field), value)
             setattr(dest, dest_field, value)
 
     def __getattr__(self, field):

@@ -1,5 +1,6 @@
 import os
 
+from . import types
 from .base_options import BaseOptions
 from .builders import BuilderOptions, make_builder_options
 from .freezedried import DictToListFreezeDryer, FreezeDried
@@ -8,7 +9,6 @@ from .path import Path
 from .placeholder import placeholder
 from .platforms import platform_name
 from .sources import make_package_options, PackageOptions
-from .types import Unset
 
 
 class ExprSymbols(dict):
@@ -18,7 +18,7 @@ class ExprSymbols(dict):
         return ExprSymbols(
             **self,
             **({i: placeholder(Path('', i)) for i in paths}),
-            **symbols,
+            **symbols
         )
 
 
@@ -32,20 +32,29 @@ class CommonOptions(FreezeDried, BaseOptions):
         return config
 
     def __init__(self, deploy_paths=None):
-        self.target_platform = Unset
+        self.target_platform = types.Unset
         self.env = {}
         self.deploy_paths = deploy_paths or {}
 
-    def __call__(self, *, target_platform=Unset, env=None, **kwargs):
-        if self.target_platform is Unset:
-            self.target_platform = target_platform
-        if env:
-            for k, v in env.items():
-                if k not in self.env:
-                    self.env[k] = v
+    @staticmethod
+    def _fill_env(env, new_env):
+        if new_env:
+            for k, v in new_env.items():
+                if k not in env:
+                    env[k] = v
+        return env
+
+    def __call__(self, *, target_platform=types.Unset, env=None, **kwargs):
+        T = types.TypeCheck(locals())
+        if self.target_platform is types.Unset:
+            T.target_platform(types.maybe(types.string))
+        T.env(types.maybe(types.dict_of(types.string, types.string)),
+              reducer=self._fill_env)
 
     def finalize(self):
-        self(target_platform=platform_name(), env=os.environ)
+        if not self.target_platform:
+            self.target_platform = platform_name()
+        self._fill_env(self.env, os.environ)
 
     @property
     @memoize_method

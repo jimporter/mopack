@@ -1,6 +1,7 @@
 import os
 import subprocess
 import warnings
+from itertools import chain
 
 from . import BinaryPackage, PackageOptions
 from .. import log, types
@@ -31,10 +32,10 @@ class ConanPackage(BinaryPackage):
                      _symbols, _child_config=False):
             T = types.TypeCheck(locals(), _symbols)
             if build:
-                T.build(types.list_of(types.string, listify=True), extend=True)
-                self.build = uniques(self.build)
+                T.build(types.list_of(types.string, listify=True),
+                        reducer=lambda a, b: uniques(chain(a, b)))
             if extra_args:
-                T.extra_args(types.shell_args(), extend=True)
+                T.extra_args(types.shell_args(), reducer=lambda a, b: a + b)
 
     @staticmethod
     def upgrade(config, version):

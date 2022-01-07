@@ -94,14 +94,15 @@ class TestTypeCheck(TypeTestCase):
         with self.assertFieldError(('field',)):
             Thing(1)
 
-    def test_object_extend(self):
+    def test_object_reducer(self):
         class Thing:
             def __init__(self):
                 self.field = []
 
             def __call__(self, field):
                 T = TypeCheck(locals())
-                T.field(list_of(string, listify=True), extend=True)
+                T.field(list_of(string, listify=True),
+                        reducer=lambda a, b: a + b)
 
         t = Thing()
         t('foo')
@@ -110,15 +111,15 @@ class TestTypeCheck(TypeTestCase):
         with self.assertFieldError(('field',)):
             t(1)
 
-    def test_dict_extend(self):
+    def test_dict_reducer(self):
         class Thing:
             def __init__(self):
                 self.data = {'field': []}
 
             def __call__(self, field):
                 T = TypeCheck(locals())
-                T.field(list_of(string, listify=True), extend=True,
-                        dest=self.data)
+                T.field(list_of(string, listify=True), dest=self.data,
+                        reducer=lambda a, b: a + b)
 
         t = Thing()
         t('foo')
