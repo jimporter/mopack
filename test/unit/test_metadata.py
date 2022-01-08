@@ -1,14 +1,14 @@
 import json
-from unittest import mock, TestCase
+from unittest import mock
 
-from . import Stream
+from . import OptionsTest, Stream
 
 from mopack.metadata import Metadata, MetadataVersionError
 from mopack.sources.apt import AptPackage
 from mopack.sources.system import SystemPackage
 
 
-class TestMetadata(TestCase):
+class TestMetadata(OptionsTest):
     pkgdir = '/path/to/builddir/mopack'
     config_file = '/path/to/mopack.yml'
 
@@ -37,9 +37,9 @@ class TestMetadata(TestCase):
             metadata.get_package('foo')
 
     def test_get_package_strict(self):
-        metadata = Metadata(self.pkgdir)
-        with self.assertRaises(ValueError):
-            metadata.get_package('foo', strict=True)
+        metadata = Metadata(self.pkgdir, self.make_options({'strict': True}))
+        with self.assertRaises(KeyError):
+            metadata.get_package('foo')
 
     def test_save(self):
         out = Stream('')

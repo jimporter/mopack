@@ -32,6 +32,7 @@ class CommonOptions(FreezeDried, BaseOptions):
         return config
 
     def __init__(self, deploy_paths=None):
+        self.strict = types.Unset
         self.target_platform = types.Unset
         self.env = {}
         self.deploy_paths = deploy_paths or {}
@@ -44,14 +45,18 @@ class CommonOptions(FreezeDried, BaseOptions):
                     env[k] = v
         return env
 
-    def __call__(self, *, target_platform=types.Unset, env=None):
+    def __call__(self, *, strict=None, target_platform=types.Unset, env=None):
         T = types.TypeCheck(locals())
+        if self.strict is types.Unset and strict is not None:
+            T.strict(types.boolean)
         if self.target_platform is types.Unset:
             T.target_platform(types.maybe(types.string))
         T.env(types.maybe(types.dict_of(types.string, types.string)),
               reducer=self._fill_env)
 
     def finalize(self):
+        if self.strict is types.Unset:
+            self.strict = False
         if not self.target_platform:
             self.target_platform = platform_name()
         self._fill_env(self.env, os.environ)

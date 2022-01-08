@@ -150,7 +150,7 @@ def deploy(pkgdir):
 
 def usage(pkgdir, name, submodules=None, strict=False):
     metadata = Metadata.try_load(pkgdir, strict)
-    package = metadata.get_package(name, strict)
+    package = metadata.get_package(name)
     return package.get_usage(metadata, submodules)
 
 

@@ -69,3 +69,22 @@ class TestUsage(IntegrationTest):
         )
         self.assertUsage('fake', extra_args=['--strict'] + wrongdir_args,
                          returncode=1)
+
+    def test_resolve_strict(self):
+        config = os.path.join(test_data_dir, 'mopack-tarball.yml')
+        self.assertPopen(['mopack', 'resolve', '--strict', config])
+
+        # Usage for `hello`.
+        expected_output_hello = {
+            'name': 'hello',
+            'type': 'pkg_config',
+            'pcnames': ['hello'],
+            'pkg_config_path': [os.path.join(self.stage, 'mopack', 'build',
+                                             'hello', 'pkgconfig')],
+        }
+        self.assertUsageOutput('hello', expected_output_hello)
+        self.assertUsageOutput('hello', expected_output_hello, ['--strict'])
+
+        # Usage for `fake`.
+        self.assertUsage('fake', returncode=1)
+        self.assertUsage('fake', extra_args=['--strict'], returncode=1)

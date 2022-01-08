@@ -53,7 +53,8 @@ class TestKeyValueAction(TestCase):
 
 class TestConfigOptionAction(TestCase):
     def setUp(self):
-        self.action = arguments.ConfigOptionAction(['-f', '--foo'], 'dest')
+        self.action = arguments.ConfigOptionAction(['-f', '--foo'],
+                                                   dest='dest')
 
     def test_single(self):
         args = arguments.Namespace(dest=None)
@@ -68,13 +69,20 @@ class TestConfigOptionAction(TestCase):
         }))
 
     def test_key(self):
-        action = arguments.ConfigOptionAction(['-f', '--foo'], 'dest',
+        action = arguments.ConfigOptionAction(['-f', '--foo'], dest='dest',
                                               key=['mammal'])
-
         args = arguments.Namespace(dest=None)
         action(None, args, 'goat=baah')
         self.assertEqual(args, arguments.Namespace(dest={
             'mammal': {'goat': 'baah'}
+        }))
+
+        action = arguments.ConfigOptionAction(['-f', '--foo'], dest='dest',
+                                              key=['animal', 'mammal'])
+        args = arguments.Namespace(dest=None)
+        action(None, args, 'goat=baah')
+        self.assertEqual(args, arguments.Namespace(dest={
+            'animal': {'mammal': {'goat': 'baah'}}
         }))
 
     def test_yaml(self):
@@ -91,6 +99,15 @@ class TestConfigOptionAction(TestCase):
         self.action(None, args, 'mammal:goat=- baah!')
         self.assertEqual(args, arguments.Namespace(dest={
             'mammal': {'goat': ['baah', 'baah!'], 'cow': 'moo'}
+        }))
+
+    def test_const(self):
+        action = arguments.ConfigOptionAction(['-g', '--goat'], dest='dest',
+                                              key=['mammal'], const='goat')
+        args = arguments.Namespace(dest=None)
+        action(None, args, [])
+        self.assertEqual(args, arguments.Namespace(dest={
+            'mammal': 'goat'
         }))
 
     def test_invalid(self):

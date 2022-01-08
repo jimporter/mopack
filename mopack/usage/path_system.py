@@ -318,7 +318,6 @@ class PathUsage(Usage):
         deps_requires = []
         deps_paths = [pkgconfdir]
         for dep_pkg, dep_sub in chain_attr('dependencies'):
-            # XXX: Support `strict` from the command line?
             # XXX: Cache usage so we don't repeatedly process the same package.
             usage = metadata.get_package(dep_pkg).get_usage(metadata, dep_sub)
 

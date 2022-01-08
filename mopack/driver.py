@@ -168,6 +168,10 @@ def main():
                            key=['builders'], dest='options',
                            metavar='OPTION=VALUE',
                            help='additional builder options')
+    resolve_p.add_argument('--strict', action=arguments.ConfigOptionAction,
+                           key=['strict'], const=True, dest='options',
+                           help=('return an error during usage if package ' +
+                                 'is not defined'))
     resolve_p.add_argument('file', nargs='+', complete='file',
                            help='the mopack configuration files')
 

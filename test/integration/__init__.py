@@ -47,10 +47,11 @@ def slurp(filename):
         return f.read()
 
 
-def cfg_common_options(target_platform=platform_name(), env=AlwaysEqual(),
-                       deploy_paths={}):
-    return {'_version': 1, 'target_platform': target_platform,
-            'env': env, 'deploy_paths': deploy_paths}
+def cfg_common_options(*, strict=False, target_platform=platform_name(),
+                       env=AlwaysEqual(), deploy_paths={}):
+    return {'_version': 1, 'strict': strict,
+            'target_platform': target_platform, 'env': env,
+            'deploy_paths': deploy_paths}
 
 
 def cfg_bfg9000_options(toolchain=None):

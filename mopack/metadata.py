@@ -31,11 +31,11 @@ class Metadata:
     def add_package(self, package):
         self.packages[package.name] = package
 
-    def get_package(self, name, strict=False):
+    def get_package(self, name):
         if name in self.packages:
             package = self.packages[name]
-        elif strict:
-            raise ValueError('no definition for package {!r}'.format(name))
+        elif self.options.common.strict:
+            raise KeyError('no definition for package {!r}'.format(name))
         else:
             package = fallback_system_package(name, self.options)
 
@@ -60,7 +60,7 @@ class Metadata:
             }, f, cls=MarkedJSONEncoder)
 
     @classmethod
-    def load(cls, pkgdir):
+    def load(cls, pkgdir, strict=False):
         with open(os.path.join(pkgdir, cls.metadata_filename)) as f:
             state = json.load(f)
             version, data = state['version'], state['metadata']
@@ -76,6 +76,9 @@ class Metadata:
         metadata.implicit_files = state['config_files']['implicit']
 
         metadata.options = Options.rehydrate(data['options'])
+        if strict:
+            metadata.options.common.strict = True
+
         metadata.packages = cls._PackagesFD.rehydrate(
             data['packages'], _options=metadata.options
         )
@@ -85,7 +88,7 @@ class Metadata:
     @classmethod
     def try_load(cls, pkgdir, strict=False):
         try:
-            return Metadata.load(pkgdir)
+            return Metadata.load(pkgdir, strict)
         except FileNotFoundError:
             if strict:
                 raise

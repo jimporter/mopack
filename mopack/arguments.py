@@ -49,24 +49,31 @@ class KeyValueAction(Action):
 
 class ConfigOptionAction(Action):
     def __init__(self, *args, key=None, **kwargs):
+        if 'const' in kwargs:
+            kwargs['nargs'] = 0
         super().__init__(*args, **kwargs)
         self.key = key or []
 
     def __call__(self, parser, namespace, values, option_string=None):
-        try:
-            key, value = values.split('=', 1)
-        except ValueError:
-            raise ArgumentError(self, 'expected OPTION=VALUE')
+        if self.nargs == 0:
+            key = self.key
+            value = self.const
+            print(values)
+        else:
+            try:
+                key, value = values.split('=', 1)
+            except ValueError:
+                raise ArgumentError(self, 'expected OPTION=VALUE')
 
-        key = self.key + key.split(':')
+            key = self.key + key.split(':')
 
-        try:
-            value = yaml.safe_load(value)
-        except yaml.parser.ParserError:
-            raise ArgumentError(self, 'invalid yaml: {!r}'.format(value))
+            try:
+                value = yaml.safe_load(value)
+            except yaml.parser.ParserError:
+                raise ArgumentError(self, 'invalid yaml: {!r}'.format(value))
+
         for i in reversed(key):
             value = {i: value}
-
         if getattr(namespace, self.dest) is None:
             setattr(namespace, self.dest, {})
         merge_into_dict(getattr(namespace, self.dest), value)
