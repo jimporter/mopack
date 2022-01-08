@@ -172,7 +172,7 @@ def main():
                            key=['strict'], const=True, dest='options',
                            help=('return an error during usage if package ' +
                                  'is not defined'))
-    resolve_p.add_argument('file', nargs='+', complete='file',
+    resolve_p.add_argument('file', nargs='+', metavar='FILE', complete='file',
                            help='the mopack configuration files')
 
     usage_p = subparsers.add_parser(
@@ -187,6 +187,7 @@ def main():
     usage_p.add_argument('--strict', action='store_true',
                          help='return an error if package is not defined')
     usage_p.add_argument('dependency', type=dependency_type,
+                         metavar='DEPENDENCY',
                          help='the name of the dependency to query')
 
     deploy_p = subparsers.add_parser(
