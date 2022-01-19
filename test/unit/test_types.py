@@ -372,7 +372,7 @@ class TestDictOf(TypeTestCase):
 
     def test_invalid_value(self):
         with self.assertFieldError(('field', 'f'), 'expected a boolean'):
-            print(dict_of(string, boolean)('field', {'f': 'foo'}))
+            dict_of(string, boolean)('field', {'f': 'foo'})
 
 
 class TestDictShape(TypeTestCase):

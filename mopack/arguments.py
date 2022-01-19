@@ -58,7 +58,6 @@ class ConfigOptionAction(Action):
         if self.nargs == 0:
             key = self.key
             value = self.const
-            print(values)
         else:
             try:
                 key, value = values.split('=', 1)
