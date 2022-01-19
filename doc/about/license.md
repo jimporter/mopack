@@ -2,7 +2,7 @@
 
 ## BSD 3-clause license
 
-Copyright (c) 2020-2021, Jim Porter
+Copyright (c) 2020-2022, Jim Porter
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
