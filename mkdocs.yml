@@ -5,7 +5,7 @@ edit_uri: ""
 copyright: Copyright &copy; 2020-2022 Jim Porter
 
 theme:
-  name: yeti
+  name: yeti-classic
   hljs_languages: [yaml]
 extra_css:
   - css/extra.css
