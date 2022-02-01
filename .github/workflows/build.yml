@@ -12,7 +12,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         compiler: [cc, msvc]
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ['3.6', '3.7', '3.8', '3.9']
 
         include:
           - {os: ubuntu-latest, extra-tests: [apt, mingw-cross]}
@@ -25,6 +25,8 @@ jobs:
             compiler: msvc
           - os: macos-latest
             compiler: msvc
+          - os: macos-latest
+            python-version: '3.6'
       fail-fast: false
     env:
       MOPACK_EXTRA_TESTS: ${{ join(matrix.extra-tests, ' ') }}
