@@ -41,8 +41,7 @@ usage:
           libraries: boost_$submodule
         thread:
           <<: *submodule_map
-          compile_flags: -pthread
-          link_flags: "${{ target_platform == 'darwin' ? '' : '-pthread' }}"
+          dependencies: ['pthread']
   system: *path_system_usage
   pkg_config:
     submodule_map: null

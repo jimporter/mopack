@@ -170,8 +170,8 @@ class PathUsage(Usage):
                 _list_of_libraries, default=pkg.name
             )
         T.libraries(libs_checker)
-        T.compile_flags(types.shell_args(none_ok=True))
-        T.link_flags(types.shell_args(none_ok=True))
+        T.compile_flags(pkg_default(types.shell_args(none_ok=True)))
+        T.link_flags(pkg_default(types.shell_args(none_ok=True)))
 
         if pkg.submodules:
             T.submodule_map(pkg_default(

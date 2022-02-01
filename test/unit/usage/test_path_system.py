@@ -9,6 +9,7 @@ from . import MockPackage, through_json, UsageTest
 from ... import call_pkg_config, test_stage_dir
 
 from mopack.options import Options
+from mopack.metadata import Metadata
 from mopack.path import Path
 from mopack.shell import ShellArguments
 from mopack.types import dependency_string, FieldValueError
@@ -97,7 +98,7 @@ class TestPath(UsageTest):
             self.assertEqual(usage.version(self.metadata, pkg), expected)
 
     def check_get_usage(self, usage, name, submodules, expected=None, *,
-                        pkg=None, write_pkg_config=True):
+                        pkg=None, metadata=None, write_pkg_config=True):
         depname = dependency_string(name, submodules)
         if expected is None:
             expected = {'name': depname, 'type': self.type, 'generated': True,
@@ -106,6 +107,8 @@ class TestPath(UsageTest):
 
         if pkg is None:
             pkg = MockPackage(name)
+        if metadata is None:
+            metadata = self.metadata
 
         self.clear_pkgdir()
 
@@ -119,9 +122,8 @@ class TestPath(UsageTest):
                         return_value=['lib{}.so']), \
              mock.patch('mopack.usage.path_system.isfile',
                         mock_isfile):
-            self.assertEqual(usage.get_usage(
-                self.metadata, pkg, submodules
-            ), expected)
+            self.assertEqual(usage.get_usage(metadata, pkg, submodules),
+                             expected)
 
     def check_pkg_config(self, name, submodules, expected={}):
         pcname = dependency_string(name, submodules)
@@ -601,6 +603,7 @@ class TestPath(UsageTest):
         submodules = {'names': '*', 'required': False}
         for plat in ['linux', 'darwin', 'windows']:
             opts = self.make_options(common_options={'target_platform': plat})
+            metadata = Metadata(self.pkgdir, opts)
             pkg = MockPackage('boost', submodules=submodules, _options=opts)
             usage = self.make_usage(pkg)
             self.check_usage(usage, name='boost')
@@ -615,7 +618,7 @@ class TestPath(UsageTest):
                 'name': 'boost[thread]', 'type': self.type, 'generated': True,
                 'auto_link': False, 'pcnames': ['boost[thread]'],
                 'pkg_config_path': [self.pkgconfdir],
-            }, pkg=pkg)
+            }, pkg=pkg, metadata=metadata)
             self.check_pkg_config('boost', ['thread'], {
                 'libs': ['-L' + abspath('/mock/lib'), '-lboost',
                          '-lboost_thread'],
@@ -630,7 +633,7 @@ class TestPath(UsageTest):
                 'name': 'boost', 'type': self.type, 'generated': True,
                 'auto_link': plat == 'windows', 'pcnames': ['boost'],
                 'pkg_config_path': [self.pkgconfdir],
-            }, pkg=pkg)
+            }, pkg=pkg, metadata=metadata)
             self.check_pkg_config('boost', None, {
                 'cflags': ['-I' + abspath('/mock/include')],
                 'libs': (['-L' + abspath('/mock/lib')]
@@ -641,7 +644,7 @@ class TestPath(UsageTest):
                 'auto_link': plat == 'windows',
                 'pcnames': ['boost[thread]' if plat != 'windows' else 'boost'],
                 'pkg_config_path': [self.pkgconfdir],
-            }, pkg=pkg)
+            }, pkg=pkg, metadata=metadata)
             sub = ['thread'] if plat != 'windows' else None
             self.check_pkg_config('boost', sub, {
                 'cflags': ( ['-I' + abspath('/mock/include')] +
@@ -663,7 +666,7 @@ class TestPath(UsageTest):
                 'name': 'boost', 'type': self.type, 'generated': True,
                 'auto_link': plat == 'windows', 'pcnames': ['boost'],
                 'pkg_config_path': [self.pkgconfdir],
-            }, pkg=pkg)
+            }, pkg=pkg, metadata=metadata)
             self.check_pkg_config('boost', None, {
                 'cflags': ['-I' + abspath('/mock/include')]
             })
@@ -673,7 +676,7 @@ class TestPath(UsageTest):
                 'auto_link': plat == 'windows',
                 'pcnames': ['boost[regex]' if plat != 'windows' else 'boost'],
                 'pkg_config_path': [self.pkgconfdir],
-            }, pkg=pkg)
+            }, pkg=pkg, metadata=metadata)
             sub = ['regex'] if plat != 'windows' else None
             self.check_pkg_config('boost', sub, {
                 'cflags': ['-I' + abspath('/mock/include')],
@@ -699,17 +702,19 @@ class TestPath(UsageTest):
         }
 
         opts = self.make_options(common_options=common_opts)
+        metadata = Metadata(self.pkgdir, opts)
         pkg = MockPackage('boost', submodules=submodules, _options=opts)
         usage = self.make_usage(pkg, inherit_defaults=True)
         self.check_usage(usage, name='boost', auto_link=False,
                          headers=['boost/version.hpp'], libraries=[],
                          **pathobjs)
-        self.check_get_usage(usage, 'boost', None, pkg=pkg)
+        self.check_get_usage(usage, 'boost', None, pkg=pkg, metadata=metadata)
         self.check_version(usage, '1.23', header=header)
         self.check_pkg_config('boost', None, {
             'cflags': ['-I{}'.format(boost_inc)], 'libs': [],
         })
-        self.check_get_usage(usage, 'boost', ['thread'], pkg=pkg)
+        self.check_get_usage(usage, 'boost', ['thread'], pkg=pkg,
+                             metadata=metadata)
         self.check_pkg_config('boost', ['thread'], {
             'cflags': ['-I{}'.format(boost_inc), '-pthread'],
             'libs': ['-L{}'.format(boost_lib), '-pthread', '-lboost_thread'],
@@ -721,15 +726,38 @@ class TestPath(UsageTest):
                          headers=['boost/version.hpp'], libraries=['boost'],
                          **pathobjs)
         self.check_version(usage, '1.23', header=header)
-        self.check_get_usage(usage, 'boost', None, pkg=pkg)
+        self.check_get_usage(usage, 'boost', None, pkg=pkg, metadata=metadata)
         self.check_pkg_config('boost', None, {
             'cflags': ['-I{}'.format(boost_inc)],
             'libs': ['-L{}'.format(boost_lib), '-lboost'],
         })
-        self.check_get_usage(usage, 'boost', ['regex'], pkg=pkg)
+        self.check_get_usage(usage, 'boost', ['regex'], pkg=pkg,
+                             metadata=metadata)
         self.check_pkg_config('boost', ['regex'], {
             'cflags': ['-I{}'.format(boost_inc)],
             'libs': ['-L{}'.format(boost_lib), '-lboost', '-lboost_regex'],
+        })
+
+    def test_pthread(self):
+        usage = self.make_usage('pthread', inherit_defaults=True,
+                                common_options={'target_platform': 'linux'})
+        self.check_usage(usage, name='pthread', libraries=[],
+                         compile_flags=['-pthread'],
+                         link_flags=['-pthread'])
+        self.check_get_usage(usage, 'pthread', None)
+        self.check_pkg_config('pthread', None, {
+            'cflags': ['-pthread'],
+            'libs': ['-pthread'],
+        })
+
+        usage = self.make_usage('pthread', inherit_defaults=True,
+                                common_options={'target_platform': 'darwin'})
+        self.check_usage(usage, name='pthread', libraries=[],
+                         compile_flags=['-pthread'])
+        self.check_get_usage(usage, 'pthread', None)
+        self.check_pkg_config('pthread', None, {
+            'cflags': ['-pthread'],
+            'libs': [],
         })
 
     def test_gl(self):
