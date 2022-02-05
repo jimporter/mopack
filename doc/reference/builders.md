@@ -1,5 +1,9 @@
 # Builders
 
+Builders define how [source distributions](sources.md#source-distributions)
+should be built, allowing you to build dependencies from source even if they use
+a different build system.
+
 ## bfg9000
 
 ```yaml

@@ -1,5 +1,8 @@
 # Package Sources
 
+Package sources describe how to fetch a particular package as well as all the
+necessary details to actually use it as a dependency.
+
 ```yaml
 packages:
   my_pkg:

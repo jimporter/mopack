@@ -1,5 +1,10 @@
 # Usage
 
+Usage defines how to include a package in part of your build process. These
+definitions are used to generate a [pkg-config][pkg-config] `.pc` file (or to
+point to an existing one), which can then be used when compiling or linking
+*your* project.
+
 ```yaml
 packages:
   my_pkg:
@@ -45,3 +50,5 @@ packages:
       path: <path-list>
       pcname: <string>
 ```
+
+[pkg-config]: https://www.freedesktop.org/wiki/Software/pkg-config/
