@@ -131,6 +131,10 @@
                 <div class="col-md-9" role="main">
 
 <h1 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">§</a></h1>
+<p>Usage defines how to include a package in part of your build process. These
+definitions are used to generate a <a href="https://www.freedesktop.org/wiki/Software/pkg-config/">pkg-config</a> <code>.pc</code> file (or to
+point to an existing one), which can then be used when compiling or linking
+<em>your</em> project.</p>
 <pre><code class="yaml">packages:
   my_pkg:
     # ...
