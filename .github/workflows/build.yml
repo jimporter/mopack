@@ -12,12 +12,12 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         compiler: [cc, msvc]
-        python-version: ['3.6', '3.7', '3.8', '3.9']
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
 
         include:
           - {os: ubuntu-latest, extra-tests: [apt, mingw-cross]}
-          - {os: windows-latest, compiler: msvc, msvc-version: '14.29',
-             win-sdk: '10.0.18362.0', boost-version: '1.72.0',
+          - {os: windows-latest, compiler: msvc, msvc-version: '14.31',
+             win-sdk: '10.0.20348.0', boost-version: '1.78.0',
              qt-version: '5.12.9'}
           - {os: windows-latest, compiler: cc, skipped-tests: [boost, qt]}
         exclude:
@@ -25,6 +25,8 @@ jobs:
             compiler: msvc
           - os: macos-latest
             compiler: msvc
+          - os: windows-latest
+            python-version: '3.6'
           - os: macos-latest
             python-version: '3.6'
       fail-fast: false
