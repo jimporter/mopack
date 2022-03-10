@@ -86,8 +86,8 @@ jobs:
       - name: Install Linux dependencies
         if: matrix.os == 'ubuntu-latest'
         run: |
-          sudo apt-get install mingw-w64 ninja-build libboost-dev \
-            libboost-regex-dev qt5-default
+          sudo apt-get update && sudo apt-get install \
+            mingw-w64 ninja-build libboost-dev libboost-regex-dev qt5-default
           echo "MOPACK_INCLUDE_PATH=/usr/include" >> .mopack_test_env
           echo "MOPACK_LIB_NAMES=lib{}.so" >> .mopack_test_env
           echo "MOPACK_LIB_PATH=/usr/lib/x86_64-linux-gnu" >> .mopack_test_env
