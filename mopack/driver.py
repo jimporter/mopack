@@ -20,6 +20,38 @@ of defining package dependencies across multiple package managers, including
 using tarballs directly.
 """
 
+resolve_desc = """
+Fetch dependencies from their origins and prepare them for use by the current
+project (e.g. by building them).
+"""
+
+usage_desc = """
+Retrieve information about how to use a dependency. This returns metadata in
+YAML format (or JSON if `--json` is passed) pointing to a pkg-config .pc file.
+"""
+
+deploy_desc = """
+Copy the project's dependencies to an installation directory (e.g. as part of
+running a command like `make install`).
+"""
+
+clean_desc = """
+Clean the `mopack` package directory of all files.
+"""
+
+list_files_desc = """
+List all the input files used by the current configuration.
+"""
+
+list_packages_desc = """
+List all the package dependencies.
+"""
+
+generate_completion_desc = """
+Generate shell-completion functions for mopack and write them to standard
+output. This requires the Python package `shtab`.
+"""
+
 
 @functools.wraps(dependency)
 def dependency_type(s):
@@ -144,7 +176,8 @@ def main():
     subparsers.required = True
 
     resolve_p = subparsers.add_parser(
-        'resolve', help='fetch and build package dependencies'
+        'resolve', description=resolve_desc,
+        help='fetch and build package dependencies'
     )
     resolve_p.set_defaults(func=resolve)
     resolve_p.add_argument('--directory', default='.', type=os.path.abspath,
@@ -176,7 +209,8 @@ def main():
                            help='the mopack configuration files')
 
     usage_p = subparsers.add_parser(
-        'usage', help='retrieve usage info for a package'
+        'usage', description=usage_desc,
+        help='retrieve usage info for a package'
     )
     usage_p.set_defaults(func=usage)
     usage_p.add_argument('--directory', default='.', type=os.path.abspath,
@@ -191,7 +225,7 @@ def main():
                          help='the name of the dependency to query')
 
     deploy_p = subparsers.add_parser(
-        'deploy', help='deploy packages'
+        'deploy', description=deploy_desc, help='deploy packages'
     )
     deploy_p.set_defaults(func=deploy)
     deploy_p.add_argument('--directory', default='.', type=os.path.abspath,
@@ -199,7 +233,7 @@ def main():
                           help='directory storing local package data')
 
     clean_p = subparsers.add_parser(
-        'clean', help='clean package directory'
+        'clean', description=clean_desc, help='clean package directory'
     )
     clean_p.set_defaults(func=clean)
     clean_p.add_argument('--directory', default='.', type=os.path.abspath,
@@ -207,7 +241,7 @@ def main():
                          help='directory storing local package data')
 
     list_files_p = subparsers.add_parser(
-        'list-files', help='list input files'
+        'list-files', description=list_files_desc, help='list input files'
     )
     list_files_p.set_defaults(func=list_files)
     list_files_p.add_argument('--directory', default='.', type=os.path.abspath,
@@ -221,7 +255,8 @@ def main():
                               help='return an error if package is not defined')
 
     list_packages_p = subparsers.add_parser(
-        'list-packages', aliases=['ls'], help='list packages'
+        'list-packages', aliases=['ls'], description=list_packages_desc,
+        help='list packages'
     )
     list_packages_p.set_defaults(func=list_packages)
     list_packages_p.add_argument('--directory', default='.',
@@ -239,7 +274,8 @@ def main():
                         help='subcommand to request help for')
 
     completion_p = subparsers.add_parser(
-        'generate-completion', help='print shell completion script'
+        'generate-completion', description=generate_completion_desc,
+        help='print shell completion script'
     )
     completion_p.set_defaults(func=generate_completion)
     shell = (os.path.basename(os.environ['SHELL'])
