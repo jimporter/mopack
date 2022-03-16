@@ -252,7 +252,8 @@ def main():
     list_files_p.add_argument('--json', action='store_true',
                               help='display results as JSON')
     list_files_p.add_argument('--strict', action='store_true',
-                              help='return an error if package is not defined')
+                              help=('return an error if package directory ' +
+                                    'does not exist'))
 
     list_packages_p = subparsers.add_parser(
         'list-packages', aliases=['ls'], description=list_packages_desc,

@@ -28,6 +28,7 @@ nav:
     - Sources: reference/sources.md
     - Builders: reference/builders.md
     - Usage: reference/usage.md
+    - Command-Line Interface: reference/command-line.md
     - Environment Variables: reference/environment-vars.md
   - About:
     - License: about/license.md
