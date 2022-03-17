@@ -89,7 +89,7 @@ Default: *none*
 {: .subtitle}
 
 The root directory where Qt headers and libraries are stored (as
-`$QT_ROOT/include:$QT_ROOT/include/Qt` and `QT_ROOT/lib`, respectively).
+`$QT_ROOT/include:$QT_ROOT/include/Qt` and `$QT_ROOT/lib`, respectively).
 
 #### *QT_INCLUDEDIR*
 Default: *none*
