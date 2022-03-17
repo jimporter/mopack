@@ -84,6 +84,27 @@ Default: *none*
 The root directory where Boost libraries are stored. This takes precedence over
 [`$BOOST_ROOT`](#boost_root).
 
+#### *QT_ROOT*
+Default: *none*
+{: .subtitle}
+
+The root directory where Qt headers and libraries are stored (as
+`$QT_ROOT/include:$QT_ROOT/include/Qt` and `QT_ROOT/lib`, respectively).
+
+#### *QT_INCLUDEDIR*
+Default: *none*
+{: .subtitle}
+
+The root directory where Qt headers are stored. This takes precedence over
+[`$QT_ROOT`](#qt_root).
+
+#### *QT_LIBRARYDIR*
+Default: *none*
+{: .subtitle}
+
+The root directory where Qt libraries are stored. This takes precedence over
+[`$QT_ROOT`](#qt_root).
+
 ## System variables
 ---
 
