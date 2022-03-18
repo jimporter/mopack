@@ -8,7 +8,7 @@ different.
     mopack is careful not to use the term "install"; depending on context,
     installation can refer to one of two very-different concepts:
 
-    1. *Resolve*: to fetch a dependency from its origin and preparing it
+    1. *Resolve*: to fetch a dependency from its origin and prepare it
        (usually by building) for use by the root project (e.g. `conan install`)
     2. *Deploy*: to copy any files from the dependency needed for running the
        root project into their final locations (e.g. `make install`)
