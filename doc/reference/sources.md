@@ -8,6 +8,7 @@ packages:
   my_pkg:
     source: <package-source>
     inherit_defaults: <boolean>
+    deploy: <boolean>
     submodules: <submodules>
 ```
 
