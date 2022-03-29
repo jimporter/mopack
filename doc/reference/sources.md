@@ -27,8 +27,8 @@ packages:
 `submodules`
 : A list of available submodules, or `*` to indicate that any submodule name
   should be accepted. If this is specified, using this package via `mopack
-  usage` *must* specify a submodule. To declare that submodules are optional,
-  you can specify a dictionary:
+  usage` *must* specify a submodule. To declare that submodules are optional for
+  usage, you can specify a dictionary:
 
         submodules:
           names: <submodules>
