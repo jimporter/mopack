@@ -8,7 +8,7 @@ h1 {
 
 /* Adjust display of code in headers. */
 
-:is(h1, h2, h3, h4, h5) code {
+:is(h1, h2, h3, h4, h5, dt) code {
   font-size: 100%;
   padding: 0;
   border: none;
@@ -20,4 +20,21 @@ h1 {
 .subtitle {
   margin-top: -10.5px;
   color: #bbb;
+}
+
+/* Adjust display of definition lists form. */
+
+dt {
+  font-weight: normal;
+  margin: 0.25em 0 0 0;
+}
+
+dd {
+  margin: 0 0 0 1.5em;
+}
+
+/* Make sure code blocks have some margin at the top and bottom. */
+
+pre {
+  margin: 1rem 0;
 }
