@@ -66,6 +66,7 @@ packages:
 packages:
   my_pkg:
     source: git
+    repository: <url-or-path>
     tag: <tag-name>  # or...
     branch: <branch-name>  # or...
     commit: <commit-sha>
