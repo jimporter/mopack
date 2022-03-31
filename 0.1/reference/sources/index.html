@@ -146,16 +146,16 @@ necessary details to actually use it as a dependency.</p>
 </code></pre>
 
 <dl>
-<dt><code>source</code></dt>
+<dt><code>source</code> <span class="subtitle"><em>required</em></span></dt>
 <dd>The type of dependency, corresponding to a particular origin (e.g. a
   package manager); see below for possible values.</dd>
-<dt><code>inherit_defaults</code></dt>
+<dt><code>inherit_defaults</code> <span class="subtitle"><em>optional, default</em>: <code>false</code></span></dt>
 <dd>If true, inherit any unspecified values for this dependency from the defaults
   for the package. Defaults to false; however, any packages requested via
   <code>mopack usage</code> but not defined will use the defaults.</dd>
-<dt><code>deploy</code></dt>
-<dd>If true (the default), deploy this package when calling <code>mopack deploy</code>.</dd>
-<dt><code>submodules</code></dt>
+<dt><code>deploy</code> <span class="subtitle"><em>optional, default</em>: <code>true</code></span></dt>
+<dd>If true, deploy this package when calling <code>mopack deploy</code>.</dd>
+<dt><code>submodules</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dd>A list of available submodules, or <code>*</code> to indicate that any submodule name
   should be accepted. If this is specified, using this package via <code>mopack
   usage</code> <em>must</em> specify a submodule. To declare that submodules are optional for
