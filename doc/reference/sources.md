@@ -12,19 +12,19 @@ packages:
     submodules: <submodules>
 ```
 
-`source`
+`source` <span class="subtitle">*required*</span>
 : The type of dependency, corresponding to a particular origin (e.g. a
   package manager); see below for possible values.
 
-`inherit_defaults`
+`inherit_defaults` <span class="subtitle">*optional, default*: `false`</span>
 : If true, inherit any unspecified values for this dependency from the defaults
   for the package. Defaults to false; however, any packages requested via
   `mopack usage` but not defined will use the defaults.
 
-`deploy`
-: If true (the default), deploy this package when calling `mopack deploy`.
+`deploy` <span class="subtitle">*optional, default*: `true`</span>
+: If true, deploy this package when calling `mopack deploy`.
 
-`submodules`
+`submodules` <span class="subtitle">*optional, default*: `null`</span>
 : A list of available submodules, or `*` to indicate that any submodule name
   should be accepted. If this is specified, using this package via `mopack
   usage` *must* specify a submodule. To declare that submodules are optional for
