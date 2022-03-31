@@ -42,11 +42,23 @@ packages:
 packages:
   my_pkg:
     source: directory
-    version: <string>
     path: <path>
     build: <build>
     usage: <usage>
 ```
+
+`path` <span class="subtitle">*required*</span>
+: The path to the source directory of the dependency.
+
+`build` <span class="subtitle">*required*</span>
+: The [builder](builders.md) to use when resolving this package. Note that while
+  this is required, it can be unset if the dependency defines the builder in its
+  `export` section.
+
+`usage` <span class="subtitle">*optional, default: from builder*</span>
+: The [usage](usage.md) to use when, well, using this package. Some builders
+  require this to be set, but others provide a default usage specification; the
+  dependency can also define the usage in its `export` section.
 
 ### git
 
