@@ -75,6 +75,28 @@ packages:
     usage: <usage>
 ```
 
+`repository` <span class="subtitle">*required*</span>
+: The URL or path to the repository.
+
+`tag` <span class="subtitle">*optional*</span>
+`branch`
+`commit`
+: The tag, branch, or commit to check out. At most one of these may be
+  specified.
+
+`srcdir` <span class="subtitle">*optional; default:* `.`</span>
+: The directory within the repository containing the dependency's source code.
+
+`build` <span class="subtitle">*required*</span>
+: The [builder](builders.md) to use when resolving this package. Note that while
+  this is required, it can be unset if the dependency defines the builder in its
+  `export` section.
+
+`usage` <span class="subtitle">*optional, default: from builder*</span>
+: The [usage](usage.md) to use when, well, using this package. Some builders
+  require this to be set, but others provide a default usage specification; the
+  dependency can also define the usage in its `export` section.
+
 ### tarball
 
 ```yaml
@@ -89,6 +111,30 @@ packages:
     build: <build>
     usage: <usage>
 ```
+
+`path` <span class="subtitle">*required*</span>
+`url`
+: The path or URL to the archive. Exactly one of these must be specified.
+
+`files` <span class="subtitle">*optional; default:* `null`</span>
+: A glob or list of globs to filter the files extracted from the archive. If
+  unspecified, extract everything.
+
+`srcdir` <span class="subtitle">*optional; default:* `.`</span>
+: The directory within the repository containing the dependency's source code.
+
+`patch` <span class="subtitle">*optional; default:* `null`</span>
+: The path to a patch file to apply to the extract source files.
+
+`build` <span class="subtitle">*required*</span>
+: The [builder](builders.md) to use when resolving this package. Note that while
+  this is required, it can be unset if the dependency defines the builder in its
+  `export` section.
+
+`usage` <span class="subtitle">*optional, default: from builder*</span>
+: The [usage](usage.md) to use when, well, using this package. Some builders
+  require this to be set, but others provide a default usage specification; the
+  dependency can also define the usage in its `export` section.
 
 ## Other sources
 
