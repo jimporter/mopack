@@ -200,6 +200,25 @@ necessary details to actually use it as a dependency.</p>
     usage: &lt;usage&gt;
 </code></pre>
 
+<dl>
+<dt><code>repository</code> <span class="subtitle"><em>required</em></span></dt>
+<dd>The URL or path to the repository.</dd>
+<dt><code>tag</code> <span class="subtitle"><em>optional</em></span></dt>
+<dt><code>branch</code></dt>
+<dt><code>commit</code></dt>
+<dd>The tag, branch, or commit to check out. At most one of these may be
+  specified.</dd>
+<dt><code>srcdir</code> <span class="subtitle"><em>optional; default:</em> <code>.</code></span></dt>
+<dd>The directory within the repository containing the dependency's source code.</dd>
+<dt><code>build</code> <span class="subtitle"><em>required</em></span></dt>
+<dd>The <a href="../builders/">builder</a> to use when resolving this package. Note that while
+  this is required, it can be unset if the dependency defines the builder in its
+  <code>export</code> section.</dd>
+<dt><code>usage</code> <span class="subtitle"><em>optional, default: from builder</em></span></dt>
+<dd>The <a href="../usage/">usage</a> to use when, well, using this package. Some builders
+  require this to be set, but others provide a default usage specification; the
+  dependency can also define the usage in its <code>export</code> section.</dd>
+</dl>
 <h3 id="tarball">tarball<a class="headerlink" href="#tarball" title="Permanent link">§</a></h3>
 <pre><code class="yaml">packages:
   my_pkg:
@@ -213,6 +232,26 @@ necessary details to actually use it as a dependency.</p>
     usage: &lt;usage&gt;
 </code></pre>
 
+<dl>
+<dt><code>path</code> <span class="subtitle"><em>required</em></span></dt>
+<dt><code>url</code></dt>
+<dd>The path or URL to the archive. Exactly one of these must be specified.</dd>
+<dt><code>files</code> <span class="subtitle"><em>optional; default:</em> <code>null</code></span></dt>
+<dd>A glob or list of globs to filter the files extracted from the archive. If
+  unspecified, extract everything.</dd>
+<dt><code>srcdir</code> <span class="subtitle"><em>optional; default:</em> <code>.</code></span></dt>
+<dd>The directory within the repository containing the dependency's source code.</dd>
+<dt><code>patch</code> <span class="subtitle"><em>optional; default:</em> <code>null</code></span></dt>
+<dd>The path to a patch file to apply to the extract source files.</dd>
+<dt><code>build</code> <span class="subtitle"><em>required</em></span></dt>
+<dd>The <a href="../builders/">builder</a> to use when resolving this package. Note that while
+  this is required, it can be unset if the dependency defines the builder in its
+  <code>export</code> section.</dd>
+<dt><code>usage</code> <span class="subtitle"><em>optional, default: from builder</em></span></dt>
+<dd>The <a href="../usage/">usage</a> to use when, well, using this package. Some builders
+  require this to be set, but others provide a default usage specification; the
+  dependency can also define the usage in its <code>export</code> section.</dd>
+</dl>
 <h2 id="other-sources">Other sources<a class="headerlink" href="#other-sources" title="Permanent link">§</a></h2>
 <h3 id="apt">apt<a class="headerlink" href="#apt" title="Permanent link">§</a></h3>
 <pre><code class="yaml">packages:

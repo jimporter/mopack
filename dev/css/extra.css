@@ -26,7 +26,6 @@ h1 {
 
 dt {
   font-weight: normal;
-  margin: 0.25em 0 0 0;
 }
 
 dt .subtitle {
@@ -38,7 +37,7 @@ dt .subtitle code {
 }
 
 dd {
-  margin: 0 0 0 1.5em;
+  margin: 0 0 0.25em 1.5em;
 }
 
 /* Make sure code blocks have some margin at the top and bottom. */
