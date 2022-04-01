@@ -69,7 +69,7 @@
                                 <ul class="dropdown-menu">
                                     
 <li >
-    <a href="../../reference/sources/">Sources</a>
+    <a href="../../reference/packages/">Packages</a>
 </li>
                                     
 <li >
@@ -112,7 +112,7 @@
                                 </a>
                             </li>
                             <li >
-                                <a rel="prev" href="../../reference/sources/">
+                                <a rel="prev" href="../../reference/packages/">
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
@@ -142,7 +142,7 @@
 <h1 id="writing-mopackyml-configurations">Writing mopack.yml Configurations<a class="headerlink" href="#writing-mopackyml-configurations" title="Permanent link">§</a></h1>
 <h2 id="your-first-configuration">Your first configuration<a class="headerlink" href="#your-first-configuration" title="Permanent link">§</a></h2>
 <p>The absolute simplest mopack configuration is an empty file, in which any
-requested dependencies are assumed to be <a href="../../reference/sources/#system">system
+requested dependencies are assumed to be <a href="../../reference/packages/#system">system
 dependencies</a>. However, that's not very
 interesting. Instead, let's look at a basic <code>mopack.yml</code> configuration that
 specifies a dependent package fetched and built from a tarball:</p>
@@ -154,8 +154,8 @@ specifies a dependent package fetched and built from a tarball:</p>
 </code></pre>
 
 <p>This informs mopack that it should fetch a
-<a href="../../reference/sources/#tarball">tarball</a> from the specified URL and then build
-it using the <a href="../../reference/builders/#bfg9000">bfg9000</a> builder.</p>
+<a href="../../reference/packages/#tarball">tarball</a> from the specified URL and then
+build it using the <a href="../../reference/builders/#bfg9000">bfg9000</a> builder.</p>
 <h2 id="configuring-buildsusage">Configuring builds/usage<a class="headerlink" href="#configuring-buildsusage" title="Permanent link">§</a></h2>
 <p>In the above example, mopack builds <code>foo_pkg</code> using the default settings for
 bfg9000. However, sometimes you may need to provide additional configuration
@@ -182,11 +182,11 @@ header files, what libraries to link to, etc.</p>
 <h2 id="other-package-sources">Other package sources<a class="headerlink" href="#other-package-sources" title="Permanent link">§</a></h2>
 <p>One of the primary benefits of mopack is that packages can come from multiple
 different origins, or sources. These include other source distributions similar
-to <a href="../../reference/sources/#tarball"><code>tarball</code></a>, such as
-<a href="../../reference/sources/#directory"><code>directory</code></a> or
-<a href="../../reference/sources/#git"><code>git</code></a>, as well as full-fledged package managers
-like <a href="../../reference/sources/#apt"><code>apt</code></a> or
-<a href="../../reference/sources/#conan"><code>conan</code></a>:</p>
+to <a href="../../reference/packages/#tarball"><code>tarball</code></a>, such as
+<a href="../../reference/packages/#directory"><code>directory</code></a> or
+<a href="../../reference/packages/#git"><code>git</code></a>, as well as full-fledged package managers
+like <a href="../../reference/packages/#apt"><code>apt</code></a> or
+<a href="../../reference/packages/#conan"><code>conan</code></a>:</p>
 <pre><code class="yaml">packages:
   zlib:
     source: conan
