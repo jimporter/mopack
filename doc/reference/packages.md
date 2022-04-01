@@ -1,7 +1,7 @@
-# Package Sources
+# Packages
 
-Package sources describe how to fetch a particular package as well as all the
-necessary details to actually use it as a dependency.
+Package configurations describe how to fetch a particular dependency as well as
+all the necessary details to actually use it in the parent project.
 
 ```yaml
 packages:

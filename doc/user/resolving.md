@@ -19,7 +19,7 @@ The first step in working with dependencies is, unsurprisingly, getting them.
 This is really two sub-steps rolled into one: fetching and building. This
 typically involves downloading the appropriate files from some remote source
 (possibly recursively in the case of [source
-distributions](../reference/sources.md#source-distribution)) and then compiling
+distributions](../reference/packages.md#source-distribution)) and then compiling
 any projects as needed in the proper order, using their respective build
 systems.
 

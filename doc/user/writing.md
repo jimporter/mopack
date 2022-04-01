@@ -4,7 +4,7 @@
 
 The absolute simplest mopack configuration is an empty file, in which any
 requested dependencies are assumed to be [system
-dependencies](../reference/sources.md#system). However, that's not very
+dependencies](../reference/packages.md#system). However, that's not very
 interesting. Instead, let's look at a basic `mopack.yml` configuration that
 specifies a dependent package fetched and built from a tarball:
 
@@ -17,8 +17,8 @@ packages:
 ```
 
 This informs mopack that it should fetch a
-[tarball](../reference/sources.md#tarball) from the specified URL and then build
-it using the [bfg9000](../reference/builders.md#bfg9000) builder.
+[tarball](../reference/packages.md#tarball) from the specified URL and then
+build it using the [bfg9000](../reference/builders.md#bfg9000) builder.
 
 ## Configuring builds/usage
 
@@ -52,11 +52,11 @@ header files, what libraries to link to, etc.
 
 One of the primary benefits of mopack is that packages can come from multiple
 different origins, or sources. These include other source distributions similar
-to [`tarball`](../reference/sources.md#tarball), such as
-[`directory`](../reference/sources.md#directory) or
-[`git`](../reference/sources.md#git), as well as full-fledged package managers
-like [`apt`](../reference/sources.md#apt) or
-[`conan`](../reference/sources.md#conan):
+to [`tarball`](../reference/packages.md#tarball), such as
+[`directory`](../reference/packages.md#directory) or
+[`git`](../reference/packages.md#git), as well as full-fledged package managers
+like [`apt`](../reference/packages.md#apt) or
+[`conan`](../reference/packages.md#conan):
 
 ```yaml
 packages:

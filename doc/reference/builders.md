@@ -1,6 +1,6 @@
 # Builders
 
-Builders define how [source distributions](sources.md#source-distributions)
+Builders define how [source distributions](packages.md#source-distributions)
 should be built, allowing you to build dependencies from source even if they use
 a different build system.
 
