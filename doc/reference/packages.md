@@ -56,8 +56,8 @@ packages:
   `export` section.
 
 `usage` <span class="subtitle">*optional, default: from builder*</span>
-: The [usage](usage.md) to use when, well, using this package. Some builders
-  require this to be set, but others provide a default usage specification; the
+: The [usage](usage.md) to use when using this package. Some builders require
+  this to be set, but others provide a default usage specification; the
   dependency can also define the usage in its `export` section.
 
 ### git
@@ -93,8 +93,8 @@ packages:
   `export` section.
 
 `usage` <span class="subtitle">*optional, default: from builder*</span>
-: The [usage](usage.md) to use when, well, using this package. Some builders
-  require this to be set, but others provide a default usage specification; the
+: The [usage](usage.md) to use when using this package. Some builders require
+  this to be set, but others provide a default usage specification; the
   dependency can also define the usage in its `export` section.
 
 ### tarball
@@ -132,8 +132,8 @@ packages:
   `export` section.
 
 `usage` <span class="subtitle">*optional, default: from builder*</span>
-: The [usage](usage.md) to use when, well, using this package. Some builders
-  require this to be set, but others provide a default usage specification; the
+: The [usage](usage.md) to use when using this package. Some builders require
+  this to be set, but others provide a default usage specification; the
   dependency can also define the usage in its `export` section.
 
 ## Other sources
@@ -148,6 +148,16 @@ packages:
     repository: <string>
     usage: <usage>
 ```
+
+`remote` <span class="subtitle">*optional; default:* `lib{package}-dev`</span>
+: The Apt package(s) to fetch when resolving this package.
+
+`repository` <span class="subtitle">*optional; default:* `null`</span>
+: The Apt repository to fetch the package(s) from. If not specified, use the
+  default repositories for the system.
+
+`usage` <span class="subtitle">*optional, default:* [`system`](usage.md#system)</span>
+: The [usage](usage.md) to use when using this package.
 
 ### conan
 
