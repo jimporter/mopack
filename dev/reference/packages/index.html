@@ -183,8 +183,8 @@ all the necessary details to actually use it in the parent project.</p>
   this is required, it can be unset if the dependency defines the builder in its
   <code>export</code> section.</dd>
 <dt><code>usage</code> <span class="subtitle"><em>optional, default: from builder</em></span></dt>
-<dd>The <a href="../usage/">usage</a> to use when, well, using this package. Some builders
-  require this to be set, but others provide a default usage specification; the
+<dd>The <a href="../usage/">usage</a> to use when using this package. Some builders require
+  this to be set, but others provide a default usage specification; the
   dependency can also define the usage in its <code>export</code> section.</dd>
 </dl>
 <h3 id="git">git<a class="headerlink" href="#git" title="Permanent link">§</a></h3>
@@ -215,8 +215,8 @@ all the necessary details to actually use it in the parent project.</p>
   this is required, it can be unset if the dependency defines the builder in its
   <code>export</code> section.</dd>
 <dt><code>usage</code> <span class="subtitle"><em>optional, default: from builder</em></span></dt>
-<dd>The <a href="../usage/">usage</a> to use when, well, using this package. Some builders
-  require this to be set, but others provide a default usage specification; the
+<dd>The <a href="../usage/">usage</a> to use when using this package. Some builders require
+  this to be set, but others provide a default usage specification; the
   dependency can also define the usage in its <code>export</code> section.</dd>
 </dl>
 <h3 id="tarball">tarball<a class="headerlink" href="#tarball" title="Permanent link">§</a></h3>
@@ -248,8 +248,8 @@ all the necessary details to actually use it in the parent project.</p>
   this is required, it can be unset if the dependency defines the builder in its
   <code>export</code> section.</dd>
 <dt><code>usage</code> <span class="subtitle"><em>optional, default: from builder</em></span></dt>
-<dd>The <a href="../usage/">usage</a> to use when, well, using this package. Some builders
-  require this to be set, but others provide a default usage specification; the
+<dd>The <a href="../usage/">usage</a> to use when using this package. Some builders require
+  this to be set, but others provide a default usage specification; the
   dependency can also define the usage in its <code>export</code> section.</dd>
 </dl>
 <h2 id="other-sources">Other sources<a class="headerlink" href="#other-sources" title="Permanent link">§</a></h2>
@@ -262,6 +262,15 @@ all the necessary details to actually use it in the parent project.</p>
     usage: &lt;usage&gt;
 </code></pre>
 
+<dl>
+<dt><code>remote</code> <span class="subtitle"><em>optional; default:</em> <code>lib{package}-dev</code></span></dt>
+<dd>The Apt package(s) to fetch when resolving this package.</dd>
+<dt><code>repository</code> <span class="subtitle"><em>optional; default:</em> <code>null</code></span></dt>
+<dd>The Apt repository to fetch the package(s) from. If not specified, use the
+  default repositories for the system.</dd>
+<dt><code>usage</code> <span class="subtitle"><em>optional, default:</em> <a href="../usage/#system"><code>system</code></a></span></dt>
+<dd>The <a href="../usage/">usage</a> to use when using this package.</dd>
+</dl>
 <h3 id="conan">conan<a class="headerlink" href="#conan" title="Permanent link">§</a></h3>
 <pre><code class="yaml">options:
   sources:
