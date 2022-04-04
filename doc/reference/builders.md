@@ -19,6 +19,14 @@ packages:
       extra_args: <shell-args>
 ```
 
+`toolchain` <span class="subtitle">*optional, default*: `null`</span>
+: The path to a bfg9000 toolchain file to use when building bfg-based
+  dependencies.
+
+`extra_args` <span class="subtitle">*optional, default*: `null`</span>
+: A list of extra arguments to pass to `bfg9000 configure`. If a string is
+  supplied, it will first be split according to POSIX shell rules.
+
 ## cmake
 
 ```yaml
@@ -33,6 +41,14 @@ packages:
       type: cmake
       extra_args: <shell-args>
 ```
+
+`toolchain` <span class="subtitle">*optional, default*: `null`</span>
+: The path to a CMake toolchain file to use when building CMake-based
+  dependencies.
+
+`extra_args` <span class="subtitle">*optional, default*: `null`</span>
+: A list of extra arguments to pass to `cmake`. If a string is
+  supplied, it will first be split according to POSIX shell rules.
 
 ## custom
 
