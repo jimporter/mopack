@@ -192,6 +192,16 @@ packages:
       deploy_commands: &lt;shell-args-list&gt;
 </code></pre>
 
+<dl>
+<dt><code>build_commands</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>A list of shell commands to execute when building the dependency. Each command
+  can be a list of arguments or a single string (which will be split into
+  arguments according to POSIX shell rules).</dd>
+<dt><code>deploy_commands</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>A list of shell commands to execute when deploying the dependency. Each
+  command can be a list of arguments or a single string (which will be split
+  into arguments according to POSIX shell rules).</dd>
+</dl>
 <h2 id="none">none<a class="headerlink" href="#none" title="Permanent link">§</a></h2>
 <pre><code class="yaml">packages:
   my_pkg:
