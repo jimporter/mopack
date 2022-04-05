@@ -62,6 +62,16 @@ packages:
       deploy_commands: <shell-args-list>
 ```
 
+`build_commands` <span class="subtitle">*optional, default*: `null`</span>
+: A list of shell commands to execute when building the dependency. Each command
+  can be a list of arguments or a single string (which will be split into
+  arguments according to POSIX shell rules).
+
+`deploy_commands` <span class="subtitle">*optional, default*: `null`</span>
+: A list of shell commands to execute when deploying the dependency. Each
+  command can be a list of arguments or a single string (which will be split
+  into arguments according to POSIX shell rules).
+
 ## none
 
 ```yaml
