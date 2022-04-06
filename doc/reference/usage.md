@@ -47,8 +47,30 @@ packages:
     # ...
     usage:
       type: pkg_config
-      path: <path-list>
       pcname: <string>
+      pkg_config_path: <path-list>
 ```
+
+`pcname` <span class="subtitle">*optional, default*: *package name*</span>
+: The name of the pkg-config `.pc` file, without the extension. If
+  [submodules](packages.md) are required for this package, this instead defaults
+  to `null`.
+
+`pkg_config_path` <span class="subtitle">*optional, default*: `null`</span>
+: The path to look for the pkg-config file in. If not specified, use the default
+  path for pkg-config.
+
+```yaml
+package:
+  my_pkg:
+    # ...
+    usage:
+      submodule_map:
+        pcname: <string>
+```
+
+`pcname` <span class="subtitle">*optional, default*: `'<package>_<submodule>'`</span>
+: The name of the pkg-config `.pc` file for the submodule, without the
+  extension.
 
 [pkg-config]: https://www.freedesktop.org/wiki/Software/pkg-config/

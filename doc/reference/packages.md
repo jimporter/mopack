@@ -55,7 +55,7 @@ packages:
   this is required, it can be unset if the dependency defines the builder in its
   `export` section.
 
-`usage` <span class="subtitle">*optional, default: from builder*</span>
+`usage` <span class="subtitle">*optional, default*: *from builder*</span>
 : The [usage](usage.md) to use when using this package. Some builders require
   this to be set, but others provide a default usage specification; the
   dependency can also define the usage in its `export` section.
