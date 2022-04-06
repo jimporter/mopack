@@ -176,9 +176,32 @@ point to an existing one), which can then be used when compiling or linking
     # ...
     usage:
       type: pkg_config
-      path: &lt;path-list&gt;
       pcname: &lt;string&gt;
-</code></pre></div>
+      pkg_config_path: &lt;path-list&gt;
+</code></pre>
+
+<dl>
+<dt><code>pcname</code> <span class="subtitle"><em>optional, default</em>: <em>package name</em></span></dt>
+<dd>The name of the pkg-config <code>.pc</code> file, without the extension. If
+  <a href="../packages/">submodules</a> are required for this package, this instead defaults
+  to <code>null</code>.</dd>
+<dt><code>pkg_config_path</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>The path to look for the pkg-config file in. If not specified, use the default
+  path for pkg-config.</dd>
+</dl>
+<pre><code class="yaml">package:
+  my_pkg:
+    # ...
+    usage:
+      submodule_map:
+        pcname: &lt;string&gt;
+</code></pre>
+
+<dl>
+<dt><code>pcname</code> <span class="subtitle"><em>optional, default</em>: <code>'&lt;package&gt;_&lt;submodule&gt;'</code></span></dt>
+<dd>The name of the pkg-config <code>.pc</code> file for the submodule, without the
+  extension.</dd>
+</dl></div>
         </div>
 
         <footer class="col-md-12">
