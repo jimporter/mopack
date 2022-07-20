@@ -277,7 +277,19 @@ all the necessary details to actually use it in the parent project.</p>
     conan:
       build: &lt;string-list&gt;
       extra_args: &lt;shell-args&gt;
-packages:
+</code></pre>
+
+<dl>
+<dt><code>build</code> <span class="subtitle"><em>optional; default:</em> <code>null</code></span></dt>
+<dd>A string (or list of strings) of packages that Conan should explicitly build.
+  This corresponds to <code>--build=&lt;pkg&gt;</code> on the <code>conan install</code> command line for
+  each <code>pkg</code>. You can also specify <code>all</code> to build <em>everything</em> (equivalent to
+  <code>--build</code>).</dd>
+<dt><code>extra_args</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>A list of extra arguments to pass to <code>conan install</code>. If a string is
+  supplied, it will first be split according to POSIX shell rules.</dd>
+</dl>
+<pre><code class="yaml">packages:
   my_pkg:
     source: conan
     remote: &lt;string&gt;
@@ -287,6 +299,17 @@ packages:
     usage: &lt;usage&gt;
 </code></pre>
 
+<dl>
+<dt><code>remote</code> <span class="subtitle"><em>required</em></span></dt>
+<dd>The specifier for the package in the Conan repository, e.g. <code>zlib/1.2.11</code>.</dd>
+<dt><code>build</code> <span class="subtitle"><em>optional; default:</em> <code>false</code></span></dt>
+<dd>True if the package should be built from source; false otherwise.</dd>
+<dt><code>options</code> <span class="subtitle"><em>optional; default:</em> <code>{}</code></span></dt>
+<dd>A dictionary of options to pass to Conan; for example, you could pass
+  <code>shared: true</code> to request a shared library configuration.</dd>
+<dt><code>usage</code> <span class="subtitle"><em>optional, default:</em> <a href="../usage/#pkg_config"><code>pkg_config</code></a></span></dt>
+<dd>The <a href="../usage/">usage</a> to use when using this package.</dd>
+</dl>
 <h3 id="system">system<a class="headerlink" href="#system" title="Permanent link">§</a></h3>
 <pre><code class="yaml">packages:
   my_pkg:

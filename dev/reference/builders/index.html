@@ -145,7 +145,14 @@ a different build system.</p>
   builders:
     bfg9000:
       toolchain: &lt;path&gt;
-packages:
+</code></pre>
+
+<dl>
+<dt><code>toolchain</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>The path to a bfg9000 toolchain file to use when building bfg-based
+  dependencies.</dd>
+</dl>
+<pre><code class="yaml">packages:
   my_pkg:
     # ...
     builder:
@@ -154,9 +161,6 @@ packages:
 </code></pre>
 
 <dl>
-<dt><code>toolchain</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
-<dd>The path to a bfg9000 toolchain file to use when building bfg-based
-  dependencies.</dd>
 <dt><code>extra_args</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dd>A list of extra arguments to pass to <code>bfg9000 configure</code>. If a string is
   supplied, it will first be split according to POSIX shell rules.</dd>
@@ -166,7 +170,14 @@ packages:
   builders:
     cmake:
       toolchain: &lt;path&gt;
-packages:
+</code></pre>
+
+<dl>
+<dt><code>toolchain</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>The path to a CMake toolchain file to use when building CMake-based
+  dependencies.</dd>
+</dl>
+<pre><code class="yaml">packages:
   my_pkg:
     # ...
     builder:
@@ -175,9 +186,6 @@ packages:
 </code></pre>
 
 <dl>
-<dt><code>toolchain</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
-<dd>The path to a CMake toolchain file to use when building CMake-based
-  dependencies.</dd>
 <dt><code>extra_args</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dd>A list of extra arguments to pass to <code>cmake</code>. If a string is
   supplied, it will first be split according to POSIX shell rules.</dd>
