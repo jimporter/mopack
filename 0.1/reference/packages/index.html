@@ -282,9 +282,9 @@ all the necessary details to actually use it in the parent project.</p>
 <dl>
 <dt><code>build</code> <span class="subtitle"><em>optional; default:</em> <code>null</code></span></dt>
 <dd>A string (or list of strings) of packages that Conan should explicitly build.
-  This corresponds to <code>--build=&lt;pkg&gt;</code> on the <code>conan install</code> command line for
-  each <code>pkg</code>. You can also specify <code>all</code> to build <em>everything</em> (equivalent to
-  <code>--build</code>).</dd>
+  This corresponds to <code>--build={package}</code> on the <code>conan install</code> command line
+  for each <code>{package}</code> in the list. You can also specify <code>all</code> to build
+  <em>everything</em> (equivalent to <code>--build</code>).</dd>
 <dt><code>extra_args</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dd>A list of extra arguments to pass to <code>conan install</code>. If a string is
   supplied, it will first be split according to POSIX shell rules.</dd>
