@@ -167,6 +167,19 @@ options:
     conan:
       build: <string-list>
       extra_args: <shell-args>
+```
+
+`build` <span class="subtitle">*optional; default:* `null`</span>
+: A string (or list of strings) of packages that Conan should explicitly build.
+  This corresponds to `--build=<pkg>` on the `conan install` command line for
+  each `pkg`. You can also specify `all` to build *everything* (equivalent to
+  `--build`).
+
+`extra_args` <span class="subtitle">*optional, default*: `null`</span>
+: A list of extra arguments to pass to `conan install`. If a string is
+  supplied, it will first be split according to POSIX shell rules.
+
+```yaml
 packages:
   my_pkg:
     source: conan
@@ -176,6 +189,19 @@ packages:
       my_option: <string-or-boolean>
     usage: <usage>
 ```
+
+`remote` <span class="subtitle">*required*</span>
+: The specifier for the package in the Conan repository, e.g. `zlib/1.2.11`.
+
+`build` <span class="subtitle">*optional; default:* `false`</span>
+: True if the package should be built from source; false otherwise.
+
+`options` <span class="subtitle">*optional; default:* `{}`</span>
+: A dictionary of options to pass to Conan; for example, you could pass
+  `shared: true` to request a shared library configuration.
+
+`usage` <span class="subtitle">*optional, default:* [`pkg_config`](usage.md#pkg_config)</span>
+: The [usage](usage.md) to use when using this package.
 
 ### system
 

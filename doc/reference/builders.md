@@ -11,6 +11,13 @@ options:
   builders:
     bfg9000:
       toolchain: <path>
+```
+
+`toolchain` <span class="subtitle">*optional, default*: `null`</span>
+: The path to a bfg9000 toolchain file to use when building bfg-based
+  dependencies.
+
+```yaml
 packages:
   my_pkg:
     # ...
@@ -18,10 +25,6 @@ packages:
       type: bfg9000
       extra_args: <shell-args>
 ```
-
-`toolchain` <span class="subtitle">*optional, default*: `null`</span>
-: The path to a bfg9000 toolchain file to use when building bfg-based
-  dependencies.
 
 `extra_args` <span class="subtitle">*optional, default*: `null`</span>
 : A list of extra arguments to pass to `bfg9000 configure`. If a string is
@@ -34,6 +37,13 @@ options:
   builders:
     cmake:
       toolchain: <path>
+```
+
+`toolchain` <span class="subtitle">*optional, default*: `null`</span>
+: The path to a CMake toolchain file to use when building CMake-based
+  dependencies.
+
+```yaml
 packages:
   my_pkg:
     # ...
@@ -41,10 +51,6 @@ packages:
       type: cmake
       extra_args: <shell-args>
 ```
-
-`toolchain` <span class="subtitle">*optional, default*: `null`</span>
-: The path to a CMake toolchain file to use when building CMake-based
-  dependencies.
 
 `extra_args` <span class="subtitle">*optional, default*: `null`</span>
 : A list of extra arguments to pass to `cmake`. If a string is
