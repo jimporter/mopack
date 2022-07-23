@@ -140,6 +140,19 @@
 <p>Builders define how <a href="../packages/#source-distributions">source distributions</a>
 should be built, allowing you to build dependencies from source even if they use
 a different build system.</p>
+<pre><code class="yaml">packages:
+  my_pkg:
+    # ...
+    build: &lt;builder_type&gt;
+    # or...
+    build:
+      type: &lt;builder_type&gt;
+</code></pre>
+
+<dl>
+<dt><code>type</code> <span class="subtitle"><em>required</em></span></dt>
+<dd>The type of builder; see below for possible values.</dd>
+</dl>
 <h2 id="bfg9000">bfg9000<a class="headerlink" href="#bfg9000" title="Permanent link">§</a></h2>
 <pre><code class="yaml">options:
   builders:
