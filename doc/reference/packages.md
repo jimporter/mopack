@@ -6,7 +6,7 @@ all the necessary details to actually use it in the parent project.
 ```yaml
 packages:
   my_pkg:
-    source: <package-source>
+    source: <package_source>
     inherit_defaults: <boolean>
     deploy: <boolean>
     submodules: <submodules>
@@ -66,11 +66,11 @@ packages:
 packages:
   my_pkg:
     source: git
-    repository: <url-or-path>
-    tag: <tag-name>  # or...
-    branch: <branch-name>  # or...
-    commit: <commit-sha>
-    srcdir: <inner-path>
+    repository: <url | path>
+    tag: <tag_name>  # or...
+    branch: <branch_name>  # or...
+    commit: <commit_sha>
+    srcdir: <inner_path>
     build: <build>
     usage: <usage>
 ```
@@ -105,8 +105,8 @@ packages:
     source: tarball
     path: <path>  # or...
     url: <url>
-    files: <glob-list>
-    srcdir: <inner-path>
+    files: <list[glob]>
+    srcdir: <inner_path>
     patch: <path>
     build: <build>
     usage: <usage>
@@ -144,7 +144,7 @@ packages:
 packages:
   my_pkg:
     source: apt
-    remote: <string-list>
+    remote: <list[string]>
     repository: <string>
     usage: <usage>
 ```
@@ -165,8 +165,8 @@ packages:
 options:
   sources:
     conan:
-      build: <string-list>
-      extra_args: <shell-args>
+      build: <list[string]>
+      extra_args: <shell_args>
 ```
 
 `build` <span class="subtitle">*optional; default:* `null`</span>
@@ -186,7 +186,7 @@ packages:
     remote: <string>
     build: <boolean>
     options:
-      my_option: <string-or-boolean>
+      my_option: <string | boolean>
     usage: <usage>
 ```
 
@@ -212,15 +212,15 @@ packages:
     auto_link: <boolean>
     version: <string>
     pcname: <string>
-    dependencies: <dependency-list>
-    include_path: <path-list>
-    library_path: <path-list>
-    headers: <header-list>
-    libraries: <library-list>
-    compile_flags: <shell-args>
-    link_flags: <shell-args>
-    submodule_map: <submodule-map>  # or...
+    dependencies: <list[dependency]>
+    include_path: <list[path]>
+    library_path: <list[path]>
+    headers: <list[header]>
+    libraries: <list[library]>
+    compile_flags: <shell_args>
+    link_flags: <shell_args>
+    submodule_map: <submodule_map>  # or...
     submodule_map:
-      my_submodule: <submodule-map>
-      '*': <submodule-map>
+      my_submodule: <submodule_map>
+      '*': <submodule_map>
 ```

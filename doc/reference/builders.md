@@ -23,7 +23,7 @@ packages:
     # ...
     builder:
       type: bfg9000
-      extra_args: <shell-args>
+      extra_args: <shell_args>
 ```
 
 `extra_args` <span class="subtitle">*optional, default*: `null`</span>
@@ -49,7 +49,7 @@ packages:
     # ...
     builder:
       type: cmake
-      extra_args: <shell-args>
+      extra_args: <shell_args>
 ```
 
 `extra_args` <span class="subtitle">*optional, default*: `null`</span>
@@ -64,8 +64,8 @@ packages:
     # ...
     builder:
       type: custom
-      build_commands: <shell-args-list>
-      deploy_commands: <shell-args-list>
+      build_commands: <list[shell_args]>
+      deploy_commands: <list[shell_args]>
 ```
 
 `build_commands` <span class="subtitle">*optional, default*: `null`</span>

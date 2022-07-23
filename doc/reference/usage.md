@@ -10,12 +10,12 @@ packages:
   my_pkg:
     # ...
     usage:
-      type: <usage-type>
+      type: <usage_type>
       inherit_defaults: <boolean>
-      submodule_map: <submodule-map>  # or...
+      submodule_map: <submodule_map>  # or...
       submodule_map:
-        my_submodule: <submodule-map>
-        '*': <submodule-map>
+        my_submodule: <submodule_map>
+        '*': <submodule_map>
 ```
 
 ## path/system
@@ -30,13 +30,13 @@ packages:
       auto_link: <boolean>
       version: <string>
       pcname: <string>  # system only
-      dependencies: <dependency-list>
-      include_path: <path-list>
-      library_path: <path-list>
-      headers: <header-list>
-      libraries: <library-list>
-      compile_flags: <shell-args>
-      link_flags: <shell-args>
+      dependencies: <list[dependency]>
+      include_path: <list[path]>
+      library_path: <list[path]>
+      headers: <list[header]>
+      libraries: <list[library]>
+      compile_flags: <shell_args>
+      link_flags: <shell_args>
 ```
 
 ## pkg_config
@@ -48,7 +48,7 @@ packages:
     usage:
       type: pkg_config
       pcname: <string>
-      pkg_config_path: <path-list>
+      pkg_config_path: <list[path]>
 ```
 
 `pcname` <span class="subtitle">*optional, default*: *package name*</span>
@@ -69,7 +69,7 @@ package:
         pcname: <string>
 ```
 
-`pcname` <span class="subtitle">*optional, default*: `'<package>_<submodule>'`</span>
+`pcname` <span class="subtitle">*optional, default*: `'{package}_{submodule}'`</span>
 : The name of the pkg-config `.pc` file for the submodule, without the
   extension.
 
