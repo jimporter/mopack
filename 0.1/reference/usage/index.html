@@ -69,6 +69,10 @@
                                 <ul class="dropdown-menu">
                                     
 <li >
+    <a href="../file-structure/">File Structure</a>
+</li>
+                                    
+<li >
     <a href="../packages/">Packages</a>
 </li>
                                     
@@ -142,6 +146,8 @@ point to an existing one), which can then be used when compiling or linking
 <pre><code class="yaml">packages:
   my_pkg:
     # ...
+    usage: &lt;usage_type&gt;
+    # or...
     usage:
       type: &lt;usage_type&gt;
       inherit_defaults: &lt;boolean&gt;
@@ -151,6 +157,16 @@ point to an existing one), which can then be used when compiling or linking
         '*': &lt;submodule_map&gt;
 </code></pre>
 
+<dl>
+<dt><code>type</code> <span class="subtitle"><em>required</em></span></dt>
+<dd>The type of usage; see below for possible values.</dd>
+<dt><code>inherit_defaults</code> <span class="subtitle"><em>optional, default</em>: <code>false</code></span></dt>
+<dd>If true, inherit any unspecified values for this usage from the defaults
+  for the package. Defaults to false; however, any packages requested via
+  <code>mopack usage</code> but not defined will use the defaults.</dd>
+<dt><code>submodule_map</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>TODO</dd>
+</dl>
 <h2 id="pathsystem">path/system<a class="headerlink" href="#pathsystem" title="Permanent link">§</a></h2>
 <pre><code class="yaml">packages:
   my_pkg:
