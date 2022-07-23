@@ -4,6 +4,19 @@ Builders define how [source distributions](packages.md#source-distributions)
 should be built, allowing you to build dependencies from source even if they use
 a different build system.
 
+```yaml
+packages:
+  my_pkg:
+    # ...
+    build: <builder_type>
+    # or...
+    build:
+      type: <builder_type>
+```
+
+`type` <span class="subtitle">*required*</span>
+: The type of builder; see below for possible values.
+
 ## bfg9000
 
 ```yaml
