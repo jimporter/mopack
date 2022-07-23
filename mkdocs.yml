@@ -26,6 +26,7 @@ nav:
     - Resolving Packages With mopack: user/resolving.md
     - Writing mopack.yml Configurations: user/writing.md
   - Reference:
+    - File Structure: reference/file-structure.md
     - Packages: reference/packages.md
     - Builders: reference/builders.md
     - Usage: reference/usage.md
