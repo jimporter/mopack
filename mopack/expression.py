@@ -183,8 +183,7 @@ index = (
 
 expr_atom = literal | index | identifier
 expr <<= pp.infix_notation(expr_atom, [
-    ('!', 1, pp.opAssoc.RIGHT, lambda t: [UnaryOp(*t[0])]),
-    ('-', 1, pp.opAssoc.RIGHT, lambda t: [UnaryOp(*t[0])]),
+    (pp.one_of('! -'), 1, pp.opAssoc.RIGHT, lambda t: [UnaryOp(*t[0])]),
     (pp.one_of('* / %'), 2, pp.opAssoc.LEFT, lambda t: [left_assoc(t[0])]),
     (pp.one_of('+ -'), 2, pp.opAssoc.LEFT, lambda t: [left_assoc(t[0])]),
     (pp.one_of('> >= < <='), 2, pp.opAssoc.LEFT, lambda t: [left_assoc(t[0])]),
