@@ -143,12 +143,12 @@ point to an existing one), which can then be used when compiling or linking
   my_pkg:
     # ...
     usage:
-      type: &lt;usage-type&gt;
+      type: &lt;usage_type&gt;
       inherit_defaults: &lt;boolean&gt;
-      submodule_map: &lt;submodule-map&gt;  # or...
+      submodule_map: &lt;submodule_map&gt;  # or...
       submodule_map:
-        my_submodule: &lt;submodule-map&gt;
-        '*': &lt;submodule-map&gt;
+        my_submodule: &lt;submodule_map&gt;
+        '*': &lt;submodule_map&gt;
 </code></pre>
 
 <h2 id="pathsystem">path/system<a class="headerlink" href="#pathsystem" title="Permanent link">§</a></h2>
@@ -161,13 +161,13 @@ point to an existing one), which can then be used when compiling or linking
       auto_link: &lt;boolean&gt;
       version: &lt;string&gt;
       pcname: &lt;string&gt;  # system only
-      dependencies: &lt;dependency-list&gt;
-      include_path: &lt;path-list&gt;
-      library_path: &lt;path-list&gt;
-      headers: &lt;header-list&gt;
-      libraries: &lt;library-list&gt;
-      compile_flags: &lt;shell-args&gt;
-      link_flags: &lt;shell-args&gt;
+      dependencies: &lt;list[dependency]&gt;
+      include_path: &lt;list[path]&gt;
+      library_path: &lt;list[path]&gt;
+      headers: &lt;list[header]&gt;
+      libraries: &lt;list[library]&gt;
+      compile_flags: &lt;shell_args&gt;
+      link_flags: &lt;shell_args&gt;
 </code></pre>
 
 <h2 id="pkg_config">pkg_config<a class="headerlink" href="#pkg_config" title="Permanent link">§</a></h2>
@@ -177,7 +177,7 @@ point to an existing one), which can then be used when compiling or linking
     usage:
       type: pkg_config
       pcname: &lt;string&gt;
-      pkg_config_path: &lt;path-list&gt;
+      pkg_config_path: &lt;list[path]&gt;
 </code></pre>
 
 <dl>
@@ -198,7 +198,7 @@ point to an existing one), which can then be used when compiling or linking
 </code></pre>
 
 <dl>
-<dt><code>pcname</code> <span class="subtitle"><em>optional, default</em>: <code>'&lt;package&gt;_&lt;submodule&gt;'</code></span></dt>
+<dt><code>pcname</code> <span class="subtitle"><em>optional, default</em>: <code>'{package}_{submodule}'</code></span></dt>
 <dd>The name of the pkg-config <code>.pc</code> file for the submodule, without the
   extension.</dd>
 </dl></div>

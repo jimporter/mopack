@@ -157,7 +157,7 @@ a different build system.</p>
     # ...
     builder:
       type: bfg9000
-      extra_args: &lt;shell-args&gt;
+      extra_args: &lt;shell_args&gt;
 </code></pre>
 
 <dl>
@@ -182,7 +182,7 @@ a different build system.</p>
     # ...
     builder:
       type: cmake
-      extra_args: &lt;shell-args&gt;
+      extra_args: &lt;shell_args&gt;
 </code></pre>
 
 <dl>
@@ -196,8 +196,8 @@ a different build system.</p>
     # ...
     builder:
       type: custom
-      build_commands: &lt;shell-args-list&gt;
-      deploy_commands: &lt;shell-args-list&gt;
+      build_commands: &lt;list[shell_args]&gt;
+      deploy_commands: &lt;list[shell_args]&gt;
 </code></pre>
 
 <dl>

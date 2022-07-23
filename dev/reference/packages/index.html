@@ -139,7 +139,7 @@
 all the necessary details to actually use it in the parent project.</p>
 <pre><code class="yaml">packages:
   my_pkg:
-    source: &lt;package-source&gt;
+    source: &lt;package_source&gt;
     inherit_defaults: &lt;boolean&gt;
     deploy: &lt;boolean&gt;
     submodules: &lt;submodules&gt;
@@ -191,11 +191,11 @@ all the necessary details to actually use it in the parent project.</p>
 <pre><code class="yaml">packages:
   my_pkg:
     source: git
-    repository: &lt;url-or-path&gt;
-    tag: &lt;tag-name&gt;  # or...
-    branch: &lt;branch-name&gt;  # or...
-    commit: &lt;commit-sha&gt;
-    srcdir: &lt;inner-path&gt;
+    repository: &lt;url | path&gt;
+    tag: &lt;tag_name&gt;  # or...
+    branch: &lt;branch_name&gt;  # or...
+    commit: &lt;commit_sha&gt;
+    srcdir: &lt;inner_path&gt;
     build: &lt;build&gt;
     usage: &lt;usage&gt;
 </code></pre>
@@ -225,8 +225,8 @@ all the necessary details to actually use it in the parent project.</p>
     source: tarball
     path: &lt;path&gt;  # or...
     url: &lt;url&gt;
-    files: &lt;glob-list&gt;
-    srcdir: &lt;inner-path&gt;
+    files: &lt;list[glob]&gt;
+    srcdir: &lt;inner_path&gt;
     patch: &lt;path&gt;
     build: &lt;build&gt;
     usage: &lt;usage&gt;
@@ -257,7 +257,7 @@ all the necessary details to actually use it in the parent project.</p>
 <pre><code class="yaml">packages:
   my_pkg:
     source: apt
-    remote: &lt;string-list&gt;
+    remote: &lt;list[string]&gt;
     repository: &lt;string&gt;
     usage: &lt;usage&gt;
 </code></pre>
@@ -275,8 +275,8 @@ all the necessary details to actually use it in the parent project.</p>
 <pre><code class="yaml">options:
   sources:
     conan:
-      build: &lt;string-list&gt;
-      extra_args: &lt;shell-args&gt;
+      build: &lt;list[string]&gt;
+      extra_args: &lt;shell_args&gt;
 </code></pre>
 
 <dl>
@@ -295,7 +295,7 @@ all the necessary details to actually use it in the parent project.</p>
     remote: &lt;string&gt;
     build: &lt;boolean&gt;
     options:
-      my_option: &lt;string-or-boolean&gt;
+      my_option: &lt;string | boolean&gt;
     usage: &lt;usage&gt;
 </code></pre>
 
@@ -317,17 +317,17 @@ all the necessary details to actually use it in the parent project.</p>
     auto_link: &lt;boolean&gt;
     version: &lt;string&gt;
     pcname: &lt;string&gt;
-    dependencies: &lt;dependency-list&gt;
-    include_path: &lt;path-list&gt;
-    library_path: &lt;path-list&gt;
-    headers: &lt;header-list&gt;
-    libraries: &lt;library-list&gt;
-    compile_flags: &lt;shell-args&gt;
-    link_flags: &lt;shell-args&gt;
-    submodule_map: &lt;submodule-map&gt;  # or...
+    dependencies: &lt;list[dependency]&gt;
+    include_path: &lt;list[path]&gt;
+    library_path: &lt;list[path]&gt;
+    headers: &lt;list[header]&gt;
+    libraries: &lt;list[library]&gt;
+    compile_flags: &lt;shell_args&gt;
+    link_flags: &lt;shell_args&gt;
+    submodule_map: &lt;submodule_map&gt;  # or...
     submodule_map:
-      my_submodule: &lt;submodule-map&gt;
-      '*': &lt;submodule-map&gt;
+      my_submodule: &lt;submodule_map&gt;
+      '*': &lt;submodule_map&gt;
 </code></pre></div>
         </div>
 
