@@ -13,8 +13,8 @@ packages:
 ```
 
 `source` <span class="subtitle">*required*</span>
-: The type of dependency, corresponding to a particular origin (e.g. a
-  package manager); see below for possible values.
+: The type of dependency, corresponding to a particular origin (e.g. a package
+  manager); see below for possible values.
 
 `inherit_defaults` <span class="subtitle">*optional, default*: `false`</span>
 : If true, inherit any unspecified values for this dependency from the defaults
@@ -176,8 +176,8 @@ options:
   *everything* (equivalent to `--build`).
 
 `extra_args` <span class="subtitle">*optional, default*: `null`</span>
-: A list of extra arguments to pass to `conan install`. If a string is
-  supplied, it will first be split according to POSIX shell rules.
+: A list of extra arguments to pass to `conan install`. If a string is supplied,
+  it will first be split according to POSIX shell rules.
 
 ```yaml
 packages:

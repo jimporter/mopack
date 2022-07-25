@@ -66,8 +66,8 @@ packages:
 ```
 
 `extra_args` <span class="subtitle">*optional, default*: `null`</span>
-: A list of extra arguments to pass to `cmake`. If a string is
-  supplied, it will first be split according to POSIX shell rules.
+: A list of extra arguments to pass to `cmake`. If a string is supplied, it will
+  first be split according to POSIX shell rules.
 
 ## custom
 
