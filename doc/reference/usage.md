@@ -9,6 +9,8 @@ point to an existing one), which can then be used when compiling or linking
 packages:
   my_pkg:
     # ...
+    usage: <usage_type>
+    # or...
     usage:
       type: <usage_type>
       inherit_defaults: <boolean>
@@ -17,6 +19,19 @@ packages:
         my_submodule: <submodule_map>
         '*': <submodule_map>
 ```
+
+`type` <span class="subtitle">*required*</span>
+: The type of usage; see below for possible values.
+
+`inherit_defaults` <span class="subtitle">*optional, default*: `false`</span>
+: If true, inherit any unspecified values for this usage from the defaults for
+  the package. Defaults to false; however, any packages requested via `mopack
+  usage` but not defined will use the defaults.
+
+`submodule_map` <span class="subtitle">*optional, default*: `null`</span>
+: A mapping from submodule names to submodule-specific configuration; a key of
+  `'*'` refers to all submodules. See below for possible values for each usage
+  type.
 
 ## path/system
 
@@ -37,6 +52,24 @@ packages:
       libraries: <list[library]>
       compile_flags: <shell_args>
       link_flags: <shell_args>
+```
+
+```yaml
+packages:
+  my_pkg:
+    # ...
+    usage:
+      # ...
+      submodule_map:
+        my_submodule:
+          pcname: <string>  # system only
+          dependencies: <list[dependency]>
+          include_path: <list[path]>
+          library_path: <list[path]>
+          headers: <list[header]>
+          libraries: <list[library]>
+          compile_flags: <shell_args>
+          link_flags: <shell_args>
 ```
 
 ## pkg_config
@@ -61,15 +94,17 @@ packages:
   path for pkg-config.
 
 ```yaml
-package:
+packages:
   my_pkg:
     # ...
     usage:
+      # ...
       submodule_map:
-        pcname: <string>
+        my_submodule:
+          pcname: <string>
 ```
 
-`pcname` <span class="subtitle">*optional, default*: `'{package}_{submodule}'`</span>
+`pcname` <span class="subtitle">*optional, default*: `{my_pkg}_{my_submodule}`</span>
 : The name of the pkg-config `.pc` file for the submodule, without the
   extension.
 
