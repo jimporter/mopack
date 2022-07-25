@@ -151,8 +151,8 @@ all the necessary details to actually use it in the parent project.</p>
 
 <dl>
 <dt><code>source</code> <span class="subtitle"><em>required</em></span></dt>
-<dd>The type of dependency, corresponding to a particular origin (e.g. a
-  package manager); see below for possible values.</dd>
+<dd>The type of dependency, corresponding to a particular origin (e.g. a package
+  manager); see below for possible values.</dd>
 <dt><code>inherit_defaults</code> <span class="subtitle"><em>optional, default</em>: <code>false</code></span></dt>
 <dd>If true, inherit any unspecified values for this dependency from the defaults
   for the package. Defaults to false; however, any packages requested via
@@ -290,8 +290,8 @@ all the necessary details to actually use it in the parent project.</p>
   for each <code>{package}</code> in the list. You can also specify <code>all</code> to build
   <em>everything</em> (equivalent to <code>--build</code>).</dd>
 <dt><code>extra_args</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
-<dd>A list of extra arguments to pass to <code>conan install</code>. If a string is
-  supplied, it will first be split according to POSIX shell rules.</dd>
+<dd>A list of extra arguments to pass to <code>conan install</code>. If a string is supplied,
+  it will first be split according to POSIX shell rules.</dd>
 </dl>
 <pre><code class="yaml">packages:
   my_pkg:

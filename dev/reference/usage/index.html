@@ -161,11 +161,13 @@ point to an existing one), which can then be used when compiling or linking
 <dt><code>type</code> <span class="subtitle"><em>required</em></span></dt>
 <dd>The type of usage; see below for possible values.</dd>
 <dt><code>inherit_defaults</code> <span class="subtitle"><em>optional, default</em>: <code>false</code></span></dt>
-<dd>If true, inherit any unspecified values for this usage from the defaults
-  for the package. Defaults to false; however, any packages requested via
-  <code>mopack usage</code> but not defined will use the defaults.</dd>
+<dd>If true, inherit any unspecified values for this usage from the defaults for
+  the package. Defaults to false; however, any packages requested via <code>mopack
+  usage</code> but not defined will use the defaults.</dd>
 <dt><code>submodule_map</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
-<dd>TODO</dd>
+<dd>A mapping from submodule names to submodule-specific configuration; a key of
+  <code>'*'</code> refers to all submodules. See below for possible values for each usage
+  type.</dd>
 </dl>
 <h2 id="pathsystem">path/system<a class="headerlink" href="#pathsystem" title="Permanent link">§</a></h2>
 <pre><code class="yaml">packages:
@@ -184,6 +186,23 @@ point to an existing one), which can then be used when compiling or linking
       libraries: &lt;list[library]&gt;
       compile_flags: &lt;shell_args&gt;
       link_flags: &lt;shell_args&gt;
+</code></pre>
+
+<pre><code class="yaml">packages:
+  my_pkg:
+    # ...
+    usage:
+      # ...
+      submodule_map:
+        my_submodule:
+          pcname: &lt;string&gt;  # system only
+          dependencies: &lt;list[dependency]&gt;
+          include_path: &lt;list[path]&gt;
+          library_path: &lt;list[path]&gt;
+          headers: &lt;list[header]&gt;
+          libraries: &lt;list[library]&gt;
+          compile_flags: &lt;shell_args&gt;
+          link_flags: &lt;shell_args&gt;
 </code></pre>
 
 <h2 id="pkg_config">pkg_config<a class="headerlink" href="#pkg_config" title="Permanent link">§</a></h2>
@@ -205,16 +224,18 @@ point to an existing one), which can then be used when compiling or linking
 <dd>The path to look for the pkg-config file in. If not specified, use the default
   path for pkg-config.</dd>
 </dl>
-<pre><code class="yaml">package:
+<pre><code class="yaml">packages:
   my_pkg:
     # ...
     usage:
+      # ...
       submodule_map:
-        pcname: &lt;string&gt;
+        my_submodule:
+          pcname: &lt;string&gt;
 </code></pre>
 
 <dl>
-<dt><code>pcname</code> <span class="subtitle"><em>optional, default</em>: <code>'{package}_{submodule}'</code></span></dt>
+<dt><code>pcname</code> <span class="subtitle"><em>optional, default</em>: <code>{my_pkg}_{my_submodule}</code></span></dt>
 <dd>The name of the pkg-config <code>.pc</code> file for the submodule, without the
   extension.</dd>
 </dl></div>
