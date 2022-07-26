@@ -188,6 +188,37 @@ point to an existing one), which can then be used when compiling or linking
       link_flags: &lt;shell_args&gt;
 </code></pre>
 
+<dl>
+<dt><code>auto_link</code> <span class="subtitle"><em>optional, default</em>: <code>false</code></span></dt>
+<dd>If true, the package requires a compiler that supports auto-link (e.g. MSVC).</dd>
+<dt><code>pcname</code> <span class="subtitle"><em>optional, default</em>: <code>{my_pkg}</code></span></dt>
+<dd>The name of the pkg-config <code>.pc</code> file, without the extension. If
+  <a href="../packages/">submodules</a> are <em>required</em> for this package, this instead
+  defaults to <code>null</code>. If this file isn't found, use the other options to
+  generate a pkg-config file.</dd>
+<dt><code>dependencies</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>A list of package dependencies that are required to use this package. This
+  corresponds to the <code>Requires</code> field of a pkg-config <code>.pc</code> file.</dd>
+<dt><code>include_path</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>A list of paths to search for header files (as specified in <code>headers</code>). Any
+  paths that include the required headers will be used when compiling with this
+  dependency.</dd>
+<dt><code>library_path</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>A list of paths to search for library files (as specified in <code>libraries</code>). Any
+  paths that include the required libraries will be used when linking with this
+  dependency.</dd>
+<dt><code>headers</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>A list of headers that must be found when searching <code>include_path</code>. This can
+  generally be a single representative header file to detect that the dependency
+  could actually be found.</dd>
+<dt><code>libraries</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>A list of libary files to link to when using this dependency.</dd>
+<dt><code>compile_flags</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>A list of extra flags to pass to the compiler when compiling with this
+  dependency.</dd>
+<dt><code>link_flags</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>A list of extra flags to pass to the linker when linking with this dependency.</dd>
+</dl>
 <pre><code class="yaml">packages:
   my_pkg:
     # ...
@@ -205,6 +236,25 @@ point to an existing one), which can then be used when compiling or linking
           link_flags: &lt;shell_args&gt;
 </code></pre>
 
+<dl>
+<dt><code>pcname</code> <span class="subtitle"><em>optional, default</em>: <code>{my_pkg}</code></span></dt>
+<dd>The name of the pkg-config <code>.pc</code> file, without the extension. If this file
+  isn't found, use the other options to generate a pkg-config file.</dd>
+<dt><code>dependencies</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>As above.</dd>
+<dt><code>include_path</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>As above.</dd>
+<dt><code>library_path</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>As above.</dd>
+<dt><code>headers</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>As above.</dd>
+<dt><code>libraries</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>As above.</dd>
+<dt><code>compile_flags</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>As above.</dd>
+<dt><code>link_flags</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>As above.</dd>
+</dl>
 <h2 id="pkg_config">pkg_config<a class="headerlink" href="#pkg_config" title="Permanent link">§</a></h2>
 <pre><code class="yaml">packages:
   my_pkg:
@@ -216,10 +266,10 @@ point to an existing one), which can then be used when compiling or linking
 </code></pre>
 
 <dl>
-<dt><code>pcname</code> <span class="subtitle"><em>optional, default</em>: <em>package name</em></span></dt>
+<dt><code>pcname</code> <span class="subtitle"><em>optional, default</em>: <code>{my_pkg}</code></span></dt>
 <dd>The name of the pkg-config <code>.pc</code> file, without the extension. If
-  <a href="../packages/">submodules</a> are required for this package, this instead defaults
-  to <code>null</code>.</dd>
+  <a href="../packages/">submodules</a> are <em>required</em> for this package, this instead
+  defaults to <code>null</code>.</dd>
 <dt><code>pkg_config_path</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dd>The path to look for the pkg-config file in. If not specified, use the default
   path for pkg-config.</dd>
