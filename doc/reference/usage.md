@@ -54,6 +54,44 @@ packages:
       link_flags: <shell_args>
 ```
 
+`auto_link` <span class="subtitle">*optional, default*: `false`</span>
+: If true, the package requires a compiler that supports auto-link (e.g. MSVC).
+
+`pcname` <span class="subtitle">*optional, default*: `{my_pkg}`</span>
+: The name of the pkg-config `.pc` file, without the extension. If
+  [submodules](packages.md) are *required* for this package, this instead
+  defaults to `null`. If this file isn't found, use the other options to
+  generate a pkg-config file.
+
+`dependencies` <span class="subtitle">*optional, default*: `null`</span>
+: A list of package dependencies that are required to use this package. This
+  corresponds to the `Requires` field of a pkg-config `.pc` file.
+
+`include_path` <span class="subtitle">*optional, default*: `null`</span>
+: A list of paths to search for header files (as specified in `headers`). Any
+  paths that include the required headers will be used when compiling with this
+  dependency.
+
+`library_path` <span class="subtitle">*optional, default*: `null`</span>
+: A list of paths to search for library files (as specified in `libraries`). Any
+  paths that include the required libraries will be used when linking with this
+  dependency.
+
+`headers` <span class="subtitle">*optional, default*: `null`</span>
+: A list of headers that must be found when searching `include_path`. This can
+  generally be a single representative header file to detect that the dependency
+  could actually be found.
+
+`libraries` <span class="subtitle">*optional, default*: `null`</span>
+: A list of libary files to link to when using this dependency.
+
+`compile_flags` <span class="subtitle">*optional, default*: `null`</span>
+: A list of extra flags to pass to the compiler when compiling with this
+  dependency.
+
+`link_flags` <span class="subtitle">*optional, default*: `null`</span>
+: A list of extra flags to pass to the linker when linking with this dependency.
+
 ```yaml
 packages:
   my_pkg:
@@ -72,6 +110,31 @@ packages:
           link_flags: <shell_args>
 ```
 
+`pcname` <span class="subtitle">*optional, default*: `{my_pkg}`</span>
+: The name of the pkg-config `.pc` file, without the extension. If this file
+  isn't found, use the other options to generate a pkg-config file.
+
+`dependencies` <span class="subtitle">*optional, default*: `null`</span>
+: As above.
+
+`include_path` <span class="subtitle">*optional, default*: `null`</span>
+: As above.
+
+`library_path` <span class="subtitle">*optional, default*: `null`</span>
+: As above.
+
+`headers` <span class="subtitle">*optional, default*: `null`</span>
+: As above.
+
+`libraries` <span class="subtitle">*optional, default*: `null`</span>
+: As above.
+
+`compile_flags` <span class="subtitle">*optional, default*: `null`</span>
+: As above.
+
+`link_flags` <span class="subtitle">*optional, default*: `null`</span>
+: As above.
+
 ## pkg_config
 
 ```yaml
@@ -84,10 +147,10 @@ packages:
       pkg_config_path: <list[path]>
 ```
 
-`pcname` <span class="subtitle">*optional, default*: *package name*</span>
+`pcname` <span class="subtitle">*optional, default*: `{my_pkg}`</span>
 : The name of the pkg-config `.pc` file, without the extension. If
-  [submodules](packages.md) are required for this package, this instead defaults
-  to `null`.
+  [submodules](packages.md) are *required* for this package, this instead
+  defaults to `null`.
 
 `pkg_config_path` <span class="subtitle">*optional, default*: `null`</span>
 : The path to look for the pkg-config file in. If not specified, use the default
