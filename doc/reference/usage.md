@@ -115,23 +115,11 @@ packages:
   isn't found, use the other options to generate a pkg-config file.
 
 `dependencies` <span class="subtitle">*optional, default*: `null`</span>
-: As above.
-
 `include_path` <span class="subtitle">*optional, default*: `null`</span>
-: As above.
-
 `library_path` <span class="subtitle">*optional, default*: `null`</span>
-: As above.
-
 `headers` <span class="subtitle">*optional, default*: `null`</span>
-: As above.
-
 `libraries` <span class="subtitle">*optional, default*: `null`</span>
-: As above.
-
 `compile_flags` <span class="subtitle">*optional, default*: `null`</span>
-: As above.
-
 `link_flags` <span class="subtitle">*optional, default*: `null`</span>
 : As above.
 
