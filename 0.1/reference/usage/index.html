@@ -191,6 +191,9 @@ point to an existing one), which can then be used when compiling or linking
 <dl>
 <dt><code>auto_link</code> <span class="subtitle"><em>optional, default</em>: <code>false</code></span></dt>
 <dd>If true, the package requires a compiler that supports auto-link (e.g. MSVC).</dd>
+<dt><code>version</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>An optional version string, corresponding to the <code>Version</code> field of a
+  pkg-config <code>.pc</code> file.</dd>
 <dt><code>pcname</code> <span class="subtitle"><em>optional, default</em>: <code>{my_pkg}</code></span></dt>
 <dd>The name of the pkg-config <code>.pc</code> file, without the extension. If
   <a href="../packages/">submodules</a> are <em>required</em> for this package, this instead
