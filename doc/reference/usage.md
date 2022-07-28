@@ -57,6 +57,10 @@ packages:
 `auto_link` <span class="subtitle">*optional, default*: `false`</span>
 : If true, the package requires a compiler that supports auto-link (e.g. MSVC).
 
+`version` <span class="subtitle">*optional, default*: `null`</span>
+: An optional version string, corresponding to the `Version` field of a
+  pkg-config `.pc` file.
+
 `pcname` <span class="subtitle">*optional, default*: `{my_pkg}`</span>
 : The name of the pkg-config `.pc` file, without the extension. If
   [submodules](packages.md) are *required* for this package, this instead

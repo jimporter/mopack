@@ -224,3 +224,15 @@ packages:
       my_submodule: <submodule_map>
       '*': <submodule_map>
 ```
+
+`auto_link` <span class="subtitle">*optional, default*: `false`</span>
+`version` <span class="subtitle">*optional, default*: `null`</span>
+`pcname` <span class="subtitle">*optional, default*: `{my_pkg}`</span>
+`dependencies` <span class="subtitle">*optional, default*: `null`</span>
+`include_path` <span class="subtitle">*optional, default*: `null`</span>
+`library_path` <span class="subtitle">*optional, default*: `null`</span>
+`headers` <span class="subtitle">*optional, default*: `null`</span>
+`libraries` <span class="subtitle">*optional, default*: `null`</span>
+`compile_flags` <span class="subtitle">*optional, default*: `null`</span>
+`link_flags` <span class="subtitle">*optional, default*: `null`</span>
+: See [`system`](usage.md#pathsystem) usage.
