@@ -5,12 +5,11 @@
 [![Build status][ci-image]][ci-link]
 [![Coverage status][codecov-image]][codecov-link]
 
-**mopack** (pronounced "ammopack" - name subject to change) is an experimental
-*multiple origin* package manager, with an emphasis on C/C++ packages. It's
-designed to allow users to resolve package dependencies from multiple package
-managers ("origins").
+**mopack** (pronounced "ammopack") is a *multiple origin* package manager, with
+an emphasis on C/C++ packages. It's designed to allow users to resolve package
+dependencies from multiple package managers ("origins").
 
-## Design Goals
+## Why Mopack?
 
 ### No configuration necessary
 
