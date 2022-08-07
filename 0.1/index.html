@@ -132,15 +132,27 @@
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
         <li class="main active"><a href="#mopack">mopack</a></li>
+            <li><a href="#why-mopack">Why Mopack?</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
 <h1 id="mopack">mopack<a class="headerlink" href="#mopack" title="Permanent link">§</a></h1>
-<p><strong>mopack</strong> (pronounced "ammopack" - name subject to change) is an experimental
-<em>multiple origin</em> package manager, with an emphasis on C/C++ packages. It's
-designed to allow users to resolve package dependencies from multiple package
-managers ("origins").</p></div>
+<p><strong>mopack</strong> (pronounced "ammopack") is a <em>multiple origin</em> package manager, with
+an emphasis on C/C++ packages. It's designed to allow users to resolve package
+dependencies from multiple package managers ("origins").</p>
+<h2 id="why-mopack">Why Mopack?<a class="headerlink" href="#why-mopack" title="Permanent link">§</a></h2>
+<h3 id="no-configuration-necessary">No configuration necessary<a class="headerlink" href="#no-configuration-necessary" title="Permanent link">§</a></h3>
+<p>By default, mopack will assume all package dependencies are already fetched
+(downloaded and ready to use) and will attempt to resolve each dependency using
+common methods for the relevant platform/runtime (e.g. pkg-config, searching
+system paths).</p>
+<h3 id="builders-can-override-developers">Builders can override developers<a class="headerlink" href="#builders-can-override-developers" title="Permanent link">§</a></h3>
+<p>In typical usage, a project's developers will provide an mopack configuration to
+make it easier for development builds to resolve dependencies. However, people
+who <em>build</em> the project may prefer to resolve packages differently (e.g. if a
+project defaults to resolving packages via Conan, someone building for <code>apt</code>
+would likely override the config to point to <code>apt</code> packages).</p></div>
         </div>
 
         <footer class="col-md-12">
@@ -225,5 +237,5 @@ managers ("origins").</p></div>
 
 <!--
 MkDocs version : 1.2.3
-Build Date UTC : 2022-07-28 05:27:23.660281+00:00
+Build Date UTC : 2022-08-07 03:08:27.235725+00:00
 -->
