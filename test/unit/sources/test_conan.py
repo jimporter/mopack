@@ -46,7 +46,7 @@ class TestConan(SourceTest):
                 (['conan', 'install', '-if', conandir] + extra_args +
                  ['--', self.pkgdir]),
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, check=True
+                universal_newlines=True, check=True, env={}
             )
 
     def check_usage(self, pkg, *, submodules=None, usage=None):

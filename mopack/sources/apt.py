@@ -3,7 +3,7 @@ from itertools import chain
 
 from . import BinaryPackage
 from .. import log, types
-from ..environment import get_cmd
+from ..environment import get_cmd, subprocess_run
 from ..iterutils import uniques
 
 
@@ -29,10 +29,12 @@ class AptPackage(BinaryPackage):
     def guessed_version(self, metadata):
         # XXX: Maybe try to de-munge the version into something not
         # apt-specific?
-        dpkgq = get_cmd(self._common_options.env, 'DPKG_QUERY', 'dpkg-query')
-        return subprocess.run(
+        env = self._common_options.env
+        dpkgq = get_cmd(env, 'DPKG_QUERY', 'dpkg-query')
+        return subprocess_run(
             dpkgq + ['-W', '-f${Version}', self.remote[0]],
-            check=True, stdout=subprocess.PIPE, universal_newlines=True
+            check=True, stdout=subprocess.PIPE, universal_newlines=True,
+            env=env
         ).stdout
 
     @classmethod
@@ -49,9 +51,9 @@ class AptPackage(BinaryPackage):
 
         with log.LogFile.open(metadata.pkgdir, 'apt') as logfile:
             for i in repositories:
-                logfile.check_call(aptrepo + ['-y', i])
-            logfile.check_call(apt + ['update'])
-            logfile.check_call(apt + ['install', '-y'] + remotes)
+                logfile.check_call(aptrepo + ['-y', i], env=env)
+            logfile.check_call(apt + ['update'], env=env)
+            logfile.check_call(apt + ['install', '-y'] + remotes, env=env)
 
         for i in packages:
             i.resolved = True

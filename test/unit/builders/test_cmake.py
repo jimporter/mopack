@@ -28,11 +28,11 @@ class TestCMakeBuilder(BuilderTest):
             mcall.assert_any_call(
                 ['cmake', self.srcdir, '-G', 'Ninja'] + extra_args,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, check=True
+                universal_newlines=True, check=True, env={}
             )
             mcall.assert_called_with(
                 ['ninja'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, check=True
+                universal_newlines=True, check=True, env={}
             )
 
     def test_basic(self):
@@ -52,7 +52,7 @@ class TestCMakeBuilder(BuilderTest):
             mcall.assert_called_with(
                 ['ninja', 'install'],
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, check=True
+                universal_newlines=True, check=True, env={}
             )
 
     def test_extra_args(self):

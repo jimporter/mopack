@@ -125,12 +125,14 @@ class ConanPackage(BinaryPackage):
 
         build = [i.remote_name for i in packages if i.build]
 
-        conan = get_cmd(packages[0]._common_options.env, 'CONAN', 'conan')
+        env = packages[0]._common_options.env
+        conan = get_cmd(env, 'CONAN', 'conan')
         with log.LogFile.open(metadata.pkgdir, 'conan') as logfile:
             logfile.check_call(
                 conan + ['install', '-if', cls._installdir(metadata)] +
                 cls._build_opts(uniques(options.build + build)) +
-                options.extra_args.fill() + ['--', metadata.pkgdir]
+                options.extra_args.fill() + ['--', metadata.pkgdir],
+                env=env
             )
 
         for i in packages:

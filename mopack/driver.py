@@ -5,14 +5,10 @@ import sys
 
 from . import arguments, commands, config, log, yaml_tools
 from .app_version import version
+from .environment import nested_invoke
 from .types import dependency
 
 logger = log.getLogger(__name__)
-
-# This environment variable is set to the top builddir when `mopack resolve` is
-# executed so that nested invocations of `mopack` consistently point to the
-# same mopack directory.
-nested_invoke = 'MOPACK_NESTED_INVOCATION'
 
 description = """
 mopack ("multiple-origin package manager") is a tool providing a unified means

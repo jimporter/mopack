@@ -65,24 +65,27 @@ class Bfg9000Builder(Builder):
     def build(self, metadata, pkg):
         path_values = pkg.path_values(metadata, builder=self)
 
-        bfg9000 = get_cmd(self._common_options.env, 'BFG9000', 'bfg9000')
-        ninja = get_cmd(self._common_options.env, 'NINJA', 'ninja')
+        env = self._common_options.env
+        bfg9000 = get_cmd(env, 'BFG9000', 'bfg9000')
+        ninja = get_cmd(env, 'NINJA', 'ninja')
         with LogFile.open(metadata.pkgdir, self.name) as logfile:
             with pushd(path_values['srcdir']):
                 logfile.check_call(
                     bfg9000 + ['configure', path_values['builddir']] +
                     self._toolchain_args(self._this_options.toolchain) +
                     self._install_args(self._common_options.deploy_paths) +
-                    self.extra_args.fill(**path_values)
+                    self.extra_args.fill(**path_values),
+                    env=env
                 )
             with pushd(path_values['builddir']):
-                logfile.check_call(ninja)
+                logfile.check_call(ninja, env=env)
 
     def deploy(self, metadata, pkg):
         path_values = pkg.path_values(metadata, builder=self)
 
-        ninja = get_cmd(self._common_options.env, 'NINJA', 'ninja')
+        env = self._common_options.env
+        ninja = get_cmd(env, 'NINJA', 'ninja')
         with LogFile.open(metadata.pkgdir, self.name,
                           kind='deploy') as logfile:
             with pushd(path_values['builddir']):
-                logfile.check_call(ninja + ['install'])
+                logfile.check_call(ninja + ['install'], env=env)

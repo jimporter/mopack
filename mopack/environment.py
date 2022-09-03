@@ -1,9 +1,16 @@
 import os
 import re
+import subprocess
+from collections import ChainMap
 
 from .iterutils import isiterable, listify
 from .platforms import platform_name
 from .shell import split_native_str
+
+# This environment variable is set to the top builddir when `mopack resolve` is
+# executed so that nested invocations of `mopack` consistently point to the
+# same mopack directory.
+nested_invoke = 'MOPACK_NESTED_INVOCATION'
 
 
 def split_paths(s, sep=os.pathsep):
@@ -46,6 +53,13 @@ def which(names, env=os.environ, resolve=False, kind='executable'):
 
 def get_cmd(env, cmdvar, default):
     return split_native_str(env.get(cmdvar, default))
+
+
+def subprocess_run(args, *, env, **kwargs):
+    if nested_invoke in os.environ:
+        override_env = {nested_invoke: os.environ[nested_invoke]}
+        env = ChainMap(override_env, env)
+    return subprocess.run(args, env=env, **kwargs)
 
 
 # Make a function to convert between command names for different languages in

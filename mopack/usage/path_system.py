@@ -6,7 +6,7 @@ from itertools import chain
 from . import preferred_path_base, Usage
 from . import submodules as submod
 from .. import types
-from ..environment import get_pkg_config
+from ..environment import get_pkg_config, subprocess_run
 from ..freezedried import DictFreezeDryer, FreezeDried, ListFreezeDryer
 from ..iterutils import ismapping, listify, uniques
 from ..package_defaults import DefaultResolver
@@ -444,10 +444,11 @@ class SystemUsage(PathUsage):
         pkg_config = get_pkg_config(self._common_options.env)
         try:
             # XXX: Make sure this works when submodules are required.
-            return subprocess.run(
+            return subprocess_run(
                 pkg_config + [self.pcname, '--modversion'], check=True,
                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                universal_newlines=True
+                universal_newlines=True,
+                env=self._common_options.env
             ).stdout.strip()
         except (OSError, subprocess.CalledProcessError):
             return super().version(metadata, pkg)
@@ -464,11 +465,13 @@ class SystemUsage(PathUsage):
         else:
             pcnames = [self.pcname]
 
-        pkg_config = get_pkg_config(self._common_options.env)
+        env = self._common_options.env
+        pkg_config = get_pkg_config(env)
         try:
-            subprocess.run(pkg_config + pcnames, check=True,
+            subprocess_run(pkg_config + pcnames, check=True,
                            stdout=subprocess.DEVNULL,
-                           stderr=subprocess.DEVNULL)
+                           stderr=subprocess.DEVNULL,
+                           env=env)
             return self._usage(pkg, submodules, pcnames=pcnames,
                                pkg_config_path=[])
         except (OSError, subprocess.CalledProcessError):

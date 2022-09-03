@@ -10,6 +10,7 @@ from logging import (getLogger, info, debug,  # noqa: F401
                      CRITICAL, ERROR, WARNING, INFO, DEBUG)
 
 from .iterutils import listify
+from .environment import subprocess_run
 
 _next_level = INFO + 1
 
@@ -146,13 +147,13 @@ class LogFile:
     def close(self):
         self.file.close()
 
-    def check_call(self, args, **kwargs):
+    def check_call(self, args, *, env, **kwargs):
         command = ' '.join(shlex.quote(i) for i in args)
         self._print_verbose('$ ' + command, flush=True)
         try:
-            result = subprocess.run(
+            result = subprocess_run(
                 args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, check=True, **kwargs
+                universal_newlines=True, check=True, env=env, **kwargs
             )
             self._print_verbose(result.stdout)
         except subprocess.CalledProcessError as e:

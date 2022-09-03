@@ -29,11 +29,11 @@ class TestBfg9000Builder(BuilderTest):
             mcall.assert_any_call(
                 ['bfg9000', 'configure', builddir] + extra_args,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, check=True
+                universal_newlines=True, check=True, env={}
             )
             mcall.assert_called_with(
                 ['ninja'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, check=True
+                universal_newlines=True, check=True, env={}
             )
 
     def test_basic(self):
@@ -53,7 +53,7 @@ class TestBfg9000Builder(BuilderTest):
             mcall.assert_called_with(
                 ['ninja', 'install'], stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT, universal_newlines=True,
-                check=True
+                check=True, env={}
             )
 
     def test_extra_args(self):

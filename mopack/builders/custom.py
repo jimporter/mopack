@@ -44,7 +44,7 @@ class CustomBuilder(Builder):
                         raise RuntimeError('invalid command format')
                     os.chdir(line[1])
             else:
-                logfile.check_call(line)
+                logfile.check_call(line, env=self._common_options.env)
 
     def build(self, metadata, pkg):
         path_values = pkg.path_values(metadata, builder=self)

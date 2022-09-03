@@ -163,7 +163,7 @@ class TestLogFile(TestCase):
         with mock.patch('builtins.open', mock.mock_open()) as mopen, \
              mock.patch('subprocess.run', return_value=comp_proc):
             with log.LogFile.open('pkgdir', 'package') as logfile:
-                logfile.check_call(['cmd', '--arg'])
+                logfile.check_call(['cmd', '--arg'], env=None)
                 output = ''.join(i[-2][0] for i in mopen().write.mock_calls)
                 self.assertEqual(output, '$ cmd --arg\nstdout\n')
 
@@ -175,7 +175,7 @@ class TestLogFile(TestCase):
              mock.patch('subprocess.run', side_effect=err):
             with log.LogFile.open('pkgdir', 'package') as logfile:
                 with self.assertRaises(SubprocessError, msg=msg):
-                    logfile.check_call(['cmd', '--arg'])
+                    logfile.check_call(['cmd', '--arg'], env=None)
                 output = ''.join(i[-2][0] for i in mopen().write.mock_calls)
                 self.assertEqual(output, '$ cmd --arg\n\n')
 
@@ -188,7 +188,7 @@ class TestLogFile(TestCase):
              mock.patch('subprocess.run', side_effect=err):
             with log.LogFile.open('pkgdir', 'package') as logfile:
                 with self.assertRaises(SubprocessError, msg=msg):
-                    logfile.check_call(['cmd', '--arg'])
+                    logfile.check_call(['cmd', '--arg'], env=None)
                 output = ''.join(i[-2][0] for i in mopen().write.mock_calls)
                 self.assertEqual(output, '$ cmd --arg\nstdout\nstdout\n\n')
 
@@ -200,7 +200,7 @@ class TestLogFile(TestCase):
              mock.patch('subprocess.run', side_effect=err):
             with log.LogFile.open('pkgdir', 'package') as logfile:
                 with self.assertRaises(OSError, msg=msg):
-                    logfile.check_call(['cmd', '--arg'])
+                    logfile.check_call(['cmd', '--arg'], env=None)
                 output = ''.join(i[-2][0] for i in mopen().write.mock_calls)
                 self.assertEqual(output, '$ cmd --arg\nbad\n')
 

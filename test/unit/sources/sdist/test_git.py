@@ -40,7 +40,7 @@ class TestGit(SDistTestCase):
             pkg.fetch(self.metadata, self.config)
             mrun.assert_has_calls([
                 mock.call(i, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                          universal_newlines=True, check=True)
+                          universal_newlines=True, check=True, env={})
                 for i in git_cmds
             ], any_order=True)
 
@@ -321,7 +321,8 @@ class TestGit(SDistTestCase):
             pkg.fetch(self.metadata, self.config)
             mrun.assert_called_once_with(
                 ['git', 'pull'], stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT, universal_newlines=True, check=True
+                stderr=subprocess.STDOUT, universal_newlines=True, check=True,
+                env={}
             )
         self.check_resolve(pkg)
 
@@ -370,7 +371,7 @@ class TestGit(SDistTestCase):
             mrun.assert_any_call(
                 ['bfg9000', 'configure', builddir, '--prefix', '/usr/local'],
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, check=True
+                universal_newlines=True, check=True, env={}
             )
 
         with mock_open_log() as mopen, \

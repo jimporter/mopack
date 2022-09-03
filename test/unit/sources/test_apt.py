@@ -36,16 +36,17 @@ class TestApt(SourceTest):
                     mrun.assert_any_call(
                         ['sudo', 'add-apt-repository', '-y', i.repository],
                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                        universal_newlines=True, check=True
+                        universal_newlines=True, check=True, env={}
                     )
             mrun.assert_any_call(
                 ['sudo', 'apt-get', 'update'], stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT, universal_newlines=True, check=True
+                stderr=subprocess.STDOUT, universal_newlines=True, check=True,
+                env={}
             )
             mrun.assert_any_call(
                 ['sudo', 'apt-get', 'install', '-y'] + remotes,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, check=True
+                universal_newlines=True, check=True, env={}
             )
 
     def check_usage(self, pkg, *, submodules=None, usage=None):
@@ -83,11 +84,12 @@ class TestApt(SourceTest):
                 mock.call(
                     ['pkg-config', 'foo', '--modversion'], check=True,
                     stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                    universal_newlines=True
+                    universal_newlines=True, env={}
                 ),
                 mock.call(
                     ['dpkg-query', '-W', '-f${Version}', 'libfoo-dev'],
-                    check=True, stdout=subprocess.PIPE, universal_newlines=True
+                    check=True, stdout=subprocess.PIPE,
+                    universal_newlines=True, env={}
                 ),
             ])
 
@@ -105,11 +107,12 @@ class TestApt(SourceTest):
                 mock.call(
                     ['pkg-config', 'foo', '--modversion'], check=True,
                     stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                    universal_newlines=True
+                    universal_newlines=True, env={}
                 ),
                 mock.call(
                     ['dpkg-query', '-W', '-f${Version}', 'foo-dev'],
-                    check=True, stdout=subprocess.PIPE, universal_newlines=True
+                    check=True, stdout=subprocess.PIPE,
+                    universal_newlines=True, env={}
                 ),
             ])
 
@@ -126,11 +129,12 @@ class TestApt(SourceTest):
                 mock.call(
                     ['pkg-config', 'foo', '--modversion'], check=True,
                     stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                    universal_newlines=True
+                    universal_newlines=True, env={}
                 ),
                 mock.call(
                     ['dpkg-query', '-W', '-f${Version}', 'foo-dev'],
-                    check=True, stdout=subprocess.PIPE, universal_newlines=True
+                    check=True, stdout=subprocess.PIPE,
+                    universal_newlines=True, env={}
                 ),
             ])
 
@@ -159,7 +163,7 @@ class TestApt(SourceTest):
             mrun.assert_called_once_with(
                 ['pkg-config', 'foo', '--modversion'], check=True,
                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                universal_newlines=True
+                universal_newlines=True, env={}
             )
 
         self.check_usage(pkg)

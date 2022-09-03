@@ -1,9 +1,10 @@
 import subprocess
+from collections import ChainMap
 
 from . import preferred_path_base, Usage
 from . import submodules as submod
 from .. import types
-from ..environment import get_pkg_config
+from ..environment import get_pkg_config, subprocess_run
 from ..freezedried import DictFreezeDryer, FreezeDried, ListFreezeDryer
 from ..iterutils import listify
 from ..package_defaults import DefaultResolver
@@ -91,16 +92,15 @@ class PkgConfigUsage(Usage):
             ), evaluate=False)
 
     def version(self, metadata, pkg):
+        pkg_config = get_pkg_config(self._common_options.env)
         path_values = pkg.path_values(metadata, builder=True)
         pkgconfpath = [i.string(**path_values) for i in self.pkg_config_path]
-        env = self._common_options.env.copy()
-        env['PKG_CONFIG_PATH'] = join_paths(pkgconfpath)
-        pkg_config = get_pkg_config(self._common_options.env)
+        env = ChainMap({'PKG_CONFIG_PATH': join_paths(pkgconfpath)},
+                       self._common_options.env)
 
-        return subprocess.run(
-            pkg_config + [self.pcname, '--modversion'],
-            check=True, env=env, stdout=subprocess.PIPE,
-            universal_newlines=True,
+        return subprocess_run(
+            pkg_config + [self.pcname, '--modversion'], check=True,
+            stdout=subprocess.PIPE, universal_newlines=True, env=env
         ).stdout.strip()
 
     def _get_submodule_mapping(self, submodule):

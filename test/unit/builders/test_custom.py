@@ -31,9 +31,10 @@ class TestCustomBuilder(BuilderTest):
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')
             for line in build_commands:
-                mcall.assert_any_call(line, stdout=subprocess.PIPE,
-                                      stderr=subprocess.STDOUT,
-                                      universal_newlines=True, check=True)
+                mcall.assert_any_call(
+                    line, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                    universal_newlines=True, check=True, env={}
+                )
 
     def test_basic(self):
         builder = self.make_builder('foo', build_commands=[
@@ -98,7 +99,7 @@ class TestCustomBuilder(BuilderTest):
             mcall.assert_called_with(
                 ['make', 'install'], stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT, universal_newlines=True,
-                check=True
+                check=True, env={}
             )
 
     def test_cd(self):

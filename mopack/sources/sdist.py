@@ -225,13 +225,14 @@ class TarballPackage(SDistPackage):
                         arc.extractall(base_srcdir)
 
             if self.patch:
-                patch_cmd = get_cmd(self._common_options.env, 'PATCH', 'patch')
+                env = self._common_options.env
+                patch_cmd = get_cmd(env, 'PATCH', 'patch')
                 patch = self.patch.string(cfgdir=self.config_dir)
                 log.pkg_patch(self.name, 'with {}'.format(patch))
                 with LogFile.open(metadata.pkgdir, self.name) as logfile, \
                      open(patch) as f, \
                      pushd(self._srcdir(metadata)):
-                    logfile.check_call(patch_cmd + ['-p1'], stdin=f)
+                    logfile.check_call(patch_cmd + ['-p1'], stdin=f, env=env)
 
         return self._find_mopack(parent_config, self._srcdir(metadata))
 
@@ -284,23 +285,25 @@ class GitPackage(SDistPackage):
 
     def fetch(self, metadata, parent_config):
         base_srcdir = self._base_srcdir(metadata)
-        git = get_cmd(self._common_options.env, 'GIT', 'git')
+        env = self._common_options.env
+        git = get_cmd(env, 'GIT', 'git')
 
         with LogFile.open(metadata.pkgdir, self.name) as logfile:
             if os.path.exists(base_srcdir):
                 if self.rev[0] == 'branch':
                     with pushd(base_srcdir):
-                        logfile.check_call(git + ['pull'])
+                        logfile.check_call(git + ['pull'], env=env)
             else:
                 log.pkg_fetch(self.name, 'from {}'.format(self.repository))
                 clone = ['git', 'clone', self.repository, base_srcdir]
                 if self.rev[0] in ['branch', 'tag']:
                     clone.extend(['--branch', self.rev[1]])
-                    logfile.check_call(clone)
+                    logfile.check_call(clone, env=env)
                 elif self.rev[0] == 'commit':
-                    logfile.check_call(clone)
+                    logfile.check_call(clone, env=env)
                     with pushd(base_srcdir):
-                        logfile.check_call(git + ['checkout', self.rev[1]])
+                        logfile.check_call(git + ['checkout', self.rev[1]],
+                                           env=env)
                 else:  # pragma: no cover
                     raise ValueError('unknown revision type {!r}'
                                      .format(self.rev[0]))

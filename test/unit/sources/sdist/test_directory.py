@@ -324,7 +324,7 @@ class TestDirectory(SDistTestCase):
             mrun.assert_any_call(
                 ['bfg9000', 'configure', builddir, '--prefix', '/usr/local'],
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, check=True
+                universal_newlines=True, check=True, env={}
             )
 
         with mock_open_log() as mopen, \
