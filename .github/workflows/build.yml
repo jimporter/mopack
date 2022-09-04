@@ -142,7 +142,6 @@ jobs:
     env:
       CYGROOT: C:\cygwin
       CYGCACHE: C:\cygwin\var\cache\setup
-      CONAN_CMAKE_GENERATOR: Ninja
       MOPACK_SKIPPED_TESTS: qt
 
     steps:
@@ -171,11 +170,17 @@ jobs:
       - name: Install Python dependencies
         run: >
           C:\cygwin\bin\bash -lc
-          "cd mopack && pip3.8 install ./bfg9000 '.[test]'"
+          "cd mopack &&
+          pip3.8 install ./bfg9000 '.[test]' &&
+          conan profile new default --detect &&
+          conan profile update settings.os.subsystem=cygwin default &&
+          echo tools.cmake.cmaketoolchain:generator=Ninja >> ~/.conan/global.conf"
       - name: Run tests
         run: >
           C:\cygwin\bin\bash -lc
-          "cd mopack && python3.8 setup.py coverage -q && coverage xml"
+          "cd mopack &&
+          python3.8 setup.py coverage -q &&
+          coverage xml"
       - name: Copy coverage from Cygwin
         run: |
           copy C:\cygwin\home\runneradmin\mopack\coverage.xml .
