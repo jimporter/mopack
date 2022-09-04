@@ -34,7 +34,7 @@ class TestLocal(IntegrationTest):
             'packages': [
                 cfg_conan_pkg(
                     'zlib', os.path.join(config, 'mopack-local.yml'),
-                    remote='zlib/1.2.11',
+                    remote='zlib/1.2.12',
                     options={'shared': True},
                     usage=cfg_pkg_config_usage(
                         pcname='zlib',

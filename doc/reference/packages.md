@@ -191,7 +191,7 @@ packages:
 ```
 
 `remote` <span class="subtitle">*required*</span>
-: The specifier for the package in the Conan repository, e.g. `zlib/1.2.11`.
+: The specifier for the package in the Conan repository, e.g. `zlib/1.2.12`.
 
 `build` <span class="subtitle">*optional; default:* `false`</span>
 : True if the package should be built from source; false otherwise.
