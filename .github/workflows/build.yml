@@ -35,10 +35,10 @@ jobs:
       MOPACK_SKIPPED_TESTS: ${{ join(matrix.skipped-tests, ' ') }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Cache Boost binaries
         if: startsWith(matrix.os, 'windows-') && matrix.boost-version
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         id: cache-boost
         with:
           path: C:\boost-${{ matrix.boost-version }}
@@ -47,11 +47,11 @@ jobs:
             matrix.msvc-version }}-python-${{ matrix.python-version }}-${{
             hashFiles('.github/workflows/build.yml') }}
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Clone bfg9000
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: jimporter/bfg9000
           path: bfg9000
@@ -67,7 +67,7 @@ jobs:
           sdk: ${{ matrix.win-sdk }}
       - name: Install Qt ${{ matrix.qt-version }}
         if: matrix.qt-version
-        uses: jurplel/install-qt-action@v2
+        uses: jurplel/install-qt-action@v3
         with:
           version: ${{ matrix.qt-version || '5.12.9' }}
       - name: Install Boost ${{ matrix.boost-version }} from binaries
@@ -134,7 +134,7 @@ jobs:
           python setup.py coverage -q
           coverage xml
       - name: Upload coverage
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           files: ./coverage.xml
   build-cygwin:
@@ -145,9 +145,9 @@ jobs:
       MOPACK_SKIPPED_TESTS: qt
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Clone bfg9000
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: jimporter/bfg9000
           path: bfg9000
@@ -185,16 +185,16 @@ jobs:
         run: |
           copy C:\cygwin\home\runneradmin\mopack\coverage.xml .
       - name: Upload coverage
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           files: ./coverage.xml
   lint:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python 3.10
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - name: Install dependencies
