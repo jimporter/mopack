@@ -34,6 +34,9 @@ packages:
           names: <submodules>
           required: false
 
+  This can also be set in a package's [`export`](file-structure.md#exports)
+  section.
+
 ## Source distributions
 
 ### directory
@@ -53,12 +56,13 @@ packages:
 `build` <span class="subtitle">*required*</span>
 : The [builder](builders.md) to use when resolving this package. Note that while
   this is required, it can be unset if the dependency defines the builder in its
-  `export` section.
+  [`export`](file-structure.md#exports) section.
 
 `usage` <span class="subtitle">*optional, default*: *from builder*</span>
 : The [usage](usage.md) to use when using this package. Some builders require
   this to be set, but others provide a default usage specification; the
-  dependency can also define the usage in its `export` section.
+  dependency can also define the usage in its
+  [`export`](file-structure.md#exports) section.
 
 ### git
 
