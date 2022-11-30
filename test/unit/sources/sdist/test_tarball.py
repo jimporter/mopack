@@ -95,14 +95,11 @@ class TestTarball(SDistTestCase):
 
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
         with mock.patch('mopack.sources.sdist.urlopen', self.mock_urlopen), \
-             mock.patch('tarfile.TarFile.extract') as mtar, \
+             mock.patch('tarfile.TarFile.extractall') as mtar, \
              mock.patch('os.path.isdir', return_value=True), \
              mock.patch('os.path.exists', return_value=False):
             pkg.fetch(self.metadata, self.config)
-            self.assertEqual(mtar.mock_calls, [
-                mock.call('hello-bfg/include', srcdir),
-                mock.call('hello-bfg/include/hello.hpp', srcdir),
-            ])
+            mtar.assert_called_once_with(srcdir, AlwaysEqual())
         self.check_resolve(pkg)
 
     def test_patch(self):

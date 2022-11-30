@@ -219,8 +219,8 @@ class TarballPackage(SDistPackage):
                     if self.files:
                         # XXX: This doesn't extract parents of our globs, so
                         # owners/permissions won't be applied to them...
-                        for i in filter_glob(self.files, names):
-                            arc.extract(i, base_srcdir)
+                        filtered = filter_glob(self.files, names)
+                        arc.extractall(base_srcdir, members=filtered)
                     else:
                         arc.extractall(base_srcdir)
 
