@@ -16,9 +16,9 @@ jobs:
 
         include:
           - {os: ubuntu-latest, extra-tests: [apt, mingw-cross]}
-          - {os: windows-latest, compiler: msvc, msvc-version: '14.33',
+          - {os: windows-latest, compiler: msvc, msvc-version: '14.34',
              win-sdk: '10.0.20348.0', boost-version: '1.78.0',
-             qt-version: '5.12.9'}
+             qt-version: '5.15.2'}
           - {os: windows-latest, compiler: cc, skipped-tests: [boost, qt]}
         exclude:
           - os: ubuntu-latest
@@ -69,7 +69,7 @@ jobs:
         if: matrix.qt-version
         uses: jurplel/install-qt-action@v3
         with:
-          version: ${{ matrix.qt-version || '5.12.9' }}
+          version: ${{ matrix.qt-version }}
       - name: Install Boost ${{ matrix.boost-version }} from binaries
         if: startsWith(matrix.os, 'windows-') && matrix.boost-version
         run: |
