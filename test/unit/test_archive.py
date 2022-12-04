@@ -8,6 +8,27 @@ from mopack import archive
 
 
 class TestTarArchive(TestCase):
+    def test_create(self):
+        f = mock.MagicMock()
+        with mock.patch('tarfile.open') as mtar:
+            archive.TarArchive(f, 'r:tar')
+            mtar.assert_called_once_with(mode='r:tar', fileobj=f)
+
+        with mock.patch('tarfile.open') as mtar, \
+             mock.patch('zipfile.is_zipfile', return_value=False):
+            archive.TarArchive(f, 'r:*')
+            mtar.assert_called_once_with(mode='r:*', fileobj=f)
+
+        with mock.patch('tarfile.open') as mtar, \
+             mock.patch('zipfile.is_zipfile', return_value=False):
+            archive.TarArchive(f, 'r')
+            mtar.assert_called_once_with(mode='r', fileobj=f)
+
+        with mock.patch('tarfile.open') as mtar, \
+             mock.patch('zipfile.is_zipfile', return_value=False):
+            archive.TarArchive(f)
+            mtar.assert_called_once_with(mode='r:*', fileobj=f)
+
     def test_open(self):
         f = mock.MagicMock()
         with mock.patch('tarfile.open') as mtar:
@@ -83,7 +104,31 @@ class TestTarArchive(TestCase):
 
 
 class TestZipArchive(TestCase):
-    def test_open_zip(self):
+    def test_create(self):
+        f = mock.MagicMock()
+        with mock.patch('zipfile.ZipFile') as mzip:
+            archive.ZipArchive(f, 'r:zip')
+            mzip.assert_called_once_with(f, 'r')
+
+        with mock.patch('zipfile.ZipFile') as mzip, \
+             mock.patch('zipfile.is_zipfile', return_value=True):
+            archive.ZipArchive(f, 'r:*')
+            mzip.assert_called_once_with(f, 'r')
+
+        with mock.patch('zipfile.ZipFile') as mzip, \
+             mock.patch('zipfile.is_zipfile', return_value=True):
+            archive.ZipArchive(f, 'r')
+            mzip.assert_called_once_with(f, 'r')
+
+        with mock.patch('zipfile.ZipFile') as mzip, \
+             mock.patch('zipfile.is_zipfile', return_value=True):
+            archive.ZipArchive(f)
+            mzip.assert_called_once_with(f, 'r')
+
+        with self.assertRaises(ValueError):
+            archive.ZipArchive(f, 'r:gzip')
+
+    def test_open(self):
         f = mock.MagicMock()
         with mock.patch('zipfile.ZipFile') as mzip:
             archive.open(f, 'r:zip')
