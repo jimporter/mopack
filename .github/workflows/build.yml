@@ -17,7 +17,7 @@ jobs:
         include:
           - {os: ubuntu-latest, extra-tests: [apt, mingw-cross]}
           - {os: windows-latest, compiler: msvc, msvc-version: '14.34',
-             win-sdk: '10.0.20348.0', boost-version: '1.78.0',
+             win-sdk: '10.0.20348.0', boost-version: '1.80.0',
              qt-version: '5.15.2'}
           - {os: windows-latest, compiler: cc, skipped-tests: [boost, qt]}
         exclude:
