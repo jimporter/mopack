@@ -68,7 +68,8 @@ packages:
 ## Project-wide options
 
 In addition to specifying configuration options for a particular package, you
-can also specify options for *all* packages, or all those of a particular type:
+can also specify [options](../reference/file-structure.md#options) for *all*
+packages, or all those of a particular type:
 
 ```yaml
 options:
@@ -137,9 +138,10 @@ build dependencies so that each package has all of its build requirements met.
 ### Exporting package configuration
 
 When creating a source distribution package, you can make it easier to use this
-package by exporting its configuration. This allows users of your package to
-omit the details about how to build and use the package. For example, you can
-include the following in your package's `mopack.yml` file:
+package by [exporting](../reference/file-structure.md#exports) its
+configuration. This allows users of your package to omit the details about how
+to build and use the package. For example, you can include the following in your
+package's `mopack.yml` file:
 
 ```yaml
 export:
@@ -162,7 +164,8 @@ dependency simply by including the appropriate configuration setting, as in our
 
 ## Variable interpolation
 
-For more advanced scenarios, you can take advantage of variable interpolation to
+For more advanced scenarios, you can take advantage of [variable
+interpolation](../reference/file-structure.md#expression-syntax) to
 programmatically specify package configurations. For example, suppose we wanted
 to (partially) rewrite our [first configuration](#your-first-configuration)
 using a [`custom`](../reference/builders.md#custom) builder:
