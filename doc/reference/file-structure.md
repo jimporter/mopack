@@ -85,3 +85,5 @@ packages:
 ```
 
 ## Expression Syntax
+
+[gnu-directory-vars]: https://www.gnu.org/prep/standards/html_node/Directory-Variables.html
