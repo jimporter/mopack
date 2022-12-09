@@ -146,7 +146,7 @@ which list the package dependencies and how to resolve them;
 <a href="#options">options</a>, which define various cross-package settings; and
 <a href="#exports">exports</a>, which tell other packages how to use the current one.</p>
 <h2 id="exports">Exports<a class="headerlink" href="#exports" title="Permanent link">§</a></h2>
-<p>The export section allows a package to declare how <em>other</em> packages should use
+<p>The <code>export</code> section allows a package to declare how <em>other</em> packages should use
 it as a dependency, when used as a <a href="../packages/#source-distributions">source
 distribution</a>.</p>
 <pre><code class="yaml">export:
@@ -176,6 +176,8 @@ distribution</a>.</p>
   this one will need to define it.</dd>
 </dl>
 <h2 id="options">Options<a class="headerlink" href="#options" title="Permanent link">§</a></h2>
+<p>The <code>options</code> section lets you specify project-wide options to configure <em>all</em>
+your dependencies, or all of those with a particular source or builder.</p>
 <pre><code class="yaml">options:
   target_platform: &lt;platform&gt;
   env: &lt;dict&gt;
@@ -185,6 +187,24 @@ distribution</a>.</p>
   builders:  # ...
 </code></pre>
 
+<dl>
+<dt><code>target_platform</code> <span class="subtitle"><em>optional, default</em>: <em>host platform</em></span></dt>
+<dd>The target platform to build for. This is useful for cross-compilation.
+  Examples of target platforms include: <code>linux</code>, <code>windows</code>, or <code>darwin</code> (macOS).</dd>
+<dt><code>env</code> <span class="subtitle"><em>optional, default:</em> <code>null</code></span></dt>
+<dd>A dictionary of environment variables and their values to set while resolving
+  dependencies. These override current environment variables of the same name
+  (e.g. from the shell).</dd>
+<dt><code>deploy_paths</code> <span class="subtitle"><em>optional, default:</em> <code>null</code></span></dt>
+<dd>A dictionary mapping <em>kinds</em> of deploy paths to their actual paths. Each kind
+  of path should be one of the [GNU directory variables][gnu-directory-vars]. At
+  the simplest, you can just specify the <code>prefix</code> path. Note: the exact kinds
+  that are supported depend on the package source and builder.</dd>
+<dt><code>sources</code> <span class="subtitle"><em>optional, default:</em> <code>null</code></span></dt>
+<dd>A dictionary of options for specific <a href="../packages/">package sources</a>.</dd>
+<dt><code>builders</code> <span class="subtitle"><em>optional, default:</em> <code>null</code></span></dt>
+<dd>A dictionary of options for specific <a href="../builders/">package builders</a>.</dd>
+</dl>
 <h2 id="packages">Packages<a class="headerlink" href="#packages" title="Permanent link">§</a></h2>
 <pre><code class="yaml">packages:
   my_pkg:

@@ -199,7 +199,8 @@ like <a href="../../reference/packages/#apt"><code>apt</code></a> or
 
 <h2 id="project-wide-options">Project-wide options<a class="headerlink" href="#project-wide-options" title="Permanent link">§</a></h2>
 <p>In addition to specifying configuration options for a particular package, you
-can also specify options for <em>all</em> packages, or all those of a particular type:</p>
+can also specify <a href="../../reference/file-structure/#options">options</a> for <em>all</em>
+packages, or all those of a particular type:</p>
 <pre><code class="yaml">options:
   target_platform: linux
 
@@ -258,9 +259,10 @@ one.</p>
 </div>
 <h3 id="exporting-package-configuration">Exporting package configuration<a class="headerlink" href="#exporting-package-configuration" title="Permanent link">§</a></h3>
 <p>When creating a source distribution package, you can make it easier to use this
-package by exporting its configuration. This allows users of your package to
-omit the details about how to build and use the package. For example, you can
-include the following in your package's <code>mopack.yml</code> file:</p>
+package by <a href="../../reference/file-structure/#exports">exporting</a> its
+configuration. This allows users of your package to omit the details about how
+to build and use the package. For example, you can include the following in your
+package's <code>mopack.yml</code> file:</p>
 <pre><code class="yaml">export:
   build: bfg9000
 </code></pre>
@@ -277,7 +279,8 @@ relying on mopack to fill in the blanks:</p>
 dependency simply by including the appropriate configuration setting, as in our
 <a href="#your-first-configuration">first example</a>.</p>
 <h2 id="variable-interpolation">Variable interpolation<a class="headerlink" href="#variable-interpolation" title="Permanent link">§</a></h2>
-<p>For more advanced scenarios, you can take advantage of variable interpolation to
+<p>For more advanced scenarios, you can take advantage of <a href="../../reference/file-structure/#expression-syntax">variable
+interpolation</a> to
 programmatically specify package configurations. For example, suppose we wanted
 to (partially) rewrite our <a href="#your-first-configuration">first configuration</a>
 using a <a href="../../reference/builders/#custom"><code>custom</code></a> builder:</p>
