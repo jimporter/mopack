@@ -12,9 +12,13 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         compiler: [cc, msvc]
-        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
 
         include:
+          # Python 3.6 builds
+          - {os: ubuntu-20.04, compiler: cc, python-version: '3.6'}
+
+          # Extra settings for matrix builds
           - {os: ubuntu-latest, extra-tests: [apt, mingw-cross]}
           - {os: windows-latest, compiler: msvc, msvc-version: '14.34',
              win-sdk: '10.0.20348.0', boost-version: '1.80.0',
@@ -25,10 +29,6 @@ jobs:
             compiler: msvc
           - os: macos-latest
             compiler: msvc
-          - os: windows-latest
-            python-version: '3.6'
-          - os: macos-latest
-            python-version: '3.6'
       fail-fast: false
     env:
       MOPACK_EXTRA_TESTS: ${{ join(matrix.extra-tests, ' ') }}
@@ -84,15 +84,16 @@ jobs:
           echo "BOOST_INCLUDEDIR=${boostroot}" >> ${env:GITHUB_ENV}
           echo "BOOST_LIBRARYDIR=${boostroot}\lib64-msvc-${msvcver}" >> ${env:GITHUB_ENV}
       - name: Install Linux dependencies
-        if: matrix.os == 'ubuntu-latest'
+        if: startsWith(matrix.os, 'ubuntu-')
         run: |
           sudo apt-get update && sudo apt-get install \
-            mingw-w64 ninja-build libboost-dev libboost-regex-dev qt5-default
+            libboost-dev libboost-regex-dev mingw-w64 ninja-build \
+            qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools
           echo "MOPACK_INCLUDE_PATH=/usr/include" >> .mopack_test_env
           echo "MOPACK_LIB_NAMES=lib{}.so" >> .mopack_test_env
           echo "MOPACK_LIB_PATH=/usr/lib/x86_64-linux-gnu" >> .mopack_test_env
       - name: Install Windows dependencies
-        if: matrix.os == 'windows-latest'
+        if: startsWith(matrix.os, 'windows-')
         run: |
           cinst ninja
           ${gnomebase} = "https://ftp.gnome.org/pub/gnome/binaries/win32"
@@ -110,7 +111,7 @@ jobs:
 
           echo "MOPACK_LIB_NAMES={}.lib;lib{}.dll.a" >> .mopack_test_env
       - name: Install macOS dependencies
-        if: matrix.os == 'macos-latest'
+        if: startsWith(matrix.os, 'macos-')
         run: |
           brew install ninja pkg-config boost qt5
           brew link qt5 --force
