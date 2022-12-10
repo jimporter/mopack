@@ -206,6 +206,9 @@ your dependencies, or all of those with a particular source or builder.</p>
 <dd>A dictionary of options for specific <a href="../builders/">package builders</a>.</dd>
 </dl>
 <h2 id="packages">Packages<a class="headerlink" href="#packages" title="Permanent link">§</a></h2>
+<p>The <code>packages</code> section lists all the <a href="../packages/">package dependencies</a> for
+your project, as well as how to resolve them. Packages are specified as a
+dictionary mapping package names to their configurations:</p>
 <pre><code class="yaml">packages:
   my_pkg:
     source: &lt;source&gt;
