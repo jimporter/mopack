@@ -30,6 +30,7 @@ nav:
     - Packages: reference/packages.md
     - Builders: reference/builders.md
     - Usage: reference/usage.md
+    - Expressions: reference/expressions.md
     - Command-Line Interface: reference/command-line.md
     - Environment Variables: reference/environment-vars.md
   - About:

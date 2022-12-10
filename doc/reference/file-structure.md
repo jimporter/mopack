@@ -88,6 +88,29 @@ packages:
     # ...
 ```
 
-## Expression Syntax
+You can also specify a list of configurations for a given package; in addition
+to the usual properties, each element of the list (except the last) must have an
+`if` property. mopack will then use the first configuration whose conditional is
+satisfied:
+
+```yaml
+packages:
+  my_pkg:
+    - if: <condition>
+      source: <source>
+      # ...
+    - source: <source>
+      # ...
+```
+
+Conditionals use mopack's [expression syntax](expressions.md), though unlike in
+other contexts, the `${}` sigil isn't required:
+
+```yaml
+packages:
+  my_pkg:
+    - if: target_platform == 'linux'
+      # ...
+```
 
 [gnu-directory-vars]: https://www.gnu.org/prep/standards/html_node/Directory-Variables.html
