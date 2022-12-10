@@ -85,6 +85,10 @@
 </li>
                                     
 <li >
+    <a href="../expressions/">Expressions</a>
+</li>
+                                    
+<li >
     <a href="../command-line/">Command-Line Interface</a>
 </li>
                                     
@@ -135,7 +139,6 @@
             <li><a href="#exports">Exports</a></li>
             <li><a href="#options">Options</a></li>
             <li><a href="#packages">Packages</a></li>
-            <li><a href="#expression-syntax">Expression Syntax</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
@@ -215,7 +218,26 @@ dictionary mapping package names to their configurations:</p>
     # ...
 </code></pre>
 
-<h2 id="expression-syntax">Expression Syntax<a class="headerlink" href="#expression-syntax" title="Permanent link">§</a></h2></div>
+<p>You can also specify a list of configurations for a given package; in addition
+to the usual properties, each element of the list (except the last) must have an
+<code>if</code> property. mopack will then use the first configuration whose conditional is
+satisfied:</p>
+<pre><code class="yaml">packages:
+  my_pkg:
+    - if: &lt;condition&gt;
+      source: &lt;source&gt;
+      # ...
+    - source: &lt;source&gt;
+      # ...
+</code></pre>
+
+<p>Conditionals use mopack's <a href="../expressions/">expression syntax</a>, though unlike in
+other contexts, the <code>${}</code> sigil isn't required:</p>
+<pre><code class="yaml">packages:
+  my_pkg:
+    - if: target_platform == 'linux'
+      # ...
+</code></pre></div>
         </div>
 
         <footer class="col-md-12">
