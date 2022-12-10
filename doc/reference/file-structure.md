@@ -77,6 +77,10 @@ options:
 
 ## Packages
 
+The `packages` section lists all the [package dependencies](packages.md) for
+your project, as well as how to resolve them. Packages are specified as a
+dictionary mapping package names to their configurations:
+
 ```yaml
 packages:
   my_pkg:
