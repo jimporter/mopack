@@ -88,6 +88,8 @@ packages:
     # ...
 ```
 
+### Conditional package definitions
+
 You can also specify a list of configurations for a given package; in addition
 to the usual properties, each element of the list (except the last) must have an
 `if` property. mopack will then use the first configuration whose conditional is
