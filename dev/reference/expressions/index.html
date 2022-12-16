@@ -136,11 +136,31 @@
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
         <li class="main active"><a href="#expressions">Expressions</a></li>
+            <li><a href="#introducing-expressions">Introducing expressions</a></li>
+            <li><a href="#literals">Literals</a></li>
+            <li><a href="#variables">Variables</a></li>
+            <li><a href="#subscripts">Subscripts</a></li>
+            <li><a href="#operators">Operators</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h1 id="expressions">Expressions<a class="headerlink" href="#expressions" title="Permanent link">§</a></h1></div>
+<h1 id="expressions">Expressions<a class="headerlink" href="#expressions" title="Permanent link">§</a></h1>
+<p>Sometimes, how a dependency should be resolved depends on the system you're
+using. For example, you would only use <a href="../packages/#apt">apt</a> dependencies on
+Linux systems. To support this, mopack lets you write your dependency
+configurations using expressions.</p>
+<h2 id="introducing-expressions">Introducing expressions<a class="headerlink" href="#introducing-expressions" title="Permanent link">§</a></h2>
+<p>You can introduce expressions with <code>${ ... }</code>, or <code>$</code> if the expression is just
+a variable name. When defining the expression for <a href="../file-structure/#conditional-package-definitions">conditional package
+definitions</a>, this introducer
+isn't necessary (a conditional is always an expression to begin with).</p>
+<h2 id="literals">Literals<a class="headerlink" href="#literals" title="Permanent link">§</a></h2>
+<!-- boolean, null, integer, string, array -->
+
+<h2 id="variables">Variables<a class="headerlink" href="#variables" title="Permanent link">§</a></h2>
+<h2 id="subscripts">Subscripts<a class="headerlink" href="#subscripts" title="Permanent link">§</a></h2>
+<h2 id="operators">Operators<a class="headerlink" href="#operators" title="Permanent link">§</a></h2></div>
         </div>
 
         <footer class="col-md-12">
