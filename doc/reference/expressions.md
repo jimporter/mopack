@@ -7,10 +7,36 @@ configurations using expressions.
 
 ## Introducing expressions
 
-You can introduce expressions with `${ ... }`, or `$` if the expression is just
-a variable name. When defining the expression for [conditional package
+You can introduce expressions with `${{ ... }}`, or `$` if the expression is
+just a variable name:
+
+```yaml
+packages:
+  my_pkg:
+    # ...
+    build:
+      type: custom
+      build_commands:
+        - ./configure --prefix=${{ deploy_paths['prefix'] }}
+    usage:
+      type: path
+      # ...
+      compile_flags: -I$srcdir/include
+```
+
+When defining the expression for [conditional package
 definitions](file-structure.md#conditional-package-definitions), this introducer
-isn't necessary (a conditional is always an expression to begin with).
+isn't necessary (a conditional is always an expression to begin with):
+
+```yaml
+packages:
+  hello:
+    - if: host_platform == 'linux'
+      source: apt
+      # ...
+    - source: tarball
+      # ...
+```
 
 ## Literals
 
