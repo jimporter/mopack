@@ -151,10 +151,33 @@ using. For example, you would only use <a href="../packages/#apt">apt</a> depend
 Linux systems. To support this, mopack lets you write your dependency
 configurations using expressions.</p>
 <h2 id="introducing-expressions">Introducing expressions<a class="headerlink" href="#introducing-expressions" title="Permanent link">§</a></h2>
-<p>You can introduce expressions with <code>${ ... }</code>, or <code>$</code> if the expression is just
-a variable name. When defining the expression for <a href="../file-structure/#conditional-package-definitions">conditional package
+<p>You can introduce expressions with <code>${{ ... }}</code>, or <code>$</code> if the expression is
+just a variable name:</p>
+<pre><code class="yaml">packages:
+  my_pkg:
+    # ...
+    build:
+      type: custom
+      build_commands:
+        - ./configure --prefix=${{ deploy_paths['prefix'] }}
+    usage:
+      type: path
+      # ...
+      compile_flags: -I$srcdir/include
+</code></pre>
+
+<p>When defining the expression for <a href="../file-structure/#conditional-package-definitions">conditional package
 definitions</a>, this introducer
-isn't necessary (a conditional is always an expression to begin with).</p>
+isn't necessary (a conditional is always an expression to begin with):</p>
+<pre><code class="yaml">packages:
+  hello:
+    - if: host_platform == 'linux'
+      source: apt
+      # ...
+    - source: tarball
+      # ...
+</code></pre>
+
 <h2 id="literals">Literals<a class="headerlink" href="#literals" title="Permanent link">§</a></h2>
 <!-- boolean, null, integer, string, array -->
 
