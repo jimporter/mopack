@@ -184,7 +184,7 @@ your dependencies, or all of those with a particular source or builder.</p>
 <pre><code class="yaml">options:
   target_platform: &lt;platform&gt;
   env: &lt;dict&gt;
-  deploy_paths: &lt;dict&gt;
+  deploy_dirs: &lt;dict&gt;
 
   sources:  # ...
   builders:  # ...
@@ -198,11 +198,11 @@ your dependencies, or all of those with a particular source or builder.</p>
 <dd>A dictionary of environment variables and their values to set while resolving
   dependencies. These override current environment variables of the same name
   (e.g. from the shell).</dd>
-<dt><code>deploy_paths</code> <span class="subtitle"><em>optional, default:</em> <code>null</code></span></dt>
-<dd>A dictionary mapping <em>kinds</em> of deploy paths to their actual paths. Each kind
-  of path should be one of the <a href="https://www.gnu.org/prep/standards/html_node/Directory-Variables.html">GNU directory variables</a>. At
-  the simplest, you can just specify the <code>prefix</code> path. Note: the exact kinds
-  that are supported depend on the package source and builder.</dd>
+<dt><code>deploy_dirs</code> <span class="subtitle"><em>optional, default:</em> <code>null</code></span></dt>
+<dd>A dictionary mapping <em>kinds</em> of deploy directories to their actual locations.
+  Each kind should be one of the <a href="https://www.gnu.org/prep/standards/html_node/Directory-Variables.html">GNU directory variables</a>.
+  At the simplest, you can just specify the <code>prefix</code> variable. Note: the exact
+  kinds that are supported depend on the package source and builder.</dd>
 <dt><code>sources</code> <span class="subtitle"><em>optional, default:</em> <code>null</code></span></dt>
 <dd>A dictionary of options for specific <a href="../packages/">package sources</a>.</dd>
 <dt><code>builders</code> <span class="subtitle"><em>optional, default:</em> <code>null</code></span></dt>
