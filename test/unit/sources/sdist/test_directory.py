@@ -308,9 +308,9 @@ class TestDirectory(SDistTestCase):
             pkg.get_usage(self.metadata, ['invalid'])
 
     def test_deploy(self):
-        deploy_paths = {'prefix': '/usr/local'}
+        deploy_dirs = {'prefix': '/usr/local'}
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
-                                deploy_paths=deploy_paths)
+                                deploy_dirs=deploy_dirs)
         self.assertEqual(pkg.should_deploy, True)
 
         with mock_open_log() as mopen, \

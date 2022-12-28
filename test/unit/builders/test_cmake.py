@@ -73,9 +73,9 @@ class TestCMakeBuilder(BuilderTest):
             os.path.join(self.config_dir, 'toolchain.cmake')
         ])
 
-    def test_deploy_paths(self):
-        deploy_paths = {'prefix': '/usr/local', 'goofy': '/foo/bar'}
-        builder = self.make_builder('foo', deploy_paths=deploy_paths)
+    def test_deploy_dirs(self):
+        deploy_dirs = {'prefix': '/usr/local', 'goofy': '/foo/bar'}
+        builder = self.make_builder('foo', deploy_dirs=deploy_dirs)
         self.assertEqual(builder.name, 'foo')
         self.assertEqual(builder.extra_args, ShellArguments())
         self.check_build(builder, extra_args=[

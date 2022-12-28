@@ -31,11 +31,11 @@ class CommonOptions(FreezeDried, BaseOptions):
     def upgrade(config, version):
         return config
 
-    def __init__(self, deploy_paths=None):
+    def __init__(self, deploy_dirs=None):
         self.strict = types.Unset
         self.target_platform = types.Unset
         self.env = {}
-        self.deploy_paths = deploy_paths or {}
+        self.deploy_dirs = deploy_dirs or {}
 
     @staticmethod
     def _fill_env(env, new_env):
@@ -65,13 +65,13 @@ class CommonOptions(FreezeDried, BaseOptions):
     @memoize_method
     def expr_symbols(self):
         deploy_vars = {k: placeholder(Path(v)) for k, v in
-                       self.deploy_paths.items()}
+                       self.deploy_dirs.items()}
 
         return ExprSymbols(
             host_platform=platform_name(),
             target_platform=self.target_platform,
             env=self.env,
-            deploy_paths=deploy_vars,
+            deploy_dirs=deploy_vars,
         )
 
     def __eq__(self, rhs):
@@ -89,8 +89,8 @@ class Options(FreezeDried):
                       'builders': make_builder_options}
     option_kinds = list(_option_makers.keys())
 
-    def __init__(self, deploy_paths=None):
-        self.common = CommonOptions(deploy_paths)
+    def __init__(self, deploy_dirs=None):
+        self.common = CommonOptions(deploy_dirs)
         for i in self.option_kinds:
             setattr(self, i, {})
 

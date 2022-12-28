@@ -178,9 +178,9 @@ class BaseConfig:
 class Config(BaseConfig):
     child = False
 
-    def __init__(self, filenames, options=None, deploy_paths=None):
+    def __init__(self, filenames, options=None, deploy_dirs=None):
         super().__init__()
-        self.options = Options(deploy_paths)
+        self.options = Options(deploy_dirs)
         self._process_options('<command-line>', options or {})
         self._load_configs(filenames)
 

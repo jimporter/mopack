@@ -58,7 +58,7 @@ def resolve(parser, args):
     if os.environ.get(nested_invoke):
         return 3
 
-    config_data = config.Config(args.file, args.options, args.deploy_paths)
+    config_data = config.Config(args.file, args.options, args.deploy_dirs)
     os.environ[nested_invoke] = args.directory
     commands.resolve(config_data, commands.get_package_dir(args.directory))
 
@@ -177,11 +177,11 @@ def main():
     )
     resolve_p.set_defaults(func=resolve)
     resolve_p.add_argument('--directory', default='.', type=os.path.abspath,
-                           metavar='PATH', complete='directory',
+                           metavar='DIR', complete='directory',
                            help='directory to store local package data in')
     resolve_p.add_argument('-P', '--deploy-path',
                            action=arguments.KeyValueAction,
-                           dest='deploy_paths', metavar='TYPE=PATH',
+                           dest='deploy_dirs', metavar='KIND=DIR',
                            help='directories to deploy packages to')
     resolve_p.add_argument('-o', '--option',
                            action=arguments.ConfigOptionAction,

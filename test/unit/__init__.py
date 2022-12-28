@@ -86,8 +86,8 @@ class OptionsTest(TestCase):
     def config_dir(self):
         return os.path.dirname(self.config_file)
 
-    def make_options(self, common_options=None, deploy_paths=None):
-        options = Options(deploy_paths)
+    def make_options(self, common_options=None, deploy_dirs=None):
+        options = Options(deploy_dirs)
         if common_options:
             options.common.accumulate(common_options)
         with mock.patch.object(os, 'environ', return_value={}):

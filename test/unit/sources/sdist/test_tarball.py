@@ -304,9 +304,9 @@ class TestTarball(SDistTestCase):
         self.check_resolve(pkg)
 
     def test_deploy(self):
-        deploy_paths = {'prefix': '/usr/local'}
+        deploy_dirs = {'prefix': '/usr/local'}
         pkg = self.make_package('foo', url=self.srcurl, build='bfg9000',
-                                deploy_paths=deploy_paths)
+                                deploy_dirs=deploy_dirs)
         self.assertEqual(pkg.should_deploy, True)
         self.check_fetch(pkg)
 

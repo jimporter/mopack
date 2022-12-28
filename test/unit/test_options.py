@@ -16,7 +16,7 @@ class TestCommonOptions(TestCase):
         self.assertEqual(opts.strict, False)
         self.assertEqual(opts.target_platform, platform_name())
         self.assertEqual(opts.env, os.environ)
-        self.assertEqual(opts.deploy_paths, {})
+        self.assertEqual(opts.deploy_dirs, {})
 
     def test_strict(self):
         opts = CommonOptions()

@@ -48,10 +48,10 @@ def slurp(filename):
 
 
 def cfg_common_options(*, strict=False, target_platform=platform_name(),
-                       env=AlwaysEqual(), deploy_paths={}):
+                       env=AlwaysEqual(), deploy_dirs={}):
     return {'_version': 1, 'strict': strict,
             'target_platform': target_platform, 'env': env,
-            'deploy_paths': deploy_paths}
+            'deploy_dirs': deploy_dirs}
 
 
 def cfg_bfg9000_options(toolchain=None):

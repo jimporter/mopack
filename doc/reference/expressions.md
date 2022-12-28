@@ -17,7 +17,7 @@ packages:
     build:
       type: custom
       build_commands:
-        - ./configure --prefix=${{ deploy_paths['prefix'] }}
+        - ./configure --prefix=${{ deploy_dirs['prefix'] }}
     usage:
       type: path
       # ...

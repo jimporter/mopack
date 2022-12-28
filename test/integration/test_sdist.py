@@ -94,7 +94,7 @@ class TestTarball(SDistTest):
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
             'options': cfg_options(
-                common={'deploy_paths': {'prefix': self.prefix}},
+                common={'deploy_dirs': {'prefix': self.prefix}},
                 bfg9000={}
             ),
             'packages': [
@@ -135,7 +135,7 @@ class TestTarballPatch(SDistTest):
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
             'options': cfg_options(
-                common={'deploy_paths': {'prefix': self.prefix}},
+                common={'deploy_dirs': {'prefix': self.prefix}},
                 bfg9000={}
             ),
             'packages': [
@@ -178,7 +178,7 @@ class TestGit(SDistTest):
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
             'options': cfg_options(
-                common={'deploy_paths': {'prefix': self.prefix}},
+                common={'deploy_dirs': {'prefix': self.prefix}},
                 bfg9000={}
             ),
             'packages': [

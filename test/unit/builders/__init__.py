@@ -17,8 +17,8 @@ class BuilderTest(OptionsTest):
         return os.path.join(self.pkgdir, 'build', name, pkgconfig)
 
     def make_options(self, builder_type=None, *, common_options=None,
-                     this_options=None, deploy_paths=None, config_file=None):
-        options = super().make_options(common_options, deploy_paths)
+                     this_options=None, deploy_dirs=None, config_file=None):
+        options = super().make_options(common_options, deploy_dirs)
         if this_options:
             type = (builder_type or self.builder_type).type
             options.builders[type].accumulate(
@@ -28,7 +28,7 @@ class BuilderTest(OptionsTest):
         return options
 
     def make_builder(self, *args, common_options=None, this_options=None,
-                     deploy_paths=None, usage=None, **kwargs):
+                     deploy_dirs=None, usage=None, **kwargs):
         if len(args) == 1:
             builder_type = self.builder_type
             pkg = args[0]
@@ -38,7 +38,7 @@ class BuilderTest(OptionsTest):
         if isinstance(pkg, str):
             options = self.make_options(
                 builder_type, common_options=common_options,
-                this_options=this_options, deploy_paths=deploy_paths
+                this_options=this_options, deploy_dirs=deploy_dirs
             )
             pkg = MockPackage(pkg, srcdir=self.srcdir, _options=options)
 

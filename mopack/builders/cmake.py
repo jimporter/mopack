@@ -50,9 +50,9 @@ class CMakeBuilder(Builder):
     def _toolchain_args(self, toolchain):
         return ['-DCMAKE_TOOLCHAIN_FILE=' + toolchain] if toolchain else []
 
-    def _install_args(self, deploy_paths):
+    def _install_args(self, deploy_dirs):
         args = []
-        for k, v in deploy_paths.items():
+        for k, v in deploy_dirs.items():
             if k in _known_install_types:
                 args.append('-DCMAKE_INSTALL_{}:PATH={}'
                             .format(k.upper(), os.path.abspath(v)))
@@ -69,7 +69,7 @@ class CMakeBuilder(Builder):
                 logfile.check_call(
                     cmake + [path_values['srcdir'], '-G', 'Ninja'] +
                     self._toolchain_args(self._this_options.toolchain) +
-                    self._install_args(self._common_options.deploy_paths) +
+                    self._install_args(self._common_options.deploy_dirs) +
                     self.extra_args.fill(**path_values),
                     env=env
                 )

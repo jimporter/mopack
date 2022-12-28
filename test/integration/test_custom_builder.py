@@ -65,7 +65,7 @@ class TestCustomBuilderDeploy(IntegrationTest):
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
             'options': cfg_options(
-                common={'deploy_paths': {'prefix': self.prefix}}
+                common={'deploy_dirs': {'prefix': self.prefix}}
             ),
             'packages': [
                 cfg_tarball_pkg(

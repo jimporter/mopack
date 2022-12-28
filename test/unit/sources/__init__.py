@@ -14,8 +14,8 @@ class SourceTest(OptionsTest):
         self.metadata = Metadata(self.pkgdir)
 
     def make_options(self, pkg_type=None, *, common_options=None,
-                     this_options=None, deploy_paths=None, config_file=None):
-        options = super().make_options(common_options, deploy_paths)
+                     this_options=None, deploy_dirs=None, config_file=None):
+        options = super().make_options(common_options, deploy_dirs)
         if this_options:
             source = (pkg_type or self.pkg_type).source
             options.sources[source].accumulate(
@@ -25,7 +25,7 @@ class SourceTest(OptionsTest):
         return options
 
     def make_package(self, *args, common_options=None, this_options=None,
-                     deploy_paths=None, **kwargs):
+                     deploy_dirs=None, **kwargs):
         if len(args) == 1:
             pkg_type = self.pkg_type
             name = args[0]
@@ -35,5 +35,5 @@ class SourceTest(OptionsTest):
         kwargs.setdefault('config_file', self.config_file)
         opts = self.make_options(pkg_type, common_options=common_options,
                                  this_options=this_options,
-                                 deploy_paths=deploy_paths)
+                                 deploy_dirs=deploy_dirs)
         return pkg_type(name, _options=opts, **kwargs)

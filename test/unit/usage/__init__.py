@@ -14,7 +14,7 @@ class UsageTest(OptionsTest):
         super().setUp()
         self.metadata = Metadata(self.pkgdir)
 
-    def make_usage(self, *args, common_options=None, deploy_paths=None,
+    def make_usage(self, *args, common_options=None, deploy_dirs=None,
                    submodules=None, **kwargs):
         if len(args) == 1:
             usage_type = self.usage_type
@@ -23,7 +23,7 @@ class UsageTest(OptionsTest):
             usage_type, pkg = args
 
         if isinstance(pkg, str):
-            options = self.make_options(common_options, deploy_paths)
+            options = self.make_options(common_options, deploy_dirs)
             pkg = MockPackage(pkg, srcdir=self.srcdir, builddir=self.builddir,
                               submodules=submodules, _options=options)
 

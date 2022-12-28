@@ -48,7 +48,7 @@ your dependencies, or all of those with a particular source or builder.
 options:
   target_platform: <platform>
   env: <dict>
-  deploy_paths: <dict>
+  deploy_dirs: <dict>
 
   sources:  # ...
   builders:  # ...
@@ -63,11 +63,11 @@ options:
   dependencies. These override current environment variables of the same name
   (e.g. from the shell).
 
-`deploy_paths` <span class="subtitle">*optional, default:* `null`</span>
-: A dictionary mapping *kinds* of deploy paths to their actual paths. Each kind
-  of path should be one of the [GNU directory variables][gnu-directory-vars]. At
-  the simplest, you can just specify the `prefix` path. Note: the exact kinds
-  that are supported depend on the package source and builder.
+`deploy_dirs` <span class="subtitle">*optional, default:* `null`</span>
+: A dictionary mapping *kinds* of deploy directories to their actual locations.
+  Each kind should be one of the [GNU directory variables][gnu-directory-vars].
+  At the simplest, you can just specify the `prefix` variable. Note: the exact
+  kinds that are supported depend on the package source and builder.
 
 `sources` <span class="subtitle">*optional, default:* `null`</span>
 : A dictionary of options for specific [package sources](packages.md).
