@@ -44,6 +44,30 @@ packages:
 
 ## Variables
 
+`cfgdir` <span class="subtitle">*availability*: everywhere</span>
+: FIXME
+
+`srcdir` <span class="subtitle">*availability*: FIXME</span>
+: FIXME
+
+`builddir` <span class="subtitle">*availability*: [builders](builders.md)</span>
+: FIXME
+
+`deploy_dirs` <span class="subtitle">*availability*: everywhere</span>
+: FIXME
+
+`host_platform` <span class="subtitle">*availability*: everywhere</span>
+: FIXME
+
+`target_platform` <span class="subtitle">*availability*: everywhere</span>
+: FIXME
+
+`env` <span class="subtitle">*availability*: everywhere</span>
+: FIXME
+
+`submodule` <span class="subtitle">*availability*: FIXME</span>
+: FIXME
+
 ## Subscripts
 
 ## Operators
