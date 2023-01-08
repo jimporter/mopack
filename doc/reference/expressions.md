@@ -44,29 +44,37 @@ packages:
 
 ## Variables
 
+mopack provides several variables that you can use in your configuration files
+in order to programmatically define how to resolve or use your dependencies.
+
 `cfgdir` <span class="subtitle">*availability*: everywhere</span>
-: FIXME
+: The directory containing the current mopack configuration file.
 
-`srcdir` <span class="subtitle">*availability*: FIXME</span>
-: FIXME
+`srcdir` <span class="subtitle">*availability*: [source distributions](packages.md#source-distributions)</span>
+: The directory containing the source code for the current package.
 
-`builddir` <span class="subtitle">*availability*: [builders](builders.md)</span>
-: FIXME
+`builddir` <span class="subtitle">*availability*: [builders](builders.md), [usage](usage.md)</span>
+: The directory to put the compiled output from a source distribution.
 
 `deploy_dirs` <span class="subtitle">*availability*: everywhere</span>
-: FIXME
+: A dictionary of directories specifying where to deploy package data to. These
+  can be specified in the [`options`](file-structure.md#options) section.
 
 `host_platform` <span class="subtitle">*availability*: everywhere</span>
-: FIXME
+: The name of the current platform (the one being used to build your project).
+  Possible values include `linux`, `windows`, or `darwin`.
 
 `target_platform` <span class="subtitle">*availability*: everywhere</span>
-: FIXME
+: The name of the platform that binaries are being built for.
 
 `env` <span class="subtitle">*availability*: everywhere</span>
-: FIXME
+: A dictionary of environment variables. These can be set by the calling
+  environment or overridden in the [`options`](file-structure.md#options)
+  section.
 
-`submodule` <span class="subtitle">*availability*: FIXME</span>
-: FIXME
+`submodule` <span class="subtitle">*availability*: [submodule maps](usage.md)</span>
+: The name of the user-specified submodule. You can use this to automatically
+  generate submodule configuration for the `*` placeholder submodule.
 
 ## Subscripts
 
