@@ -182,6 +182,31 @@ isn't necessary (a conditional is always an expression to begin with):</p>
 <!-- boolean, null, integer, string, array -->
 
 <h2 id="variables">Variables<a class="headerlink" href="#variables" title="Permanent link">§</a></h2>
+<p>mopack provides several variables that you can use in your configuration files
+in order to programmatically define how to resolve or use your dependencies.</p>
+<dl>
+<dt><code>cfgdir</code> <span class="subtitle"><em>availability</em>: everywhere</span></dt>
+<dd>The directory containing the current mopack configuration file.</dd>
+<dt><code>srcdir</code> <span class="subtitle"><em>availability</em>: <a href="../packages/#source-distributions">source distributions</a></span></dt>
+<dd>The directory containing the source code for the current package.</dd>
+<dt><code>builddir</code> <span class="subtitle"><em>availability</em>: <a href="../builders/">builders</a>, <a href="../usage/">usage</a></span></dt>
+<dd>The directory to put the compiled output from a source distribution.</dd>
+<dt><code>deploy_dirs</code> <span class="subtitle"><em>availability</em>: everywhere</span></dt>
+<dd>A dictionary of directories specifying where to deploy package data to. These
+  can be specified in the <a href="../file-structure/#options"><code>options</code></a> section.</dd>
+<dt><code>host_platform</code> <span class="subtitle"><em>availability</em>: everywhere</span></dt>
+<dd>The name of the current platform (the one being used to build your project).
+  Possible values include <code>linux</code>, <code>windows</code>, or <code>darwin</code>.</dd>
+<dt><code>target_platform</code> <span class="subtitle"><em>availability</em>: everywhere</span></dt>
+<dd>The name of the platform that binaries are being built for.</dd>
+<dt><code>env</code> <span class="subtitle"><em>availability</em>: everywhere</span></dt>
+<dd>A dictionary of environment variables. These can be set by the calling
+  environment or overridden in the <a href="../file-structure/#options"><code>options</code></a>
+  section.</dd>
+<dt><code>submodule</code> <span class="subtitle"><em>availability</em>: <a href="../usage/">submodule maps</a></span></dt>
+<dd>The name of the user-specified submodule. You can use this to automatically
+  generate submodule configuration for the <code>*</code> placeholder submodule.</dd>
+</dl>
 <h2 id="subscripts">Subscripts<a class="headerlink" href="#subscripts" title="Permanent link">§</a></h2>
 <h2 id="operators">Operators<a class="headerlink" href="#operators" title="Permanent link">§</a></h2></div>
         </div>
