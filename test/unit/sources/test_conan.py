@@ -5,7 +5,7 @@ from textwrap import dedent
 from unittest import mock
 
 from . import OptionsTest, SourceTest, through_json
-from .. import mock_open_log
+from .. import assert_logging, mock_open_log
 
 from mopack.iterutils import iterate
 from mopack.shell import ShellArguments
@@ -38,7 +38,9 @@ class TestConan(SourceTest):
     def check_resolve_all(self, pkgs, conanfile, extra_args=[]):
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('subprocess.run') as mrun:
-            ConanPackage.resolve_all(self.metadata, pkgs)
+            with assert_logging([('resolve', '{} from conan'.format(i.name))
+                                 for i in pkgs]):
+                ConanPackage.resolve_all(self.metadata, pkgs)
 
             self.assertEqual(mopen.mock_file.getvalue(), conanfile)
             conandir = os.path.join(self.pkgdir, 'conan')

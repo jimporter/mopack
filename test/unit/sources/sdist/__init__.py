@@ -2,7 +2,7 @@ import os
 from unittest import mock
 
 from .. import SourceTest, through_json  # noqa: F401
-from ... import mock_open_log
+from ... import assert_logging, mock_open_log
 
 from mopack.iterutils import iterate
 from mopack.types import dependency_string
@@ -31,7 +31,8 @@ class SDistTestCase(SourceTest):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.run'):
-            pkg.resolve(self.metadata)
+            with assert_logging([('resolve', pkg.name)]):
+                pkg.resolve(self.metadata)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')

@@ -5,7 +5,7 @@ from io import StringIO
 from unittest import mock
 
 from . import *
-from ... import mock_open_data
+from ... import assert_logging, mock_open_data
 from .... import *
 
 from mopack.builders.bfg9000 import Bfg9000Builder
@@ -41,7 +41,8 @@ class TestDirectory(SDistTestCase):
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
-        pkg.fetch(self.metadata, self.config)
+        with assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]):
+            pkg.fetch(self.metadata, self.config)
         self.check_resolve(pkg)
 
     def test_build(self):
@@ -54,7 +55,8 @@ class TestDirectory(SDistTestCase):
         ))
         self.assertEqual(pkg.should_deploy, True)
 
-        pkg.fetch(self.metadata, self.config)
+        with assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]):
+            pkg.fetch(self.metadata, self.config)
         self.check_resolve(pkg)
 
     def test_infer_build(self):
@@ -69,7 +71,9 @@ class TestDirectory(SDistTestCase):
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open):
-            config = pkg.fetch(self.metadata, self.config)
+            with assert_logging([('fetch',
+                                  'foo from {}'.format(self.srcpath))]):
+                config = pkg.fetch(self.metadata, self.config)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
                 'foo', path=self.srcpath, build='bfg9000'
@@ -84,7 +88,9 @@ class TestDirectory(SDistTestCase):
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open):
-            config = pkg.fetch(self.metadata, self.config)
+            with assert_logging([('fetch',
+                                  'foo from {}'.format(self.srcpath))]):
+                config = pkg.fetch(self.metadata, self.config)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
                 'foo', path=self.srcpath, build='bfg9000',
@@ -112,7 +118,9 @@ class TestDirectory(SDistTestCase):
              mock.patch('builtins.open', mock_open_data(
                  'export:\n  build: bfg9000'
              )):
-            config = pkg.fetch(self.metadata, self.config)
+            with assert_logging([('fetch',
+                                  'foo from {}'.format(self.srcpath))]):
+                config = pkg.fetch(self.metadata, self.config)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
                 'foo', path=self.srcpath, build='cmake', usage='pkg_config'
@@ -131,7 +139,8 @@ class TestDirectory(SDistTestCase):
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open):
-            config = pkg.fetch(self.metadata, self.config)
+            with assert_logging([('fetch', 'foo from {}'.format(srcpath))]):
+                config = pkg.fetch(self.metadata, self.config)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(config.export.submodules,
                              ['french', 'english'])
@@ -146,7 +155,8 @@ class TestDirectory(SDistTestCase):
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open):
-            config = pkg.fetch(self.metadata, self.config)
+            with assert_logging([('fetch', 'foo from {}'.format(srcpath))]):
+                config = pkg.fetch(self.metadata, self.config)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(config.export.submodules,
                              ['french', 'english'])
@@ -161,6 +171,7 @@ class TestDirectory(SDistTestCase):
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_data(child)), \
+             assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]), \
              self.assertRaises(ConfigurationError):
             pkg.fetch(self.metadata, self.config)
 
@@ -171,6 +182,7 @@ class TestDirectory(SDistTestCase):
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open',
                         lambda *args, **kwargs: StringIO(child)), \
+             assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]), \
              self.assertRaisesRegex(YamlParseError, loc):
             pkg.fetch(self.metadata, self.config)
 
@@ -180,6 +192,7 @@ class TestDirectory(SDistTestCase):
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_data(child)), \
+             assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]), \
              self.assertRaisesRegex(YamlParseError, loc):
             pkg.fetch(self.metadata, self.config)
 
@@ -189,6 +202,7 @@ class TestDirectory(SDistTestCase):
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_data(child)), \
+             assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]), \
              self.assertRaises(YamlParseError):
             pkg.fetch(self.metadata, self.config)
 
@@ -199,6 +213,7 @@ class TestDirectory(SDistTestCase):
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_data(child)), \
+             assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]), \
              self.assertRaisesRegex(YamlParseError, loc):
             pkg.fetch(self.metadata, self.config)
 
@@ -210,6 +225,7 @@ class TestDirectory(SDistTestCase):
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_data(child)), \
+             assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]), \
              self.assertRaises(FieldError):
             pkg.fetch(self.metadata, self.config)
 
@@ -220,6 +236,7 @@ class TestDirectory(SDistTestCase):
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_data(child)), \
+             assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]), \
              self.assertRaisesRegex(YamlParseError, loc):
             pkg.fetch(self.metadata, self.config)
 
@@ -229,7 +246,8 @@ class TestDirectory(SDistTestCase):
         self.assertEqual(pkg.path, Path(self.srcpath))
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
 
-        pkg.fetch(self.metadata, self.config)
+        with assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]):
+            pkg.fetch(self.metadata, self.config)
         self.check_resolve(pkg)
 
         with mock.patch('subprocess.run') as mrun:
@@ -246,7 +264,8 @@ class TestDirectory(SDistTestCase):
         self.assertEqual(pkg.path, Path(self.srcpath))
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
 
-        pkg.fetch(self.metadata, self.config)
+        with assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]):
+            pkg.fetch(self.metadata, self.config)
         self.check_resolve(pkg, usage={
             'name': 'foo', 'type': 'pkg_config', 'pcnames': ['foo'],
             'pkg_config_path': [self.pkgconfdir('foo', 'pkgconf')],
@@ -258,7 +277,8 @@ class TestDirectory(SDistTestCase):
         self.assertEqual(pkg.path, Path(self.srcpath))
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
 
-        pkg.fetch(self.metadata, self.config)
+        with assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]):
+            pkg.fetch(self.metadata, self.config)
         self.check_resolve(pkg, usage={
             'name': 'foo', 'type': 'path', 'generated': True,
             'auto_link': False, 'pcnames': ['foo'],
@@ -316,7 +336,8 @@ class TestDirectory(SDistTestCase):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.run') as mrun:
-            pkg.resolve(self.metadata)
+            with assert_logging([('resolve', 'foo')]):
+                pkg.resolve(self.metadata)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')
@@ -330,7 +351,8 @@ class TestDirectory(SDistTestCase):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.run'):
-            pkg.deploy(self.metadata)
+            with assert_logging([('deploy', 'foo')]):
+                pkg.deploy(self.metadata)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'deploy', 'foo.log'
             ), 'a')

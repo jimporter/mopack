@@ -4,6 +4,7 @@ from os.path import abspath
 from unittest import mock
 
 from . import SourceTest
+from .. import assert_logging
 from ... import call_pkg_config, test_stage_dir
 
 from mopack.path import Path
@@ -67,14 +68,16 @@ class TestSystemPackage(SourceTest):
 
     def test_resolve_path(self):
         pkg = self.make_package('foo')
-        pkg.resolve(self.metadata)
+        with assert_logging([('resolve', 'foo from system')]):
+            pkg.resolve(self.metadata)
         self.assertEqual(pkg.version(self.metadata), None)
         self.check_get_usage(pkg, None)
         self.check_pkg_config('foo', None)
 
     def test_resolve_pkg_config(self):
         pkg = self.make_package('foo')
-        pkg.resolve(self.metadata)
+        with assert_logging([('resolve', 'foo from system')]):
+            pkg.resolve(self.metadata)
         self.check_get_usage(pkg, None, {
             'name': 'foo', 'type': 'system', 'pcnames': ['foo'],
             'pkg_config_path': [],
@@ -82,14 +85,16 @@ class TestSystemPackage(SourceTest):
 
     def test_explicit_version(self):
         pkg = self.make_package('foo', version='2.0')
-        pkg.resolve(self.metadata)
+        with assert_logging([('resolve', 'foo from system')]):
+            pkg.resolve(self.metadata)
         self.assertEqual(pkg.version(self.metadata), '2.0')
         self.check_get_usage(pkg, None)
         self.check_pkg_config('foo', None)
 
     def test_auto_link(self):
         pkg = self.make_package('foo', auto_link=True)
-        pkg.resolve(self.metadata)
+        with assert_logging([('resolve', 'foo from system')]):
+            pkg.resolve(self.metadata)
         self.check_get_usage(pkg, None, {
             'name': 'foo', 'type': 'system', 'generated': True,
             'auto_link': True, 'pcnames': ['foo'],
@@ -103,27 +108,31 @@ class TestSystemPackage(SourceTest):
         incdir = abspath('/mock/path/to/include')
         pkg = self.make_package('foo', include_path='/mock/path/to/include',
                                 headers=['foo.hpp'])
-        pkg.resolve(self.metadata)
+        with assert_logging([('resolve', 'foo from system')]):
+            pkg.resolve(self.metadata)
         self.check_get_usage(pkg, None)
         self.check_pkg_config('foo', None, {'cflags': ['-I' + incdir]})
 
     def test_library_path(self):
         libdir = abspath('/mock/path/to/lib')
         pkg = self.make_package('foo', library_path='/mock/path/to/lib')
-        pkg.resolve(self.metadata)
+        with assert_logging([('resolve', 'foo from system')]):
+            pkg.resolve(self.metadata)
         self.check_get_usage(pkg, None)
         self.check_pkg_config('foo', None, {'libs': ['-L' + libdir, '-lfoo']})
 
     def test_headers(self):
         pkg = self.make_package('foo', headers='foo.hpp')
-        pkg.resolve(self.metadata)
+        with assert_logging([('resolve', 'foo from system')]):
+            pkg.resolve(self.metadata)
         self.check_get_usage(pkg, None)
         self.check_pkg_config('foo', None, {
             'cflags': ['-I' + abspath('/mock/include')],
         })
 
         pkg = self.make_package('foo', headers=['foo.hpp'])
-        pkg.resolve(self.metadata)
+        with assert_logging([('resolve', 'foo from system')]):
+            pkg.resolve(self.metadata)
         self.check_get_usage(pkg, None)
         self.check_pkg_config('foo', None, {
             'cflags': ['-I' + abspath('/mock/include')],
@@ -131,21 +140,24 @@ class TestSystemPackage(SourceTest):
 
     def test_libraries(self):
         pkg = self.make_package('foo', libraries='bar')
-        pkg.resolve(self.metadata)
+        with assert_logging([('resolve', 'foo from system')]):
+            pkg.resolve(self.metadata)
         self.check_get_usage(pkg, None)
         self.check_pkg_config('foo', None, {
             'libs': ['-L' + abspath('/mock/lib'), '-lbar'],
         })
 
         pkg = self.make_package('foo', libraries=['foo', 'bar'])
-        pkg.resolve(self.metadata)
+        with assert_logging([('resolve', 'foo from system')]):
+            pkg.resolve(self.metadata)
         self.check_get_usage(pkg, None)
         self.check_pkg_config('foo', None, {
             'libs': ['-L' + abspath('/mock/lib'), '-lfoo', '-lbar'],
         })
 
         pkg = self.make_package('foo', libraries=None)
-        pkg.resolve(self.metadata)
+        with assert_logging([('resolve', 'foo from system')]):
+            pkg.resolve(self.metadata)
         self.check_get_usage(pkg, None)
         self.check_pkg_config('foo', None, {'libs': []})
 

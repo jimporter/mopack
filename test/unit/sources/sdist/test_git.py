@@ -3,6 +3,7 @@ import subprocess
 from unittest import mock
 
 from . import *
+from ... import assert_logging
 from .... import *
 
 from mopack.builders.bfg9000 import Bfg9000Builder
@@ -37,7 +38,9 @@ class TestGit(SDistTestCase):
         with mock_open_log(), \
              mock.patch('mopack.sources.sdist.pushd'), \
              mock.patch('subprocess.run') as mrun:
-            pkg.fetch(self.metadata, self.config)
+            with assert_logging([('fetch',
+                                  'foo from {}'.format(pkg.repository))]):
+                pkg.fetch(self.metadata, self.config)
             mrun.assert_has_calls([
                 mock.call(i, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                           universal_newlines=True, check=True, env={})
@@ -159,7 +162,9 @@ class TestGit(SDistTestCase):
              mock.patch('builtins.open', mock_open_after_first(
                  read_data='export:\n  build: bfg9000'
              )):
-            config = pkg.fetch(self.metadata, self.config)
+            with assert_logging([('fetch',
+                                  'foo from {}'.format(pkg.repository))]):
+                config = pkg.fetch(self.metadata, self.config)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
                 'foo', repository=self.srcssh, build='bfg9000'
@@ -177,7 +182,9 @@ class TestGit(SDistTestCase):
              mock.patch('builtins.open', mock_open_after_first(
                  read_data='export:\n  build: bfg9000'
              )):
-            config = pkg.fetch(self.metadata, self.config)
+            with assert_logging([('fetch',
+                                  'foo from {}'.format(pkg.repository))]):
+                config = pkg.fetch(self.metadata, self.config)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
                 'foo', repository=self.srcssh, build='bfg9000',
@@ -206,7 +213,9 @@ class TestGit(SDistTestCase):
              mock.patch('builtins.open', mock_open_after_first(
                  read_data='export:\n  build: bfg9000'
              )):
-            config = pkg.fetch(self.metadata, self.config)
+            with assert_logging([('fetch',
+                                  'foo from {}'.format(pkg.repository))]):
+                config = pkg.fetch(self.metadata, self.config)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
                 'foo', repository=self.srcssh, build='cmake',
@@ -318,7 +327,8 @@ class TestGit(SDistTestCase):
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('mopack.sources.sdist.pushd'), \
              mock.patch('subprocess.run') as mrun:
-            pkg.fetch(self.metadata, self.config)
+            with assert_logging([]):
+                pkg.fetch(self.metadata, self.config)
             mrun.assert_called_once_with(
                 ['git', 'pull'], stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT, universal_newlines=True, check=True,
@@ -336,7 +346,8 @@ class TestGit(SDistTestCase):
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('mopack.sources.sdist.pushd'), \
              mock.patch('subprocess.run') as mrun:
-            pkg.fetch(self.metadata, self.config)
+            with assert_logging([]):
+                pkg.fetch(self.metadata, self.config)
             mrun.assert_not_called()
         self.check_resolve(pkg)
 
@@ -350,7 +361,8 @@ class TestGit(SDistTestCase):
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('mopack.sources.sdist.pushd'), \
              mock.patch('subprocess.run') as mrun:
-            pkg.fetch(self.metadata, self.config)
+            with assert_logging([]):
+                pkg.fetch(self.metadata, self.config)
             mrun.assert_not_called()
         self.check_resolve(pkg)
 
@@ -363,7 +375,8 @@ class TestGit(SDistTestCase):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.run') as mrun:
-            pkg.resolve(self.metadata)
+            with assert_logging([('resolve', 'foo')]):
+                pkg.resolve(self.metadata)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')
@@ -377,7 +390,8 @@ class TestGit(SDistTestCase):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.run'):
-            pkg.deploy(self.metadata)
+            with assert_logging([('deploy', 'foo')]):
+                pkg.deploy(self.metadata)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'deploy', 'foo.log'
             ), 'a')

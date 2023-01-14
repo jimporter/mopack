@@ -3,6 +3,7 @@ import subprocess
 from unittest import mock
 
 from . import *
+from ... import assert_logging
 from .... import *
 
 from mopack.builders.bfg9000 import Bfg9000Builder
@@ -32,11 +33,13 @@ class TestTarball(SDistTestCase):
 
     def check_fetch(self, pkg):
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
+        where = pkg.url or pkg.path.string()
         with mock.patch('mopack.sources.sdist.urlopen', self.mock_urlopen), \
              mock.patch('tarfile.TarFile.extractall') as mtar, \
              mock.patch('os.path.isdir', return_value=True), \
              mock.patch('os.path.exists', return_value=False):
-            pkg.fetch(self.metadata, self.config)
+            with assert_logging([('fetch', 'foo from {}'.format(where))]):
+                pkg.fetch(self.metadata, self.config)
             mtar.assert_called_once_with(srcdir, None)
 
     def test_url(self):
@@ -77,7 +80,8 @@ class TestTarball(SDistTestCase):
              mock.patch('zipfile.ZipFile.extractall') as mtar, \
              mock.patch('os.path.isdir', return_value=True), \
              mock.patch('os.path.exists', return_value=False):
-            pkg.fetch(self.metadata, self.config)
+            with assert_logging([('fetch', 'foo from {}'.format(srcpath))]):
+                pkg.fetch(self.metadata, self.config)
             mtar.assert_called_once_with(srcdir, None)
         self.check_resolve(pkg)
 
@@ -98,7 +102,9 @@ class TestTarball(SDistTestCase):
              mock.patch('tarfile.TarFile.extractall') as mtar, \
              mock.patch('os.path.isdir', return_value=True), \
              mock.patch('os.path.exists', return_value=False):
-            pkg.fetch(self.metadata, self.config)
+            with assert_logging([('fetch',
+                                  'foo from {}'.format(self.srcpath))]):
+                pkg.fetch(self.metadata, self.config)
             mtar.assert_called_once_with(srcdir, AlwaysEqual())
         self.check_resolve(pkg)
 
@@ -117,7 +123,11 @@ class TestTarball(SDistTestCase):
              mock.patch('builtins.open', mock_open_after_first()) as mopen, \
              mock.patch('os.makedirs'), \
              mock.patch('subprocess.run') as mrun:
-            pkg.fetch(self.metadata, self.config)
+            with assert_logging([
+                ('fetch', 'foo from {}'.format(self.srcpath)),
+                ('patch', 'foo with {}'.format(patch)),
+            ]):
+                pkg.fetch(self.metadata, self.config)
             mtar.assert_called_once_with(srcdir, None)
             mrun.assert_called_once_with(
                 ['patch', '-p1'], stdout=subprocess.PIPE,
@@ -148,7 +158,9 @@ class TestTarball(SDistTestCase):
              mock.patch('builtins.open', mock_open_after_first(
                  read_data='export:\n  build: bfg9000'
              )):
-            config = pkg.fetch(self.metadata, self.config)
+            with assert_logging([('fetch',
+                                  'foo from {}'.format(self.srcpath))]):
+                config = pkg.fetch(self.metadata, self.config)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
                 'foo', path=self.srcpath, build='bfg9000'
@@ -165,7 +177,9 @@ class TestTarball(SDistTestCase):
              mock.patch('builtins.open', mock_open_after_first(
                  read_data='export:\n  build: bfg9000'
              )):
-            config = pkg.fetch(self.metadata, self.config)
+            with assert_logging([('fetch',
+                                  'foo from {}'.format(self.srcpath))]):
+                config = pkg.fetch(self.metadata, self.config)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
                 'foo', path=self.srcpath, build='bfg9000',
@@ -193,7 +207,9 @@ class TestTarball(SDistTestCase):
              mock.patch('builtins.open', mock_open_after_first(
                  read_data='export:\n  build: bfg9000'
              )):
-            config = pkg.fetch(self.metadata, self.config)
+            with assert_logging([('fetch',
+                                  'foo from {}'.format(self.srcpath))]):
+                config = pkg.fetch(self.metadata, self.config)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
                 'foo', path=self.srcpath, build='cmake', usage='pkg_config'
@@ -299,7 +315,8 @@ class TestTarball(SDistTestCase):
         with mock.patch('os.path.exists', mock_exists), \
              mock.patch('tarfile.TarFile.extractall') as mtar, \
              mock.patch('os.path.isdir', return_value=True):
-            pkg.fetch(self.metadata, self.config)
+            with assert_logging([('fetch', 'foo already fetched')]):
+                pkg.fetch(self.metadata, self.config)
             mtar.assert_not_called()
         self.check_resolve(pkg)
 
@@ -313,7 +330,8 @@ class TestTarball(SDistTestCase):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.run') as mrun:
-            pkg.resolve(self.metadata)
+            with assert_logging([('resolve', 'foo')]):
+                pkg.resolve(self.metadata)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')
@@ -327,7 +345,8 @@ class TestTarball(SDistTestCase):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('subprocess.run'):
-            pkg.deploy(self.metadata)
+            with assert_logging([('deploy', 'foo')]):
+                pkg.deploy(self.metadata)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'deploy', 'foo.log'
             ), 'a')

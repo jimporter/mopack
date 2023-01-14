@@ -3,7 +3,7 @@ import subprocess
 from unittest import mock
 
 from . import SourceTest, through_json
-from .. import mock_open_log
+from .. import assert_logging, mock_open_log
 
 from mopack.iterutils import iterate
 from mopack.sources import Package
@@ -22,16 +22,18 @@ class TestApt(SourceTest):
     pkg_type = AptPackage
     pkgconfdir = os.path.join(SourceTest.pkgdir, 'pkgconfig')
 
-    def check_resolve_all(self, packages, remotes):
+    def check_resolve_all(self, pkgs, remotes):
         with mock_open_log() as mopen, \
              mock.patch('subprocess.run') as mrun:
-            AptPackage.resolve_all(self.metadata, packages)
+            with assert_logging([('resolve', '{} from apt'.format(i.name))
+                                 for i in pkgs]):
+                AptPackage.resolve_all(self.metadata, pkgs)
 
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'apt.log'
             ), 'a')
 
-            for i in packages:
+            for i in pkgs:
                 if i.repository:
                     mrun.assert_any_call(
                         ['sudo', 'add-apt-repository', '-y', i.repository],

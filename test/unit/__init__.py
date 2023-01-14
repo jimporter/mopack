@@ -1,6 +1,8 @@
 import json
+import logging
 import os
 import pkg_resources
+import re
 from contextlib import contextmanager
 from io import StringIO
 from unittest import mock, TestCase
@@ -18,6 +20,30 @@ def mock_open_log(new=None, *args, **kwargs):
                     *args, **kwargs) as m, \
          mock.patch('os.makedirs'):
         yield m
+
+
+@contextmanager
+def assert_logging(expected):
+    def strip_ansi(s):
+        return re.sub('\033\\[.*?m', '', s)
+
+    def format_logs(logs):
+        if not logs:
+            return '  <none>'
+        return '  ' + '\n  '.join('{}: {}'.format(*i) for i in logs)
+
+    with mock.patch.object(logging.Logger, 'isEnabledFor',
+                           return_value=True), \
+         mock.patch.object(logging.Logger, 'handle') as m:
+        yield
+        # `i[-2]` gets the positional arguments. This is just for compatibility
+        # with Python 3.7 and older. (In 3.8+, we'd use `i.args`).
+        logs = [(i[-2][0].levelname, strip_ansi(i[-2][0].getMessage()))
+                for i in m.mock_calls]
+        if logs != expected:
+            raise AssertionError('Expected logs:\n{}\nReceived:\n{}'.format(
+                format_logs(expected), format_logs(logs)
+            ))
 
 
 class Stream(StringIO):
