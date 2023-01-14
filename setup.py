@@ -28,6 +28,8 @@ class Coverage(Command):
         if env.get('PYTHONPATH'):
             pythonpath += os.pathsep + env['PYTHONPATH']
         env.update({
+            # Set the top srcdir so that our coverage configuration can find
+            # the source files, even if we run `mopack` from another directory.
             'TOP_SRCDIR': root_dir,
             'PYTHONPATH': pythonpath,
             'COVERAGE_FILE': os.path.join(root_dir, '.coverage'),
