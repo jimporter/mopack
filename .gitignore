@@ -1,6 +1,7 @@
 *.pyc
 /.coverage
 /.coverage.*
+/.eggs/
 /.mopack_test_env
 /dist/
 /htmlcov/
