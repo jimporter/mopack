@@ -138,9 +138,9 @@
         <li class="main active"><a href="#expressions">Expressions</a></li>
             <li><a href="#introducing-expressions">Introducing expressions</a></li>
             <li><a href="#literals">Literals</a></li>
-            <li><a href="#variables">Variables</a></li>
             <li><a href="#subscripts">Subscripts</a></li>
             <li><a href="#operators">Operators</a></li>
+            <li><a href="#variables">Variables</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
@@ -179,8 +179,16 @@ isn't necessary (a conditional is always an expression to begin with):</p>
 </code></pre>
 
 <h2 id="literals">Literals<a class="headerlink" href="#literals" title="Permanent link">§</a></h2>
-<!-- boolean, null, integer, string, array -->
-
+<p>Within expressions, you can use a variety of literal types:</p>
+<ul>
+<li>booleans (<code>true</code> or <code>false</code>)</li>
+<li>null values (<code>null</code>)</li>
+<li>integers (decimal digits, possibly preceded by <code>-</code>)</li>
+<li>strings (quoted using either <code>'</code> or <code>"</code>, and with <code>\</code> for escapes)</li>
+<li>arrays (<code>[value, ...]</code>)</li>
+</ul>
+<h2 id="subscripts">Subscripts<a class="headerlink" href="#subscripts" title="Permanent link">§</a></h2>
+<h2 id="operators">Operators<a class="headerlink" href="#operators" title="Permanent link">§</a></h2>
 <h2 id="variables">Variables<a class="headerlink" href="#variables" title="Permanent link">§</a></h2>
 <p>mopack provides several variables that you can use in your configuration files
 in order to programmatically define how to resolve or use your dependencies.</p>
@@ -206,9 +214,7 @@ in order to programmatically define how to resolve or use your dependencies.</p>
 <dt><code>submodule</code> <span class="subtitle"><em>availability</em>: <a href="../usage/">submodule maps</a></span></dt>
 <dd>The name of the user-specified submodule. You can use this to automatically
   generate submodule configuration for the <code>*</code> placeholder submodule.</dd>
-</dl>
-<h2 id="subscripts">Subscripts<a class="headerlink" href="#subscripts" title="Permanent link">§</a></h2>
-<h2 id="operators">Operators<a class="headerlink" href="#operators" title="Permanent link">§</a></h2></div>
+</dl></div>
         </div>
 
         <footer class="col-md-12">
