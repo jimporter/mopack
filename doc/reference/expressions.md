@@ -40,7 +40,17 @@ packages:
 
 ## Literals
 
-<!-- boolean, null, integer, string, array -->
+Within expressions, you can use a variety of literal types:
+
+* booleans (`true` or `false`)
+* null values (`null`)
+* integers (decimal digits, possibly preceded by `-`)
+* strings (quoted using either `'` or `"`, and with `\` for escapes)
+* arrays (`[value, ...]`)
+
+## Subscripts
+
+## Operators
 
 ## Variables
 
@@ -76,6 +86,3 @@ in order to programmatically define how to resolve or use your dependencies.
 : The name of the user-specified submodule. You can use this to automatically
   generate submodule configuration for the `*` placeholder submodule.
 
-## Subscripts
-
-## Operators
