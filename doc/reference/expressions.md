@@ -58,7 +58,7 @@ and associativity:
 |------------|-------------|--------------------------|---------------|
 | 1          | `x[y]`      | Subscript                | Left          |
 | 2          | `!x`        | Logical not              | Right         |
-|            | `-x`        | Unary minus              | Right         |
+|            | `-x`        | Arithmetic negation      | Right         |
 | 3          | `x * y`     | Multiplication           | Left          |
 |            | `x / y`     | Division                 | Left          |
 |            | `x % y`     | Modulo                   | Left          |
