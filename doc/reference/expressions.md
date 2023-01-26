@@ -48,14 +48,36 @@ Within expressions, you can use a variety of literal types:
 * strings (quoted using either `'` or `"`, and with `\` for escapes)
 * arrays (`[value, ...]`)
 
-## Subscripts
-
 ## Operators
+
+As you might expect, you can use operators within your expressions to manipulate
+values. The table below lists all the supported operators, with the precedence
+and associativity:
+
+| Precedence | Operator    | Meaning                  | Associativity |
+|------------|-------------|--------------------------|---------------|
+| 1          | `x[y]`      | Subscript                | Left          |
+| 2          | `!x`        | Logical not              | Right         |
+|            | `-x`        | Unary minus              | Right         |
+| 3          | `x * y`     | Multiplication           | Left          |
+|            | `x / y`     | Division                 | Left          |
+|            | `x % y`     | Modulo                   | Left          |
+| 4          | `x + y`     | Addition/concatenation   | Left          |
+|            | `x - y`     | Subtraction              | Left          |
+| 5          | `x > y`     | Greater than             | Left          |
+|            | `x >= y`    | Greater than or equal to | Left          |
+|            | `x < y`     | Less than                | Left          |
+|            | `x <= y`    | Less than or equal to    | Left          |
+| 6          | `x == y`    | Equal to                 | Left          |
+|            | `x != y`    | Not equal to             | Left          |
+| 7          | `x && y`    | Logical and              | Left          |
+|            | `x || y`    | Logical or               | Left          |
+| 8          | `x ? y : z` | Ternary conditional      | Right         |
 
 ## Variables
 
-mopack provides several variables that you can use in your configuration files
-in order to programmatically define how to resolve or use your dependencies.
+mopack provides several variables that you can use within expressions in order
+to programmatically define how to resolve or use your dependencies.
 
 `cfgdir` <span class="subtitle">*availability*: everywhere</span>
 : The directory containing the current mopack configuration file.
