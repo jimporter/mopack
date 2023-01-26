@@ -138,7 +138,6 @@
         <li class="main active"><a href="#expressions">Expressions</a></li>
             <li><a href="#introducing-expressions">Introducing expressions</a></li>
             <li><a href="#literals">Literals</a></li>
-            <li><a href="#subscripts">Subscripts</a></li>
             <li><a href="#operators">Operators</a></li>
             <li><a href="#variables">Variables</a></li>
     </ul>
@@ -187,11 +186,127 @@ isn't necessary (a conditional is always an expression to begin with):</p>
 <li>strings (quoted using either <code>'</code> or <code>"</code>, and with <code>\</code> for escapes)</li>
 <li>arrays (<code>[value, ...]</code>)</li>
 </ul>
-<h2 id="subscripts">Subscripts<a class="headerlink" href="#subscripts" title="Permanent link">§</a></h2>
 <h2 id="operators">Operators<a class="headerlink" href="#operators" title="Permanent link">§</a></h2>
+<p>As you might expect, you can use operators within your expressions to manipulate
+values. The table below lists all the supported operators, with the precedence
+and associativity:</p>
+<table>
+<thead>
+<tr>
+<th>Precedence</th>
+<th>Operator</th>
+<th>Meaning</th>
+<th>Associativity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>x[y]</code></td>
+<td>Subscript</td>
+<td>Left</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>!x</code></td>
+<td>Logical not</td>
+<td>Right</td>
+</tr>
+<tr>
+<td></td>
+<td><code>-x</code></td>
+<td>Unary minus</td>
+<td>Right</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>x * y</code></td>
+<td>Multiplication</td>
+<td>Left</td>
+</tr>
+<tr>
+<td></td>
+<td><code>x / y</code></td>
+<td>Division</td>
+<td>Left</td>
+</tr>
+<tr>
+<td></td>
+<td><code>x % y</code></td>
+<td>Modulo</td>
+<td>Left</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>x + y</code></td>
+<td>Addition/concatenation</td>
+<td>Left</td>
+</tr>
+<tr>
+<td></td>
+<td><code>x - y</code></td>
+<td>Subtraction</td>
+<td>Left</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>x &gt; y</code></td>
+<td>Greater than</td>
+<td>Left</td>
+</tr>
+<tr>
+<td></td>
+<td><code>x &gt;= y</code></td>
+<td>Greater than or equal to</td>
+<td>Left</td>
+</tr>
+<tr>
+<td></td>
+<td><code>x &lt; y</code></td>
+<td>Less than</td>
+<td>Left</td>
+</tr>
+<tr>
+<td></td>
+<td><code>x &lt;= y</code></td>
+<td>Less than or equal to</td>
+<td>Left</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>x == y</code></td>
+<td>Equal to</td>
+<td>Left</td>
+</tr>
+<tr>
+<td></td>
+<td><code>x != y</code></td>
+<td>Not equal to</td>
+<td>Left</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>x &amp;&amp; y</code></td>
+<td>Logical and</td>
+<td>Left</td>
+</tr>
+<tr>
+<td></td>
+<td><code>x || y</code></td>
+<td>Logical or</td>
+<td>Left</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>x ? y : z</code></td>
+<td>Ternary conditional</td>
+<td>Right</td>
+</tr>
+</tbody>
+</table>
 <h2 id="variables">Variables<a class="headerlink" href="#variables" title="Permanent link">§</a></h2>
-<p>mopack provides several variables that you can use in your configuration files
-in order to programmatically define how to resolve or use your dependencies.</p>
+<p>mopack provides several variables that you can use within expressions in order
+to programmatically define how to resolve or use your dependencies.</p>
 <dl>
 <dt><code>cfgdir</code> <span class="subtitle"><em>availability</em>: everywhere</span></dt>
 <dd>The directory containing the current mopack configuration file.</dd>
