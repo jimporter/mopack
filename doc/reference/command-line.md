@@ -61,8 +61,9 @@ not defined.
 
 ### <code>mopack usage [*DEPENDENCY*]</code> { #usage }
 
-Retrieve information about how to use a dependency. This returns metadata in
-YAML format (or JSON if `--json` is passed) pointing to a pkg-config .pc file.
+Retrieve information about how to use a dependency. This returns
+[metadata](usage.md#usage-results) in YAML format (or JSON if `--json` is
+passed) pointing to a pkg-config .pc file.
 
 #### <code>--directory *PATH*</code> { #usage-directory }
 

@@ -75,9 +75,9 @@ step. To get a package's usage information, run the following command:
 $ mopack usage some-package
 ```
 
-This will return the package's [usage](../reference/usage.md) information in
-YAML format (or JSON if `--json` is passed), which can then be fed to the
-dependent build steps.
+This will return the package's [usage](../reference/usage.md#usage-results)
+information in YAML format (or JSON if `--json` is passed), which can then be
+fed to the dependent build steps.
 
 Some packages contain [submodules](writing.md#submodules), representing optional
 components that you may or may not want to use (e.g. individual libraries from
