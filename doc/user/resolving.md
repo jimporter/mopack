@@ -1,6 +1,6 @@
 # Resolving Packages With mopack
 
-Most package managers allow developers to pull dependencies from a remote source
+Most package managers allow developers to pull dependencies from a remote origin
 and prepare them for use by your build system. In this regard, mopack is no
 different.
 
@@ -17,7 +17,7 @@ different.
 
 The first step in working with dependencies is, unsurprisingly, getting them.
 This is really two sub-steps rolled into one: fetching and building. This
-typically involves downloading the appropriate files from some remote source
+typically involves downloading the appropriate files from some remote origin
 (possibly recursively in the case of [source
 distributions](../reference/packages.md#source-distribution)) and then compiling
 any projects as needed in the proper order, using their respective build

@@ -17,17 +17,17 @@ class TestDefaultConfig(TestCase):
         self.assertEqual(cfg.get(*args, evaluate=False), expected_raw)
 
     def test_string_field(self):
-        data = 'source:\n  foo:\n    field: value'
+        data = 'origin:\n  foo:\n    field: value'
         with mock.patch('builtins.open', mock_open(data)):
             cfg = DefaultConfig('file.yml')
 
-        self.assertGet(cfg, ({}, 'source', 'foo', 'field'), 'value')
-        self.assertGet(cfg, ({}, 'source', 'foo', 'other'), None)
-        self.assertGet(cfg, ({}, 'source', 'foo', 'other', 'default'),
+        self.assertGet(cfg, ({}, 'origin', 'foo', 'field'), 'value')
+        self.assertGet(cfg, ({}, 'origin', 'foo', 'other'), None)
+        self.assertGet(cfg, ({}, 'origin', 'foo', 'other', 'default'),
                        'default')
 
-        self.assertGet(cfg, ({}, 'source', 'bar', 'field'), None)
-        self.assertGet(cfg, ({}, 'source', 'bar', 'field', 'default'),
+        self.assertGet(cfg, ({}, 'origin', 'bar', 'field'), None)
+        self.assertGet(cfg, ({}, 'origin', 'bar', 'field', 'default'),
                        'default')
 
         self.assertGet(cfg, ({}, 'usage', 'foo', 'field'), None)
@@ -35,74 +35,74 @@ class TestDefaultConfig(TestCase):
                        'default')
 
     def test_list_field(self):
-        data = 'source:\n  foo:\n    field: [1, 2]'
+        data = 'origin:\n  foo:\n    field: [1, 2]'
         with mock.patch('builtins.open', mock_open(data)):
             cfg = DefaultConfig('file.yml')
 
-        self.assertGet(cfg, ({}, 'source', 'foo', 'field'), [1, 2])
-        self.assertGet(cfg, ({}, 'source', 'foo', 'other'), None)
-        self.assertGet(cfg, ({}, 'source', 'foo', 'other', []), [])
-        self.assertGet(cfg, ({}, 'source', 'bar', 'field'), None)
-        self.assertGet(cfg, ({}, 'source', 'bar', 'field', []), [])
+        self.assertGet(cfg, ({}, 'origin', 'foo', 'field'), [1, 2])
+        self.assertGet(cfg, ({}, 'origin', 'foo', 'other'), None)
+        self.assertGet(cfg, ({}, 'origin', 'foo', 'other', []), [])
+        self.assertGet(cfg, ({}, 'origin', 'bar', 'field'), None)
+        self.assertGet(cfg, ({}, 'origin', 'bar', 'field', []), [])
 
     def test_dict_field(self):
-        data = 'source:\n  foo:\n    field: {goat: 1, panda: 2}'
+        data = 'origin:\n  foo:\n    field: {goat: 1, panda: 2}'
         with mock.patch('builtins.open', mock_open(data)):
             cfg = DefaultConfig('file.yml')
 
-        self.assertGet(cfg, ({}, 'source', 'foo', 'field'),
+        self.assertGet(cfg, ({}, 'origin', 'foo', 'field'),
                        {'goat': 1, 'panda': 2})
-        self.assertGet(cfg, ({}, 'source', 'foo', 'other'), None)
-        self.assertGet(cfg, ({}, 'source', 'foo', 'other', {}), {})
-        self.assertGet(cfg, ({}, 'source', 'bar', 'field'), None)
-        self.assertGet(cfg, ({}, 'source', 'bar', 'field', {}), {})
+        self.assertGet(cfg, ({}, 'origin', 'foo', 'other'), None)
+        self.assertGet(cfg, ({}, 'origin', 'foo', 'other', {}), {})
+        self.assertGet(cfg, ({}, 'origin', 'bar', 'field'), None)
+        self.assertGet(cfg, ({}, 'origin', 'bar', 'field', {}), {})
 
     def test_expr_field(self):
-        data = 'source:\n  foo:\n    field: $variable'
+        data = 'origin:\n  foo:\n    field: $variable'
         with mock.patch('builtins.open', mock_open(data)):
             cfg = DefaultConfig('file.yml')
 
         symbols = {'variable': 'goat'}
-        self.assertGet(cfg, (symbols, 'source', 'foo', 'field'), 'goat',
+        self.assertGet(cfg, (symbols, 'origin', 'foo', 'field'), 'goat',
                        '$variable')
-        self.assertGet(cfg, (symbols, 'source', 'bar', 'field'), None)
+        self.assertGet(cfg, (symbols, 'origin', 'bar', 'field'), None)
 
         symbols = {'variable': 'panda'}
-        self.assertGet(cfg, (symbols, 'source', 'foo', 'field'), 'panda',
+        self.assertGet(cfg, (symbols, 'origin', 'foo', 'field'), 'panda',
                        '$variable')
-        self.assertGet(cfg, (symbols, 'source', 'bar', 'field'), None)
+        self.assertGet(cfg, (symbols, 'origin', 'bar', 'field'), None)
 
     def test_conditional(self):
-        data = 'source:\n  foo:\n    - if: true\n      field: goat'
+        data = 'origin:\n  foo:\n    - if: true\n      field: goat'
         with mock.patch('builtins.open', mock_open(data)):
             cfg = DefaultConfig('file.yml')
 
-        self.assertGet(cfg, ({}, 'source', 'foo', 'field'), 'goat')
-        self.assertGet(cfg, ({}, 'source', 'bar', 'field'), None)
+        self.assertGet(cfg, ({}, 'origin', 'foo', 'field'), 'goat')
+        self.assertGet(cfg, ({}, 'origin', 'bar', 'field'), None)
 
-        data = 'source:\n  foo:\n    - if: false\n      field: goat'
+        data = 'origin:\n  foo:\n    - if: false\n      field: goat'
         with mock.patch('builtins.open', mock_open(data)):
             cfg = DefaultConfig('file.yml')
 
-        self.assertGet(cfg, ({}, 'source', 'foo', 'field'), None)
-        self.assertGet(cfg, ({}, 'source', 'bar', 'field'), None)
+        self.assertGet(cfg, ({}, 'origin', 'foo', 'field'), None)
+        self.assertGet(cfg, ({}, 'origin', 'bar', 'field'), None)
 
     def test_conditional_expr(self):
-        data = ('source:\n  foo:\n    - if: variable == true\n' +
+        data = ('origin:\n  foo:\n    - if: variable == true\n' +
                 '      field: goat\n    - field: panda')
         with mock.patch('builtins.open', mock_open(data)):
             cfg = DefaultConfig('file.yml')
 
         symbols = {'variable': True}
-        self.assertGet(cfg, (symbols, 'source', 'foo', 'field'), 'goat')
-        self.assertGet(cfg, (symbols, 'source', 'bar', 'field'), None)
+        self.assertGet(cfg, (symbols, 'origin', 'foo', 'field'), 'goat')
+        self.assertGet(cfg, (symbols, 'origin', 'bar', 'field'), None)
 
         symbols = {'variable': False}
-        self.assertGet(cfg, (symbols, 'source', 'foo', 'field'), 'panda')
-        self.assertGet(cfg, (symbols, 'source', 'bar', 'field'), None)
+        self.assertGet(cfg, (symbols, 'origin', 'foo', 'field'), 'panda')
+        self.assertGet(cfg, (symbols, 'origin', 'bar', 'field'), None)
 
     def test_invalid_conditional(self):
-        data = ('source:\n  foo:\n    - field: goat\n    - field: panda')
+        data = ('origin:\n  foo:\n    - field: goat\n    - field: panda')
         with mock.patch('builtins.open', mock_open(data)), \
              self.assertRaises(YamlParseError):
             DefaultConfig('file.yml')
@@ -113,7 +113,7 @@ class TestDefaultConfig(TestCase):
              self.assertRaises(YamlParseError):
             DefaultConfig('file.yml')
 
-        data = ('source:\n  foo:\n    field: value')
+        data = ('origin:\n  foo:\n    field: value')
         with mock.patch('builtins.open', mock_open(data)):
             cfg = DefaultConfig('file.yml')
             with self.assertRaises(ValueError):

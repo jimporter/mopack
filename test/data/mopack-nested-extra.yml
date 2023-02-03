@@ -1,13 +1,13 @@
 packages:
   greeter:
-    source: directory
+    origin: directory
     path: greeter-bfg
     build: &bfg-debug
       type: bfg9000
       extra_args: --extra
 
   hello:
-    source: directory
+    origin: directory
     path: hello-bfg
     build: *bfg-debug
 

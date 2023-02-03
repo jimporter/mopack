@@ -1,6 +1,6 @@
 packages:
   hello:
-    source: tarball
+    origin: tarball
     path: hello-bfg.tar.gz
     patch: hello-bfg.patch
     build: bfg9000

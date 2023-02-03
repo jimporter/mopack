@@ -6,7 +6,7 @@ from yaml.error import MarkedYAMLError
 from . import expression as expr
 from .iterutils import isiterable
 from .options import Options
-from .sources import try_make_package
+from .origins import try_make_package
 from .yaml_tools import (load_file, to_parse_error, MarkedDict,
                          MarkedYAMLOffsetError, SafeLineLoader)
 
@@ -198,13 +198,13 @@ class Config(BaseConfig):
                 self.options.common.accumulate(common)
 
     def finalize(self):
-        sources = {pkg.source: True for pkg in self.packages.values()}
+        origins = {pkg.origin: True for pkg in self.packages.values()}
         builders = {i: True for i in chain.from_iterable(
             pkg.builder_types for pkg in self.packages.values()
         )}
 
-        for i in sources:
-            self.options.add('sources', i)
+        for i in origins:
+            self.options.add('origins', i)
         for i in builders:
             self.options.add('builders', i)
 

@@ -4,14 +4,14 @@ from io import StringIO
 from textwrap import dedent
 from unittest import mock
 
-from . import OptionsTest, SourceTest, through_json
+from . import OptionsTest, OriginTest, through_json
 from .. import assert_logging, mock_open_log
 
 from mopack.iterutils import iterate
 from mopack.shell import ShellArguments
-from mopack.sources import Package, PackageOptions
-from mopack.sources.apt import AptPackage
-from mopack.sources.conan import ConanPackage
+from mopack.origins import Package, PackageOptions
+from mopack.origins.apt import AptPackage
+from mopack.origins.conan import ConanPackage
 from mopack.types import dependency_string
 
 
@@ -31,9 +31,9 @@ def mock_open_write():
     return mock_open
 
 
-class TestConan(SourceTest):
+class TestConan(OriginTest):
     pkg_type = ConanPackage
-    pkgconfdir = os.path.join(SourceTest.pkgdir, 'conan')
+    pkgconfdir = os.path.join(OriginTest.pkgdir, 'conan')
 
     def check_resolve_all(self, pkgs, conanfile, extra_args=[]):
         with mock_open_log(mock_open_write()) as mopen, \
@@ -404,7 +404,7 @@ class TestConan(SourceTest):
 
     def test_upgrade(self):
         opts = self.make_options()
-        data = {'source': 'conan', '_version': 0, 'name': 'foo',
+        data = {'origin': 'conan', '_version': 0, 'name': 'foo',
                 'remote': 'foo', 'build': False, 'options': None,
                 'usage': {'type': 'system', '_version': 0}}
         with mock.patch.object(ConanPackage, 'upgrade',
@@ -467,7 +467,7 @@ class TestConanOptions(OptionsTest):
         self.assertEqual(opts, PackageOptions.rehydrate(data))
 
     def test_upgrade(self):
-        data = {'source': 'conan', '_version': 0, 'build': [],
+        data = {'origin': 'conan', '_version': 0, 'build': [],
                 'extra_args': []}
         with mock.patch.object(ConanPackage.Options, 'upgrade',
                                side_effect=ConanPackage.Options.upgrade) as m:

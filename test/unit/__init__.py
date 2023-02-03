@@ -119,10 +119,10 @@ class OptionsTest(TestCase):
         with mock.patch.object(os, 'environ', return_value={}):
             options.common.finalize()
 
-        for i in pkg_resources.iter_entry_points('mopack.sources'):
+        for i in pkg_resources.iter_entry_points('mopack.origins'):
             opts_type = i.load().Options
             if opts_type:
-                options.sources[opts_type.source] = opts_type()
+                options.origins[opts_type.origin] = opts_type()
 
         for i in pkg_resources.iter_entry_points('mopack.builders'):
             opts_type = i.load().Options

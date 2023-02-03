@@ -5,7 +5,7 @@ from . import BuilderTest, MockPackage, through_json
 
 from mopack.builders import Builder
 from mopack.builders.none import NoneBuilder
-from mopack.sources.sdist import DirectoryPackage
+from mopack.origins.sdist import DirectoryPackage
 
 
 class TestNoneBuilder(BuilderTest):

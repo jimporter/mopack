@@ -2,13 +2,13 @@ import os
 import subprocess
 from unittest import mock
 
-from . import SourceTest, through_json
+from . import OriginTest, through_json
 from .. import assert_logging, mock_open_log
 
 from mopack.iterutils import iterate
-from mopack.sources import Package
-from mopack.sources.apt import AptPackage
-from mopack.sources.conan import ConanPackage
+from mopack.origins import Package
+from mopack.origins.apt import AptPackage
+from mopack.origins.conan import ConanPackage
 from mopack.types import dependency_string
 
 
@@ -18,9 +18,9 @@ def mock_run(args, **kwargs):
     raise OSError()
 
 
-class TestApt(SourceTest):
+class TestApt(OriginTest):
     pkg_type = AptPackage
-    pkgconfdir = os.path.join(SourceTest.pkgdir, 'pkgconfig')
+    pkgconfdir = os.path.join(OriginTest.pkgdir, 'pkgconfig')
 
     def check_resolve_all(self, pkgs, remotes):
         with mock_open_log() as mopen, \
@@ -279,7 +279,7 @@ class TestApt(SourceTest):
 
     def test_upgrade(self):
         opts = self.make_options()
-        data = {'source': 'apt', '_version': 0, 'name': 'foo',
+        data = {'origin': 'apt', '_version': 0, 'name': 'foo',
                 'remote': 'libfoo-dev', 'repository': None,
                 'usage': {'type': 'system', '_version': 0}}
         with mock.patch.object(AptPackage, 'upgrade',

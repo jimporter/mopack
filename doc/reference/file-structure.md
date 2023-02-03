@@ -42,7 +42,7 @@ export:
 ## Options
 
 The `options` section lets you specify project-wide options to configure *all*
-your dependencies, or all of those with a particular source or builder.
+your dependencies, or all of those with a particular origin or builder.
 
 ```yaml
 options:
@@ -50,7 +50,7 @@ options:
   env: <dict>
   deploy_dirs: <dict>
 
-  sources:  # ...
+  origins:  # ...
   builders:  # ...
 ```
 
@@ -67,10 +67,10 @@ options:
 : A dictionary mapping *kinds* of deploy directories to their actual locations.
   Each kind should be one of the [GNU directory variables][gnu-directory-vars].
   At the simplest, you can just specify the `prefix` variable. Note: the exact
-  kinds that are supported depend on the package source and builder.
+  kinds that are supported depend on the package origin and builder.
 
-`sources` <span class="subtitle">*optional, default:* `null`</span>
-: A dictionary of options for specific [package sources](packages.md).
+`origins` <span class="subtitle">*optional, default:* `null`</span>
+: A dictionary of options for specific [package origins](packages.md).
 
 `builders` <span class="subtitle">*optional, default:* `null`</span>
 : A dictionary of options for specific [package builders](builders.md).
@@ -84,7 +84,7 @@ dictionary mapping package names to their configurations:
 ```yaml
 packages:
   my_pkg:
-    source: <source>
+    origin: <origin>
     # ...
 ```
 
@@ -99,9 +99,9 @@ satisfied:
 packages:
   my_pkg:
     - if: <condition>
-      source: <source>
+      origin: <origin>
       # ...
-    - source: <source>
+    - origin: <origin>
       # ...
 ```
 

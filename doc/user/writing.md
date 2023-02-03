@@ -11,7 +11,7 @@ specifies a dependent package fetched and built from a tarball:
 ```yaml
 packages:
   foo_pkg:
-    source: tarball
+    origin: tarball
     url: https://phobos.uac/foo_pkg-1.0.tar.gz
     build: bfg9000
 ```
@@ -29,7 +29,7 @@ options for the build:
 ```yaml
 packages:
   foo_pkg:
-    source: tarball
+    origin: tarball
     url: https://phobos.uac/foo_pkg-1.0.tar.gz
     build:
       type: bfg9000
@@ -48,7 +48,7 @@ We also explicitly specify a [*usage*](../reference/usage.md). A usage, as the
 name implies, describes how a package should be *used*, e.g. where to find
 header files, what libraries to link to, etc.
 
-## Other package sources
+## Other package origins
 
 One of the primary benefits of mopack is that packages can come from multiple
 different origins, or sources. These include other source distributions similar
@@ -61,7 +61,7 @@ like [`apt`](../reference/packages.md#apt) or
 ```yaml
 packages:
   zlib:
-    source: conan
+    origin: conan
     remote: zlib/1.2.12
 ```
 
@@ -78,7 +78,7 @@ options:
   builders:
     bfg9000:
       toolchain: /path/to/toolchain.bfg
-  sources:
+  origins:
     conan:
       build: missing
 
@@ -102,7 +102,7 @@ fetched and built so that `foo_pkg` can use it during its build:
 ```yaml
 packages:
   bar_pkg:
-    source: tarball
+    origin: tarball
     url: https://phobos.uac/bar_pkg-2.0.tar.gz
     build: bfg9000
 ```
@@ -116,11 +116,11 @@ parent `mopack.yml`:
 ```yaml
 packages:
   foo_pkg:
-    source: tarball
+    origin: tarball
     url: https://phobos.uac/foo_pkg-1.0.tar.gz
     build: bfg9000
   bar_pkg:
-    source: tarball
+    origin: tarball
     url: https://phobos.uac/bar_pkg-2.1.tar.gz
     build: bfg9000
 ```
@@ -154,7 +154,7 @@ relying on mopack to fill in the blanks:
 ```yaml
 packages:
   foo_pkg:
-    source: tarball
+    origin: tarball
     url: https://phobos.uac/foo_pkg-1.0.tar.gz
 ```
 
@@ -173,7 +173,7 @@ using a [`custom`](../reference/builders.md#custom) builder:
 ```yaml
 packages:
   foo_pkg:
-    source: tarball
+    origin: tarball
     url: https://phobos.uac/foo_pkg-1.0.tar.gz
     build:
       type: custom
@@ -199,7 +199,7 @@ arguments to bfg9000:
 ```yaml
 packages:
   foo_pkg:
-    source: tarball
+    origin: tarball
     url: https://phobos.uac/foo_pkg-1.0.tar.gz
     build:
       type: custom
@@ -228,8 +228,8 @@ since `if` always takes an expression, the `$`/`${{ }}` sigil is not required:
 packages:
   foo_pkg:
     - if: host_platform == 'linux'
-      source: apt
-    - source: tarball
+      origin: apt
+    - origin: tarball
       url: https://phobos.uac/foo_pkg-1.0.tar.gz
       build: bfg9000
 ```
@@ -254,7 +254,7 @@ available submodule names:
 ```yaml
 packages:
   hello:
-    source: tarball
+    origin: tarball
     path: greeter-1.0.tar.gz
     build: bfg9000
     submodules: ['french', 'english']

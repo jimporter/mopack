@@ -1,7 +1,7 @@
 import os
 from unittest import mock
 
-from .. import SourceTest, through_json  # noqa: F401
+from .. import OriginTest, through_json  # noqa: F401
 from ... import assert_logging, mock_open_log
 
 from mopack.iterutils import iterate
@@ -10,7 +10,7 @@ from mopack.types import dependency_string
 mock_bfgclean = 'mopack.builders.bfg9000.Bfg9000Builder.clean'
 
 
-class SDistTestCase(SourceTest):
+class SDistTestCase(OriginTest):
     config_file = os.path.abspath('/path/to/mopack.yml')
 
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):

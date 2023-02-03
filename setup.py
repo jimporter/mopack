@@ -163,13 +163,13 @@ setup(
         'console_scripts': [
             'mopack=mopack.driver:main'
         ],
-        'mopack.sources': [
-            'apt=mopack.sources.apt:AptPackage',
-            'conan=mopack.sources.conan:ConanPackage',
-            'directory=mopack.sources.sdist:DirectoryPackage',
-            'git=mopack.sources.sdist:GitPackage',
-            'system=mopack.sources.system:SystemPackage',
-            'tarball=mopack.sources.sdist:TarballPackage',
+        'mopack.origins': [
+            'apt=mopack.origins.apt:AptPackage',
+            'conan=mopack.origins.conan:ConanPackage',
+            'directory=mopack.origins.sdist:DirectoryPackage',
+            'git=mopack.origins.sdist:GitPackage',
+            'system=mopack.origins.system:SystemPackage',
+            'tarball=mopack.origins.sdist:TarballPackage',
         ],
         'mopack.builders': [
             'bfg9000=mopack.builders.bfg9000:Bfg9000Builder',

@@ -1,9 +1,9 @@
 packages:
   hello:
     - if: host_platform == 'windows'
-      source: tarball
+      origin: tarball
       path: hello-bfg.tar.gz
       build: bfg9000
-    - source: directory
+    - origin: directory
       path: hello-bfg
       build: bfg9000

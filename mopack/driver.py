@@ -104,7 +104,7 @@ def list_files(parser, args):
 
 def list_packages(parser, args):
     pkg_fmt = ('\033[1;34m{package.name}\033[0m {version}' +
-               '(\033[33m{package.source}\033[0m)')
+               '(\033[33m{package.origin}\033[0m)')
     try:
         # Try to encode a Unicode box drawing character; if we fail, use ASCII.
         '┼'.encode(sys.stdout.encoding)
@@ -187,11 +187,11 @@ def main():
                            action=arguments.ConfigOptionAction,
                            dest='options', metavar='OPTION=VALUE',
                            help='additional common options')
-    resolve_p.add_argument('-S', '--source-option',
+    resolve_p.add_argument('-S', '--origin-option',
                            action=arguments.ConfigOptionAction,
-                           key=['sources'], dest='options',
+                           key=['origins'], dest='options',
                            metavar='OPTION=VALUE',
-                           help='additional source options')
+                           help='additional origin options')
     resolve_p.add_argument('-B', '--builder-option',
                            action=arguments.ConfigOptionAction,
                            key=['builders'], dest='options',

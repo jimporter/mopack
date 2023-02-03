@@ -8,7 +8,7 @@ from .objutils import memoize_method
 from .path import Path
 from .placeholder import placeholder
 from .platforms import platform_name
-from .sources import make_package_options, PackageOptions
+from .origins import make_package_options, PackageOptions
 
 
 class ExprSymbols(dict):
@@ -81,11 +81,11 @@ class CommonOptions(FreezeDried, BaseOptions):
 
 @FreezeDried.fields(rehydrate={
     'common': CommonOptions,
-    'sources': DictToListFreezeDryer(PackageOptions, lambda x: x.source),
+    'origins': DictToListFreezeDryer(PackageOptions, lambda x: x.origin),
     'builders': DictToListFreezeDryer(BuilderOptions, lambda x: x.type),
 })
 class Options(FreezeDried):
-    _option_makers = {'sources': make_package_options,
+    _option_makers = {'origins': make_package_options,
                       'builders': make_builder_options}
     option_kinds = list(_option_makers.keys())
 

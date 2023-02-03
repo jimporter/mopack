@@ -4,8 +4,8 @@ from unittest import mock
 from . import OptionsTest, Stream
 
 from mopack.metadata import Metadata, MetadataVersionError
-from mopack.sources.apt import AptPackage
-from mopack.sources.system import SystemPackage
+from mopack.origins.apt import AptPackage
+from mopack.origins.system import SystemPackage
 
 
 class TestMetadata(OptionsTest):

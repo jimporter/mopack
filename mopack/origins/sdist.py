@@ -98,12 +98,12 @@ class SDistPackage(Package):
 
         context = 'while constructing package {!r}'.format(self.name)
         with to_parse_error(export.config_file):
-            with types.try_load_config(export.data, context, self.source):
+            with types.try_load_config(export.data, context, self.origin):
                 self.builder = make_builder(self, export.build)
 
         if not self.pending_usage and export.usage:
             with to_parse_error(export.config_file):
-                with types.try_load_config(export.data, context, self.source):
+                with types.try_load_config(export.data, context, self.origin):
                     self.usage = self._make_usage(export.usage)
         else:
             # Note: If this fails and `pending_usage` is a string, this won't
@@ -111,7 +111,7 @@ class SDistPackage(Package):
             # lost that info by now in that case.
             with to_parse_error(self.config_file):
                 with types.try_load_config(self.pending_usage, context,
-                                           self.source):
+                                           self.origin):
                     self.usage = self._make_usage(self.pending_usage,
                                                   field=None)
 
@@ -140,7 +140,7 @@ class SDistPackage(Package):
 
 @FreezeDried.fields(rehydrate={'path': Path})
 class DirectoryPackage(SDistPackage):
-    source = 'directory'
+    origin = 'directory'
     _version = 1
 
     def __init__(self, name, *, path, **kwargs):
@@ -160,7 +160,7 @@ class DirectoryPackage(SDistPackage):
 
 @FreezeDried.fields(rehydrate={'path': Path}, skip_compare={'guessed_srcdir'})
 class TarballPackage(SDistPackage):
-    source = 'tarball'
+    origin = 'tarball'
     _version = 1
 
     def __init__(self, name, *, path=None, url=None, files=None, srcdir=None,
@@ -198,7 +198,7 @@ class TarballPackage(SDistPackage):
             return False
 
         if not quiet:
-            log.pkg_clean(self.name, 'sources')
+            log.pkg_clean(self.name, 'origins')
         shutil.rmtree(self._base_srcdir(metadata), ignore_errors=True)
         return True
 
@@ -238,7 +238,7 @@ class TarballPackage(SDistPackage):
 
 
 class GitPackage(SDistPackage):
-    source = 'git'
+    origin = 'git'
     _version = 1
 
     def __init__(self, name, *, repository, tag=None, branch=None, commit=None,
@@ -279,7 +279,7 @@ class GitPackage(SDistPackage):
             return False
 
         if not quiet:
-            log.pkg_clean(self.name, 'sources')
+            log.pkg_clean(self.name, 'origins')
         shutil.rmtree(self._base_srcdir(metadata), ignore_errors=True)
         return True
 

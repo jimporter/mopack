@@ -1,10 +1,10 @@
 options:
-  sources:
+  origins:
     conan:
       build: missing
 packages:
   zlib:
-    source: conan
+    origin: conan
     remote: zlib/1.2.12
     options:
       shared: true

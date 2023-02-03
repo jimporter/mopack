@@ -46,9 +46,9 @@ GNU-like [directory variable][gnu-directory-variables], such as `prefix` or
 
 Override the common option *OPTION* to be *VALUE*.
 
-#### <code>-S *OPTION*=*VALUE*</code>, <code>--source-option *OPTION*=*VALUE*</code> { #resolve-source-option }
+#### <code>-S *OPTION*=*VALUE*</code>, <code>--origin-option *OPTION*=*VALUE*</code> { #resolve-origin-option }
 
-Override the source option *OPTION* to be *VALUE*.
+Override the origin option *OPTION* to be *VALUE*.
 
 #### <code>-B *OPTION*=*VALUE*</code>, <code>--builder-option *OPTION*=*VALUE*</code> { #resolve-builder-option }
 

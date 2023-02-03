@@ -32,9 +32,9 @@ isn't necessary (a conditional is always an expression to begin with):
 packages:
   hello:
     - if: host_platform == 'linux'
-      source: apt
+      origin: apt
       # ...
-    - source: tarball
+    - origin: tarball
       # ...
 ```
 

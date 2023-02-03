@@ -1,6 +1,6 @@
 packages:
   hello:
-    source: directory
+    origin: directory
     path: hello-bfg
     build:
       type: bfg9000

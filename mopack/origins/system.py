@@ -5,7 +5,7 @@ from ..iterutils import slice_dict
 
 
 class SystemPackage(BinaryPackage):
-    source = 'system'
+    origin = 'system'
     _version = 1
 
     @staticmethod
@@ -33,7 +33,7 @@ class SystemPackage(BinaryPackage):
         )
 
     def resolve(self, metadata):
-        log.pkg_resolve(self.name, 'from {}'.format(self.source))
+        log.pkg_resolve(self.name, 'from {}'.format(self.origin))
         self.resolved = True
 
     def deploy(self, metadata):

@@ -1,6 +1,6 @@
 packages:
   greeter:
-    source: directory
+    origin: directory
     path: greeter-cmake
     build: cmake
     usage:

@@ -1,6 +1,6 @@
 packages:
   hello:
-    source: directory
+    origin: directory
     path: hello-multi-bfg
     build: bfg9000
     submodules: ['french', 'english']

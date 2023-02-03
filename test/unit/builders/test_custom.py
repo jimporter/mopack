@@ -9,7 +9,7 @@ from mopack.builders import Builder
 from mopack.builders.custom import CustomBuilder
 from mopack.path import Path
 from mopack.shell import ShellArguments
-from mopack.sources.sdist import DirectoryPackage
+from mopack.origins.sdist import DirectoryPackage
 
 
 class TestCustomBuilder(BuilderTest):

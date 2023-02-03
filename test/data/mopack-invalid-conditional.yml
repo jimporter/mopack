@@ -1,6 +1,6 @@
 packages:
   hello:
     - if: unknown
-      source: tarball
+      origin: tarball
       path: hello-bfg.tar.gz
       build: bfg9000

@@ -7,8 +7,8 @@ from . import mock_open_data
 from mopack import commands
 from mopack.config import Config
 from mopack.metadata import Metadata
-from mopack.sources.apt import AptPackage
-from mopack.sources.sdist import DirectoryPackage
+from mopack.origins.apt import AptPackage
+from mopack.origins.sdist import DirectoryPackage
 
 
 class CommandsTestCase(TestCase):
@@ -22,7 +22,7 @@ class CommandsTestCase(TestCase):
         cfg_data = dedent("""\
           packages:
             foo:
-              source: apt
+              origin: apt
               remote: libfoo1-dev
         """)
         with mock.patch('builtins.open', mock_open_data(cfg_data)):

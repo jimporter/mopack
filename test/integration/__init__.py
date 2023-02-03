@@ -63,27 +63,27 @@ def cfg_cmake_options(toolchain=None):
 
 
 def cfg_conan_options(build=[], extra_args=[]):
-    return {'source': 'conan', '_version': 1, 'build': build,
+    return {'origin': 'conan', '_version': 1, 'build': build,
             'extra_args': extra_args}
 
 
 def cfg_options(**kwargs):
     result = {'common': cfg_common_options(**kwargs.pop('common', {})),
               'builders': [],
-              'sources': []}
+              'origins': []}
     for k, v in kwargs.items():
         opts = globals()['cfg_{}_options'.format(k)](**v)
         if k in ('bfg9000', 'cmake'):
             result['builders'].append(opts)
         else:
-            result['sources'].append(opts)
+            result['origins'].append(opts)
     return result
 
 
-def _cfg_package(source, api_version, name, config_file, parent=None,
+def _cfg_package(origin, api_version, name, config_file, parent=None,
                  resolved=True, submodules=None, should_deploy=True):
     return {
-        'source': source,
+        'origin': origin,
         '_version': api_version,
         'name': name,
         'config_file': config_file,

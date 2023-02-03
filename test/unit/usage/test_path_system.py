@@ -246,7 +246,7 @@ class TestPath(UsageTest):
         dep_usage = {'name': 'foo', 'type': self.type, 'generated': True,
                      'auto_link': True, 'pcnames': ['bar'],
                      'pkg_config_path': [path]}
-        with mock.patch('mopack.sources.Package.get_usage',
+        with mock.patch('mopack.origins.Package.get_usage',
                         return_value=dep_usage):
             self.check_get_usage(usage, 'foo', None, {
                 'name': 'foo', 'type': self.type, 'generated': True,
@@ -588,7 +588,7 @@ class TestPath(UsageTest):
         def mock_pkg_get_usage(self, metadata, submodules):
             return usage.get_usage(metadata, pkg, submodules)
 
-        with mock.patch('mopack.sources.Package.get_usage',
+        with mock.patch('mopack.origins.Package.get_usage',
                         mock_pkg_get_usage):
             self.check_get_usage(usage, 'foo', ['sub'], pkg=pkg)
         self.check_pkg_config('foo', ['sub'], {

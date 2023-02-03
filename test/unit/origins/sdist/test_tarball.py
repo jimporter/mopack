@@ -9,9 +9,9 @@ from .... import *
 from mopack.builders.bfg9000 import Bfg9000Builder
 from mopack.config import Config
 from mopack.path import Path
-from mopack.sources import Package
-from mopack.sources.apt import AptPackage
-from mopack.sources.sdist import TarballPackage
+from mopack.origins import Package
+from mopack.origins.apt import AptPackage
+from mopack.origins.sdist import TarballPackage
 from mopack.types import ConfigurationError
 
 
@@ -34,7 +34,7 @@ class TestTarball(SDistTestCase):
     def check_fetch(self, pkg):
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
         where = pkg.url or pkg.path.string()
-        with mock.patch('mopack.sources.sdist.urlopen', self.mock_urlopen), \
+        with mock.patch('mopack.origins.sdist.urlopen', self.mock_urlopen), \
              mock.patch('tarfile.TarFile.extractall') as mtar, \
              mock.patch('os.path.isdir', return_value=True), \
              mock.patch('os.path.exists', return_value=False):
@@ -76,7 +76,7 @@ class TestTarball(SDistTestCase):
         self.assertEqual(pkg.should_deploy, True)
 
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
-        with mock.patch('mopack.sources.sdist.urlopen', self.mock_urlopen), \
+        with mock.patch('mopack.origins.sdist.urlopen', self.mock_urlopen), \
              mock.patch('zipfile.ZipFile.extractall') as mtar, \
              mock.patch('os.path.isdir', return_value=True), \
              mock.patch('os.path.exists', return_value=False):
@@ -98,7 +98,7 @@ class TestTarball(SDistTestCase):
         self.assertEqual(pkg.files, ['/hello-bfg/include/'])
 
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
-        with mock.patch('mopack.sources.sdist.urlopen', self.mock_urlopen), \
+        with mock.patch('mopack.origins.sdist.urlopen', self.mock_urlopen), \
              mock.patch('tarfile.TarFile.extractall') as mtar, \
              mock.patch('os.path.isdir', return_value=True), \
              mock.patch('os.path.exists', return_value=False):
@@ -115,8 +115,8 @@ class TestTarball(SDistTestCase):
         self.assertEqual(pkg.patch, Path(patch))
 
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
-        with mock.patch('mopack.sources.sdist.urlopen', self.mock_urlopen), \
-             mock.patch('mopack.sources.sdist.pushd'), \
+        with mock.patch('mopack.origins.sdist.urlopen', self.mock_urlopen), \
+             mock.patch('mopack.origins.sdist.pushd'), \
              mock.patch('tarfile.TarFile.extractall') as mtar, \
              mock.patch('os.path.isdir', return_value=True), \
              mock.patch('os.path.exists', return_value=False), \
@@ -550,7 +550,7 @@ class TestTarball(SDistTestCase):
     def test_upgrade(self):
         opts = self.make_options()
         data = {
-            'source': 'tarball', '_version': 0, 'name': 'foo',
+            'origin': 'tarball', '_version': 0, 'name': 'foo',
             'path': {'base': 'cfgdir', 'path': 'foo.tar.gz'}, 'url': None,
             'files': [], 'srcdir': '.', 'patch': None,
             'build': {

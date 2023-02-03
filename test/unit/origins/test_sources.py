@@ -4,17 +4,17 @@ from textwrap import dedent
 from unittest import mock
 from yaml.error import MarkedYAMLError
 
-from . import SourceTest
+from . import OriginTest
 
 from mopack.path import Path
-from mopack.sources import make_package, try_make_package
-from mopack.sources.sdist import DirectoryPackage
-from mopack.sources.system import SystemPackage
+from mopack.origins import make_package, try_make_package
+from mopack.origins.sdist import DirectoryPackage
+from mopack.origins.system import SystemPackage
 from mopack.types import FieldError
 from mopack.yaml_tools import SafeLineLoader
 
 
-class TestMakePackage(SourceTest):
+class TestMakePackage(OriginTest):
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         if name is None:
             return os.path.join(self.pkgdir, pkgconfig)
@@ -23,7 +23,7 @@ class TestMakePackage(SourceTest):
 
     def test_make(self):
         pkg = make_package('foo', {
-            'source': 'directory', 'path': '/path', 'build': 'bfg9000',
+            'origin': 'directory', 'path': '/path', 'build': 'bfg9000',
         }, _options=self.make_options(), config_file='/path/to/mopack.yml')
         self.assertIsInstance(pkg, DirectoryPackage)
         self.assertEqual(pkg.name, 'foo')
@@ -42,7 +42,7 @@ class TestMakePackage(SourceTest):
 
     def test_make_no_deploy(self):
         pkg = make_package('foo', {
-            'source': 'directory', 'path': '/path', 'build': 'bfg9000',
+            'origin': 'directory', 'path': '/path', 'build': 'bfg9000',
             'deploy': False,
         }, _options=self.make_options(), config_file='/path/to/mopack.yml')
         self.assertIsInstance(pkg, DirectoryPackage)
@@ -62,7 +62,7 @@ class TestMakePackage(SourceTest):
 
     def test_make_submodules(self):
         pkg = make_package('foo', {
-            'source': 'system', 'submodules': '*',
+            'origin': 'system', 'submodules': '*',
         }, _options=self.make_options(), config_file='/path/to/mopack.yml')
         self.assertIsInstance(pkg, SystemPackage)
         self.assertEqual(pkg.name, 'foo')
@@ -85,7 +85,7 @@ class TestMakePackage(SourceTest):
             pkg.get_usage(self.metadata, None)
 
         pkg = make_package('foo', {
-            'source': 'system', 'submodules': ['sub'],
+            'origin': 'system', 'submodules': ['sub'],
         }, _options=self.make_options(), config_file='/path/to/mopack.yml')
         self.assertIsInstance(pkg, SystemPackage)
         self.assertEqual(pkg.name, 'foo')
@@ -110,7 +110,7 @@ class TestMakePackage(SourceTest):
             pkg.get_usage(self.metadata, None)
 
         pkg = make_package('foo', {
-            'source': 'system',
+            'origin': 'system',
             'submodules': {'names': ['sub'], 'required': False},
         }, _options=self.make_options(), config_file='/path/to/mopack.yml')
         self.assertIsInstance(pkg, SystemPackage)
@@ -147,7 +147,7 @@ class TestMakePackage(SourceTest):
 
     def test_boost(self):
         pkg = make_package('boost', {
-            'source': 'system',
+            'origin': 'system',
         }, _options=self.make_options(), config_file='/path/to/mopack.yml')
         self.assertIsInstance(pkg, SystemPackage)
         self.assertEqual(pkg.name, 'boost')
@@ -155,20 +155,20 @@ class TestMakePackage(SourceTest):
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
 
-    def test_unknown_source(self):
-        cfg = {'source': 'goofy'}
+    def test_unknown_origin(self):
+        cfg = {'origin': 'goofy'}
         self.assertRaises(FieldError, make_package, 'foo', cfg,
                           config_file='/path/to/mopack.yml')
         self.assertRaises(FieldError, try_make_package, 'foo', cfg,
                           config_file='/path/to/mopack.yml')
-        data = yaml.load('source: goofy', Loader=SafeLineLoader)
+        data = yaml.load('origin: goofy', Loader=SafeLineLoader)
         with self.assertRaisesRegex(MarkedYAMLError,
                                     r'line 1, column 9:\n'
-                                    r'    source: goofy\n'
+                                    r'    origin: goofy\n'
                                     r'            \^$'):
             try_make_package('foo', data, _options=self.make_options())
 
-    def test_no_source(self):
+    def test_no_origin(self):
         with self.assertRaises(TypeError):
             make_package('boost', None, _options=self.make_options(),
                          config_file='/path/to/mopack.yml')
@@ -176,28 +176,28 @@ class TestMakePackage(SourceTest):
     def test_invalid_config_file(self):
         with self.assertRaises(FieldError):
             make_package('boost', {
-                'source': 'system', 'config_file': '/path/to/mopack.yml',
+                'origin': 'system', 'config_file': '/path/to/mopack.yml',
             }, _options=self.make_options())
 
     def test_invalid_keys(self):
         # Missing key
-        cfg = {'source': 'directory'}
+        cfg = {'origin': 'directory'}
         self.assertRaises(TypeError, make_package, 'foo', cfg,
                           _options=self.make_options(),
                           config_file='/path/to/mopack.yml')
         self.assertRaises(TypeError, try_make_package, 'foo', cfg,
                           _options=self.make_options(),
                           config_file='/path/to/mopack.yml')
-        data = yaml.load('source: directory', Loader=SafeLineLoader)
+        data = yaml.load('origin: directory', Loader=SafeLineLoader)
         with self.assertRaisesRegex(MarkedYAMLError,
                                     r'line 1, column 1:\n'
-                                    r'    source: directory\n'
+                                    r'    origin: directory\n'
                                     r'    \^$'):
             try_make_package('foo', data, _options=self.make_options(),
                              config_file='/path/to/mopack.yml')
 
         # Extra key
-        cfg = {'source': 'directory', 'path': '/path', 'unknown': 'blah'}
+        cfg = {'origin': 'directory', 'path': '/path', 'unknown': 'blah'}
         self.assertRaises(TypeError, make_package, 'foo', cfg,
                           _options=self.make_options(),
                           config_file='/path/to/mopack.yml')
@@ -205,7 +205,7 @@ class TestMakePackage(SourceTest):
                           _options=self.make_options(),
                           config_file='/path/to/mopack.yml')
         data = yaml.load(dedent("""\
-          source: directory
+          origin: directory
           path: /path
           unknown: blah
         """), Loader=SafeLineLoader)
@@ -217,7 +217,7 @@ class TestMakePackage(SourceTest):
                              config_file='/path/to/mopack.yml')
 
     def test_invalid_values(self):
-        cfg = {'source': 'tarball', 'path': 'file.tar.gz', 'srcdir': '..'}
+        cfg = {'origin': 'tarball', 'path': 'file.tar.gz', 'srcdir': '..'}
         self.assertRaises(FieldError, make_package, 'foo', cfg,
                           _options=self.make_options(),
                           config_file='/path/to/mopack.yml')
@@ -225,7 +225,7 @@ class TestMakePackage(SourceTest):
                           _options=self.make_options(),
                           config_file='/path/to/mopack.yml')
         data = yaml.load(dedent("""\
-          source: tarball
+          origin: tarball
           path: file.tar.gz
           srcdir: ..
         """), Loader=SafeLineLoader)
@@ -238,7 +238,7 @@ class TestMakePackage(SourceTest):
 
     def test_unknown_builder(self):
         data = yaml.load(dedent("""\
-          source: directory
+          origin: directory
           path: /path
           build: goofy
         """), Loader=SafeLineLoader)
@@ -250,7 +250,7 @@ class TestMakePackage(SourceTest):
                              config_file='/path/to/mopack.yml')
 
         data = yaml.load(dedent("""\
-          source: directory
+          origin: directory
           path: /path
           build:
             type: goofy
@@ -264,7 +264,7 @@ class TestMakePackage(SourceTest):
 
     def test_invalid_builder_keys(self):
         data = yaml.load(dedent("""\
-          source: directory
+          origin: directory
           path: /path
           build:
             type: bfg9000
@@ -279,7 +279,7 @@ class TestMakePackage(SourceTest):
 
     def test_invalid_builder_values(self):
         data = yaml.load(dedent("""\
-          source: directory
+          origin: directory
           path: /path
           build:
             type: bfg9000
@@ -294,7 +294,7 @@ class TestMakePackage(SourceTest):
 
     def test_unknown_usage(self):
         data = yaml.load(dedent("""\
-          source: apt
+          origin: apt
           usage: unknown
         """), Loader=SafeLineLoader)
         with self.assertRaisesRegex(MarkedYAMLError,
@@ -305,7 +305,7 @@ class TestMakePackage(SourceTest):
                              config_file='/path/to/mopack.yml')
 
         data = yaml.load(dedent("""\
-          source: apt
+          origin: apt
           usage:
             type: unknown
         """), Loader=SafeLineLoader)
@@ -318,7 +318,7 @@ class TestMakePackage(SourceTest):
 
     def test_invalid_usage_keys(self):
         data = yaml.load(dedent("""\
-          source: apt
+          origin: apt
           usage:
             type: pkg_config
             unknown: blah
@@ -332,7 +332,7 @@ class TestMakePackage(SourceTest):
 
     def test_invalid_usage_values(self):
         data = yaml.load(dedent("""\
-          source: apt
+          origin: apt
           usage:
             type: pkg_config
             pkg_config_path: ..

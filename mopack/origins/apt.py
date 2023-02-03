@@ -8,7 +8,7 @@ from ..iterutils import uniques
 
 
 class AptPackage(BinaryPackage):
-    source = 'apt'
+    origin = 'apt'
     _version = 1
 
     @staticmethod
@@ -40,7 +40,7 @@ class AptPackage(BinaryPackage):
     @classmethod
     def resolve_all(cls, metadata, packages):
         for i in packages:
-            log.pkg_resolve(i.name, 'from {}'.format(cls.source))
+            log.pkg_resolve(i.name, 'from {}'.format(cls.origin))
 
         env = packages[0]._common_options.env
         apt = get_cmd(env, 'APT_GET', 'sudo apt-get')

@@ -8,9 +8,9 @@ from .... import *
 
 from mopack.builders.bfg9000 import Bfg9000Builder
 from mopack.config import Config
-from mopack.sources import Package
-from mopack.sources.apt import AptPackage
-from mopack.sources.sdist import GitPackage
+from mopack.origins import Package
+from mopack.origins.apt import AptPackage
+from mopack.origins.sdist import GitPackage
 from mopack.types import ConfigurationError
 
 
@@ -36,7 +36,7 @@ class TestGit(SDistTestCase):
             git_cmds.append(['git', 'checkout', pkg.rev[1]])
 
         with mock_open_log(), \
-             mock.patch('mopack.sources.sdist.pushd'), \
+             mock.patch('mopack.origins.sdist.pushd'), \
              mock.patch('subprocess.run') as mrun:
             with assert_logging([('fetch',
                                   'foo from {}'.format(pkg.repository))]):
@@ -325,7 +325,7 @@ class TestGit(SDistTestCase):
         pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000')
         with mock_open_log(), \
              mock.patch('os.path.exists', mock_exists), \
-             mock.patch('mopack.sources.sdist.pushd'), \
+             mock.patch('mopack.origins.sdist.pushd'), \
              mock.patch('subprocess.run') as mrun:
             with assert_logging([]):
                 pkg.fetch(self.metadata, self.config)
@@ -344,7 +344,7 @@ class TestGit(SDistTestCase):
                                 build='bfg9000')
         with mock_open_log(), \
              mock.patch('os.path.exists', mock_exists), \
-             mock.patch('mopack.sources.sdist.pushd'), \
+             mock.patch('mopack.origins.sdist.pushd'), \
              mock.patch('subprocess.run') as mrun:
             with assert_logging([]):
                 pkg.fetch(self.metadata, self.config)
@@ -359,7 +359,7 @@ class TestGit(SDistTestCase):
                                 commit='abcdefg', build='bfg9000')
         with mock_open_log(), \
              mock.patch('os.path.exists', mock_exists), \
-             mock.patch('mopack.sources.sdist.pushd'), \
+             mock.patch('mopack.origins.sdist.pushd'), \
              mock.patch('subprocess.run') as mrun:
             with assert_logging([]):
                 pkg.fetch(self.metadata, self.config)
@@ -571,7 +571,7 @@ class TestGit(SDistTestCase):
     def test_upgrade(self):
         opts = self.make_options()
         data = {
-            'source': 'git', '_version': 0, 'name': 'foo',
+            'origin': 'git', '_version': 0, 'name': 'foo',
             'repository': 'repo', 'tag': None, 'branch': None, 'commit': None,
             'srcdir': '.',
             'build': {

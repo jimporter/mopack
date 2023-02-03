@@ -1,11 +1,11 @@
 packages:
   greeter:
-    source: directory
+    origin: directory
     path: greeter-bfg
     build: bfg9000
 
   hello:
-    source: directory
+    origin: directory
     path: hello-cmake
     build: cmake
     usage:

@@ -3,8 +3,8 @@ import os
 
 from .config import Options
 from .freezedried import DictToListFreezeDryer
-from .sources import Package
-from .sources.system import fallback_system_package
+from .origins import Package
+from .origins.system import fallback_system_package
 from .yaml_tools import MarkedJSONEncoder
 
 

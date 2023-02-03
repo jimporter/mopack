@@ -10,11 +10,11 @@ from ..types import FieldKeyError, FieldValueError, try_load_config
 from ..usage import Usage, make_usage
 
 
-def _get_source_type(source, field='source'):
+def _get_origin_type(origin, field='origin'):
     try:
-        return load_entry_point('mopack', 'mopack.sources', source)
+        return load_entry_point('mopack', 'mopack.origins', origin)
     except ImportError:
-        raise FieldValueError('unknown source {!r}'.format(source), field)
+        raise FieldValueError('unknown origin {!r}'.format(origin), field)
 
 
 _submodule_dict = types.dict_shape({
@@ -37,10 +37,10 @@ def submodules_type(field, value):
 
 @FreezeDried.fields(skip_compare={'parent', 'config_file', 'resolved'})
 class Package(OptionsHolder):
-    _options_type = 'sources'
-    _default_genus = 'source'
-    _type_field = 'source'
-    _get_type = _get_source_type
+    _options_type = 'origins'
+    _default_genus = 'origin'
+    _type_field = 'origin'
+    _get_type = _get_origin_type
 
     Options = None
 
@@ -142,15 +142,15 @@ class BinaryPackage(Package):
 
 
 class PackageOptions(FreezeDried, BaseOptions):
-    _type_field = 'source'
+    _type_field = 'origin'
 
     @property
     def _context(self):
-        return 'while adding options for {!r} source'.format(self.source)
+        return 'while adding options for {!r} origin'.format(self.origin)
 
     @staticmethod
-    def _get_type(source):
-        return _get_source_type(source).Options
+    def _get_type(origin):
+        return _get_origin_type(origin).Options
 
 
 def make_package(name, config, **kwargs):
@@ -161,20 +161,20 @@ def make_package(name, config, **kwargs):
         raise FieldKeyError('config_file is reserved', 'config_file')
 
     config = config.copy()
-    source = config.pop('source')
+    origin = config.pop('origin')
 
     if not config:
         config = {'inherit_defaults': True}
 
-    return _get_source_type(source)(name, **config, **kwargs)
+    return _get_origin_type(origin)(name, **config, **kwargs)
 
 
 def try_make_package(name, config, **kwargs):
     context = 'while constructing package {!r}'.format(name)
-    with try_load_config(config, context, config['source']):
+    with try_load_config(config, context, config['origin']):
         return make_package(name, config, **kwargs)
 
 
-def make_package_options(source):
-    opts = _get_source_type(source).Options
+def make_package_options(origin):
+    opts = _get_origin_type(origin).Options
     return opts() if opts else None

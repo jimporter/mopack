@@ -5,7 +5,7 @@ from .. import OptionsTest, through_json  # noqa: F401
 from mopack.metadata import Metadata
 
 
-class SourceTest(OptionsTest):
+class OriginTest(OptionsTest):
     config_file = os.path.abspath('/path/to/mopack.yml')
     pkgdir = os.path.abspath('/path/to/builddir/mopack')
 
@@ -17,8 +17,8 @@ class SourceTest(OptionsTest):
                      this_options=None, deploy_dirs=None, config_file=None):
         options = super().make_options(common_options, deploy_dirs)
         if this_options:
-            source = (pkg_type or self.pkg_type).source
-            options.sources[source].accumulate(
+            origin = (pkg_type or self.pkg_type).origin
+            options.origins[origin].accumulate(
                 this_options, _symbols=options.expr_symbols,
                 config_file=config_file or self.config_file
             )

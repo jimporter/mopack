@@ -1,5 +1,5 @@
 packages:
   greeter:
-    source: directory
+    origin: directory
     path: greeter-bfg
     build: bfg9000

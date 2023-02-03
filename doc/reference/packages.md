@@ -6,13 +6,13 @@ all the necessary details to actually use it in the parent project.
 ```yaml
 packages:
   my_pkg:
-    source: <package_source>
+    origin: <package_origin>
     inherit_defaults: <boolean>
     deploy: <boolean>
     submodules: <submodules>
 ```
 
-`source` <span class="subtitle">*required*</span>
+`origin` <span class="subtitle">*required*</span>
 : The type of dependency, corresponding to a particular origin (e.g. a package
   manager); see below for possible values.
 
@@ -44,7 +44,7 @@ packages:
 ```yaml
 packages:
   my_pkg:
-    source: directory
+    origin: directory
     path: <path>
     build: <build>
     usage: <usage>
@@ -69,7 +69,7 @@ packages:
 ```yaml
 packages:
   my_pkg:
-    source: git
+    origin: git
     repository: <url | path>
     tag: <tag_name>  # or...
     branch: <branch_name>  # or...
@@ -106,7 +106,7 @@ packages:
 ```yaml
 packages:
   my_pkg:
-    source: tarball
+    origin: tarball
     path: <path>  # or...
     url: <url>
     files: <list[glob]>
@@ -140,14 +140,14 @@ packages:
   this to be set, but others provide a default usage specification; the
   dependency can also define the usage in its `export` section.
 
-## Other sources
+## Other origins
 
 ### apt
 
 ```yaml
 packages:
   my_pkg:
-    source: apt
+    origin: apt
     remote: <list[string]>
     repository: <string>
     usage: <usage>
@@ -167,7 +167,7 @@ packages:
 
 ```yaml
 options:
-  sources:
+  origins:
     conan:
       build: <list[string]>
       extra_args: <shell_args>
@@ -186,7 +186,7 @@ options:
 ```yaml
 packages:
   my_pkg:
-    source: conan
+    origin: conan
     remote: <string>
     build: <boolean>
     options:
@@ -212,7 +212,7 @@ packages:
 ```yaml
 packages:
   my_pkg:
-    source: system
+    origin: system
     auto_link: <boolean>
     version: <string>
     pcname: <string>

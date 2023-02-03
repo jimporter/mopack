@@ -3,20 +3,20 @@ import shutil
 from os.path import abspath
 from unittest import mock
 
-from . import SourceTest
+from . import OriginTest
 from .. import assert_logging
 from ... import call_pkg_config, test_stage_dir
 
 from mopack.path import Path
-from mopack.sources import Package
-from mopack.sources.apt import AptPackage
-from mopack.sources.system import SystemPackage
+from mopack.origins import Package
+from mopack.origins.apt import AptPackage
+from mopack.origins.system import SystemPackage
 from mopack.types import dependency_string, FieldKeyError
 
 
-class TestSystemPackage(SourceTest):
+class TestSystemPackage(OriginTest):
     pkg_type = SystemPackage
-    pkgdir = os.path.join(test_stage_dir, 'sources')
+    pkgdir = os.path.join(test_stage_dir, 'origins')
     pkgconfdir = os.path.join(pkgdir, 'pkgconfig')
 
     def setUp(self):
@@ -256,7 +256,7 @@ class TestSystemPackage(SourceTest):
 
     def test_upgrade(self):
         opts = self.make_options()
-        data = {'source': 'system', '_version': 0, 'name': 'foo',
+        data = {'origin': 'system', '_version': 0, 'name': 'foo',
                 'usage': {'type': 'system', '_version': 0}}
         with mock.patch.object(SystemPackage, 'upgrade',
                                side_effect=SystemPackage.upgrade) as m:

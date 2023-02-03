@@ -12,12 +12,12 @@ from ..shell import ShellArguments
 
 
 class ConanPackage(BinaryPackage):
-    source = 'conan'
+    origin = 'conan'
     _version = 1
 
     @FreezeDried.fields(rehydrate={'extra_args': ShellArguments})
     class Options(PackageOptions):
-        source = 'conan'
+        origin = 'conan'
         _version = 1
 
         @staticmethod
@@ -86,7 +86,7 @@ class ConanPackage(BinaryPackage):
         ).stdout
 
     def clean_post(self, metadata, new_package, quiet=False):
-        if new_package and self.source == new_package.source:
+        if new_package and self.origin == new_package.origin:
             return False
 
         if not quiet:
@@ -103,7 +103,7 @@ class ConanPackage(BinaryPackage):
     @classmethod
     def resolve_all(cls, metadata, packages):
         for i in packages:
-            log.pkg_resolve(i.name, 'from {}'.format(cls.source))
+            log.pkg_resolve(i.name, 'from {}'.format(cls.origin))
 
         options = packages[0]._this_options
         os.makedirs(metadata.pkgdir, exist_ok=True)

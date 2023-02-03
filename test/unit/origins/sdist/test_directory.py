@@ -11,9 +11,9 @@ from .... import *
 from mopack.builders.bfg9000 import Bfg9000Builder
 from mopack.config import Config
 from mopack.path import Path
-from mopack.sources import Package
-from mopack.sources.apt import AptPackage
-from mopack.sources.sdist import DirectoryPackage
+from mopack.origins import Package
+from mopack.origins.apt import AptPackage
+from mopack.origins.sdist import DirectoryPackage
 from mopack.types import ConfigurationError, FieldError
 from mopack.yaml_tools import SafeLineLoader, YamlParseError
 
@@ -489,7 +489,7 @@ class TestDirectory(SDistTestCase):
     def test_upgrade(self):
         opts = self.make_options()
         data = {
-            'source': 'directory', '_version': 0, 'name': 'foo',
+            'origin': 'directory', '_version': 0, 'name': 'foo',
             'path': {'base': 'cfgdir', 'path': '.'},
             'build': {
                 'type': None, '_version': 0,
