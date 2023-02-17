@@ -128,6 +128,7 @@ jobs:
         if: startsWith(matrix.os, 'windows-') && matrix.compiler == 'cc'
         run: |
           echo "PATH=C:\msys64\mingw64\bin;${env:PATH}" >> ${env:GITHUB_ENV}
+          echo "INCLUDE_PATH=C:\msys64\mingw64\include;${env:INCLUDE_PATH}" >> ${env:GITHUB_ENV}
           echo "CC=gcc" >> ${env:GITHUB_ENV}
           echo "CXX=g++" >> ${env:GITHUB_ENV}
       - name: Run tests
