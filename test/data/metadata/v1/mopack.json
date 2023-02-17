@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "config_files": {
+    "explicit": ["/path/to/mopack.yml"],
+    "implicit": []
+  },
+  "metadata": {
+    "options": {
+      "common": {
+        "_version": 1,
+        "strict": false,
+        "target_platform": "linux",
+        "env": {},
+        "deploy_paths": {}
+      },
+      "sources": [
+        {
+          "source": "conan",
+          "_version": 1,
+          "build": ["missing"],
+          "extra_args": []
+        }
+      ],
+      "builders": []
+    },
+    "packages": [
+      {
+        "source": "conan",
+        "_version": 1,
+        "name": "zlib",
+        "config_file": "/path/to/mopack.yml",
+        "resolved": true,
+        "parent": null,
+        "should_deploy": true,
+        "submodules": null,
+        "usage": {
+          "type": "pkg_config",
+          "_version": 1,
+          "pcname": "zlib",
+          "pkg_config_path": [{
+            "base": "builddir",
+            "path": ""
+          }]
+        },
+        "remote": "zlib/1.2.11",
+        "build": false,
+        "options": {
+          "shared": true
+        }
+      }
+    ]
+  }
+}

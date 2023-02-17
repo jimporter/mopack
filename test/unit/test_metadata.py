@@ -1,10 +1,13 @@
 import json
+import os
 from unittest import mock
 
 from . import OptionsTest, Stream
+from .. import AlwaysEqual, test_data_dir
 
 from mopack.metadata import Metadata, MetadataVersionError
 from mopack.origins.apt import AptPackage
+from mopack.origins.conan import ConanPackage
 from mopack.origins.system import SystemPackage
 
 
@@ -68,3 +71,12 @@ class TestMetadata(OptionsTest):
                         mock.mock_open(read_data=json.dumps(data))):
             with self.assertRaises(MetadataVersionError):
                 Metadata.load(self.pkgdir)
+
+    def test_upgrade_from_v1(self):
+        metadata = Metadata.load(os.path.join(test_data_dir, 'metadata', 'v1'))
+        self.assertIsInstance(metadata.get_package('zlib'), ConanPackage)
+        self.assertEqual(metadata.options.common.expr_symbols,
+                         {'host_platform': AlwaysEqual(),
+                          'target_platform': 'linux',
+                          'env': {},
+                          'deploy_dirs': {}})
