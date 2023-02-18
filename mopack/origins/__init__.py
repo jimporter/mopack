@@ -1,4 +1,5 @@
 import os
+import warnings
 from pkg_resources import load_entry_point
 
 from .. import types
@@ -161,7 +162,16 @@ def make_package(name, config, **kwargs):
         raise FieldKeyError('config_file is reserved', 'config_file')
 
     config = config.copy()
-    origin = config.pop('origin')
+    try:
+        origin = config.pop('origin')
+    except KeyError as e:  # pragma: no cover
+        # TODO: Remove this after v0.1 is released.
+        try:
+            origin = config.pop('source')
+            # FIXME: Show where in the config file this occurred.
+            warnings.warn('`source` is deprecated; use `origin` instead')
+        except KeyError:
+            raise e
 
     if not config:
         config = {'inherit_defaults': True}
@@ -171,7 +181,13 @@ def make_package(name, config, **kwargs):
 
 def try_make_package(name, config, **kwargs):
     context = 'while constructing package {!r}'.format(name)
-    with try_load_config(config, context, config['origin']):
+    try:
+        origin = config['origin']
+    except KeyError:  # pragma: no cover
+        # TODO: Remove this after v0.1 is released.
+        origin = config.get('source')
+
+    with try_load_config(config, context, origin):
         return make_package(name, config, **kwargs)
 
 

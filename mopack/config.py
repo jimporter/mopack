@@ -1,4 +1,5 @@
 import os
+import warnings
 from collections import namedtuple
 from itertools import chain
 from yaml.error import MarkedYAMLError
@@ -96,6 +97,10 @@ class BaseConfig:
     def _process_options(self, filename, data):
         if not data:
             return
+        if 'sources' in data:  # pragma: no cover
+            # FIXME: Show where in the config file this occurred.
+            warnings.warn('`sources` is deprecated; use `origins` instead')
+            data['origins'] = data.pop('sources')
         for kind in Options.option_kinds:
             if kind in data:
                 for k, v in data[kind].items():
