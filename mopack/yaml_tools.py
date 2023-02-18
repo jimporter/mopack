@@ -23,7 +23,9 @@
 # SOFTWARE.
 
 import collections.abc
+import io
 import json
+import warnings
 import yaml
 from collections import namedtuple
 from contextlib import contextmanager
@@ -36,7 +38,7 @@ from .exceptions import ConfigurationError
 
 __all__ = ['load_file', 'make_parse_error', 'to_parse_error', 'MarkedDict',
            'MarkedJSONEncoder', 'MarkedList', 'MarkedYAMLOffsetError',
-           'SafeLineLoader', 'YamlParseError']
+           'MarkedYAMLWarning', 'SafeLineLoader', 'YamlParseError']
 
 
 class MarkedYAMLOffsetError(MarkedYAMLError):
@@ -56,6 +58,10 @@ class MarkedYAMLOffsetError(MarkedYAMLError):
     @property
     def problem_mark(self):
         return self.problem_range.start
+
+
+class MarkedYAMLWarning(MarkedYAMLError, Warning):
+    pass
 
 
 class YamlParseError(ConfigurationError):
@@ -100,41 +106,70 @@ def _get_line_for_index(s, index):
     return s[start:end]
 
 
-def make_parse_error(e, stream):
-    if isinstance(e, MarkedYAMLOffsetError) and e.offset != 0:
-        start_mark, end_mark = e.problem_range
-        indent = _get_indent_at_mark(stream, start_mark)
-        data = _read_mark_range(stream, start_mark, end_mark)
-
-        mark = _get_offset_mark(data, e.offset, indent)
-        if mark.line == 0:
-            snippet = _read_line_for_mark(stream, start_mark)
-            mark = Mark(start_mark.name, start_mark.index + mark.index,
-                        start_mark.line, start_mark.column + mark.column, None,
-                        None)
-        else:
-            snippet = _get_line_for_index(data, mark.index)
-            mark = Mark(start_mark.name, start_mark.index + mark.index,
-                        start_mark.line + mark.line, mark.column, None, None)
+@contextmanager
+def _maybe_open(stream_or_filename, *args, **kwargs):
+    if isinstance(stream_or_filename, io.IOBase):
+        yield stream_or_filename
     else:
-        mark = e.problem_mark
-        snippet = _read_line_for_mark(stream, mark)
+        with open(stream_or_filename, newline='') as f:
+            yield f
+
+
+def make_parse_error(e, stream_or_filename):
+    with _maybe_open(stream_or_filename) as f:
+        if isinstance(e, MarkedYAMLOffsetError) and e.offset != 0:
+            start_mark, end_mark = e.problem_range
+            indent = _get_indent_at_mark(f, start_mark)
+            data = _read_mark_range(f, start_mark, end_mark)
+
+            mark = _get_offset_mark(data, e.offset, indent)
+            if mark.line == 0:
+                snippet = _read_line_for_mark(f, start_mark)
+                mark = Mark(start_mark.name, start_mark.index + mark.index,
+                            start_mark.line, start_mark.column + mark.column,
+                            None, None)
+            else:
+                snippet = _get_line_for_index(data, mark.index)
+                mark = Mark(start_mark.name, start_mark.index + mark.index,
+                            start_mark.line + mark.line, mark.column,
+                            None, None)
+        else:
+            mark = e.problem_mark
+            snippet = _read_line_for_mark(f, mark)
 
     return YamlParseError(e.problem, mark, snippet.rstrip())
 
 
 @contextmanager
-def to_parse_error(filename):
+def to_parse_warning(stream_or_filename):
+    original = warnings.showwarning
+
+    def showwarning(message, *args, **kwargs):
+        if isinstance(message, MarkedYAMLWarning):
+            with _maybe_open(stream_or_filename) as f:
+                message = UserWarning(make_parse_error(message, f))
+        return original(message, *args, **kwargs)
+
+    warnings.showwarning = showwarning
     try:
         yield
-    except MarkedYAMLError as e:
-        with open(filename, newline='') as f:
-            raise make_parse_error(e, f)
+    finally:
+        warnings.showwarning = original
+
+
+@contextmanager
+def to_parse_error(filename):
+    with to_parse_warning(filename):
+        try:
+            yield
+        except MarkedYAMLError as e:
+            raise make_parse_error(e, filename)
 
 
 @contextmanager
 def load_file(filename, Loader=SafeLoader):
-    with open(filename, newline='') as f:
+    with open(filename, newline='') as f, \
+         to_parse_warning(f):
         try:
             yield yaml.load(f, Loader=Loader)
         except MarkedYAMLError as e:

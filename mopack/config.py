@@ -9,7 +9,8 @@ from .iterutils import isiterable
 from .options import Options
 from .origins import try_make_package
 from .yaml_tools import (load_file, to_parse_error, MarkedDict,
-                         MarkedYAMLOffsetError, SafeLineLoader)
+                         MarkedYAMLOffsetError, MarkedYAMLWarning,
+                         SafeLineLoader)
 
 mopack_file = 'mopack.yml'
 mopack_local_file = 'mopack-local.yml'
@@ -97,10 +98,16 @@ class BaseConfig:
     def _process_options(self, filename, data):
         if not data:
             return
+
+        # TODO: Remove this after v0.1 is released.
         if 'sources' in data:  # pragma: no cover
-            # FIXME: Show where in the config file this occurred.
-            warnings.warn('`sources` is deprecated; use `origins` instead')
+            warnings.warn(MarkedYAMLWarning(
+                'while reading options', data.mark.start,
+                '`sources` is deprecated; use `origins` instead',
+                data.marks['sources'].start
+            ))
             data['origins'] = data.pop('sources')
+
         for kind in Options.option_kinds:
             if kind in data:
                 for k, v in data[kind].items():

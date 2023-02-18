@@ -9,6 +9,7 @@ from ..iterutils import ismapping, listify
 from ..package_defaults import DefaultResolver
 from ..types import FieldKeyError, FieldValueError, try_load_config
 from ..usage import Usage, make_usage
+from ..yaml_tools import MarkedYAMLWarning
 
 
 def _get_origin_type(origin, field='origin'):
@@ -167,9 +168,15 @@ def make_package(name, config, **kwargs):
     except KeyError as e:  # pragma: no cover
         # TODO: Remove this after v0.1 is released.
         try:
+            context = 'while constructing package {!r}'.format(name)
+            warning = MarkedYAMLWarning(
+                context, config.mark.start,
+                '`source` is deprecated; use `origin` instead',
+                config.marks['source'].start
+            )
+
             origin = config.pop('source')
-            # FIXME: Show where in the config file this occurred.
-            warnings.warn('`source` is deprecated; use `origin` instead')
+            warnings.warn(warning)
         except KeyError:
             raise e
 

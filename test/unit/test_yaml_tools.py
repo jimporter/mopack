@@ -1,5 +1,7 @@
 import copy
 import re
+import sys
+import warnings
 import yaml
 from io import StringIO
 from textwrap import dedent
@@ -174,6 +176,61 @@ class TestMakeParseError(TestCase):
                                   cfg['house'].value_marks['dog'], offset=2)
         err = make_parse_error(e, data)
         self.assertError(err, (2, 6), '    meow', '      meow\n        ^')
+
+
+class TestToParseError(TestCase):
+    def setUp(self):
+        self.data = StringIO(dedent("""\
+          house:
+            cat: meow
+            dog: woof
+        """))
+        self.cfg = yaml.load(self.data, Loader=SafeLineLoader)
+
+        self.msg = dedent("""\
+          problem
+            in "<file>", line 2, column 8
+              cat: meow
+                   ^""")
+
+    def test_error(self):
+        msg_ex = '^' + re.escape(self.msg) + '$'
+        with self.assertRaisesRegex(YamlParseError, msg_ex), \
+             to_parse_error(self.data):
+            raise MarkedYAMLError(
+                'context', self.cfg['house'].mark.start, 'problem',
+                self.cfg['house'].value_marks['cat'].start
+            )
+
+    def test_unfiltered_error(self):
+        with self.assertRaisesRegex(ValueError, '^hello there$'), \
+             to_parse_error(self.data):
+            raise ValueError('hello there')
+
+    def test_warning(self):
+        with mock.patch('warnings.showwarning') as mwarn, \
+             to_parse_error(self.data):
+            warnings.warn(MarkedYAMLWarning(
+                'context', self.cfg['house'].mark.start, 'problem',
+                self.cfg['house'].value_marks['cat'].start
+            ))
+            mwarn.assert_called_once()
+            # Older versions of mock_calls don't support this.
+            if sys.version_info >= (3, 8):
+                warning = mwarn.mock_calls[0].args[0]
+                self.assertIsInstance(warning, UserWarning)
+                self.assertEqual(str(warning), self.msg)
+
+    def test_unfilterd_warning(self):
+        with mock.patch('warnings.showwarning') as mwarn, \
+             to_parse_error(self.data):
+            warnings.warn('hello there')
+            mwarn.assert_called_once()
+            # Older versions of mock_calls don't support this.
+            if sys.version_info >= (3, 8):
+                warning = mwarn.mock_calls[0].args[0]
+                self.assertIsInstance(warning, UserWarning)
+                self.assertEqual(warning.args, ('hello there',))
 
 
 class TestLoadFile(TestCase):
