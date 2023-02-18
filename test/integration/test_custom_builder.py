@@ -53,7 +53,7 @@ class TestCustomBuilderDeploy(IntegrationTest):
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-custom-builder.yml')
         self.assertPopen(['mopack', 'resolve', config,
-                          '-Dprefix=' + self.prefix])
+                          '-dprefix=' + self.prefix])
         self.assertExists('mopack/src/hello/hello-bfg/build.bfg')
         self.assertExists('mopack/build/hello/')
         self.assertExists('mopack/logs/hello.log')

@@ -36,7 +36,7 @@ project (e.g. by building them).
 
 The directory storing the local package data; defaults to `./mopack`.
 
-#### <code>-D *TYPE*=*PATH*</code>, <code>--deploy-dir *KIND*=*DIR*</code> { #resolve-deploy-dir }
+#### <code>-d *KIND*=*DIR*</code>, <code>--deploy-dir *KIND*=*DIR*</code> { #resolve-deploy-dir }
 
 Set the directory to deploy package data kind *KIND* to *DIR*. *KIND* is a
 GNU-like [directory variable][gnu-directory-variables], such as `prefix` or

@@ -179,7 +179,7 @@ def main():
     resolve_p.add_argument('--directory', default='.', type=os.path.abspath,
                            metavar='DIR', complete='directory',
                            help='directory to store local package data in')
-    resolve_p.add_argument('-D', '--deploy-dir',
+    resolve_p.add_argument('-d', '--deploy-dir',
                            action=arguments.KeyValueAction,
                            dest='deploy_dirs', metavar='KIND=DIR',
                            help='directories to deploy packages to')

@@ -14,7 +14,7 @@ class TestInnerCMake(IntegrationTest):
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-inner-cmake.yml')
         self.assertPopen(['mopack', 'resolve', config,
-                          '-Dprefix=' + self.prefix])
+                          '-dprefix=' + self.prefix])
         self.assertExists('mopack/build/greeter/')
         self.assertExists('mopack/logs/greeter.log')
         self.assertExists('mopack/build/hello/')
@@ -74,7 +74,7 @@ class TestOuterCMake(IntegrationTest):
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-outer-cmake.yml')
         self.assertPopen(['mopack', 'resolve', config,
-                          '-Dprefix=' + self.prefix])
+                          '-dprefix=' + self.prefix])
         self.assertExists('mopack/build/greeter/')
         self.assertExists('mopack/logs/greeter.log')
         self.assertExists('mopack/build/hello/')
