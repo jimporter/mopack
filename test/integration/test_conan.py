@@ -9,7 +9,7 @@ class TestConan(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-conan.yml')
-        self.assertPopen(['mopack', 'resolve', '-Sconan:extra_args=-gtxt',
+        self.assertPopen(['mopack', 'resolve', '-Oconan:extra_args=-gtxt',
                           config])
         self.assertExists('mopack/logs/conan.log')
         self.assertExists('mopack/conan/conanbuildinfo.txt')

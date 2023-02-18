@@ -36,9 +36,9 @@ project (e.g. by building them).
 
 The directory storing the local package data; defaults to `./mopack`.
 
-#### <code>-P *TYPE*=*PATH*</code>, <code>--deploy-path *TYPE*=*PATH*</code> { #resolve-deploy-path }
+#### <code>-D *TYPE*=*PATH*</code>, <code>--deploy-dir *KIND*=*DIR*</code> { #resolve-deploy-dir }
 
-Set the directory to deploy package data type *TYPE* to *PATH*. *TYPE* is a
+Set the directory to deploy package data kind *KIND* to *DIR*. *KIND* is a
 GNU-like [directory variable][gnu-directory-variables], such as `prefix` or
 `bindir`.
 
@@ -46,7 +46,7 @@ GNU-like [directory variable][gnu-directory-variables], such as `prefix` or
 
 Override the common option *OPTION* to be *VALUE*.
 
-#### <code>-S *OPTION*=*VALUE*</code>, <code>--origin-option *OPTION*=*VALUE*</code> { #resolve-origin-option }
+#### <code>-O *OPTION*=*VALUE*</code>, <code>--origin-option *OPTION*=*VALUE*</code> { #resolve-origin-option }
 
 Override the origin option *OPTION* to be *VALUE*.
 
