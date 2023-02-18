@@ -7,7 +7,6 @@ from . import *
 @skipIf('qt' not in test_features, 'skipping test requiring qt')
 class TestQt(IntegrationTest):
     name = 'qt'
-    maxDiff = None
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-qt.yml')

@@ -48,7 +48,6 @@ class TestCustomBuilder(IntegrationTest):
 
 class TestCustomBuilderDeploy(IntegrationTest):
     name = 'custom-builder-deploy'
-    maxDiff = None
     deploy = True
 
     def test_resolve(self):
