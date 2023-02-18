@@ -137,7 +137,7 @@
     <ul class="nav bs-sidenav">
         <li class="main active"><a href="#packages">Packages</a></li>
             <li><a href="#source-distributions">Source distributions</a></li>
-            <li><a href="#other-sources">Other sources</a></li>
+            <li><a href="#other-origins">Other origins</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
@@ -147,14 +147,14 @@
 all the necessary details to actually use it in the parent project.</p>
 <pre><code class="yaml">packages:
   my_pkg:
-    source: &lt;package_source&gt;
+    origin: &lt;package_origin&gt;
     inherit_defaults: &lt;boolean&gt;
     deploy: &lt;boolean&gt;
     submodules: &lt;submodules&gt;
 </code></pre>
 
 <dl>
-<dt><code>source</code> <span class="subtitle"><em>required</em></span></dt>
+<dt><code>origin</code> <span class="subtitle"><em>required</em></span></dt>
 <dd>The type of dependency, corresponding to a particular origin (e.g. a package
   manager); see below for possible values.</dd>
 <dt><code>inherit_defaults</code> <span class="subtitle"><em>optional, default</em>: <code>false</code></span></dt>
@@ -179,7 +179,7 @@ all the necessary details to actually use it in the parent project.</p>
 <h3 id="directory">directory<a class="headerlink" href="#directory" title="Permanent link">§</a></h3>
 <pre><code class="yaml">packages:
   my_pkg:
-    source: directory
+    origin: directory
     path: &lt;path&gt;
     build: &lt;build&gt;
     usage: &lt;usage&gt;
@@ -201,7 +201,7 @@ all the necessary details to actually use it in the parent project.</p>
 <h3 id="git">git<a class="headerlink" href="#git" title="Permanent link">§</a></h3>
 <pre><code class="yaml">packages:
   my_pkg:
-    source: git
+    origin: git
     repository: &lt;url | path&gt;
     tag: &lt;tag_name&gt;  # or...
     branch: &lt;branch_name&gt;  # or...
@@ -233,7 +233,7 @@ all the necessary details to actually use it in the parent project.</p>
 <h3 id="tarball">tarball<a class="headerlink" href="#tarball" title="Permanent link">§</a></h3>
 <pre><code class="yaml">packages:
   my_pkg:
-    source: tarball
+    origin: tarball
     path: &lt;path&gt;  # or...
     url: &lt;url&gt;
     files: &lt;list[glob]&gt;
@@ -263,11 +263,11 @@ all the necessary details to actually use it in the parent project.</p>
   this to be set, but others provide a default usage specification; the
   dependency can also define the usage in its <code>export</code> section.</dd>
 </dl>
-<h2 id="other-sources">Other sources<a class="headerlink" href="#other-sources" title="Permanent link">§</a></h2>
+<h2 id="other-origins">Other origins<a class="headerlink" href="#other-origins" title="Permanent link">§</a></h2>
 <h3 id="apt">apt<a class="headerlink" href="#apt" title="Permanent link">§</a></h3>
 <pre><code class="yaml">packages:
   my_pkg:
-    source: apt
+    origin: apt
     remote: &lt;list[string]&gt;
     repository: &lt;string&gt;
     usage: &lt;usage&gt;
@@ -284,7 +284,7 @@ all the necessary details to actually use it in the parent project.</p>
 </dl>
 <h3 id="conan">conan<a class="headerlink" href="#conan" title="Permanent link">§</a></h3>
 <pre><code class="yaml">options:
-  sources:
+  origins:
     conan:
       build: &lt;list[string]&gt;
       extra_args: &lt;shell_args&gt;
@@ -302,7 +302,7 @@ all the necessary details to actually use it in the parent project.</p>
 </dl>
 <pre><code class="yaml">packages:
   my_pkg:
-    source: conan
+    origin: conan
     remote: &lt;string&gt;
     build: &lt;boolean&gt;
     options:
@@ -324,7 +324,7 @@ all the necessary details to actually use it in the parent project.</p>
 <h3 id="system">system<a class="headerlink" href="#system" title="Permanent link">§</a></h3>
 <pre><code class="yaml">packages:
   my_pkg:
-    source: system
+    origin: system
     auto_link: &lt;boolean&gt;
     version: &lt;string&gt;
     pcname: &lt;string&gt;
