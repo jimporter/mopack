@@ -1,7 +1,15 @@
+import os.path
 import tarfile
 import zipfile
 
 __all__ = ['Archive', 'open', 'TarArchive', 'ZipArchive']
+
+
+def _check_safe_path(path):
+    if ( os.path.splitdrive(path)[0] or
+         os.path.isabs(path) or
+         os.path.normpath(path).split(os.path.sep)[0] == '..' ):
+        raise ValueError('unsafe path in archive: {!r}'.format(path))
 
 
 class Archive:
@@ -19,6 +27,8 @@ class Archive:
 class TarArchive(Archive):
     def __init__(self, file, mode='r:*'):
         super().__init__(tarfile.open(mode=mode, fileobj=file))
+        for i in self._archive.getmembers():
+            _check_safe_path(i.name)
 
     def getnames(self):
         def fixdir(info):
@@ -45,6 +55,8 @@ class ZipArchive(Archive):
                              .format(split_mode[1]))
 
         super().__init__(zipfile.ZipFile(file, split_mode[0]))
+        for i in self._archive.namelist():
+            _check_safe_path(i)
 
     def getnames(self):
         result = self._archive.namelist()

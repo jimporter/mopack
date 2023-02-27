@@ -1,10 +1,35 @@
 import os.path
 import sys
-from unittest import mock, TestCase
+from unittest import mock, TestCase, skipIf
 
 from .. import AlwaysEqual, test_data_dir
 
 from mopack import archive
+
+
+class TestCheckSafePath(TestCase):
+    def test_safe(self):
+        for i in ('file.txt', 'dir/', 'dir/subdir/', 'dir/file.txt',
+                  'dir/subdir/file.txt', 'dir/..', 'dir/../file.txt/',
+                  'dir/subdir/../file.txt'):
+            archive._check_safe_path(i)
+
+    def test_unsafe_abs(self):
+        for i in ('/', '/file.txt', '/dir/', '/..'):
+            with self.assertRaises(ValueError):
+                archive._check_safe_path(i)
+
+    @skipIf(sys.platform != 'win32', 'checking Windows paths')
+    def test_unsafe_abs_windows(self):
+        for i in ('C:/', 'C:/file.txt', 'C:file.txt', 'C:../file.txt'):
+            with self.assertRaises(ValueError):
+                archive._check_safe_path(i)
+
+    def test_unsafe_relative(self):
+        for i in ('..', '../file.txt', '/dir/../../',
+                  'dir/../subdir/../../file.txt'):
+            with self.assertRaises(ValueError):
+                archive._check_safe_path(i)
 
 
 class TestTarArchive(TestCase):

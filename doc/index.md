@@ -10,8 +10,8 @@ dependencies from multiple package managers ("origins").
 
 By default, mopack will assume all package dependencies are already fetched
 (downloaded and ready to use) and will attempt to resolve each dependency using
-common methods for the relevant platform/runtime (e.g. pkg-config, searching
-system paths).
+common methods for the relevant platform (e.g. pkg-config, searching system
+paths).
 
 ### Builders can override developers
 
