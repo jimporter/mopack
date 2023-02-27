@@ -37,6 +37,7 @@ class TestConan(OriginTest):
 
     def check_resolve_all(self, pkgs, conanfile, extra_args=[]):
         with mock_open_log(mock_open_write()) as mopen, \
+             mock.patch('mopack.origins.conan.pushd'), \
              mock.patch('subprocess.run') as mrun:
             with assert_logging([('resolve', '{} from conan'.format(i.name))
                                  for i in pkgs]):
@@ -45,8 +46,8 @@ class TestConan(OriginTest):
             self.assertEqual(mopen.mock_file.getvalue(), conanfile)
             conandir = os.path.join(self.pkgdir, 'conan')
             mrun.assert_called_with(
-                (['conan', 'install', '-if', conandir] + extra_args +
-                 ['--', self.pkgdir]),
+                (['conan', 'install'] + extra_args +
+                 ['--', conandir]),
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                 universal_newlines=True, check=True, env={}
             )
@@ -77,7 +78,7 @@ class TestConan(OriginTest):
             [options]
 
             [generators]
-            pkg_config
+            PkgConfigDeps
         """))
 
         with mock.patch('subprocess.run') as mrun:
@@ -106,7 +107,7 @@ class TestConan(OriginTest):
             [options]
 
             [generators]
-            pkg_config
+            PkgConfigDeps
         """), ['--build=foo'])
 
         self.check_usage(pkg)
@@ -124,10 +125,10 @@ class TestConan(OriginTest):
             foo/1.2.3@conan/stable
 
             [options]
-            foo:shared=True
+            foo*:shared=True
 
             [generators]
-            pkg_config
+            PkgConfigDeps
         """))
 
         self.check_usage(pkg)
@@ -148,7 +149,7 @@ class TestConan(OriginTest):
             [options]
 
             [generators]
-            pkg_config
+            PkgConfigDeps
         """), ['--build=foo', '-gcmake'])
 
         self.check_usage(pkg)
@@ -168,7 +169,7 @@ class TestConan(OriginTest):
             [options]
 
             [generators]
-            pkg_config
+            PkgConfigDeps
         """), ['--build'])
 
         self.check_usage(pkg)
@@ -190,7 +191,7 @@ class TestConan(OriginTest):
             [options]
 
             [generators]
-            pkg_config
+            PkgConfigDeps
         """), ['--build=foo', '--build=bar'])
 
         self.check_usage(pkg)
@@ -208,10 +209,10 @@ class TestConan(OriginTest):
                 bar/2.3.4@conan/stable
 
                 [options]
-                bar:shared=True
+                bar*:shared=True
 
                 [generators]
-                pkg_config
+                PkgConfigDeps
             """))
 
         for pkg in pkgs:

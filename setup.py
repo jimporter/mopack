@@ -152,11 +152,10 @@ setup(
 
     install_requires=['colorama', 'pyparsing >= 3.0', 'pyyaml', 'setuptools'],
     extras_require={
-        # FIXME: Support conan 2.0.
-        'dev': ['bfg9000', 'conan == 1.*', 'coverage', 'flake8 >= 3.6',
+        'dev': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6',
                 'flake8-quotes', 'mike >= 0.3.1', 'mkdocs-bootswatch-classic',
                 'verspec', 'shtab'],
-        'test': ['bfg9000', 'conan == 1.*', 'coverage', 'flake8 >= 3.6',
+        'test': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6',
                  'flake8-quotes', 'shtab'],
     },
 

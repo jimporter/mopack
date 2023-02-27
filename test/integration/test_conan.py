@@ -9,10 +9,11 @@ class TestConan(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-conan.yml')
-        self.assertPopen(['mopack', 'resolve', '-Oconan:extra_args=-gtxt',
-                          config])
+        self.assertPopen(['mopack', 'resolve',
+                          '-Oconan:extra_args=-gCMakeDeps', config])
         self.assertExists('mopack/logs/conan.log')
-        self.assertExists('mopack/conan/conanbuildinfo.txt')
+        self.assertExists('mopack/conan/conanfile.txt')
+        self.assertExists('mopack/conan/zlib.pc')
         self.assertExists('mopack/mopack.json')
 
         self.assertPkgConfigUsage('zlib', pkg_config_path=[os.path.join(
@@ -22,7 +23,7 @@ class TestConan(IntegrationTest):
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
             'options': cfg_options(
-                conan={'build': ['missing'], 'extra_args': ['-gtxt']}
+                conan={'build': ['missing'], 'extra_args': ['-gCMakeDeps']}
             ),
             'packages': [
                 cfg_conan_pkg(

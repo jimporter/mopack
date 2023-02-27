@@ -13,17 +13,31 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         compiler: [cc, msvc]
         python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        conan-version: ['1.*']
 
         include:
           # Python 3.6 builds
-          - {os: ubuntu-20.04, compiler: cc, python-version: '3.6'}
+          - {os: ubuntu-20.04, compiler: cc, python-version: '3.6',
+             conan-version: '1.*'}
+
+          # Conan 2.x builds
+          - {os: ubuntu-latest, compiler: cc, python-version: '3.11',
+             conan-version: '2.*', extra-tests: [apt, mingw-cross]}
+          - {os: windows-latest, compiler: cc, python-version: '3.11',
+             conan-version: '2.*', skipped-tests: [boost, qt]}
+          - {os: windows-latest, compiler: msvc, python-version: '3.11',
+             conan-version: '2.*', msvc-version: '14.34',
+             win-sdk: '10.0.20348.0', boost-version: '1.80.0',
+             qt-version: '5.15.2'}
+          - {os: macos-latest, compiler: cc, python-version: '3.11',
+             conan-version: '2.*'}
 
           # Extra settings for matrix builds
           - {os: ubuntu-latest, extra-tests: [apt, mingw-cross]}
+          - {os: windows-latest, compiler: cc, skipped-tests: [boost, qt]}
           - {os: windows-latest, compiler: msvc, msvc-version: '14.34',
              win-sdk: '10.0.20348.0', boost-version: '1.80.0',
              qt-version: '5.15.2'}
-          - {os: windows-latest, compiler: cc, skipped-tests: [boost, qt]}
         exclude:
           - os: ubuntu-latest
             compiler: msvc
@@ -55,9 +69,6 @@ jobs:
         with:
           repository: jimporter/bfg9000
           path: bfg9000
-      - name: Install Python dependencies
-        run: |
-          pip install ./bfg9000 '.[test]'
       - name: Initialize MSVC ${{ matrix.msvc-version }}
         if: startsWith(matrix.os, 'windows-') && matrix.compiler == 'msvc'
         uses: ilammy/msvc-dev-cmd@v1
@@ -65,6 +76,19 @@ jobs:
           toolset: ${{ matrix.msvc-version }}
           arch: 'x64'
           sdk: ${{ matrix.win-sdk }}
+      - name: Install Conan 1.x
+        if: startsWith(matrix.conan-version, '1.')
+        run: |
+          pip install 'conan==${{ matrix.conan-version }}'
+          conan profile new default --detect
+      - name: Install Conan 2.x
+        if: startsWith(matrix.conan-version, '2.')
+        run: |
+          pip install 'conan==${{ matrix.conan-version }}'
+          conan profile detect
+      - name: Install Python dependencies
+        run: |
+          pip install ./bfg9000 '.[test]'
       - name: Install Qt ${{ matrix.qt-version }}
         if: matrix.qt-version
         uses: jurplel/install-qt-action@v3
@@ -121,7 +145,6 @@ jobs:
       - name: Set up cl.exe
         if: matrix.compiler == 'msvc'
         run: |
-          conan profile new default --detect
           echo "CC=cl.exe" >> ${env:GITHUB_ENV}
           echo "CXX=cl.exe" >> ${env:GITHUB_ENV}
       - name: Set up mingw
@@ -141,6 +164,10 @@ jobs:
           files: ./coverage.xml
   build-cygwin:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        conan-version: ['1.*', '2.*']
+      fail-fast: false
     env:
       CYGROOT: C:\cygwin
       CYGCACHE: C:\cygwin\var\cache\setup
@@ -169,14 +196,29 @@ jobs:
           echo "MOPACK_LIB_PATH=/usr/lib" >> .mopack_test_env
           robocopy . ${env:CYGROOT}\home\runneradmin\mopack /E
           if(${LastExitCode} -le 7) { ${LastExitCode} = 0 }
+      - name: Install Conan 1.x
+        if: startsWith(matrix.conan-version, '1.')
+        run: >
+          C:\cygwin\bin\bash -lc
+          "pip3.8 install 'conan==${{ matrix.conan-version }}' &&
+          conan profile new default --detect &&
+          conan profile update settings.os.subsystem=cygwin default &&
+          echo tools.cmake.cmaketoolchain:generator=Ninja >> ~/.conan/global.conf"
+      - name: Install Conan 2.x
+        if: startsWith(matrix.conan-version, '2.')
+        run: >
+          C:\cygwin\bin\bash -lc
+          "pip3.8 install 'conan==${{ matrix.conan-version }}' &&
+          conan profile detect &&
+          sed -i 's/CYGWIN_NT.*/Windows/' ~/.conan2/profiles/default &&
+          echo tools.microsoft.bash:subsystem=cygwin >> ~/.conan2/global.conf &&
+          echo tools.microsoft.bash:active=True >> ~/.conan2/global.conf &&
+          echo tools.cmake.cmaketoolchain:generator=Ninja >> ~/.conan2/global.conf"
       - name: Install Python dependencies
         run: >
           C:\cygwin\bin\bash -lc
           "cd mopack &&
-          pip3.8 install ./bfg9000 '.[test]' &&
-          conan profile new default --detect &&
-          conan profile update settings.os.subsystem=cygwin default &&
-          echo tools.cmake.cmaketoolchain:generator=Ninja >> ~/.conan/global.conf"
+          pip3.8 install ./bfg9000 '.[test]'"
       - name: Run tests
         run: >
           C:\cygwin\bin\bash -lc

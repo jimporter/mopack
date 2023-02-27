@@ -8,6 +8,7 @@ from .. import log, types
 from ..environment import get_cmd
 from ..freezedried import FreezeDried
 from ..iterutils import uniques
+from ..path import pushd
 from ..shell import ShellArguments
 
 
@@ -106,8 +107,12 @@ class ConanPackage(BinaryPackage):
             log.pkg_resolve(i.name, 'from {}'.format(cls.origin))
 
         options = packages[0]._this_options
-        os.makedirs(metadata.pkgdir, exist_ok=True)
-        with open(os.path.join(metadata.pkgdir, 'conanfile.txt'),
+        conandir = cls._installdir(metadata)
+        os.makedirs(conandir, exist_ok=True)
+
+        # XXX: Rather than putting the conanfile in the `mopack/conan`
+        # directory, we could look into using Conan 2.0's "layouts" feature.
+        with open(os.path.join(conandir, 'conanfile.txt'),
                   'w') as conan:
             print('[requires]', file=conan)
             for i in packages:
@@ -117,21 +122,26 @@ class ConanPackage(BinaryPackage):
             print('[options]', file=conan)
             for i in packages:
                 for k, v in i.options.items():
-                    print('{}:{}={}'.format(i.remote_name, k, v), file=conan)
+                    print('{}*:{}={}'.format(i.remote_name, k, v), file=conan)
             print('', file=conan)
 
             print('[generators]', file=conan)
-            print('pkg_config', file=conan)
+            print('PkgConfigDeps', file=conan)
 
         build = [i.remote_name for i in packages if i.build]
 
         env = packages[0]._common_options.env
         conan = get_cmd(env, 'CONAN', 'conan')
-        with log.LogFile.open(metadata.pkgdir, 'conan') as logfile:
+        # XXX: We run this from the `mopack/conan` directory so that we can use
+        # the same command in Conan 1.x and 2.x and still get the generated
+        # files in the right place. Maybe it would be better to use different
+        # command arguments depending on Conan's version.
+        with log.LogFile.open(metadata.pkgdir, 'conan') as logfile, \
+             pushd(conandir):
             logfile.check_call(
-                conan + ['install', '-if', cls._installdir(metadata)] +
+                conan + ['install'] +
                 cls._build_opts(uniques(options.build + build)) +
-                options.extra_args.fill() + ['--', metadata.pkgdir],
+                options.extra_args.fill() + ['--', conandir],
                 env=env
             )
 
