@@ -62,7 +62,7 @@ like [`apt`](../reference/packages.md#apt) or
 packages:
   zlib:
     origin: conan
-    remote: zlib/1.2.12
+    remote: zlib/1.2.13
 ```
 
 ## Project-wide options

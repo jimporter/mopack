@@ -27,7 +27,7 @@ class TestConan(IntegrationTest):
             'packages': [
                 cfg_conan_pkg(
                     'zlib', config,
-                    remote='zlib/1.2.12',
+                    remote='zlib/1.2.13',
                     options={'shared': True},
                     usage=cfg_pkg_config_usage(
                         pcname='zlib',
