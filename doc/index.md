@@ -20,3 +20,18 @@ make it easier for development builds to resolve dependencies. However, people
 who *build* the project may prefer to resolve packages differently (e.g. if a
 project defaults to resolving packages via Conan, someone building for `apt`
 would likely override the config to point to `apt` packages).
+
+## Installation
+
+mopack uses [setuptools][setuptools], so installation is much the same as any
+other Python package:
+
+```sh
+$ pip install mopack
+```
+
+If you've downloaded mopack already, just run `pip install .` from the source
+directory. (Equivalently, you can run `python setup.py install`.) From there,
+you can start using mopack to build your software!
+
+[setuptools]: https://pythonhosted.org/setuptools/

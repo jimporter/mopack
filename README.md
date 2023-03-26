@@ -26,6 +26,17 @@ who *build* the project may prefer to resolve packages differently (e.g. if a
 project defaults to resolving packages via Conan, someone building for `apt`
 would likely override the config to point to `apt` packages).
 
+## Installation
+
+mopack uses [setuptools][setuptools], so installation is much the same as any
+other Python package:
+
+```sh
+$ pip install mopack
+```
+
+From there, you can start using mopack to build your software!
+
 ## License
 
 This project is licensed under the [BSD 3-clause license](LICENSE).
@@ -38,3 +49,4 @@ This project is licensed under the [BSD 3-clause license](LICENSE).
 [ci-link]: https://github.com/jimporter/mopack/actions?query=branch%3Amaster+workflow%3Abuild
 [codecov-image]: https://codecov.io/gh/jimporter/mopack/branch/master/graph/badge.svg
 [codecov-link]: https://codecov.io/gh/jimporter/mopack
+[setuptools]: https://pythonhosted.org/setuptools/
