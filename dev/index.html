@@ -137,6 +137,7 @@
     <ul class="nav bs-sidenav">
         <li class="main active"><a href="#mopack">mopack</a></li>
             <li><a href="#why-mopack">Why Mopack?</a></li>
+            <li><a href="#installation">Installation</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
@@ -156,7 +157,16 @@ paths).</p>
 make it easier for development builds to resolve dependencies. However, people
 who <em>build</em> the project may prefer to resolve packages differently (e.g. if a
 project defaults to resolving packages via Conan, someone building for <code>apt</code>
-would likely override the config to point to <code>apt</code> packages).</p></div>
+would likely override the config to point to <code>apt</code> packages).</p>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">§</a></h2>
+<p>mopack uses <a href="https://pythonhosted.org/setuptools/">setuptools</a>, so installation is much the same as any
+other Python package:</p>
+<pre><code class="sh">$ pip install mopack
+</code></pre>
+
+<p>If you've downloaded mopack already, just run <code>pip install .</code> from the source
+directory. (Equivalently, you can run <code>python setup.py install</code>.) From there,
+you can start using mopack to build your software!</p></div>
         </div>
 
         <footer class="col-md-12">
@@ -241,5 +251,5 @@ would likely override the config to point to <code>apt</code> packages).</p></di
 
 <!--
 MkDocs version : 1.4.2
-Build Date UTC : 2023-02-27 23:48:35.237955+00:00
+Build Date UTC : 2023-03-26 04:04:36.234010+00:00
 -->
