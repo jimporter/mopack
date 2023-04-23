@@ -9,22 +9,31 @@
 an emphasis on C/C++ packages. It's designed to allow users to resolve package
 dependencies from multiple package managers ("origins").
 
-## Why Mopack?
+## Why mopack?
+
+### Separate abstract and concrete dependencies
+
+Generally speaking, developers of a project are more concerned about
+dependencies in the abstract: if your project requires Boost v1.50+, that's all
+that really matters. However, when building a project, you work with concrete
+dependencies: you naturally have to download a particular version of Boost and
+build/install it in a particular way. mopack supports this by letting a
+project's build system asking how to use (link to) an abstract dependency, which
+mopack will resolve via a particular concrete dependency.
 
 ### No configuration necessary
 
-By default, mopack will assume all package dependencies are already fetched
-(downloaded and ready to use) and will attempt to resolve each dependency using
-common methods for the relevant platform/runtime (e.g. pkg-config, searching
-system paths).
+If you've already downloaded and installed a project's dependencies, you usually
+don't need to do anything else. mopack can find dependencies using common
+methods for the relevant platform (e.g. pkg-config, searching system paths).
 
-### Builders can override developers
+### Easy overrides
 
-In typical usage, a project's developers will provide an mopack configuration to
-make it easier for development builds to resolve dependencies. However, people
-who *build* the project may prefer to resolve packages differently (e.g. if a
-project defaults to resolving packages via Conan, someone building for `apt`
-would likely override the config to point to `apt` packages).
+To simplify building their project, developers can provide a default mopack
+configuration so that a standard build just works without any extra effort.
+However, people who *build* the project may prefer to resolve packages from
+somewhere else. mopack makes this easy: simply pass in an extra mopack file with
+new definitions for any dependency, and mopack will use those instead.
 
 ## Installation
 
