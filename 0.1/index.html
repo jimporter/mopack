@@ -136,7 +136,7 @@
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
         <li class="main active"><a href="#mopack">mopack</a></li>
-            <li><a href="#why-mopack">Why Mopack?</a></li>
+            <li><a href="#why-mopack">Why mopack?</a></li>
             <li><a href="#installation">Installation</a></li>
     </ul>
 </div></div>
@@ -146,18 +146,25 @@
 <p><strong>mopack</strong> (pronounced "ammopack") is a <em>multiple origin</em> package manager, with
 an emphasis on C/C++ packages. It's designed to allow users to resolve package
 dependencies from multiple package managers ("origins").</p>
-<h2 id="why-mopack">Why Mopack?<a class="headerlink" href="#why-mopack" title="Permanent link">§</a></h2>
+<h2 id="why-mopack">Why mopack?<a class="headerlink" href="#why-mopack" title="Permanent link">§</a></h2>
+<h3 id="separate-abstract-and-concrete-dependencies">Separate abstract and concrete dependencies<a class="headerlink" href="#separate-abstract-and-concrete-dependencies" title="Permanent link">§</a></h3>
+<p>Generally speaking, developers of a project are more concerned about
+dependencies in the abstract: if your project requires Boost v1.50+, that's all
+that really matters. However, when building a project, you work with concrete
+dependencies: you naturally have to download a particular version of Boost and
+build/install it in a particular way. mopack supports this by letting a
+project's build system asking how to use (link to) an abstract dependency, which
+mopack will resolve via a particular concrete dependency.</p>
 <h3 id="no-configuration-necessary">No configuration necessary<a class="headerlink" href="#no-configuration-necessary" title="Permanent link">§</a></h3>
-<p>By default, mopack will assume all package dependencies are already fetched
-(downloaded and ready to use) and will attempt to resolve each dependency using
-common methods for the relevant platform (e.g. pkg-config, searching system
-paths).</p>
-<h3 id="builders-can-override-developers">Builders can override developers<a class="headerlink" href="#builders-can-override-developers" title="Permanent link">§</a></h3>
-<p>In typical usage, a project's developers will provide an mopack configuration to
-make it easier for development builds to resolve dependencies. However, people
-who <em>build</em> the project may prefer to resolve packages differently (e.g. if a
-project defaults to resolving packages via Conan, someone building for <code>apt</code>
-would likely override the config to point to <code>apt</code> packages).</p>
+<p>If you've already downloaded and installed a project's dependencies, you usually
+don't need to do anything else. mopack can find dependencies using common
+methods for the relevant platform (e.g. pkg-config, searching system paths).</p>
+<h3 id="easy-overrides">Easy overrides<a class="headerlink" href="#easy-overrides" title="Permanent link">§</a></h3>
+<p>To simplify building their project, developers can provide a default mopack
+configuration so that a standard build just works without any extra effort.
+However, people who <em>build</em> the project may prefer to resolve packages from
+somewhere else. mopack makes this easy: simply pass in an extra mopack file with
+new definitions for any dependency, and mopack will use those instead.</p>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">§</a></h2>
 <p>mopack uses <a href="https://pythonhosted.org/setuptools/">setuptools</a>, so installation is much the same as any
 other Python package:</p>
@@ -251,5 +258,5 @@ you can start using mopack to build your software!</p></div>
 
 <!--
 MkDocs version : 1.4.2
-Build Date UTC : 2023-03-26 04:04:36.234010+00:00
+Build Date UTC : 2023-04-23 06:20:39.134962+00:00
 -->
