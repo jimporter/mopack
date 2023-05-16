@@ -1,5 +1,4 @@
 import os
-import warnings
 from pkg_resources import load_entry_point
 
 from .. import types
@@ -9,7 +8,6 @@ from ..iterutils import ismapping, listify
 from ..package_defaults import DefaultResolver
 from ..types import FieldKeyError, FieldValueError, try_load_config
 from ..usage import Usage, make_usage
-from ..yaml_tools import MarkedYAMLWarning
 
 
 def _get_origin_type(origin, field='origin'):

@@ -1,5 +1,4 @@
 import os
-import warnings
 from collections import namedtuple
 from itertools import chain
 from yaml.error import MarkedYAMLError
@@ -9,8 +8,7 @@ from .iterutils import isiterable
 from .options import Options
 from .origins import try_make_package
 from .yaml_tools import (load_file, to_parse_error, MarkedDict,
-                         MarkedYAMLOffsetError, MarkedYAMLWarning,
-                         SafeLineLoader)
+                         MarkedYAMLOffsetError, SafeLineLoader)
 
 mopack_file = 'mopack.yml'
 mopack_local_file = 'mopack-local.yml'
