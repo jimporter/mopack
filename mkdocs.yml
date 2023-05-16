@@ -34,4 +34,5 @@ nav:
     - Command-Line Interface: reference/command-line.md
     - Environment Variables: reference/environment-vars.md
   - About:
+    - Changes: about/changes.md
     - License: about/license.md
