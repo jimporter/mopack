@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+        <title>Usage - mopack</title>
+        <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/color-brewer.min.css">
+        <link href="../../css/extra.css" rel="stylesheet">
+        <link href="../../css/version-select.css" rel="stylesheet">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+        <script src="../../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../../js/bootstrap-3.0.3.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+            <div class="container">
+
+                <!-- Collapsed navigation -->
+                <div class="navbar-header">
+                    <!-- Expander button -->
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="../..">mopack</a>
+                </div>
+
+                <!-- Expanded navigation -->
+                <div class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li >
+                                <a href="../..">Home</a>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">User Guide <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li >
+    <a href="../../user/resolving/">Resolving Packages With mopack</a>
+</li>
+                                    
+<li >
+    <a href="../../user/writing/">Writing mopack.yml Configurations</a>
+</li>
+                                </ul>
+                            </li>
+                            <li class="dropdown active">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Reference <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li >
+    <a href="../file-structure/">File Structure</a>
+</li>
+                                    
+<li >
+    <a href="../packages/">Packages</a>
+</li>
+                                    
+<li >
+    <a href="../builders/">Builders</a>
+</li>
+                                    
+<li class="active">
+    <a href="./">Usage</a>
+</li>
+                                    
+<li >
+    <a href="../expressions/">Expressions</a>
+</li>
+                                    
+<li >
+    <a href="../command-line/">Command-Line Interface</a>
+</li>
+                                    
+<li >
+    <a href="../environment-vars/">Environment Variables</a>
+</li>
+                                </ul>
+                            </li>
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">About <b class="caret"></b></a>
+                                <ul class="dropdown-menu">
+                                    
+<li >
+    <a href="../../about/changes/">Changes</a>
+</li>
+                                    
+<li >
+    <a href="../../about/license/">License</a>
+</li>
+                                </ul>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li >
+                                <a rel="next" href="../builders/">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li >
+                                <a rel="prev" href="../expressions/">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="https://github.com/jimporter/mopack/"><i class="fa fa-github"></i> GitHub</a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#usage">Usage</a></li>
+            <li><a href="#usage-results">Usage results</a></li>
+            <li><a href="#path-system">path/system</a></li>
+            <li><a href="#pkg_config">pkg_config</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<h1 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">§</a></h1>
+<p>Usage defines how to include a package in part of your build process. These
+definitions are used to generate a <a href="https://www.freedesktop.org/wiki/Software/pkg-config/">pkg-config</a> <code>.pc</code> file (or to
+point to an existing one), which can then be used when compiling or linking
+<em>your</em> project.</p>
+<pre><code class="yaml">packages:
+  my_pkg:
+    # ...
+    usage: &lt;usage_type&gt;
+    # or...
+    usage:
+      type: &lt;usage_type&gt;
+      inherit_defaults: &lt;boolean&gt;
+      submodule_map: &lt;submodule_map&gt;  # or...
+      submodule_map:
+        my_submodule: &lt;submodule_map&gt;
+        '*': &lt;submodule_map&gt;
+</code></pre>
+
+<dl>
+<dt><code>type</code> <span class="subtitle"><em>required</em></span></dt>
+<dd>The type of usage; see below for possible values.</dd>
+<dt><code>inherit_defaults</code> <span class="subtitle"><em>optional, default</em>: <code>false</code></span></dt>
+<dd>If true, inherit any unspecified values for this usage from the defaults for
+  the package. Defaults to false; however, any packages requested via <code>mopack
+  usage</code> but not defined will use the defaults.</dd>
+<dt><code>submodule_map</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>A mapping from submodule names to submodule-specific configuration; a key of
+  <code>'*'</code> refers to all submodules. See below for possible values for each usage
+  type.</dd>
+</dl>
+<h3 id="usage-results">Usage results<a class="headerlink" href="#usage-results" title="Permanent link">§</a></h3>
+<p>When calling <code>mopack usage &lt;dependency&gt;</code>, mopack will provide information about
+how to use that dependency in your project. At minimum, all dependencies will
+report the following information:</p>
+<pre><code class="yaml">name: &lt;string&gt;
+type: &lt;usage_type&gt;
+pcnames: &lt;list[string]&gt;
+pkg_config_path: &lt;list[path]&gt;
+</code></pre>
+
+<dl>
+<dt><code>name</code></dt>
+<dd>The name of the requested dependency.</dd>
+<dt><code>type</code></dt>
+<dd>The type of usage; see below for possible values.</dd>
+<dt><code>pcnames</code></dt>
+<dd>A list of pkg-config <code>.pc</code> file names, without the <code>.pc</code> extension.</dd>
+<dt><code>pkg_config_path</code></dt>
+<dd>A list of directories to add to pkg-config's search path to find the
+  dependency's pkg-config <code>.pc</code> files.</dd>
+</dl>
+<h2 id="path-system">path/system<a class="headerlink" href="#path-system" title="Permanent link">§</a></h2>
+<pre><code class="yaml">packages:
+  my_pkg:
+    # ...
+    usage:
+      type: path  # or ...
+      type: system
+      auto_link: &lt;boolean&gt;
+      version: &lt;string&gt;
+      pcname: &lt;string&gt;  # system only
+      dependencies: &lt;list[dependency]&gt;
+      include_path: &lt;list[path]&gt;
+      library_path: &lt;list[path]&gt;
+      headers: &lt;list[header]&gt;
+      libraries: &lt;list[library]&gt;
+      compile_flags: &lt;shell_args&gt;
+      link_flags: &lt;shell_args&gt;
+</code></pre>
+
+<dl>
+<dt><code>auto_link</code> <span class="subtitle"><em>optional, default</em>: <code>false</code></span></dt>
+<dd>If true, the package requires a compiler that supports auto-link (e.g. MSVC).</dd>
+<dt><code>version</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>An optional version string, corresponding to the <code>Version</code> field of a
+  pkg-config <code>.pc</code> file.</dd>
+<dt><code>pcname</code> <span class="subtitle"><em>optional, default</em>: <code>{my_pkg}</code></span></dt>
+<dd>The name of the pkg-config <code>.pc</code> file, without the extension. If
+  <a href="../packages/">submodules</a> are <em>required</em> for this package, this instead
+  defaults to <code>null</code>. If this file isn't found, use the other options to
+  generate a pkg-config file.</dd>
+<dt><code>dependencies</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>A list of package dependencies that are required to use this package. This
+  corresponds to the <code>Requires</code> field of a pkg-config <code>.pc</code> file.</dd>
+<dt><code>include_path</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>A list of paths to search for header files (as specified in <code>headers</code>). Any
+  paths that include the required headers will be used when compiling with this
+  dependency.</dd>
+<dt><code>library_path</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>A list of paths to search for library files (as specified in <code>libraries</code>). Any
+  paths that include the required libraries will be used when linking with this
+  dependency.</dd>
+<dt><code>headers</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>A list of headers that must be found when searching <code>include_path</code>. This can
+  generally be a single representative header file to detect that the dependency
+  could actually be found.</dd>
+<dt><code>libraries</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>A list of libary files to link to when using this dependency.</dd>
+<dt><code>compile_flags</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>A list of extra flags to pass to the compiler when compiling with this
+  dependency.</dd>
+<dt><code>link_flags</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>A list of extra flags to pass to the linker when linking with this dependency.</dd>
+</dl>
+<pre><code class="yaml">packages:
+  my_pkg:
+    # ...
+    usage:
+      # ...
+      submodule_map:
+        my_submodule:
+          pcname: &lt;string&gt;  # system only
+          dependencies: &lt;list[dependency]&gt;
+          include_path: &lt;list[path]&gt;
+          library_path: &lt;list[path]&gt;
+          headers: &lt;list[header]&gt;
+          libraries: &lt;list[library]&gt;
+          compile_flags: &lt;shell_args&gt;
+          link_flags: &lt;shell_args&gt;
+</code></pre>
+
+<dl>
+<dt><code>pcname</code> <span class="subtitle"><em>optional, default</em>: <code>{my_pkg}</code></span></dt>
+<dd>The name of the pkg-config <code>.pc</code> file, without the extension. If this file
+  isn't found, use the other options to generate a pkg-config file.</dd>
+<dt><code>dependencies</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dt><code>include_path</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dt><code>library_path</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dt><code>headers</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dt><code>libraries</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dt><code>compile_flags</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dt><code>link_flags</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>As above.</dd>
+</dl>
+<h3 id="path-system-usage-results">Usage results<a class="headerlink" href="#path-system-usage-results" title="Permanent link">§</a></h3>
+<p>In addition to the required usage results data, <code>path</code>/<code>system</code> usage results
+can include the following extra data:</p>
+<pre><code class="yaml">generated: &lt;boolean&gt;
+auto_link: &lt;boolean&gt;
+</code></pre>
+
+<dl>
+<dt><code>generated</code></dt>
+<dd>If true, the pkg-config <code>.pc</code> files for this dependency were automatically
+  generated by mopack. If this property isn't included, then the <code>.pc</code> files
+  were <em>not</em> autogenerated.</dd>
+<dt><code>auto_link</code>:</dt>
+<dd>If true, the dependency expects your compiler to take advantage of
+  <a href="https://learn.microsoft.com/en-us/cpp/preprocessor/comment-c-cpp">auto-linking</a>. (For example, Boost uses this when
+  building with Microsoft or Borland compilers.)</dd>
+</dl>
+<h2 id="pkg_config">pkg_config<a class="headerlink" href="#pkg_config" title="Permanent link">§</a></h2>
+<pre><code class="yaml">packages:
+  my_pkg:
+    # ...
+    usage:
+      type: pkg_config
+      pcname: &lt;string&gt;
+      pkg_config_path: &lt;list[path]&gt;
+</code></pre>
+
+<dl>
+<dt><code>pcname</code> <span class="subtitle"><em>optional, default</em>: <code>{my_pkg}</code></span></dt>
+<dd>The name of the pkg-config <code>.pc</code> file, without the extension. If
+  <a href="../packages/">submodules</a> are <em>required</em> for this package, this instead
+  defaults to <code>null</code>.</dd>
+<dt><code>pkg_config_path</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>The path to look for the pkg-config file in. If not specified, use the default
+  path for pkg-config.</dd>
+</dl>
+<pre><code class="yaml">packages:
+  my_pkg:
+    # ...
+    usage:
+      # ...
+      submodule_map:
+        my_submodule:
+          pcname: &lt;string&gt;
+</code></pre>
+
+<dl>
+<dt><code>pcname</code> <span class="subtitle"><em>optional, default</em>: <code>{my_pkg}_{my_submodule}</code></span></dt>
+<dd>The name of the pkg-config <code>.pc</code> file for the submodule, without the
+  extension.</dd>
+</dl></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+                <p>Copyright &copy; 2020-2023 Jim Porter</p>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "../..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../../js/base.js" defer></script>
+        <script src="../../js/version-select.js" defer></script>
+        <script src="../../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="Keyboard Shortcuts Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Keyboard Shortcuts</h4>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
