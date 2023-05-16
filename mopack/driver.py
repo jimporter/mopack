@@ -203,14 +203,6 @@ def main():
                                  'is not defined'))
     resolve_p.add_argument('file', nargs='+', metavar='FILE', complete='file',
                            help='the mopack configuration files')
-    # TODO: Remove these after v0.1 is released.
-    resolve_p.add_argument('-P', '--deploy-path',
-                           action=arguments.KeyValueAction,
-                           dest='deploy_dirs', help=arguments.SUPPRESS)
-    resolve_p.add_argument('-S', '--source-option',
-                           action=arguments.ConfigOptionAction,
-                           key=['origins'], dest='options',
-                           help=arguments.SUPPRESS)
 
     usage_p = subparsers.add_parser(
         'usage', description=usage_desc,

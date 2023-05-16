@@ -99,15 +99,6 @@ class BaseConfig:
         if not data:
             return
 
-        # TODO: Remove this after v0.1 is released.
-        if 'sources' in data:  # pragma: no cover
-            warnings.warn(MarkedYAMLWarning(
-                'while reading options', data.mark.start,
-                '`sources` is deprecated; use `origins` instead',
-                data.marks['sources'].start
-            ))
-            data['origins'] = data.pop('sources')
-
         for kind in Options.option_kinds:
             if kind in data:
                 for k, v in data[kind].items():

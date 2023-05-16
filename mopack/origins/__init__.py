@@ -163,22 +163,7 @@ def make_package(name, config, **kwargs):
         raise FieldKeyError('config_file is reserved', 'config_file')
 
     config = config.copy()
-    try:
-        origin = config.pop('origin')
-    except KeyError as e:  # pragma: no cover
-        # TODO: Remove this after v0.1 is released.
-        try:
-            context = 'while constructing package {!r}'.format(name)
-            warning = MarkedYAMLWarning(
-                context, config.mark.start,
-                '`source` is deprecated; use `origin` instead',
-                config.marks['source'].start
-            )
-
-            origin = config.pop('source')
-            warnings.warn(warning)
-        except KeyError:
-            raise e
+    origin = config.pop('origin')
 
     if not config:
         config = {'inherit_defaults': True}
@@ -188,11 +173,7 @@ def make_package(name, config, **kwargs):
 
 def try_make_package(name, config, **kwargs):
     context = 'while constructing package {!r}'.format(name)
-    try:
-        origin = config['origin']
-    except KeyError:  # pragma: no cover
-        # TODO: Remove this after v0.1 is released.
-        origin = config.get('source')
+    origin = config['origin']
 
     with try_load_config(config, context, origin):
         return make_package(name, config, **kwargs)
