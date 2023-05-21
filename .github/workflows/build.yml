@@ -7,6 +7,14 @@ on:
 
 jobs:
   build:
+    name: >
+      build (${{ matrix.os }}${{
+        startsWith(matrix.os, 'windows-') &&
+        format('[{0}]', matrix.compiler) || ''
+      }}, ${{ matrix.python-version }}${{
+        matrix.conan-version != '1.*' &&
+        format(', conan-{0}', matrix.conan-version) || ''
+      }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -163,6 +171,11 @@ jobs:
         with:
           files: ./coverage.xml
   build-cygwin:
+    name: >
+      build (windows-latest[cygwin], 3.8${{
+        matrix.conan-version != '1.*' &&
+        format(', conan-{0}', matrix.conan-version) || ''
+      }})
     runs-on: windows-latest
     strategy:
       matrix:
