@@ -173,7 +173,9 @@ class TestGit(SDistTest):
         self.assertExists('mopack/mopack.json')
 
         self.assertPkgConfigUsage('bencodehpp')
-        self.check_list_files([config])
+        implicit_cfg = os.path.join(self.stage, 'mopack', 'src', 'bencodehpp',
+                                    'mopack.yml')
+        self.check_list_files([config], [implicit_cfg])
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -185,7 +187,7 @@ class TestGit(SDistTest):
                 cfg_git_pkg(
                     'bencodehpp', config,
                     repository='https://github.com/jimporter/bencode.hpp.git',
-                    rev=['tag', 'v0.2.1'],
+                    rev=['tag', 'v1.0.0'],
                     builder=cfg_bfg9000_builder('bencodehpp'),
                     usage=cfg_pkg_config_usage(pcname='bencodehpp')
                 ),
