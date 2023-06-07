@@ -72,11 +72,6 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Clone bfg9000
-        uses: actions/checkout@v3
-        with:
-          repository: jimporter/bfg9000
-          path: bfg9000
       - name: Initialize MSVC ${{ matrix.msvc-version }}
         if: startsWith(matrix.os, 'windows-') && matrix.compiler == 'msvc'
         uses: ilammy/msvc-dev-cmd@v1
@@ -95,8 +90,8 @@ jobs:
           pip install 'conan==${{ matrix.conan-version }}'
           conan profile detect
       - name: Install Python dependencies
-        run: |
-          pip install ./bfg9000 '.[test]'
+        run: >
+          pip install git+https://github.com/jimporter/bfg9000.git '.[test]'
       - name: Install Qt ${{ matrix.qt-version }}
         if: matrix.qt-version
         uses: jurplel/install-qt-action@v3
@@ -127,7 +122,7 @@ jobs:
       - name: Install Windows dependencies
         if: startsWith(matrix.os, 'windows-')
         run: |
-          cinst ninja
+          choco install ninja
           ${gnomebase} = "https://ftp.gnome.org/pub/gnome/binaries/win32"
           curl -LO ${gnomebase}/dependencies/pkg-config_0.26-1_win32.zip
           curl -LO ${gnomebase}/glib/2.28/glib_2.28.8-1_win32.zip
@@ -188,11 +183,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Clone bfg9000
-        uses: actions/checkout@v3
-        with:
-          repository: jimporter/bfg9000
-          path: bfg9000
       - name: Install Cygwin
         shell: cmd
         run: >
@@ -231,7 +221,7 @@ jobs:
         run: >
           C:\cygwin\bin\bash -lc
           "cd mopack &&
-          pip3.8 install ./bfg9000 '.[test]'"
+          pip3.8 install git+https://github.com/jimporter/bfg9000.git '.[test]'"
       - name: Run tests
         run: >
           C:\cygwin\bin\bash -lc
