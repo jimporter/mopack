@@ -187,7 +187,7 @@ class TestGit(SDistTest):
                 cfg_git_pkg(
                     'bencodehpp', config,
                     repository='https://github.com/jimporter/bencode.hpp.git',
-                    rev=['tag', 'v1.0.0'],
+                    rev=['tag', 'v1.0.1'],
                     builder=cfg_bfg9000_builder('bencodehpp'),
                     usage=cfg_pkg_config_usage(pcname='bencodehpp')
                 ),
