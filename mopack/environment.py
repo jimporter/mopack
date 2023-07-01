@@ -45,7 +45,7 @@ def which(names, env=os.environ, resolve=False, kind='executable'):
                 if os.path.exists(withext):
                     return [withext] + name[1:] if resolve else name
 
-    raise IOError('unable to find {kind}{filler} {names}'.format(
+    raise FileNotFoundError('unable to find {kind}{filler} {names}'.format(
         kind=kind, filler='; tried' if len(names) > 1 else '',
         names=', '.join('{!r}'.format(i) for i in names)
     ))
@@ -120,7 +120,7 @@ def get_c_compiler(env=os.environ):
     if candidates:
         try:
             return which(candidates, env)
-        except IOError:
+        except FileNotFoundError:
             pass
     return None
 
@@ -141,7 +141,7 @@ def get_pkg_config(env=os.environ):
     if guessed_cmd is not None:
         try:
             return which(guessed_cmd, env)
-        except IOError:
+        except FileNotFoundError:
             pass
 
     # Return the default command candidate.
