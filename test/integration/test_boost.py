@@ -1,5 +1,5 @@
 import os
-from unittest import skipIf
+from unittest import mock, skipIf
 
 from . import *
 
@@ -15,10 +15,10 @@ class TestBoost(IntegrationTest):
 
         self.assertPathUsage('boost', type='system',
                              auto_link=platform_name() == 'windows',
-                             include_path=AlwaysEqual(),
-                             library_path=AlwaysEqual(),
+                             include_path=mock.ANY,
+                             library_path=mock.ANY,
                              libraries=[],
-                             version=AlwaysEqual())
+                             version=mock.ANY)
 
         pkgconfdir = os.path.join(self.stage, 'mopack', 'pkgconfig')
         version = call_pkg_config(['boost'], ['--modversion'], path=pkgconfdir,
@@ -28,8 +28,8 @@ class TestBoost(IntegrationTest):
                              auto_link=platform_name() == 'windows',
                              pcnames=(['boost'] if platform_name() == 'windows'
                                       else ['boost[regex]']),
-                             include_path=AlwaysEqual(),
-                             library_path=AlwaysEqual(),
+                             include_path=mock.ANY,
+                             library_path=mock.ANY,
                              libraries=([] if platform_name() == 'windows'
                                         else ['boost_regex']),
                              version=version)
@@ -53,10 +53,10 @@ class TestBoost(IntegrationTest):
                                 ['_', '.'],
                             ],
                         },
-                        include_path=AlwaysEqual(),
-                        library_path=AlwaysEqual(),
+                        include_path=mock.ANY,
+                        library_path=mock.ANY,
                         headers=['boost/version.hpp'],
-                        submodule_map=AlwaysEqual(),
+                        submodule_map=mock.ANY,
                     )
                 ),
             ],

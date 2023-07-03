@@ -1,6 +1,6 @@
 import json
 import os
-from unittest import skipIf
+from unittest import mock, skipIf
 
 from . import *
 
@@ -17,8 +17,8 @@ class TestApt(IntegrationTest):
         self.assertExists('mopack/logs/apt.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPathUsage('ogg', type='system', version=AlwaysEqual())
-        self.assertPathUsage('zlib', type='system', version=AlwaysEqual(),
+        self.assertPathUsage('ogg', type='system', version=mock.ANY)
+        self.assertPathUsage('zlib', type='system', version=mock.ANY,
                              libraries=['z'])
 
         output = json.loads(slurp('mopack/mopack.json'))

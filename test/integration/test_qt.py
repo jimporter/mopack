@@ -1,5 +1,5 @@
 import os
-from unittest import skipIf
+from unittest import mock, skipIf
 
 from . import *
 
@@ -15,8 +15,8 @@ class TestQt(IntegrationTest):
 
         if platform_name() == 'windows':
             self.assertPathUsage('Qt5', ['Widgets'], type='system',
-                                 include_path=AlwaysEqual(),
-                                 library_path=AlwaysEqual(),
+                                 include_path=mock.ANY,
+                                 library_path=mock.ANY,
                                  libraries=['Qt5Widgets', 'Qt5Core'],
                                  version='')
         else:
@@ -37,10 +37,10 @@ class TestQt(IntegrationTest):
                         pcname='Qt5',
                         auto_link=False,
                         explicit_version=None,
-                        include_path=AlwaysEqual(),
-                        library_path=AlwaysEqual(),
+                        include_path=mock.ANY,
+                        library_path=mock.ANY,
                         headers=[],
-                        submodule_map=AlwaysEqual(),
+                        submodule_map=mock.ANY,
                     )
                 ),
             ],

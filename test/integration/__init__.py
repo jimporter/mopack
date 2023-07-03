@@ -4,6 +4,7 @@ import subprocess
 import tempfile
 import unittest
 import yaml
+from unittest import mock
 
 from .. import *
 
@@ -48,7 +49,7 @@ def slurp(filename):
 
 
 def cfg_common_options(*, strict=False, target_platform=platform_name(),
-                       env=AlwaysEqual(), deploy_dirs={}):
+                       env=mock.ANY, deploy_dirs={}):
     return {'_version': 1, 'strict': strict,
             'target_platform': target_platform, 'env': env,
             'deploy_dirs': deploy_dirs}
@@ -365,28 +366,28 @@ class IntegrationTest(SubprocessTestCase):
             'pkg_config_path': [pkgconfdir],
         }, submodules=submodules)
 
-        if not isinstance(include_path, AlwaysEqual):
+        if include_path is not mock.ANY:
             self.assertCountEqual(
                 call_pkg_config(pcnames, ['--cflags-only-I'], path=pkgconfdir),
                 ['-I' + i for i in include_path]
             )
-        if not isinstance(library_path, AlwaysEqual):
+        if library_path is not mock.ANY:
             self.assertCountEqual(
                 call_pkg_config(pcnames, ['--libs-only-L'], path=pkgconfdir),
                 ['-L' + i for i in library_path]
             )
-        if not isinstance(libraries, AlwaysEqual):
+        if libraries is not mock.ANY:
             self.assertCountEqual(
                 call_pkg_config(pcnames, ['--libs-only-l'], path=pkgconfdir),
                 ['-l' + i for i in libraries]
             )
-        if not isinstance(compile_flags, AlwaysEqual):
+        if compile_flags is not mock.ANY:
             self.assertCountEqual(
                 call_pkg_config(pcnames, ['--cflags-only-other'],
                                 path=pkgconfdir),
                 compile_flags
             )
-        if not isinstance(link_flags, AlwaysEqual):
+        if link_flags is not mock.ANY:
             self.assertCountEqual(
                 call_pkg_config(pcnames, ['--libs-only-other'],
                                 path=pkgconfdir),

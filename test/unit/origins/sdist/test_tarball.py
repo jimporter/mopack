@@ -105,7 +105,7 @@ class TestTarball(SDistTestCase):
             with assert_logging([('fetch',
                                   'foo from {}'.format(self.srcpath))]):
                 pkg.fetch(self.metadata, self.config)
-            mtar.assert_called_once_with(srcdir, AlwaysEqual())
+            mtar.assert_called_once_with(srcdir, mock.ANY)
         self.check_resolve(pkg)
 
     def test_patch(self):

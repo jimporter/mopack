@@ -3,7 +3,7 @@ import os
 from unittest import mock
 
 from . import OptionsTest, Stream
-from .. import AlwaysEqual, test_data_dir
+from .. import test_data_dir
 
 from mopack.metadata import Metadata, MetadataVersionError
 from mopack.origins.apt import AptPackage
@@ -76,7 +76,7 @@ class TestMetadata(OptionsTest):
         metadata = Metadata.load(os.path.join(test_data_dir, 'metadata', 'v1'))
         self.assertIsInstance(metadata.get_package('zlib'), ConanPackage)
         self.assertEqual(metadata.options.common.expr_symbols,
-                         {'host_platform': AlwaysEqual(),
+                         {'host_platform': mock.ANY,
                           'target_platform': 'linux',
                           'env': {},
                           'deploy_dirs': {}})

@@ -2,7 +2,7 @@ import os.path
 import sys
 from unittest import mock, TestCase, skipIf
 
-from .. import AlwaysEqual, test_data_dir
+from .. import test_data_dir
 
 from mopack import archive
 
@@ -115,7 +115,7 @@ class TestTarArchive(TestCase):
             mtar().extractall.assert_has_calls([
                 mock.call('.', None),
                 mock.call('path', None),
-                mock.call('.', AlwaysEqual())
+                mock.call('.', mock.ANY)
             ])
 
             # Make our mock iterate over the members list we gave it. This

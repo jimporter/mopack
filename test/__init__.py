@@ -7,8 +7,7 @@ from mopack.iterutils import listify
 from mopack.shell import split_posix_str
 
 
-__all__ = ['AlwaysEqual', 'call_pkg_config', 'test_dir', 'test_data_dir',
-           'test_stage_dir']
+__all__ = ['call_pkg_config', 'test_dir', 'test_data_dir', 'test_stage_dir']
 
 test_dir = os.path.abspath(os.path.dirname(__file__))
 test_data_dir = os.path.join(test_dir, 'data')
@@ -18,11 +17,6 @@ test_stage_dir = os.path.join(test_dir, 'stage')
 if os.path.exists(test_stage_dir):
     shutil.rmtree(test_stage_dir)
 os.makedirs(test_stage_dir)
-
-
-class AlwaysEqual:
-    def __eq__(self, rhs):
-        return True
 
 
 def call_pkg_config(package, options, *, path=None, split=True):
