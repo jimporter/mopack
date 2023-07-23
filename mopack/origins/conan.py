@@ -42,10 +42,12 @@ class ConanPackage(BinaryPackage):
     def upgrade(config, version):
         return config
 
-    def __init__(self, name, remote, build=False, options=None, linkage=None,
-                 **kwargs):
-        linkage = linkage or {'type': 'pkg_config', 'pkg_config_path': ''}
-        super().__init__(name, linkage=linkage, **kwargs)
+    # TODO: Remove `usage` after v0.2 is released.
+    def __init__(self, name, remote, build=False, options=None,
+                 linkage=types.Unset, usage=types.Unset, **kwargs):
+        if linkage is types.Unset and usage is types.Unset:
+            linkage = {'type': 'pkg_config', 'pkg_config_path': ''}
+        super().__init__(name, linkage=linkage, usage=usage, **kwargs)
 
         T = types.TypeCheck(locals(), self._expr_symbols)
         T.remote(types.string)

@@ -15,7 +15,7 @@ class MetadataVersionError(RuntimeError):
 class Metadata:
     _PackagesFD = DictToListFreezeDryer(Package, lambda x: x.name)
     metadata_filename = 'mopack.json'
-    version = 2
+    version = 3
 
     def __init__(self, pkgdir, options=None, files=None, implicit_files=None):
         self.pkgdir = pkgdir
@@ -70,7 +70,7 @@ class Metadata:
                 .format(version, cls.version)
             )
 
-        # v2 renames deploy_paths to deploy_dirs and source to origin.
+        # v2 renames `deploy_paths` to `deploy_dirs` and `source` to `origin`.
         if version < 2:
             opts = data['options']
             opts['common']['deploy_dirs'] = opts['common'].pop('deploy_paths')
@@ -79,6 +79,12 @@ class Metadata:
                 orig['origin'] = orig.pop('source')
             for pkg in data['packages']:
                 pkg['origin'] = pkg.pop('source')
+
+        # v3 renames `usage` to `linkage`.
+        if version < 3:
+            for pkg in data['packages']:
+                if 'usage' in pkg:
+                    pkg['linkage'] = pkg.pop('usage')
 
         metadata = Metadata.__new__(Metadata)
         metadata.pkgdir = pkgdir

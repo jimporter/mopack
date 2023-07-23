@@ -1,4 +1,5 @@
 import os
+import warnings
 from pkg_resources import load_entry_point
 
 from .. import types
@@ -121,9 +122,17 @@ class Package(OptionsHolder):
 
 @FreezeDried.fields(rehydrate={'linkage': Linkage})
 class BinaryPackage(Package):
-    def __init__(self, name, *, submodules=types.Unset, linkage,
-                 inherit_defaults=False, _options, _linkage_field='linkage',
-                 **kwargs):
+    # TODO: Remove `usage` after v0.2 is released.
+    def __init__(self, name, *, submodules=types.Unset, linkage=types.Unset,
+                 usage=types.Unset, inherit_defaults=False, _options,
+                 _linkage_field='linkage', **kwargs):
+        if linkage is types.Unset and usage is not types.Unset:
+            # FIXME: Show where in the config file this occurred.
+            warnings.warn('`usage` is deprecated; use `linkage` instead')
+            linkage = usage
+        if linkage is types.Unset:
+            raise TypeError('missing `linkage`')
+
         super().__init__(name, inherit_defaults=inherit_defaults,
                          _options=_options, **kwargs)
 

@@ -1,5 +1,6 @@
 import os
 import shutil
+import warnings
 from io import BytesIO
 from urllib.request import urlopen
 
@@ -24,9 +25,15 @@ class SDistPackage(Package):
     def upgrade(config, version):
         return config
 
+    # TODO: Remove `usage` after v0.2 is released.
     def __init__(self, name, *, build=None, linkage=None,
-                 submodules=types.Unset, inherit_defaults=True, _options,
-                 **kwargs):
+                 usage=types.Unset, submodules=types.Unset,
+                 inherit_defaults=True, _options, **kwargs):
+        if linkage is None and usage is not types.Unset:
+            # FIXME: Show where in the config file this occurred.
+            warnings.warn('`usage` is deprecated; use `linkage` instead')
+            linkage = usage
+
         super().__init__(name, inherit_defaults=inherit_defaults,
                          _options=_options, **kwargs)
         symbols = self._expr_symbols
