@@ -13,19 +13,20 @@ from ..glob import filter_glob
 from ..log import LogFile
 from ..package_defaults import DefaultResolver
 from ..path import Path, pushd
-from ..usage import make_usage, Usage
+from ..linkages import make_linkage, Linkage
 from ..yaml_tools import to_parse_error
 
 
-@FreezeDried.fields(rehydrate={'builder': Builder, 'usage': Usage},
-                    skip_compare={'pending_usage'})
+@FreezeDried.fields(rehydrate={'builder': Builder, 'linkage': Linkage},
+                    skip_compare={'pending_linkage'})
 class SDistPackage(Package):
     @staticmethod
     def upgrade(config, version):
         return config
 
-    def __init__(self, name, *, build=None, usage=None, submodules=types.Unset,
-                 inherit_defaults=True, _options, **kwargs):
+    def __init__(self, name, *, build=None, linkage=None,
+                 submodules=types.Unset, inherit_defaults=True, _options,
+                 **kwargs):
         super().__init__(name, inherit_defaults=inherit_defaults,
                          _options=_options, **kwargs)
         symbols = self._expr_symbols
@@ -35,19 +36,19 @@ class SDistPackage(Package):
             if submodules is not types.Unset:
                 T.submodules(submodules_type)
             self.builder = None
-            self.usage = None
-            self.pending_usage = usage
+            self.linkage = None
+            self.pending_linkage = linkage
         else:
             pkg_default = DefaultResolver(self, symbols, inherit_defaults,
                                           name)
             T.submodules(pkg_default(submodules_type))
             self.builder = make_builder(self, build)
-            self.usage = self._make_usage(usage)
+            self.linkage = self._make_linkage(linkage)
 
     def dehydrate(self):
-        if hasattr(self, 'pending_usage'):
+        if hasattr(self, 'pending_linkage'):
             raise types.ConfigurationError(
-                'cannot dehydrate until `pending_usage` is finalized'
+                'cannot dehydrate until `pending_linkage` is finalized'
             )
         return super().dehydrate()
 
@@ -74,8 +75,9 @@ class SDistPackage(Package):
         return {'srcdir': self._srcdir(metadata),
                 **(builder.path_values(metadata) if builder else {})}
 
-    def _make_usage(self, usage, **kwargs):
-        return make_usage(self, self.builder.filter_usage(usage), **kwargs)
+    def _make_linkage(self, linkage, **kwargs):
+        return make_linkage(self, self.builder.filter_linkage(linkage),
+                            **kwargs)
 
     def _find_mopack(self, parent_config, srcdir):
         config = ChildConfig([srcdir], parent_config=parent_config,
@@ -101,21 +103,21 @@ class SDistPackage(Package):
             with types.try_load_config(export.data, context, self.origin):
                 self.builder = make_builder(self, export.build)
 
-        if not self.pending_usage and export.usage:
+        if not self.pending_linkage and export.linkage:
             with to_parse_error(export.config_file):
                 with types.try_load_config(export.data, context, self.origin):
-                    self.usage = self._make_usage(export.usage)
+                    self.linkage = self._make_linkage(export.linkage)
         else:
-            # Note: If this fails and `pending_usage` is a string, this won't
+            # Note: If this fails and `pending_linkage` is a string, this won't
             # report any line number information for the error, since we've
             # lost that info by now in that case.
             with to_parse_error(self.config_file):
-                with types.try_load_config(self.pending_usage, context,
+                with types.try_load_config(self.pending_linkage, context,
                                            self.origin):
-                    self.usage = self._make_usage(self.pending_usage,
-                                                  field=None)
+                    self.linkage = self._make_linkage(self.pending_linkage,
+                                                      field=None)
 
-        del self.pending_usage
+        del self.pending_linkage
         return config
 
     def clean_post(self, metadata, new_package, quiet=False):

@@ -51,26 +51,27 @@ class TestApt(OriginTest):
                 universal_newlines=True, check=True, env={}
             )
 
-    def check_usage(self, pkg, *, submodules=None, usage=None):
-        if usage is None:
+    def check_linkage(self, pkg, *, submodules=None, linkage=None):
+        if linkage is None:
             depname = dependency_string(pkg.name, submodules)
             libs = ([] if pkg.submodules and pkg.submodules['required']
                     else [pkg.name])
             libs.extend('{}_{}'.format(pkg.name, i)
                         for i in iterate(submodules))
 
-            usage = {'name': depname, 'type': 'system', 'generated': True,
-                     'auto_link': False, 'pcnames': [depname],
-                     'pkg_config_path': [self.pkgconfdir]}
+            linkage = {'name': depname, 'type': 'system', 'generated': True,
+                       'auto_link': False, 'pcnames': [depname],
+                       'pkg_config_path': [self.pkgconfdir]}
 
         with mock.patch('subprocess.run', mock_run), \
-             mock.patch('mopack.usage.path_system.PathUsage._filter_path',
+             mock.patch('mopack.linkages.path_system.PathLinkage._filter_path',
                         lambda *args: []), \
-             mock.patch('mopack.usage.path_system.file_outdated',
+             mock.patch('mopack.linkages.path_system.file_outdated',
                         return_value=True), \
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):
-            self.assertEqual(pkg.get_usage(self.metadata, submodules), usage)
+            self.assertEqual(pkg.get_linkage(self.metadata, submodules),
+                             linkage)
 
     def test_basic(self):
         pkg = self.make_package('foo')
@@ -95,7 +96,7 @@ class TestApt(OriginTest):
                 ),
             ])
 
-        self.check_usage(pkg)
+        self.check_linkage(pkg)
 
     def test_remote(self):
         pkg = self.make_package('foo', remote='foo-dev')
@@ -118,7 +119,7 @@ class TestApt(OriginTest):
                 ),
             ])
 
-        self.check_usage(pkg)
+        self.check_linkage(pkg)
 
         pkg = self.make_package('foo', remote=['foo-dev', 'bar-dev'])
         self.assertEqual(pkg.remote, ['foo-dev', 'bar-dev'])
@@ -140,7 +141,7 @@ class TestApt(OriginTest):
                 ),
             ])
 
-        self.check_usage(pkg)
+        self.check_linkage(pkg)
 
     def test_repository(self):
         pkg = self.make_package('foo', remote='foo-dev',
@@ -148,10 +149,10 @@ class TestApt(OriginTest):
         self.assertEqual(pkg.remote, ['foo-dev'])
         self.assertEqual(pkg.repository, 'ppa:foo/stable')
         self.check_resolve_all([pkg], ['foo-dev'])
-        self.check_usage(pkg)
+        self.check_linkage(pkg)
 
     def test_explicit_version(self):
-        pkg = self.make_package('foo', usage={
+        pkg = self.make_package('foo', linkage={
             'type': 'system', 'version': '2.0',
         })
         self.assertEqual(pkg.remote, ['libfoo-dev'])
@@ -168,14 +169,14 @@ class TestApt(OriginTest):
                 universal_newlines=True, env={}
             )
 
-        self.check_usage(pkg)
+        self.check_linkage(pkg)
 
     def test_multiple(self):
         pkgs = [self.make_package('foo'),
                 self.make_package('bar', remote='bar-dev')]
         self.check_resolve_all(pkgs, ['libfoo-dev', 'bar-dev'])
         for pkg in pkgs:
-            self.check_usage(pkg)
+            self.check_linkage(pkg)
 
     def test_submodules(self):
         submodules_required = {'names': '*', 'required': True}
@@ -183,14 +184,14 @@ class TestApt(OriginTest):
 
         pkg = self.make_package('foo', submodules=submodules_required)
         self.check_resolve_all([pkg], ['libfoo-dev'])
-        self.check_usage(pkg, submodules=['sub'])
+        self.check_linkage(pkg, submodules=['sub'])
 
         pkg = self.make_package(
-            'foo', usage={'type': 'system', 'libraries': 'bar'},
+            'foo', linkage={'type': 'system', 'libraries': 'bar'},
             submodules=submodules_required
         )
         self.check_resolve_all([pkg], ['libfoo-dev'])
-        self.check_usage(pkg, submodules=['sub'], usage={
+        self.check_linkage(pkg, submodules=['sub'], linkage={
             'name': 'foo[sub]', 'type': 'system', 'generated': True,
             'auto_link': False, 'pcnames': ['foo[sub]'],
             'pkg_config_path': [self.pkgconfdir],
@@ -198,14 +199,14 @@ class TestApt(OriginTest):
 
         pkg = self.make_package('foo', submodules=submodules_optional)
         self.check_resolve_all([pkg], ['libfoo-dev'])
-        self.check_usage(pkg, submodules=['sub'])
+        self.check_linkage(pkg, submodules=['sub'])
 
         pkg = self.make_package(
-            'foo', usage={'type': 'system', 'libraries': 'bar'},
+            'foo', linkage={'type': 'system', 'libraries': 'bar'},
             submodules=submodules_optional
         )
         self.check_resolve_all([pkg], ['libfoo-dev'])
-        self.check_usage(pkg, submodules=['sub'], usage={
+        self.check_linkage(pkg, submodules=['sub'], linkage={
             'name': 'foo[sub]', 'type': 'system', 'generated': True,
             'auto_link': False, 'pcnames': ['foo[sub]'],
             'pkg_config_path': [self.pkgconfdir],
@@ -216,7 +217,7 @@ class TestApt(OriginTest):
             'names': ['sub'], 'required': True
         })
         with self.assertRaises(ValueError):
-            pkg.get_usage(self.metadata, ['invalid'])
+            pkg.get_linkage(self.metadata, ['invalid'])
 
     def test_deploy(self):
         pkg = self.make_package('foo')
@@ -281,7 +282,7 @@ class TestApt(OriginTest):
         opts = self.make_options()
         data = {'origin': 'apt', '_version': 0, 'name': 'foo',
                 'remote': 'libfoo-dev', 'repository': None,
-                'usage': {'type': 'system', '_version': 0}}
+                'linkage': {'type': 'system', '_version': 0}}
         with mock.patch.object(AptPackage, 'upgrade',
                                side_effect=AptPackage.upgrade) as m:
             pkg = Package.rehydrate(data, _options=opts)

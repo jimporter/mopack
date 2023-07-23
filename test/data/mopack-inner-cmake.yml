@@ -8,7 +8,7 @@ packages:
     origin: directory
     path: hello-cmake
     build: cmake
-    usage:
+    linkage:
       type: path
       version: "1.0"
       # XXX: Pass this via `include_path` instead?

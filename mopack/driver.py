@@ -21,7 +21,7 @@ Fetch dependencies from their origins and prepare them for use by the current
 project (e.g. by building them).
 """
 
-usage_desc = """
+linkage_desc = """
 Retrieve information about how to use a dependency. This returns metadata in
 YAML format (or JSON if `--json` is passed) pointing to a pkg-config .pc file.
 """
@@ -63,11 +63,11 @@ def resolve(parser, args):
     commands.resolve(config_data, commands.get_package_dir(args.directory))
 
 
-def usage(parser, args):
+def linkage(parser, args):
     directory = os.environ.get(nested_invoke, args.directory)
     try:
-        usage = commands.usage(commands.get_package_dir(directory),
-                               *args.dependency, strict=args.strict)
+        linkage = commands.linkage(commands.get_package_dir(directory),
+                                   *args.dependency, strict=args.strict)
     except Exception as e:
         if not args.json:
             raise
@@ -75,9 +75,9 @@ def usage(parser, args):
         return 1
 
     if args.json:
-        print(json.dumps(usage))
+        print(json.dumps(linkage))
     else:
-        print(yaml_tools.dump(usage))
+        print(yaml_tools.dump(linkage))
 
 
 def deploy(parser, args):
@@ -199,26 +199,27 @@ def main():
                            help='additional builder options')
     resolve_p.add_argument('--strict', action=arguments.ConfigOptionAction,
                            key=['strict'], const=True, dest='options',
-                           help=('return an error during usage if package ' +
+                           help=('return an error during linkage if package ' +
                                  'is not defined'))
     resolve_p.add_argument('file', nargs='+', metavar='FILE', complete='file',
                            help='the mopack configuration files')
 
-    usage_p = subparsers.add_parser(
-        'usage', description=usage_desc,
-        help='retrieve usage info for a package'
+    # TODO: Remove `usage` alias after v0.2 is released.
+    linkage_p = subparsers.add_parser(
+        'linkage', aliases=['usage'], description=linkage_desc,
+        help='retrieve linkage info for a package'
     )
-    usage_p.set_defaults(func=usage)
-    usage_p.add_argument('--directory', default='.', type=os.path.abspath,
-                         metavar='PATH', complete='directory',
-                         help='directory storing local package data')
-    usage_p.add_argument('--json', action='store_true',
-                         help='display results as JSON')
-    usage_p.add_argument('--strict', action='store_true',
-                         help='return an error if package is not defined')
-    usage_p.add_argument('dependency', type=dependency_type,
-                         metavar='DEPENDENCY',
-                         help='the name of the dependency to query')
+    linkage_p.set_defaults(func=linkage)
+    linkage_p.add_argument('--directory', default='.', type=os.path.abspath,
+                           metavar='PATH', complete='directory',
+                           help='directory storing local package data')
+    linkage_p.add_argument('--json', action='store_true',
+                           help='display results as JSON')
+    linkage_p.add_argument('--strict', action='store_true',
+                           help='return an error if package is not defined')
+    linkage_p.add_argument('dependency', type=dependency_type,
+                           metavar='DEPENDENCY',
+                           help='the name of the dependency to query')
 
     deploy_p = subparsers.add_parser(
         'deploy', description=deploy_desc, help='deploy packages'

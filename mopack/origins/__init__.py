@@ -7,7 +7,7 @@ from ..freezedried import FreezeDried
 from ..iterutils import ismapping, listify
 from ..package_defaults import DefaultResolver
 from ..types import FieldKeyError, FieldValueError, try_load_config
-from ..usage import Usage, make_usage
+from ..linkages import Linkage, make_linkage
 
 
 def _get_origin_type(origin, field='origin'):
@@ -71,7 +71,7 @@ class Package(OptionsHolder):
         return None
 
     def version(self, metadata):
-        return self.usage.version(metadata, self)
+        return self.linkage.version(metadata, self)
 
     def _check_submodules(self, wanted_submodules):
         if self.submodules:
@@ -110,8 +110,8 @@ class Package(OptionsHolder):
     def fetch(self, metadata, parent_config):
         pass  # pragma: no cover
 
-    def get_usage(self, metadata, submodules):
-        return self.usage.get_usage(
+    def get_linkage(self, metadata, submodules):
+        return self.linkage.get_linkage(
             metadata, self, self._check_submodules(submodules)
         )
 
@@ -119,10 +119,10 @@ class Package(OptionsHolder):
         return '<{}({!r})>'.format(type(self).__name__, self.name)
 
 
-@FreezeDried.fields(rehydrate={'usage': Usage})
+@FreezeDried.fields(rehydrate={'linkage': Linkage})
 class BinaryPackage(Package):
-    def __init__(self, name, *, submodules=types.Unset, usage,
-                 inherit_defaults=False, _options, _usage_field='usage',
+    def __init__(self, name, *, submodules=types.Unset, linkage,
+                 inherit_defaults=False, _options, _linkage_field='linkage',
                  **kwargs):
         super().__init__(name, inherit_defaults=inherit_defaults,
                          _options=_options, **kwargs)
@@ -132,7 +132,7 @@ class BinaryPackage(Package):
         T = types.TypeCheck(locals(), symbols)
         T.submodules(pkg_default(submodules_type))
 
-        self.usage = make_usage(self, usage, field=_usage_field)
+        self.linkage = make_linkage(self, linkage, field=_linkage_field)
 
     def path_bases(self, *, builder=None):
         return ()
@@ -155,7 +155,7 @@ class PackageOptions(FreezeDried, BaseOptions):
 
 def make_package(name, config, **kwargs):
     if config is None:
-        raise TypeError('usage not specified')
+        raise TypeError('linkage not specified')
     # config_file should always be specified in kwargs.
     if 'config_file' in config:
         raise FieldKeyError('config_file is reserved', 'config_file')

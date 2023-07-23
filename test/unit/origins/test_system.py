@@ -27,8 +27,8 @@ class TestSystemPackage(OriginTest):
         if os.path.exists(self.pkgdir):
             shutil.rmtree(self.pkgdir)
 
-    def check_get_usage(self, pkg, submodules, expected=None, *,
-                        find_pkg_config=False):
+    def check_get_linkage(self, pkg, submodules, expected=None, *,
+                          find_pkg_config=False):
         def mock_isfile(p, variables={}):
             p = os.path.normcase(p.string(**variables))
             return p.startswith(os.path.normcase(abspath('/mock')) + os.sep)
@@ -42,17 +42,17 @@ class TestSystemPackage(OriginTest):
         self.clear_pkgdir()
         side_effect = None if find_pkg_config else OSError()
         with mock.patch('subprocess.run', side_effect=side_effect), \
-             mock.patch('mopack.usage.path_system.file_outdated',
+             mock.patch('mopack.linkages.path_system.file_outdated',
                         return_value=True), \
-             mock.patch('mopack.usage.path_system._system_include_path',
+             mock.patch('mopack.linkages.path_system._system_include_path',
                         return_value=[Path('/mock/include')]), \
-             mock.patch('mopack.usage.path_system._system_lib_path',
+             mock.patch('mopack.linkages.path_system._system_lib_path',
                         return_value=[Path('/mock/lib')]), \
-             mock.patch('mopack.usage.path_system._system_lib_names',
+             mock.patch('mopack.linkages.path_system._system_lib_names',
                         return_value=['lib{}.so']), \
-             mock.patch('mopack.usage.path_system.isfile',
+             mock.patch('mopack.linkages.path_system.isfile',
                         mock_isfile):
-            self.assertEqual(pkg.get_usage(self.metadata, submodules),
+            self.assertEqual(pkg.get_linkage(self.metadata, submodules),
                              expected)
 
     def check_pkg_config(self, name, submodules, expected={}):
@@ -71,14 +71,14 @@ class TestSystemPackage(OriginTest):
         with assert_logging([('resolve', 'foo from system')]):
             pkg.resolve(self.metadata)
         self.assertEqual(pkg.version(self.metadata), None)
-        self.check_get_usage(pkg, None)
+        self.check_get_linkage(pkg, None)
         self.check_pkg_config('foo', None)
 
     def test_resolve_pkg_config(self):
         pkg = self.make_package('foo')
         with assert_logging([('resolve', 'foo from system')]):
             pkg.resolve(self.metadata)
-        self.check_get_usage(pkg, None, {
+        self.check_get_linkage(pkg, None, {
             'name': 'foo', 'type': 'system', 'pcnames': ['foo'],
             'pkg_config_path': [],
         }, find_pkg_config=True)
@@ -88,14 +88,14 @@ class TestSystemPackage(OriginTest):
         with assert_logging([('resolve', 'foo from system')]):
             pkg.resolve(self.metadata)
         self.assertEqual(pkg.version(self.metadata), '2.0')
-        self.check_get_usage(pkg, None)
+        self.check_get_linkage(pkg, None)
         self.check_pkg_config('foo', None)
 
     def test_auto_link(self):
         pkg = self.make_package('foo', auto_link=True)
         with assert_logging([('resolve', 'foo from system')]):
             pkg.resolve(self.metadata)
-        self.check_get_usage(pkg, None, {
+        self.check_get_linkage(pkg, None, {
             'name': 'foo', 'type': 'system', 'generated': True,
             'auto_link': True, 'pcnames': ['foo'],
             'pkg_config_path': [self.pkgconfdir],
@@ -110,7 +110,7 @@ class TestSystemPackage(OriginTest):
                                 headers=['foo.hpp'])
         with assert_logging([('resolve', 'foo from system')]):
             pkg.resolve(self.metadata)
-        self.check_get_usage(pkg, None)
+        self.check_get_linkage(pkg, None)
         self.check_pkg_config('foo', None, {'cflags': ['-I' + incdir]})
 
     def test_library_path(self):
@@ -118,14 +118,14 @@ class TestSystemPackage(OriginTest):
         pkg = self.make_package('foo', library_path='/mock/path/to/lib')
         with assert_logging([('resolve', 'foo from system')]):
             pkg.resolve(self.metadata)
-        self.check_get_usage(pkg, None)
+        self.check_get_linkage(pkg, None)
         self.check_pkg_config('foo', None, {'libs': ['-L' + libdir, '-lfoo']})
 
     def test_headers(self):
         pkg = self.make_package('foo', headers='foo.hpp')
         with assert_logging([('resolve', 'foo from system')]):
             pkg.resolve(self.metadata)
-        self.check_get_usage(pkg, None)
+        self.check_get_linkage(pkg, None)
         self.check_pkg_config('foo', None, {
             'cflags': ['-I' + abspath('/mock/include')],
         })
@@ -133,7 +133,7 @@ class TestSystemPackage(OriginTest):
         pkg = self.make_package('foo', headers=['foo.hpp'])
         with assert_logging([('resolve', 'foo from system')]):
             pkg.resolve(self.metadata)
-        self.check_get_usage(pkg, None)
+        self.check_get_linkage(pkg, None)
         self.check_pkg_config('foo', None, {
             'cflags': ['-I' + abspath('/mock/include')],
         })
@@ -142,7 +142,7 @@ class TestSystemPackage(OriginTest):
         pkg = self.make_package('foo', libraries='bar')
         with assert_logging([('resolve', 'foo from system')]):
             pkg.resolve(self.metadata)
-        self.check_get_usage(pkg, None)
+        self.check_get_linkage(pkg, None)
         self.check_pkg_config('foo', None, {
             'libs': ['-L' + abspath('/mock/lib'), '-lbar'],
         })
@@ -150,7 +150,7 @@ class TestSystemPackage(OriginTest):
         pkg = self.make_package('foo', libraries=['foo', 'bar'])
         with assert_logging([('resolve', 'foo from system')]):
             pkg.resolve(self.metadata)
-        self.check_get_usage(pkg, None)
+        self.check_get_linkage(pkg, None)
         self.check_pkg_config('foo', None, {
             'libs': ['-L' + abspath('/mock/lib'), '-lfoo', '-lbar'],
         })
@@ -158,7 +158,7 @@ class TestSystemPackage(OriginTest):
         pkg = self.make_package('foo', libraries=None)
         with assert_logging([('resolve', 'foo from system')]):
             pkg.resolve(self.metadata)
-        self.check_get_usage(pkg, None)
+        self.check_get_linkage(pkg, None)
         self.check_pkg_config('foo', None, {'libs': []})
 
     def test_submodules(self):
@@ -166,27 +166,27 @@ class TestSystemPackage(OriginTest):
         submodules_optional = {'names': '*', 'required': False}
 
         pkg = self.make_package('foo', submodules=submodules_required)
-        self.check_get_usage(pkg, ['sub'])
+        self.check_get_linkage(pkg, ['sub'])
         self.check_pkg_config('foo', ['sub'], {
             'libs': ['-L' + abspath('/mock/lib'), '-lfoo_sub'],
         })
 
         pkg = self.make_package('foo', libraries='bar',
                                 submodules=submodules_required)
-        self.check_get_usage(pkg, ['sub'])
+        self.check_get_linkage(pkg, ['sub'])
         self.check_pkg_config('foo', ['sub'], {
             'libs': ['-L' + abspath('/mock/lib'), '-lbar', '-lfoo_sub'],
         })
 
         pkg = self.make_package('foo', submodules=submodules_optional)
-        self.check_get_usage(pkg, ['sub'])
+        self.check_get_linkage(pkg, ['sub'])
         self.check_pkg_config('foo', ['sub'], {
             'libs': ['-L' + abspath('/mock/lib'), '-lfoo', '-lfoo_sub'],
         })
 
         pkg = self.make_package('foo', libraries='bar',
                                 submodules=submodules_optional)
-        self.check_get_usage(pkg, ['sub'])
+        self.check_get_linkage(pkg, ['sub'])
         self.check_pkg_config('foo', ['sub'], {
             'libs': ['-L' + abspath('/mock/lib'), '-lbar', '-lfoo_sub'],
         })
@@ -196,11 +196,11 @@ class TestSystemPackage(OriginTest):
             'names': ['sub'], 'required': True
         })
         with self.assertRaises(ValueError):
-            pkg.get_usage(self.metadata, ['invalid'])
+            pkg.get_linkage(self.metadata, ['invalid'])
 
-    def test_invalid_usage(self):
+    def test_invalid_linkage(self):
         with self.assertRaises(FieldKeyError):
-            self.make_package('foo', usage={'type': 'system'})
+            self.make_package('foo', linkage={'type': 'system'})
 
     def test_deploy(self):
         pkg = self.make_package('foo')
@@ -257,7 +257,7 @@ class TestSystemPackage(OriginTest):
     def test_upgrade(self):
         opts = self.make_options()
         data = {'origin': 'system', '_version': 0, 'name': 'foo',
-                'usage': {'type': 'system', '_version': 0}}
+                'linkage': {'type': 'system', '_version': 0}}
         with mock.patch.object(SystemPackage, 'upgrade',
                                side_effect=SystemPackage.upgrade) as m:
             pkg = Package.rehydrate(data, _options=opts)

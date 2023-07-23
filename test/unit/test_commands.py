@@ -111,7 +111,7 @@ class TestResolve(CommandsTestCase):
 
         metadata = Metadata(self.pkgdir)
         metadata.add_package(DirectoryPackage(
-            'foo', path='path', build='none', usage='pkg_config',
+            'foo', path='path', build='none', linkage='pkg_config',
             _options=cfg.options,
             config_file=os.path.abspath('mopack.yml'),
         ))
@@ -128,7 +128,7 @@ class TestResolve(CommandsTestCase):
 
         metadata = Metadata(self.pkgdir)
         metadata.add_package(DirectoryPackage(
-            'foo', path='path', build='none', usage='pkg_config',
+            'foo', path='path', build='none', linkage='pkg_config',
             _options=cfg.options,
             config_file=os.path.abspath('mopack.yml'),
         ))
@@ -147,7 +147,7 @@ class TestResolve(CommandsTestCase):
 
         metadata = Metadata(self.pkgdir)
         metadata.add_package(DirectoryPackage(
-            'foo', path='path', build='none', usage='pkg_config',
+            'foo', path='path', build='none', linkage='pkg_config',
             _options=cfg.options,
             config_file=os.path.abspath('mopack.yml'),
         ))

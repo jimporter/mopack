@@ -15,9 +15,9 @@ class AptPackage(BinaryPackage):
     def upgrade(config, version):
         return config
 
-    def __init__(self, name, *, remote=None, repository=None, usage='system',
+    def __init__(self, name, *, remote=None, repository=None, linkage='system',
                  **kwargs):
-        super().__init__(name, usage=usage, **kwargs)
+        super().__init__(name, linkage=linkage, **kwargs)
 
         T = types.TypeCheck(locals(), self._expr_symbols)
         T.remote(types.maybe(

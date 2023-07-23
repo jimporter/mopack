@@ -10,7 +10,7 @@ from .yaml_tools import load_file, SafeLineLoader
 
 
 class DefaultConfig:
-    _known_genera = {'origin', 'usage'}
+    _known_genera = {'origin', 'linkage'}
 
     def __init__(self, filename):
         with load_file(filename, Loader=SafeLineLoader) as cfg:

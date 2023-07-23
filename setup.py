@@ -177,10 +177,10 @@ setup(
             'custom=mopack.builders.custom:CustomBuilder',
             'none=mopack.builders.none:NoneBuilder',
         ],
-        'mopack.usage': [
-            'path=mopack.usage.path_system:PathUsage',
-            'pkg_config=mopack.usage.pkg_config:PkgConfigUsage',
-            'system=mopack.usage.path_system:SystemUsage',
+        'mopack.linkages': [
+            'path=mopack.linkages.path_system:PathLinkage',
+            'pkg_config=mopack.linkages.pkg_config:PkgConfigLinkage',
+            'system=mopack.linkages.path_system:SystemLinkage',
         ],
     },
 

@@ -18,7 +18,7 @@ packages:
       type: custom
       build_commands:
         - ./configure --prefix=${{ deploy_dirs['prefix'] }}
-    usage:
+    linkage:
       type: path
       # ...
       compile_flags: -I$srcdir/include
@@ -85,7 +85,7 @@ to programmatically define how to resolve or use your dependencies.
 `srcdir` <span class="subtitle">*availability*: [source distributions](packages.md#source-distributions)</span>
 : The directory containing the source code for the current package.
 
-`builddir` <span class="subtitle">*availability*: [builders](builders.md), [usage](usage.md)</span>
+`builddir` <span class="subtitle">*availability*: [builders](builders.md), [linkage](linkage.md)</span>
 : The directory to put the compiled output from a source distribution.
 
 `deploy_dirs` <span class="subtitle">*availability*: everywhere</span>
@@ -104,7 +104,7 @@ to programmatically define how to resolve or use your dependencies.
   environment or overridden in the [`options`](file-structure.md#options)
   section.
 
-`submodule` <span class="subtitle">*availability*: [submodule maps](usage.md)</span>
+`submodule` <span class="subtitle">*availability*: [submodule maps](linkage.md)</span>
 : The name of the user-specified submodule. You can use this to automatically
   generate submodule configuration for the `*` placeholder submodule.
 

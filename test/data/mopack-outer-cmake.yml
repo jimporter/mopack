@@ -3,7 +3,7 @@ packages:
     origin: directory
     path: greeter-cmake
     build: cmake
-    usage:
+    linkage:
       type: path
       version: "1.0"
       # XXX: Pass this via `include_path` instead?

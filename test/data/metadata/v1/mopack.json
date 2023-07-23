@@ -33,7 +33,7 @@
         "parent": null,
         "should_deploy": true,
         "submodules": null,
-        "usage": {
+        "linkage": {
           "type": "pkg_config",
           "_version": 1,
           "pcname": "zlib",

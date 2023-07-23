@@ -33,8 +33,8 @@ class Builder(OptionsHolder):
                                                 self.name))
         return {'builddir': builddir}
 
-    def filter_usage(self, usage):
-        return usage
+    def filter_linkage(self, linkage):
+        return linkage
 
     def clean(self, metadata, pkg):
         path_values = pkg.path_values(metadata, builder=self)

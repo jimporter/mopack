@@ -20,7 +20,7 @@ class TestBroken(IntegrationTest):
         self.assertExists('mopack/mopack.json')
         self.assertNotExists('mopack/build/hello/')
 
-        self.assertUsage('hello', returncode=1)
+        self.assertLinkage('hello', returncode=1)
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -35,7 +35,7 @@ class TestBroken(IntegrationTest):
                     path={'base': 'cfgdir', 'path': 'broken-bfg.tar.gz'},
                     guessed_srcdir='hello-bfg',
                     builder=cfg_bfg9000_builder('hello'),
-                    usage=cfg_pkg_config_usage(pcname='hello')
+                    linkage=cfg_pkg_config_linkage(pcname='hello')
                 ),
             ],
         })
@@ -61,7 +61,7 @@ class TestBrokenPatch(IntegrationTest):
         self.assertNotExists('mopack/src/hello')
         self.assertNotExists('mopack/build/hello/')
 
-        self.assertUsage('hello', returncode=1)
+        self.assertLinkage('hello', returncode=1)
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -77,7 +77,7 @@ class TestBrokenPatch(IntegrationTest):
                     guessed_srcdir='hello-bfg',
                     patch={'base': 'cfgdir', 'path': 'hello-bfg.patch'},
                     builder=cfg_bfg9000_builder('hello'),
-                    usage=cfg_pkg_config_usage(pcname='hello')
+                    linkage=cfg_pkg_config_linkage(pcname='hello')
                 ),
             ],
         })

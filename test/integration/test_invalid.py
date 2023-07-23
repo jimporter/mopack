@@ -37,7 +37,7 @@ class TestInvalidParent(IntegrationTest):
         config = os.path.join(test_data_dir, 'mopack-invalid-parent.yml')
         output = self.assertPopen(['mopack', 'resolve', config], returncode=1)
         self.assertRegex(output,
-                         r"error: unknown usage 'unknown'\n" +
+                         r"error: unknown linkage 'unknown'\n" +
                          r'  in ".+mopack-invalid-parent.yml", ' +
                          r'line 6, column 13\n' +
                          r'        type: unknown\n' +

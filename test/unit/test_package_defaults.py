@@ -30,8 +30,8 @@ class TestDefaultConfig(TestCase):
         self.assertGet(cfg, ({}, 'origin', 'bar', 'field', 'default'),
                        'default')
 
-        self.assertGet(cfg, ({}, 'usage', 'foo', 'field'), None)
-        self.assertGet(cfg, ({}, 'usage', 'foo', 'field', 'default'),
+        self.assertGet(cfg, ({}, 'linkage', 'foo', 'field'), None)
+        self.assertGet(cfg, ({}, 'linkage', 'foo', 'field', 'default'),
                        'default')
 
     def test_list_field(self):

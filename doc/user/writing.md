@@ -20,7 +20,7 @@ This informs mopack that it should fetch a
 [tarball](../reference/packages.md#tarball) from the specified URL and then
 build it using the [bfg9000](../reference/builders.md#bfg9000) builder.
 
-## Configuring builds/usage
+## Configuring builds/linkage
 
 In the above example, mopack builds `foo_pkg` using the default settings for
 bfg9000. However, sometimes you may need to provide additional configuration
@@ -34,7 +34,7 @@ packages:
     build:
       type: bfg9000
       extra_args: --extra
-    usage:
+    linkage:
       type: pkg_config
       pcname: foobar
 ```
@@ -44,8 +44,8 @@ type of the build and some extra arguments to be passed to it. Below, we'll show
 a more complex example taking advantage of [variable
 interpolation](#variable-interpolation).
 
-We also explicitly specify a [*usage*](../reference/usage.md). A usage, as the
-name implies, describes how a package should be *used*, e.g. where to find
+We also explicitly specify a [*linkage*](../reference/linkage.md). A linkage,
+as the name implies, describes how to *link* to a package, e.g. where to find
 header files, what libraries to link to, etc.
 
 ## Other package origins
@@ -181,7 +181,7 @@ packages:
         - bfg9000 configure $builddir
         - cd $builddir
         - ninja
-    usage: pkg_config
+    linkage: pkg_config
 ```
 
 Here, `$builddir` represents a unique path for the current project that it can
@@ -212,7 +212,7 @@ packages:
         - ninja
       deploy_commands:
         - ninja install
-    usage: pkg_config
+    linkage: pkg_config
 ```
 
 ### Conditional package specification
@@ -261,4 +261,4 @@ packages:
 ```
 
 This specifies a package with two submodules, *requiring* at least one to be
-specified whenever [`mopack usage`](resolving.md#usage) is invoked.
+specified whenever [`mopack linkage`](resolving.md#linkage) is invoked.

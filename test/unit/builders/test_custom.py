@@ -141,12 +141,12 @@ class TestCustomBuilder(BuilderTest):
             builder.clean(self.metadata, pkg)
             mrmtree.assert_called_once_with(builddir, ignore_errors=True)
 
-    def test_usage(self):
+    def test_linkage(self):
         opts = self.make_options()
         pkg = DirectoryPackage('foo', path=self.srcdir, build={
             'type': 'custom', 'build_commands': ['make'],
-        }, usage='pkg_config', _options=opts, config_file=self.config_file)
-        pkg.get_usage(self.metadata, None)
+        }, linkage='pkg_config', _options=opts, config_file=self.config_file)
+        pkg.get_linkage(self.metadata, None)
 
     def test_rehydrate(self):
         opts = self.make_options()

@@ -19,7 +19,7 @@ packages:
 `inherit_defaults` <span class="subtitle">*optional, default*: `false`</span>
 : If true, inherit any unspecified values for this dependency from the defaults
   for the package. Defaults to false; however, any packages requested via
-  `mopack usage` but not defined will use the defaults.
+  `mopack linkage` but not defined will use the defaults.
 
 `deploy` <span class="subtitle">*optional, default*: `true`</span>
 : If true, deploy this package when calling `mopack deploy`.
@@ -27,8 +27,8 @@ packages:
 `submodules` <span class="subtitle">*optional, default*: `null`</span>
 : A list of available submodules, or `*` to indicate that any submodule name
   should be accepted. If this is specified, using this package via `mopack
-  usage` *must* specify a submodule. To declare that submodules are optional for
-  usage, you can specify a dictionary:
+  linkage` *must* specify a submodule. To declare that submodules are optional for
+  linkage, you can specify a dictionary:
 
         submodules:
           names: <submodules>
@@ -47,7 +47,7 @@ packages:
     origin: directory
     path: <path>
     build: <build>
-    usage: <usage>
+    linkage: <linkage>
 ```
 
 `path` <span class="subtitle">*required*</span>
@@ -58,10 +58,10 @@ packages:
   this is required, it can be unset if the dependency defines the builder in its
   [`export`](file-structure.md#exports) section.
 
-`usage` <span class="subtitle">*optional, default*: *from builder*</span>
-: The [usage](usage.md) to use when using this package. Some builders require
-  this to be set, but others provide a default usage specification; the
-  dependency can also define the usage in its
+`linkage` <span class="subtitle">*optional, default*: *from builder*</span>
+: The [linkage](linkage.md) to use when using this package. Some builders require
+  this to be set, but others provide a default linkage specification; the
+  dependency can also define the linkage in its
   [`export`](file-structure.md#exports) section.
 
 ### git
@@ -76,7 +76,7 @@ packages:
     commit: <commit_sha>
     srcdir: <inner_path>
     build: <build>
-    usage: <usage>
+    linkage: <linkage>
 ```
 
 `repository` <span class="subtitle">*required*</span>
@@ -96,10 +96,10 @@ packages:
   this is required, it can be unset if the dependency defines the builder in its
   `export` section.
 
-`usage` <span class="subtitle">*optional, default: from builder*</span>
-: The [usage](usage.md) to use when using this package. Some builders require
-  this to be set, but others provide a default usage specification; the
-  dependency can also define the usage in its `export` section.
+`linkage` <span class="subtitle">*optional, default: from builder*</span>
+: The [linkage](linkage.md) to use when using this package. Some builders require
+  this to be set, but others provide a default linkage specification; the
+  dependency can also define the linkage in its `export` section.
 
 ### tarball
 
@@ -113,7 +113,7 @@ packages:
     srcdir: <inner_path>
     patch: <path>
     build: <build>
-    usage: <usage>
+    linkage: <linkage>
 ```
 
 `path` <span class="subtitle">*required*</span>
@@ -135,10 +135,10 @@ packages:
   this is required, it can be unset if the dependency defines the builder in its
   `export` section.
 
-`usage` <span class="subtitle">*optional, default: from builder*</span>
-: The [usage](usage.md) to use when using this package. Some builders require
-  this to be set, but others provide a default usage specification; the
-  dependency can also define the usage in its `export` section.
+`linkage` <span class="subtitle">*optional, default: from builder*</span>
+: The [linkage](linkage.md) to use when using this package. Some builders require
+  this to be set, but others provide a default linkage specification; the
+  dependency can also define the linkage in its `export` section.
 
 ## Other origins
 
@@ -150,7 +150,7 @@ packages:
     origin: apt
     remote: <list[string]>
     repository: <string>
-    usage: <usage>
+    linkage: <linkage>
 ```
 
 `remote` <span class="subtitle">*optional; default:* `lib{package}-dev`</span>
@@ -160,8 +160,8 @@ packages:
 : The Apt repository to fetch the package(s) from. If not specified, use the
   default repositories for the system.
 
-`usage` <span class="subtitle">*optional, default:* [`system`](usage.md#system)</span>
-: The [usage](usage.md) to use when using this package.
+`linkage` <span class="subtitle">*optional, default:* [`system`](linkage.md#system)</span>
+: The [linkage](linkage.md) to use when using this package.
 
 ### conan
 
@@ -191,7 +191,7 @@ packages:
     build: <boolean>
     options:
       my_option: <string | boolean>
-    usage: <usage>
+    linkage: <linkage>
 ```
 
 `remote` <span class="subtitle">*required*</span>
@@ -204,8 +204,8 @@ packages:
 : A dictionary of options to pass to Conan; for example, you could pass
   `shared: true` to request a shared library configuration.
 
-`usage` <span class="subtitle">*optional, default:* [`pkg_config`](usage.md#pkg_config)</span>
-: The [usage](usage.md) to use when using this package.
+`linkage` <span class="subtitle">*optional, default:* [`pkg_config`](linkage.md#pkg_config)</span>
+: The [linkage](linkage.md) to use when using this package.
 
 ### system
 
@@ -239,4 +239,4 @@ packages:
 `libraries` <span class="subtitle">*optional, default*: `null`</span>
 `compile_flags` <span class="subtitle">*optional, default*: `null`</span>
 `link_flags` <span class="subtitle">*optional, default*: `null`</span>
-: See [`system`](usage.md#pathsystem) usage.
+: See [`system`](linkage.md#pathsystem) linkage.

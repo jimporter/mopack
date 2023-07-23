@@ -21,12 +21,12 @@ class TestInnerCMake(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigUsage('greeter')
+        self.assertPkgConfigLinkage('greeter')
 
         include_path = [os.path.join(test_data_dir, 'hello-cmake/include')]
         library_path = [os.path.join(self.pkgbuilddir, 'hello')]
-        self.assertPathUsage('hello', include_path=include_path,
-                             library_path=library_path, version='1.0')
+        self.assertPathLinkage('hello', include_path=include_path,
+                               library_path=library_path, version='1.0')
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -39,7 +39,7 @@ class TestInnerCMake(IntegrationTest):
                     'hello', config,
                     path={'base': 'cfgdir', 'path': 'hello-cmake'},
                     builder=cfg_cmake_builder('hello'),
-                    usage=cfg_path_usage(
+                    linkage=cfg_path_linkage(
                         explicit_version='1.0',
                         compile_flags=[[
                             '-I', {'base': 'srcdir', 'path': ''},
@@ -53,7 +53,7 @@ class TestInnerCMake(IntegrationTest):
                     'greeter', config,
                     path={'base': 'cfgdir', 'path': 'greeter-bfg'},
                     builder=cfg_bfg9000_builder('greeter'),
-                    usage=cfg_pkg_config_usage(pcname='greeter')
+                    linkage=cfg_pkg_config_linkage(pcname='greeter')
                 ),
             ],
         })
@@ -83,10 +83,10 @@ class TestOuterCMake(IntegrationTest):
 
         include_path = [os.path.join(test_data_dir, 'greeter-cmake/include')]
         library_path = [os.path.join(self.pkgbuilddir, 'greeter')]
-        self.assertPathUsage('greeter', include_path=include_path,
-                             library_path=library_path, version='1.0')
+        self.assertPathLinkage('greeter', include_path=include_path,
+                               library_path=library_path, version='1.0')
 
-        self.assertPkgConfigUsage('hello')
+        self.assertPkgConfigLinkage('hello')
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -103,13 +103,13 @@ class TestOuterCMake(IntegrationTest):
                           'path': os.path.join('..', 'hello-bfg.tar.gz')},
                     guessed_srcdir='hello-bfg',
                     builder=cfg_bfg9000_builder('hello'),
-                    usage=cfg_pkg_config_usage(pcname='hello')
+                    linkage=cfg_pkg_config_linkage(pcname='hello')
                 ),
                 cfg_directory_pkg(
                     'greeter', config,
                     path={'base': 'cfgdir', 'path': 'greeter-cmake'},
                     builder=cfg_cmake_builder('greeter'),
-                    usage=cfg_path_usage(
+                    linkage=cfg_path_linkage(
                         explicit_version='1.0',
                         compile_flags=[[
                             '-I', {'base': 'srcdir', 'path': ''},

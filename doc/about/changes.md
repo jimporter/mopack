@@ -4,6 +4,9 @@
 in progress
 {: .subtitle}
 
+### Breaking changes
+- `usage`/`usages` are now `linkage`/`linkages`
+
 ---
 
 ## v0.1.0

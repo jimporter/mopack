@@ -4,7 +4,7 @@ packages:
     path: hello-multi-bfg
     build: bfg9000
     submodules: ['french', 'english']
-    usage:
+    linkage:
       type: path
       include_path: include
       library_path: .

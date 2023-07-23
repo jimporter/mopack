@@ -239,8 +239,8 @@ class ChildConfig(BaseConfig):
             return self.data.get('build')
 
         @property
-        def usage(self):
-            return self.data.get('usage')
+        def linkage(self):
+            return self.data.get('linkage')
 
     def __init__(self, filenames, parent_config, parent_package):
         super().__init__()

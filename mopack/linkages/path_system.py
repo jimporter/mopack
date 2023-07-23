@@ -3,7 +3,7 @@ import re
 import subprocess
 from itertools import chain
 
-from . import preferred_path_base, Usage
+from . import preferred_path_base, Linkage
 from . import submodules as submod
 from .. import types
 from ..environment import get_pkg_config, subprocess_run
@@ -77,7 +77,7 @@ class _PathSubmoduleMapping(FreezeDried):
                  libraries=None, compile_flags=None, link_flags=None):
         # Since we need to delay evaluating symbols until we know what the
         # selected submodule is, just store these values unevaluated. We'll
-        # evaluate them later during `mopack usage` via the fill() function.
+        # evaluate them later during `mopack linkage` via the fill() function.
         self.dependencies = dependencies
         self.include_path = include_path
         self.library_path = library_path
@@ -121,7 +121,7 @@ class _PathSubmoduleMapping(FreezeDried):
     'compile_flags': ShellArguments, 'link_flags': ShellArguments,
     'submodule_map': DictFreezeDryer(value_type=_PathSubmoduleMapping),
 })
-class PathUsage(Usage):
+class PathLinkage(Linkage):
     type = 'path'
     _version = 1
     SubmoduleMapping = _PathSubmoduleMapping
@@ -292,9 +292,9 @@ class PathUsage(Usage):
             )
         except ValueError:  # pragma: no cover
             # XXX: This is a hack to work around the fact that we currently
-            # require the build system to pass include dirs during `usage` (and
-            # really, during `list-packages` too). We should handle this in a
-            # smarter way and then remove this.
+            # require the build system to pass include dirs during `linkage`
+            # (and really, during `list-packages` too). We should handle this
+            # in a smarter way and then remove this.
             include_dirs = []
 
         return self._get_version(metadata, pkg, include_dirs, path_values)
@@ -313,17 +313,19 @@ class PathUsage(Usage):
         pcname = dependency_string(pkg.name, listify(submodule))
         pcpath = os.path.join(pkgconfdir, pcname + '.pc')
 
-        # Ensure all dependencies are up-to-date and get their usages.
+        # Ensure all dependencies are up-to-date and get their linkages.
         auto_link = self.auto_link
         deps_requires = []
         deps_paths = [pkgconfdir]
         for dep_pkg, dep_sub in chain_attr('dependencies'):
-            # XXX: Cache usage so we don't repeatedly process the same package.
-            usage = metadata.get_package(dep_pkg).get_usage(metadata, dep_sub)
+            # XXX: Cache linkage so we don't repeatedly process the same
+            # package.
+            pkg = metadata.get_package(dep_pkg)
+            linkage = pkg.get_linkage(metadata, dep_sub)
 
-            auto_link |= usage.get('auto_link', False)
-            deps_requires.extend(usage.get('pcnames', []))
-            deps_paths.extend(usage.get('pkg_config_path', []))
+            auto_link |= linkage.get('auto_link', False)
+            deps_requires.extend(linkage.get('pcnames', []))
+            deps_paths.extend(linkage.get('pkg_config_path', []))
 
         should_write = file_outdated(pcpath, metadata.path)
 
@@ -368,7 +370,7 @@ class PathUsage(Usage):
             result['version'] = version
         return result
 
-    def get_usage(self, metadata, pkg, submodules):
+    def get_linkage(self, metadata, pkg, submodules):
         if submodules and self.submodule_map:
             pkgconfpath, requires = [], []
             auto_link = False
@@ -403,7 +405,7 @@ class PathUsage(Usage):
             pcnames = [data['pcname']]
             pkgconfpath = data['pkg_config_path']
 
-        return self._usage(
+        return self._linkage(
             pkg, submodules, generated=True, auto_link=auto_link,
             pcnames=pcnames, pkg_config_path=uniques(pkgconfpath)
         )
@@ -425,7 +427,7 @@ class _SystemSubmoduleMapping(_PathSubmoduleMapping):
 @FreezeDried.fields(rehydrate={
     'submodule_map': DictFreezeDryer(value_type=_SystemSubmoduleMapping),
 })
-class SystemUsage(PathUsage):
+class SystemLinkage(PathLinkage):
     type = 'system'
     SubmoduleMapping = _SystemSubmoduleMapping
 
@@ -453,7 +455,7 @@ class SystemUsage(PathUsage):
         except (OSError, subprocess.CalledProcessError):
             return super().version(metadata, pkg)
 
-    def get_usage(self, metadata, pkg, submodules):
+    def get_linkage(self, metadata, pkg, submodules):
         if submodules and self.submodule_map:
             pcnames = [] if pkg.submodules['required'] else [self.pcname]
             path_bases = pkg.path_bases(builder=True)
@@ -472,7 +474,7 @@ class SystemUsage(PathUsage):
                            stdout=subprocess.DEVNULL,
                            stderr=subprocess.DEVNULL,
                            env=env)
-            return self._usage(pkg, submodules, pcnames=pcnames,
-                               pkg_config_path=[])
+            return self._linkage(pkg, submodules, pcnames=pcnames,
+                                 pkg_config_path=[])
         except (OSError, subprocess.CalledProcessError):
-            return super().get_usage(metadata, pkg, submodules)
+            return super().get_linkage(metadata, pkg, submodules)

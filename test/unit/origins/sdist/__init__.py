@@ -19,14 +19,14 @@ class SDistTestCase(OriginTest):
         else:
             return os.path.join(self.pkgdir, 'build', name, pkgconfig)
 
-    def check_resolve(self, pkg, *, submodules=None, usage=None):
-        if usage is None:
+    def check_resolve(self, pkg, *, submodules=None, linkage=None):
+        if linkage is None:
             pcnames = ([] if pkg.submodules and pkg.submodules['required'] else
                        ['foo'])
             pcnames.extend('foo_{}'.format(i) for i in iterate(submodules))
-            usage = {'name': dependency_string(pkg.name, submodules),
-                     'type': 'pkg_config', 'pcnames': pcnames,
-                     'pkg_config_path': [self.pkgconfdir('foo')]}
+            linkage = {'name': dependency_string(pkg.name, submodules),
+                       'type': 'pkg_config', 'pcnames': pcnames,
+                       'pkg_config_path': [self.pkgconfdir('foo')]}
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
@@ -37,9 +37,10 @@ class SDistTestCase(OriginTest):
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')
 
-        with mock.patch('mopack.usage.path_system.file_outdated',
+        with mock.patch('mopack.linkages.path_system.file_outdated',
                         return_value=False):
-            self.assertEqual(pkg.get_usage(self.metadata, submodules), usage)
+            self.assertEqual(pkg.get_linkage(self.metadata, submodules),
+                             linkage)
 
     def make_builder(self, builder_type, pkg, **kwargs):
         return builder_type(pkg, **kwargs)

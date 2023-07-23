@@ -14,17 +14,17 @@ class TestQt(IntegrationTest):
         self.assertExists('mopack/mopack.json')
 
         if platform_name() == 'windows':
-            self.assertPathUsage('Qt5', ['Widgets'], type='system',
-                                 include_path=mock.ANY,
-                                 library_path=mock.ANY,
-                                 libraries=['Qt5Widgets', 'Qt5Core'],
-                                 version='')
+            self.assertPathLinkage('Qt5', ['Widgets'], type='system',
+                                   include_path=mock.ANY,
+                                   library_path=mock.ANY,
+                                   libraries=['Qt5Widgets', 'Qt5Core'],
+                                   version='')
         else:
-            self.assertPkgConfigUsage('Qt5', ['Widgets'], type='system',
-                                      pcnames=['Qt5Widgets'],
-                                      pkg_config_path=[])
+            self.assertPkgConfigLinkage('Qt5', ['Widgets'], type='system',
+                                        pcnames=['Qt5Widgets'],
+                                        pkg_config_path=[])
 
-        self.assertUsage('Qt5', returncode=1)
+        self.assertLinkage('Qt5', returncode=1)
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -33,7 +33,7 @@ class TestQt(IntegrationTest):
                 cfg_system_pkg(
                     'Qt5', config,
                     submodules={'names': '*', 'required': True},
-                    usage=cfg_system_usage(
+                    linkage=cfg_system_linkage(
                         pcname='Qt5',
                         auto_link=False,
                         explicit_version=None,

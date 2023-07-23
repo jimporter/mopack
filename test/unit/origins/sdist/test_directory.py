@@ -48,7 +48,7 @@ class TestDirectory(SDistTestCase):
     def test_build(self):
         build = {'type': 'bfg9000', 'extra_args': '--extra'}
         pkg = self.make_package('foo', path=self.srcpath, build=build,
-                                usage='pkg_config')
+                                linkage='pkg_config')
         self.assertEqual(pkg.path, Path(self.srcpath))
         self.assertEqual(pkg.builder, self.make_builder(
             Bfg9000Builder, pkg, extra_args='--extra'
@@ -80,9 +80,9 @@ class TestDirectory(SDistTestCase):
             ))
         self.check_resolve(pkg)
 
-        # Infer but override usage
+        # Infer but override linkage
         pkg = self.make_package('foo', path=self.srcpath,
-                                usage={'type': 'system'})
+                                linkage={'type': 'system'})
         self.assertEqual(pkg.builder, None)
 
         with mock.patch('os.path.isdir', mock_isdir), \
@@ -94,16 +94,16 @@ class TestDirectory(SDistTestCase):
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
                 'foo', path=self.srcpath, build='bfg9000',
-                usage={'type': 'system'}
+                linkage={'type': 'system'}
             ))
         with mock.patch('subprocess.run', side_effect=OSError()), \
              mock.patch('os.makedirs'), \
-             mock.patch('mopack.usage.path_system.PathUsage._filter_path',
+             mock.patch('mopack.linkages.path_system.PathLinkage._filter_path',
                         lambda *args: []), \
-             mock.patch('mopack.usage.path_system.file_outdated',
+             mock.patch('mopack.linkages.path_system.file_outdated',
                         return_value=True), \
              mock.patch('builtins.open'):
-            self.check_resolve(pkg, usage={
+            self.check_resolve(pkg, linkage={
                 'name': 'foo', 'type': 'system', 'generated': True,
                 'auto_link': False, 'pcnames': ['foo'],
                 'pkg_config_path': [self.pkgconfdir(None)],
@@ -111,7 +111,7 @@ class TestDirectory(SDistTestCase):
 
     def test_infer_build_override(self):
         pkg = self.make_package('foo', path=self.srcpath, build='cmake',
-                                usage='pkg_config')
+                                linkage='pkg_config')
 
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
@@ -123,7 +123,7 @@ class TestDirectory(SDistTestCase):
                 config = pkg.fetch(self.metadata, self.config)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
-                'foo', path=self.srcpath, build='cmake', usage='pkg_config'
+                'foo', path=self.srcpath, build='cmake', linkage='pkg_config'
             ))
         with mock.patch('mopack.builders.cmake.pushd'):
             self.check_resolve(pkg)
@@ -197,7 +197,7 @@ class TestDirectory(SDistTestCase):
             pkg.fetch(self.metadata, self.config)
 
         pkg = self.make_package('foo', path=self.srcpath)
-        child = 'export:\n  build: bfg9000\n  usage: unknown'
+        child = 'export:\n  build: bfg9000\n  linkage: unknown'
         loc = 'line 3, column 10'
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
@@ -207,7 +207,7 @@ class TestDirectory(SDistTestCase):
             pkg.fetch(self.metadata, self.config)
 
         pkg = self.make_package('foo', path=self.srcpath)
-        child = ('export:\n  build: bfg9000\n  usage:\n' +
+        child = ('export:\n  build: bfg9000\n  linkage:\n' +
                  '    type: pkg_config\n    unknown: blah')
         loc = 'line 5, column 5'
         with mock.patch('os.path.isdir', mock_isdir), \
@@ -217,11 +217,11 @@ class TestDirectory(SDistTestCase):
              self.assertRaisesRegex(YamlParseError, loc):
             pkg.fetch(self.metadata, self.config)
 
-    def test_infer_build_invalid_parent_usage(self):
+    def test_infer_build_invalid_parent_linkage(self):
         child = 'export:\n  build: bfg9000'
 
-        usage = yaml.load('unknown', Loader=SafeLineLoader)
-        pkg = self.make_package('foo', path=self.srcpath, usage=usage)
+        linkage = yaml.load('unknown', Loader=SafeLineLoader)
+        pkg = self.make_package('foo', path=self.srcpath, linkage=linkage)
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open_data(child)), \
@@ -229,9 +229,9 @@ class TestDirectory(SDistTestCase):
              self.assertRaises(FieldError):
             pkg.fetch(self.metadata, self.config)
 
-        usage = yaml.load('type: pkg_config\nunknown: blah',
-                          Loader=SafeLineLoader)
-        pkg = self.make_package('foo', path=self.srcpath, usage=usage)
+        linkage = yaml.load('type: pkg_config\nunknown: blah',
+                            Loader=SafeLineLoader)
+        pkg = self.make_package('foo', path=self.srcpath, linkage=linkage)
         loc = 'line 2, column 1'
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
@@ -240,9 +240,9 @@ class TestDirectory(SDistTestCase):
              self.assertRaisesRegex(YamlParseError, loc):
             pkg.fetch(self.metadata, self.config)
 
-    def test_usage(self):
+    def test_linkage(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
-                                usage='pkg_config')
+                                linkage='pkg_config')
         self.assertEqual(pkg.path, Path(self.srcpath))
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
 
@@ -258,28 +258,28 @@ class TestDirectory(SDistTestCase):
                 stdout=subprocess.PIPE, universal_newlines=True
             )
 
-        usage = {'type': 'pkg_config', 'pkg_config_path': 'pkgconf'}
+        linkage = {'type': 'pkg_config', 'pkg_config_path': 'pkgconf'}
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
-                                usage=usage)
+                                linkage=linkage)
         self.assertEqual(pkg.path, Path(self.srcpath))
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
 
         with assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]):
             pkg.fetch(self.metadata, self.config)
-        self.check_resolve(pkg, usage={
+        self.check_resolve(pkg, linkage={
             'name': 'foo', 'type': 'pkg_config', 'pcnames': ['foo'],
             'pkg_config_path': [self.pkgconfdir('foo', 'pkgconf')],
         })
 
-        usage = {'type': 'path', 'libraries': []}
+        linkage = {'type': 'path', 'libraries': []}
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
-                                usage=usage)
+                                linkage=linkage)
         self.assertEqual(pkg.path, Path(self.srcpath))
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
 
         with assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]):
             pkg.fetch(self.metadata, self.config)
-        self.check_resolve(pkg, usage={
+        self.check_resolve(pkg, linkage={
             'name': 'foo', 'type': 'path', 'generated': True,
             'auto_link': False, 'pcnames': ['foo'],
             'pkg_config_path': [self.pkgconfdir(None)],
@@ -297,10 +297,12 @@ class TestDirectory(SDistTestCase):
                                 submodules=submodules_required)
         self.check_resolve(pkg, submodules=['sub'])
 
-        pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
-                                usage={'type': 'pkg_config', 'pcname': 'bar'},
-                                submodules=submodules_required)
-        self.check_resolve(pkg, submodules=['sub'], usage={
+        pkg = self.make_package(
+            'foo', path=self.srcpath, build='bfg9000',
+            linkage={'type': 'pkg_config', 'pcname': 'bar'},
+            submodules=submodules_required
+        )
+        self.check_resolve(pkg, submodules=['sub'], linkage={
             'name': 'foo[sub]', 'type': 'pkg_config',
             'pcnames': ['bar', 'foo_sub'],
             'pkg_config_path': [self.pkgconfdir('foo')],
@@ -310,10 +312,12 @@ class TestDirectory(SDistTestCase):
                                 submodules=submodules_optional)
         self.check_resolve(pkg, submodules=['sub'])
 
-        pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
-                                usage={'type': 'pkg_config', 'pcname': 'bar'},
-                                submodules=submodules_optional)
-        self.check_resolve(pkg, submodules=['sub'], usage={
+        pkg = self.make_package(
+            'foo', path=self.srcpath, build='bfg9000',
+            linkage={'type': 'pkg_config', 'pcname': 'bar'},
+            submodules=submodules_optional
+        )
+        self.check_resolve(pkg, submodules=['sub'], linkage={
             'name': 'foo[sub]', 'type': 'pkg_config',
             'pcnames': ['bar', 'foo_sub'],
             'pkg_config_path': [self.pkgconfdir('foo')],
@@ -325,7 +329,7 @@ class TestDirectory(SDistTestCase):
             submodules={'names': ['sub'], 'required': True}
         )
         with self.assertRaises(ValueError):
-            pkg.get_usage(self.metadata, ['invalid'])
+            pkg.get_linkage(self.metadata, ['invalid'])
 
     def test_deploy(self):
         deploy_dirs = {'prefix': '/usr/local'}
@@ -478,7 +482,7 @@ class TestDirectory(SDistTestCase):
         pkg = DirectoryPackage('foo', path=self.srcpath, build='bfg9000',
                                _options=opts, config_file=self.config_file)
         data = through_json(pkg.dehydrate())
-        self.assertNotIn('pending_usage', data)
+        self.assertNotIn('pending_linkage', data)
         self.assertEqual(pkg, Package.rehydrate(data, _options=opts))
 
         pkg = DirectoryPackage('foo', path=self.srcpath, _options=opts,
@@ -493,7 +497,7 @@ class TestDirectory(SDistTestCase):
             'path': {'base': 'cfgdir', 'path': '.'},
             'build': {
                 'type': None, '_version': 0,
-                'usage': {'type': 'system', '_version': 0},
+                'linkage': {'type': 'system', '_version': 0},
             },
         }
         with mock.patch.object(DirectoryPackage, 'upgrade',

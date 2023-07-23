@@ -12,24 +12,25 @@ class SystemPackage(BinaryPackage):
     def upgrade(config, version):
         return config
 
-    def __init__(self, name, *, usage=Unset, inherit_defaults=False, **kwargs):
-        if usage is not Unset:
+    def __init__(self, name, *, linkage=Unset, inherit_defaults=False,
+                 **kwargs):
+        if linkage is not Unset:
             raise FieldKeyError((
-                "'system' package doesn't accept 'usage' attribute; " +
-                'pass usage options directly'
-            ), 'usage')
+                "'system' package doesn't accept 'linkage' attribute; " +
+                'pass linkage options directly'
+            ), 'linkage')
 
-        usage_kwargs = slice_dict(kwargs, {
+        linkage_kwargs = slice_dict(kwargs, {
             'auto_link', 'version', 'pcname', 'dependencies', 'include_path',
             'library_path', 'headers', 'libraries', 'compile_flags',
             'link_flags', 'submodule_map',
         })
-        usage_kwargs.update({'type': 'system',
-                             'inherit_defaults': inherit_defaults})
+        linkage_kwargs.update({'type': 'system',
+                               'inherit_defaults': inherit_defaults})
 
         super().__init__(
-            name, usage=usage_kwargs, inherit_defaults=inherit_defaults,
-            _usage_field=None, **kwargs
+            name, linkage=linkage_kwargs, inherit_defaults=inherit_defaults,
+            _linkage_field=None, **kwargs
         )
 
     def resolve(self, metadata):

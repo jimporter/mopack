@@ -140,7 +140,7 @@ class TestGit(SDistTestCase):
     def test_build(self):
         build = {'type': 'bfg9000', 'extra_args': '--extra'}
         pkg = self.make_package('foo', repository=self.srcssh, build=build,
-                                usage='pkg_config')
+                                linkage='pkg_config')
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
@@ -171,9 +171,9 @@ class TestGit(SDistTestCase):
             ))
         self.check_resolve(pkg)
 
-        # Infer but override usage and version
+        # Infer but override linkage and version
         pkg = self.make_package('foo', repository=self.srcssh,
-                                usage={'type': 'system'})
+                                linkage={'type': 'system'})
         self.assertEqual(pkg.builder, None)
 
         with mock_open_log(), \
@@ -188,16 +188,16 @@ class TestGit(SDistTestCase):
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
                 'foo', repository=self.srcssh, build='bfg9000',
-                usage={'type': 'system'}
+                linkage={'type': 'system'}
             ))
         with mock.patch('subprocess.run', side_effect=OSError()), \
-             mock.patch('mopack.usage.path_system.PathUsage._filter_path',
+             mock.patch('mopack.linkages.path_system.PathLinkage._filter_path',
                         lambda *args: []), \
-             mock.patch('mopack.usage.path_system.file_outdated',
+             mock.patch('mopack.linkages.path_system.file_outdated',
                         return_value=True), \
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):
-            self.check_resolve(pkg, usage={
+            self.check_resolve(pkg, linkage={
                 'name': 'foo', 'type': 'system', 'generated': True,
                 'auto_link': False, 'pcnames': ['foo'],
                 'pkg_config_path': [self.pkgconfdir(None)],
@@ -205,7 +205,7 @@ class TestGit(SDistTestCase):
 
     def test_infer_build_override(self):
         pkg = self.make_package('foo', repository=self.srcssh, build='cmake',
-                                usage='pkg_config')
+                                linkage='pkg_config')
 
         with mock_open_log(), \
              mock.patch('os.path.exists', mock_exists), \
@@ -219,14 +219,14 @@ class TestGit(SDistTestCase):
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
                 'foo', repository=self.srcssh, build='cmake',
-                usage='pkg_config'
+                linkage='pkg_config'
             ))
         with mock.patch('mopack.builders.cmake.pushd'):
             self.check_resolve(pkg)
 
-    def test_usage(self):
+    def test_linkage(self):
         pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000',
-                                usage='pkg_config')
+                                linkage='pkg_config')
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
@@ -243,30 +243,30 @@ class TestGit(SDistTestCase):
                 stdout=subprocess.PIPE, universal_newlines=True
             )
 
-        usage = {'type': 'pkg_config', 'pkg_config_path': 'pkgconf'}
+        linkage = {'type': 'pkg_config', 'pkg_config_path': 'pkgconf'}
         pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000',
-                                usage=usage)
+                                linkage=linkage)
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
 
         self.check_fetch(pkg)
-        self.check_resolve(pkg, usage={
+        self.check_resolve(pkg, linkage={
             'name': 'foo', 'type': 'pkg_config', 'pcnames': ['foo'],
             'pkg_config_path': [self.pkgconfdir('foo', 'pkgconf')],
         })
 
-        usage = {'type': 'path', 'libraries': []}
+        linkage = {'type': 'path', 'libraries': []}
         pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000',
-                                usage=usage)
+                                linkage=linkage)
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
         self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
 
         self.check_fetch(pkg)
-        self.check_resolve(pkg, usage={
+        self.check_resolve(pkg, linkage={
             'name': 'foo', 'type': 'path', 'generated': True,
             'auto_link': False, 'pcnames': ['foo'],
             'pkg_config_path': [self.pkgconfdir(None)],
@@ -285,11 +285,13 @@ class TestGit(SDistTestCase):
         self.check_fetch(pkg)
         self.check_resolve(pkg, submodules=['sub'])
 
-        pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000',
-                                usage={'type': 'pkg_config', 'pcname': 'bar'},
-                                submodules=submodules_required)
+        pkg = self.make_package(
+            'foo', repository=self.srcssh, build='bfg9000',
+            linkage={'type': 'pkg_config', 'pcname': 'bar'},
+            submodules=submodules_required
+        )
         self.check_fetch(pkg)
-        self.check_resolve(pkg, submodules=['sub'], usage={
+        self.check_resolve(pkg, submodules=['sub'], linkage={
             'name': 'foo[sub]', 'type': 'pkg_config',
             'pcnames': ['bar', 'foo_sub'],
             'pkg_config_path': [self.pkgconfdir('foo')],
@@ -300,11 +302,13 @@ class TestGit(SDistTestCase):
         self.check_fetch(pkg)
         self.check_resolve(pkg, submodules=['sub'])
 
-        pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000',
-                                usage={'type': 'pkg_config', 'pcname': 'bar'},
-                                submodules=submodules_optional)
+        pkg = self.make_package(
+            'foo', repository=self.srcssh, build='bfg9000',
+            linkage={'type': 'pkg_config', 'pcname': 'bar'},
+            submodules=submodules_optional
+        )
         self.check_fetch(pkg)
-        self.check_resolve(pkg, submodules=['sub'], usage={
+        self.check_resolve(pkg, submodules=['sub'], linkage={
             'name': 'foo[sub]', 'type': 'pkg_config',
             'pcnames': ['bar', 'foo_sub'],
             'pkg_config_path': [self.pkgconfdir('foo')],
@@ -316,7 +320,7 @@ class TestGit(SDistTestCase):
             submodules={'names': ['sub'], 'required': True}
         )
         with self.assertRaises(ValueError):
-            pkg.get_usage(self.metadata, ['invalid'])
+            pkg.get_linkage(self.metadata, ['invalid'])
 
     def test_already_fetched_branch(self):
         def mock_exists(p):
@@ -576,7 +580,7 @@ class TestGit(SDistTestCase):
             'srcdir': '.',
             'build': {
                 'type': 'none', '_version': 0,
-                'usage': {'type': 'system', '_version': 0},
+                'linkage': {'type': 'system', '_version': 0},
             },
         }
         with mock.patch.object(GitPackage, 'upgrade',

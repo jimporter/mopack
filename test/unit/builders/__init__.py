@@ -28,7 +28,7 @@ class BuilderTest(OptionsTest):
         return options
 
     def make_builder(self, *args, common_options=None, this_options=None,
-                     deploy_dirs=None, usage=None, **kwargs):
+                     deploy_dirs=None, linkage=None, **kwargs):
         if len(args) == 1:
             builder_type = self.builder_type
             pkg = args[0]

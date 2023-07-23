@@ -16,10 +16,10 @@ class TestSubmodules(IntegrationTest):
         self.assertExists('mopack/mopack.json')
 
         for submodules in (['french'], ['english'], ['french', 'english']):
-            self.assertPkgConfigUsage(
+            self.assertPkgConfigLinkage(
                 'hello', submodules, pcnames=['hello_' + i for i in submodules]
             )
-        self.assertUsage('hello', returncode=1)
+        self.assertLinkage('hello', returncode=1)
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -33,7 +33,7 @@ class TestSubmodules(IntegrationTest):
                     },
                     path={'base': 'cfgdir', 'path': 'hello-multi-bfg'},
                     builder=cfg_bfg9000_builder('hello'),
-                    usage=cfg_pkg_config_usage(
+                    linkage=cfg_pkg_config_linkage(
                         pcname=None,
                         submodule_map={
                             '*': {'pcname': 'hello_$submodule'},
@@ -65,12 +65,12 @@ class TestSubmodulesPath(IntegrationTest):
                                      'include')]
         library_path = [os.path.join(self.pkgbuilddir, 'hello')]
         for submodules in (['french'], ['english'], ['french', 'english']):
-            self.assertPathUsage(
+            self.assertPathLinkage(
                 'hello', submodules, include_path=include_path,
                 library_path=library_path,
                 libraries=['hello_' + i for i in submodules]
             )
-        self.assertUsage('hello', returncode=1)
+        self.assertLinkage('hello', returncode=1)
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -84,7 +84,7 @@ class TestSubmodulesPath(IntegrationTest):
                     },
                     path={'base': 'cfgdir', 'path': 'hello-multi-bfg'},
                     builder=cfg_bfg9000_builder('hello'),
-                    usage=cfg_path_usage(
+                    linkage=cfg_path_linkage(
                         include_path=[{'base': 'srcdir', 'path': 'include'}],
                         library_path=[{'base': 'builddir', 'path': ''}],
                         submodule_map={'*': {

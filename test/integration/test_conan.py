@@ -16,7 +16,7 @@ class TestConan(IntegrationTest):
         self.assertExists('mopack/conan/zlib.pc')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigUsage('zlib', pkg_config_path=[os.path.join(
+        self.assertPkgConfigLinkage('zlib', pkg_config_path=[os.path.join(
             self.stage, 'mopack', 'conan'
         )])
 
@@ -30,7 +30,7 @@ class TestConan(IntegrationTest):
                     'zlib', config,
                     remote='zlib/1.2.13',
                     options={'shared': True},
-                    usage=cfg_pkg_config_usage(
+                    linkage=cfg_pkg_config_linkage(
                         pcname='zlib',
                         pkg_config_path=[{'base': 'builddir', 'path': ''}]
                     )

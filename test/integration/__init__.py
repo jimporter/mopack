@@ -22,16 +22,16 @@ for i in os.getenv('MOPACK_SKIPPED_TESTS', '').split(' '):
     if i:
         test_features.remove(i)
 
-# Get additional environment variables to use when getting usage. This
+# Get additional environment variables to use when getting linkage. This
 # is useful for setting things up to properly detect headers/libs for `path`
-# usage.
-usage_env = {}
+# linkage.
+linkage_env = {}
 try:
     test_env_file = os.path.join(test_dir, '../.mopack_test_env')
     with open(os.getenv('MOPACK_TEST_ENV_FILE', test_env_file)) as f:
         for line in f.readlines():
             k, v = line.rstrip('\n').split('=', 1)
-            usage_env[k] = v
+            linkage_env[k] = v
 except FileNotFoundError:
     pass
 
@@ -95,19 +95,19 @@ def _cfg_package(origin, api_version, name, config_file, parent=None,
     }
 
 
-def cfg_directory_pkg(name, config_file, *, path, builder, usage, **kwargs):
+def cfg_directory_pkg(name, config_file, *, path, builder, linkage, **kwargs):
     result = _cfg_package('directory', 1, name, config_file, **kwargs)
     result.update({
         'path': path,
         'builder': builder,
-        'usage': usage,
+        'linkage': linkage,
     })
     return result
 
 
 def cfg_tarball_pkg(name, config_file, *, path=None, url=None, files=[],
                     srcdir=None, guessed_srcdir=None, patch=None, builder,
-                    usage, **kwargs):
+                    linkage, **kwargs):
     result = _cfg_package('tarball', 1, name, config_file, **kwargs)
     result.update({
         'path': path,
@@ -117,51 +117,51 @@ def cfg_tarball_pkg(name, config_file, *, path=None, url=None, files=[],
         'guessed_srcdir': guessed_srcdir,
         'patch': patch,
         'builder': builder,
-        'usage': usage,
+        'linkage': linkage,
     })
     return result
 
 
 def cfg_git_pkg(name, config_file, *, repository, rev, srcdir='.', builder,
-                usage, **kwargs):
+                linkage, **kwargs):
     result = _cfg_package('git', 1, name, config_file, **kwargs)
     result.update({
         'repository': repository,
         'rev': rev,
         'srcdir': srcdir,
         'builder': builder,
-        'usage': usage,
+        'linkage': linkage,
     })
     return result
 
 
-def cfg_apt_pkg(name, config_file, *, remote, repository=None, usage,
+def cfg_apt_pkg(name, config_file, *, remote, repository=None, linkage,
                 **kwargs):
     result = _cfg_package('apt', 1, name, config_file, **kwargs)
     result.update({
         'remote': remote,
         'repository': repository,
-        'usage': usage,
+        'linkage': linkage,
     })
     return result
 
 
-def cfg_conan_pkg(name, config_file, *, remote, build=False, options={}, usage,
-                  **kwargs):
+def cfg_conan_pkg(name, config_file, *, remote, build=False, options={},
+                  linkage, **kwargs):
     result = _cfg_package('conan', 1, name, config_file, **kwargs)
     result.update({
         'remote': remote,
         'build': build,
         'options': options,
-        'usage': usage,
+        'linkage': linkage,
     })
     return result
 
 
-def cfg_system_pkg(name, config_file, *, usage, **kwargs):
+def cfg_system_pkg(name, config_file, *, linkage, **kwargs):
     result = _cfg_package('system', 1, name, config_file, **kwargs)
     result.update({
-        'usage': usage,
+        'linkage': linkage,
     })
     return result
 
@@ -200,7 +200,8 @@ def _cfg_pkg_config_submodule_map(*, pcname=None):
     }
 
 
-def cfg_pkg_config_usage(*, pcname, pkg_config_path=None, submodule_map=None):
+def cfg_pkg_config_linkage(*, pcname, pkg_config_path=None,
+                           submodule_map=None):
     if pkg_config_path is None:
         pkg_config_path = [{'base': 'builddir', 'path': 'pkgconfig'}]
     result = {
@@ -232,9 +233,10 @@ def _cfg_path_submodule_map(*, dependencies=None, include_path=None,
     }
 
 
-def cfg_path_usage(*, auto_link=False, explicit_version=None, dependencies=[],
-                   include_path=[], library_path=[], headers=[], libraries=[],
-                   compile_flags=[], link_flags=[], submodule_map=None):
+def cfg_path_linkage(*, auto_link=False, explicit_version=None,
+                     dependencies=[], include_path=[], library_path=[],
+                     headers=[], libraries=[], compile_flags=[], link_flags=[],
+                     submodule_map=None):
     result = {
         'type': 'path',
         '_version': 1,
@@ -257,8 +259,8 @@ def cfg_path_usage(*, auto_link=False, explicit_version=None, dependencies=[],
     return result
 
 
-def cfg_system_usage(*, pcname=None, **kwargs):
-    result = cfg_path_usage(**kwargs)
+def cfg_system_linkage(*, pcname=None, **kwargs):
+    result = cfg_path_linkage(**kwargs)
     result.update({
         'type': 'system',
         'pcname': pcname
@@ -320,39 +322,39 @@ class IntegrationTest(SubprocessTestCase):
         if self.deploy:
             self.prefix = stage_dir(self.name + '-install', chdir=False)
 
-    def assertUsage(self, name, usage='', extra_args=[], *, format='json',
-                    submodules=[], extra_env=usage_env, returncode=0):
+    def assertLinkage(self, name, linkage='', extra_args=[], *, format='json',
+                      submodules=[], extra_env=linkage_env, returncode=0):
         loader = {
             'json': json.loads,
             'yaml': yaml.safe_load,
         }
 
         output = self.assertPopen((
-            ['mopack', 'usage', dependency_string(name, submodules)] +
+            ['mopack', 'linkage', dependency_string(name, submodules)] +
             (['--json'] if format == 'json' else []) +
             extra_args
         ), extra_env=extra_env, returncode=returncode)
         if returncode == 0:
-            self.assertEqual(loader[format](output), usage)
+            self.assertEqual(loader[format](output), linkage)
         return output
 
-    def assertPkgConfigUsage(self, name, submodules=[], *, type='pkg_config',
-                             pcnames=None, pkg_config_path=['pkgconfig']):
+    def assertPkgConfigLinkage(self, name, submodules=[], *, type='pkg_config',
+                               pcnames=None, pkg_config_path=['pkgconfig']):
         pkg_config_path = [(i if os.path.isabs(i) else
                             os.path.join(self.pkgbuilddir, name, i))
                            for i in pkg_config_path]
         if pcnames is None:
             pcnames = [name]
 
-        self.assertUsage(name, {
+        self.assertLinkage(name, {
             'name': dependency_string(name, submodules), 'type': type,
             'pcnames': pcnames, 'pkg_config_path': pkg_config_path,
         }, submodules=submodules)
 
-    def assertPathUsage(self, name, submodules=[], *, type='path', version='',
-                        auto_link=False, pcnames=None, include_path=[],
-                        library_path=[], libraries=None, compile_flags=[],
-                        link_flags=[]):
+    def assertPathLinkage(self, name, submodules=[], *, type='path',
+                          version='', auto_link=False, pcnames=None,
+                          include_path=[], library_path=[], libraries=None,
+                          compile_flags=[], link_flags=[]):
         if libraries is None:
             libraries = [name]
         if pcnames is None:
@@ -360,7 +362,7 @@ class IntegrationTest(SubprocessTestCase):
                         iterate(submodules)] if submodules else [name])
 
         pkgconfdir = os.path.join(self.stage, 'mopack', 'pkgconfig')
-        self.assertUsage(name, {
+        self.assertLinkage(name, {
             'name': dependency_string(name, submodules), 'type': type,
             'generated': True, 'auto_link': auto_link, 'pcnames': pcnames,
             'pkg_config_path': [pkgconfdir],

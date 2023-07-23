@@ -33,12 +33,12 @@ class TestMakePackage(OriginTest):
         self.assertEqual(pkg.path, Path('/path'))
         self.assertEqual(pkg.builder.type, 'bfg9000')
 
-        self.assertEqual(pkg.get_usage(self.metadata, None), {
+        self.assertEqual(pkg.get_linkage(self.metadata, None), {
             'name': 'foo', 'type': 'pkg_config', 'pcnames': ['foo'],
             'pkg_config_path': [self.pkgconfdir('foo')],
         })
         with self.assertRaises(ValueError):
-            pkg.get_usage(self.metadata, ['sub'])
+            pkg.get_linkage(self.metadata, ['sub'])
 
     def test_make_no_deploy(self):
         pkg = make_package('foo', {
@@ -53,12 +53,12 @@ class TestMakePackage(OriginTest):
         self.assertEqual(pkg.path, Path('/path'))
         self.assertEqual(pkg.builder.type, 'bfg9000')
 
-        self.assertEqual(pkg.get_usage(self.metadata, None), {
+        self.assertEqual(pkg.get_linkage(self.metadata, None), {
             'name': 'foo', 'type': 'pkg_config', 'pcnames': ['foo'],
             'pkg_config_path': [self.pkgconfdir('foo')],
         })
         with self.assertRaises(ValueError):
-            pkg.get_usage(self.metadata, ['sub'])
+            pkg.get_linkage(self.metadata, ['sub'])
 
     def test_make_submodules(self):
         pkg = make_package('foo', {
@@ -70,19 +70,19 @@ class TestMakePackage(OriginTest):
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         with mock.patch('subprocess.run', side_effect=OSError()), \
-             mock.patch('mopack.usage.path_system.PathUsage._filter_path',
+             mock.patch('mopack.linkages.path_system.PathLinkage._filter_path',
                         lambda *args: []), \
-             mock.patch('mopack.usage.path_system.file_outdated',
+             mock.patch('mopack.linkages.path_system.file_outdated',
                         return_value=True), \
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):
-            self.assertEqual(pkg.get_usage(self.metadata, ['sub']), {
+            self.assertEqual(pkg.get_linkage(self.metadata, ['sub']), {
                 'name': 'foo[sub]', 'type': 'system', 'generated': True,
                 'auto_link': False, 'pcnames': ['foo[sub]'],
                 'pkg_config_path': [self.pkgconfdir(None)],
             })
         with self.assertRaises(ValueError):
-            pkg.get_usage(self.metadata, None)
+            pkg.get_linkage(self.metadata, None)
 
         pkg = make_package('foo', {
             'origin': 'system', 'submodules': ['sub'],
@@ -93,21 +93,21 @@ class TestMakePackage(OriginTest):
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         with mock.patch('subprocess.run', side_effect=OSError()), \
-             mock.patch('mopack.usage.path_system.PathUsage._filter_path',
+             mock.patch('mopack.linkages.path_system.PathLinkage._filter_path',
                         lambda *args: []), \
-             mock.patch('mopack.usage.path_system.file_outdated',
+             mock.patch('mopack.linkages.path_system.file_outdated',
                         return_value=True), \
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):
-            self.assertEqual(pkg.get_usage(self.metadata, ['sub']), {
+            self.assertEqual(pkg.get_linkage(self.metadata, ['sub']), {
                 'name': 'foo[sub]', 'type': 'system', 'generated': True,
                 'auto_link': False, 'pcnames': ['foo[sub]'],
                 'pkg_config_path': [self.pkgconfdir(None)],
             })
         with self.assertRaises(ValueError):
-            pkg.get_usage(self.metadata, ['bar'])
+            pkg.get_linkage(self.metadata, ['bar'])
         with self.assertRaises(ValueError):
-            pkg.get_usage(self.metadata, None)
+            pkg.get_linkage(self.metadata, None)
 
         pkg = make_package('foo', {
             'origin': 'system',
@@ -119,31 +119,31 @@ class TestMakePackage(OriginTest):
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         with mock.patch('subprocess.run', side_effect=OSError()), \
-             mock.patch('mopack.usage.path_system.PathUsage._filter_path',
+             mock.patch('mopack.linkages.path_system.PathLinkage._filter_path',
                         lambda *args: []), \
-             mock.patch('mopack.usage.path_system.file_outdated',
+             mock.patch('mopack.linkages.path_system.file_outdated',
                         return_value=True), \
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):
-            self.assertEqual(pkg.get_usage(self.metadata, ['sub']), {
+            self.assertEqual(pkg.get_linkage(self.metadata, ['sub']), {
                 'name': 'foo[sub]', 'type': 'system', 'generated': True,
                 'auto_link': False, 'pcnames': ['foo[sub]'],
                 'pkg_config_path': [self.pkgconfdir(None)],
             })
         with mock.patch('subprocess.run', side_effect=OSError()), \
-             mock.patch('mopack.usage.path_system.PathUsage._filter_path',
+             mock.patch('mopack.linkages.path_system.PathLinkage._filter_path',
                         lambda *args: []), \
-             mock.patch('mopack.usage.path_system.file_outdated',
+             mock.patch('mopack.linkages.path_system.file_outdated',
                         return_value=True), \
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):
-            self.assertEqual(pkg.get_usage(self.metadata, None), {
+            self.assertEqual(pkg.get_linkage(self.metadata, None), {
                 'name': 'foo', 'type': 'system', 'generated': True,
                 'auto_link': False, 'pcnames': ['foo'],
                 'pkg_config_path': [self.pkgconfdir(None)],
             })
         with self.assertRaises(ValueError):
-            pkg.get_usage(self.metadata, ['bar'])
+            pkg.get_linkage(self.metadata, ['bar'])
 
     def test_boost(self):
         pkg = make_package('boost', {
@@ -292,21 +292,21 @@ class TestMakePackage(OriginTest):
             try_make_package('foo', data, _options=self.make_options(),
                              config_file='/path/to/mopack.yml')
 
-    def test_unknown_usage(self):
+    def test_unknown_linkage(self):
         data = yaml.load(dedent("""\
           origin: apt
-          usage: unknown
+          linkage: unknown
         """), Loader=SafeLineLoader)
         with self.assertRaisesRegex(MarkedYAMLError,
-                                    r'line 2, column 8:\n'
-                                    r'    usage: unknown\n'
-                                    r'           \^$'):
+                                    r'line 2, column 10:\n'
+                                    r'    linkage: unknown\n'
+                                    r'             \^$'):
             try_make_package('foo', data, _options=self.make_options(),
                              config_file='/path/to/mopack.yml')
 
         data = yaml.load(dedent("""\
           origin: apt
-          usage:
+          linkage:
             type: unknown
         """), Loader=SafeLineLoader)
         with self.assertRaisesRegex(MarkedYAMLError,
@@ -316,10 +316,10 @@ class TestMakePackage(OriginTest):
             try_make_package('foo', data, _options=self.make_options(),
                              config_file='/path/to/mopack.yml')
 
-    def test_invalid_usage_keys(self):
+    def test_invalid_linkage_keys(self):
         data = yaml.load(dedent("""\
           origin: apt
-          usage:
+          linkage:
             type: pkg_config
             unknown: blah
         """), Loader=SafeLineLoader)
@@ -330,10 +330,10 @@ class TestMakePackage(OriginTest):
             try_make_package('foo', data, _options=self.make_options(),
                              config_file='/path/to/mopack.yml')
 
-    def test_invalid_usage_values(self):
+    def test_invalid_linkage_values(self):
         data = yaml.load(dedent("""\
           origin: apt
-          usage:
+          linkage:
             type: pkg_config
             pkg_config_path: ..
         """), Loader=SafeLineLoader)

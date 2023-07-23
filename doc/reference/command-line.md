@@ -56,24 +56,24 @@ Override the builder option *OPTION* to be *VALUE*.
 
 #### `--strict` { #resolve-strict }
 
-Return an error during [`mopack usage`](#usage) if the requested dependency is
-not defined.
+Return an error during [`mopack linkage`](#linkage) if the requested dependency
+is not defined.
 
-### <code>mopack usage [*DEPENDENCY*]</code> { #usage }
+### <code>mopack linkage [*DEPENDENCY*]</code> { #linkage }
 
 Retrieve information about how to use a dependency. This returns
-[metadata](usage.md#usage-results) in YAML format (or JSON if `--json` is
+[metadata](linkage.md#linkage-results) in YAML format (or JSON if `--json` is
 passed) pointing to a pkg-config .pc file.
 
-#### <code>--directory *PATH*</code> { #usage-directory }
+#### <code>--directory *PATH*</code> { #linkage-directory }
 
 The directory storing the local package data; defaults to `./mopack`.
 
-#### `--json` { #usage-json }
+#### `--json` { #linkage-json }
 
-Display usage results as JSON.
+Display linkage results as JSON.
 
-#### `--strict` { #usage-strict }
+#### `--strict` { #linkage-strict }
 
 Return an error if the requested dependency is not defined.
 
@@ -110,7 +110,7 @@ Include implicit input files.
 
 Display results as JSON.
 
-#### `--strict` { #usage-strict }
+#### `--strict` { #linkage-strict }
 
 Return an error if the package directory does not exist.
 

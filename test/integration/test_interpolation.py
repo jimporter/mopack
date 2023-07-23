@@ -16,7 +16,7 @@ class TestInterpolation(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigUsage('hello')
+        self.assertPkgConfigLinkage('hello')
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -28,7 +28,7 @@ class TestInterpolation(IntegrationTest):
                     builder=cfg_bfg9000_builder(
                         'hello', extra_args=['--extra']
                     ),
-                    usage=cfg_pkg_config_usage(pcname='hello')
+                    linkage=cfg_pkg_config_linkage(pcname='hello')
                 )
             ],
         })
@@ -41,7 +41,7 @@ class TestInterpolation(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigUsage('hello')
+        self.assertPkgConfigLinkage('hello')
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -51,7 +51,7 @@ class TestInterpolation(IntegrationTest):
                     'hello', config,
                     path={'base': 'cfgdir', 'path': 'hello-bfg'},
                     builder=cfg_bfg9000_builder('hello'),
-                    usage=cfg_pkg_config_usage(pcname='hello')
+                    linkage=cfg_pkg_config_linkage(pcname='hello')
                 )
             ],
         })

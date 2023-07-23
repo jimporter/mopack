@@ -18,7 +18,7 @@ class TestCustomBuilder(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigUsage('hello')
+        self.assertPkgConfigLinkage('hello')
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -40,7 +40,7 @@ class TestCustomBuilder(IntegrationTest):
                             ['ninja', 'install'],
                         ]
                     ),
-                    usage=cfg_pkg_config_usage(pcname='hello')
+                    linkage=cfg_pkg_config_linkage(pcname='hello')
                 ),
             ],
         })
@@ -59,7 +59,7 @@ class TestCustomBuilderDeploy(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigUsage('hello')
+        self.assertPkgConfigLinkage('hello')
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -85,7 +85,7 @@ class TestCustomBuilderDeploy(IntegrationTest):
                             ['ninja', 'install'],
                         ]
                     ),
-                    usage=cfg_pkg_config_usage(pcname='hello')
+                    linkage=cfg_pkg_config_linkage(pcname='hello')
                 ),
             ],
         })

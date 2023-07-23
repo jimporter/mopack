@@ -2,5 +2,5 @@ packages:
   hello:
     origin: directory
     path: hello-bfg
-    usage:
+    linkage:
       type: unknown

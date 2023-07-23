@@ -1,6 +1,6 @@
-# Usage
+# Linkage
 
-Usage defines how to include a package in part of your build process. These
+Linkage defines how to include a package in part of your build process. These
 definitions are used to generate a [pkg-config][pkg-config] `.pc` file (or to
 point to an existing one), which can then be used when compiling or linking
 *your* project.
@@ -9,10 +9,10 @@ point to an existing one), which can then be used when compiling or linking
 packages:
   my_pkg:
     # ...
-    usage: <usage_type>
+    linkage: <linkage_type>
     # or...
-    usage:
-      type: <usage_type>
+    linkage:
+      type: <linkage_type>
       inherit_defaults: <boolean>
       submodule_map: <submodule_map>  # or...
       submodule_map:
@@ -21,27 +21,27 @@ packages:
 ```
 
 `type` <span class="subtitle">*required*</span>
-: The type of usage; see below for possible values.
+: The type of linkage; see below for possible values.
 
 `inherit_defaults` <span class="subtitle">*optional, default*: `false`</span>
-: If true, inherit any unspecified values for this usage from the defaults for
+: If true, inherit any unspecified values for this linkage from the defaults for
   the package. Defaults to false; however, any packages requested via `mopack
-  usage` but not defined will use the defaults.
+  linkage` but not defined will use the defaults.
 
 `submodule_map` <span class="subtitle">*optional, default*: `null`</span>
 : A mapping from submodule names to submodule-specific configuration; a key of
-  `'*'` refers to all submodules. See below for possible values for each usage
+  `'*'` refers to all submodules. See below for possible values for each linkage
   type.
 
-### Usage results
+### Linkage results
 
-When calling `mopack usage <dependency>`, mopack will provide information about
-how to use that dependency in your project. At minimum, all dependencies will
-report the following information:
+When calling `mopack linkage <dependency>`, mopack will provide information
+about how to use that dependency in your project. At minimum, all dependencies
+will report the following information:
 
 ```yaml
 name: <string>
-type: <usage_type>
+type: <linkage_type>
 pcnames: <list[string]>
 pkg_config_path: <list[path]>
 ```
@@ -50,7 +50,7 @@ pkg_config_path: <list[path]>
 : The name of the requested dependency.
 
 `type`
-: The type of usage; see below for possible values.
+: The type of linkage; see below for possible values.
 
 `pcnames`
 : A list of pkg-config `.pc` file names, without the `.pc` extension.
@@ -65,7 +65,7 @@ pkg_config_path: <list[path]>
 packages:
   my_pkg:
     # ...
-    usage:
+    linkage:
       type: path  # or ...
       type: system
       auto_link: <boolean>
@@ -126,7 +126,7 @@ packages:
 packages:
   my_pkg:
     # ...
-    usage:
+    linkage:
       # ...
       submodule_map:
         my_submodule:
@@ -153,10 +153,10 @@ packages:
 `link_flags` <span class="subtitle">*optional, default*: `null`</span>
 : As above.
 
-### Usage results { #path-system-usage-results }
+### Linkage results { #path-system-linkage-results }
 
-In addition to the required usage results data, `path`/`system` usage results
-can include the following extra data:
+In addition to the required linkage results data, `path`/`system` linkage
+results can include the following extra data:
 
 ```yaml
 generated: <boolean>
@@ -179,7 +179,7 @@ auto_link: <boolean>
 packages:
   my_pkg:
     # ...
-    usage:
+    linkage:
       type: pkg_config
       pcname: <string>
       pkg_config_path: <list[path]>
@@ -198,7 +198,7 @@ packages:
 packages:
   my_pkg:
     # ...
-    usage:
+    linkage:
       # ...
       submodule_map:
         my_submodule:

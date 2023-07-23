@@ -3,9 +3,9 @@ origin:
     submodules:
       names: '*'
       required: false
-usage:
-  path: &path_system_usage
-    - &path_usage
+linkage:
+  path: &path_system_linkage
+    - &path_linkage
       if: target_platform == 'windows'
       auto_link: true
       version:
@@ -25,7 +25,7 @@ usage:
       headers: [boost/version.hpp]
       libraries: null
       submodule_map: null
-    - <<: *path_usage
+    - <<: *path_linkage
       if: true
       auto_link: false
       submodule_map:
@@ -42,6 +42,6 @@ usage:
         thread:
           <<: *submodule_map
           dependencies: ['pthread']
-  system: *path_system_usage
+  system: *path_system_linkage
   pkg_config:
     submodule_map: null

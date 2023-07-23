@@ -65,27 +65,28 @@ specified in the latter file will override those in the former. Thus, if both
 $ mopack resolve mopack.yml mopack-local.yml
 ```
 
-## Usage
+## Linkage
 
 Once a project's dependencies are ready to use, the next step is actually using
 them. Generally, this step occurs *during* the root project's configuration
-step. To get a package's usage information, run the following command:
+step. To get a package's linkage information, run the following command:
 
 ```sh
-$ mopack usage some-package
+$ mopack linkage some-package
 ```
 
-This will return the package's [usage](../reference/usage.md#usage-results)
-information in YAML format (or JSON if `--json` is passed), which can then be
-fed to the dependent build steps.
+This will return the package's
+[linkage](../reference/linkage.md#linkage-results) information in YAML format
+(or JSON if `--json` is passed), which can then be fed to the dependent build
+steps.
 
 Some packages contain [submodules](writing.md#submodules), representing optional
 components that you may or may not want to use (e.g. individual libraries from
 the Boost package). In this case, you can specify the submodules you want to use
-in a particular situation when invoking `mopack usage`:
+in a particular situation when invoking `mopack linkage`:
 
 ```sh
-$ mopack usage 'some-package[submodule1,submodule2]'
+$ mopack linkage 'some-package[submodule1,submodule2]'
 ```
 
 ## Deployment

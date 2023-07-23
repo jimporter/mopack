@@ -47,10 +47,10 @@ class Bfg9000Builder(Builder):
         T = types.TypeCheck(locals(), symbols)
         T.extra_args(types.shell_args(none_ok=True))
 
-    def filter_usage(self, usage):
-        if usage is None:
+    def filter_linkage(self, linkage):
+        if linkage is None:
             return 'pkg_config'
-        return usage
+        return linkage
 
     def _toolchain_args(self, toolchain):
         return ['--toolchain', toolchain] if toolchain else []

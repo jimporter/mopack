@@ -3,7 +3,7 @@ project(greeter)
 
 include(mopack.cmake)
 mopack_resolve()
-mopack_usage(hello)
+mopack_linkage(hello)
 
 add_library(greeter SHARED src/greeter.cpp)
 target_compile_definitions(greeter PRIVATE LIBGREETER_EXPORTS)

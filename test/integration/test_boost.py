@@ -13,26 +13,28 @@ class TestBoost(IntegrationTest):
         self.assertPopen(['mopack', 'resolve', config])
         self.assertExists('mopack/mopack.json')
 
-        self.assertPathUsage('boost', type='system',
-                             auto_link=platform_name() == 'windows',
-                             include_path=mock.ANY,
-                             library_path=mock.ANY,
-                             libraries=[],
-                             version=mock.ANY)
+        self.assertPathLinkage('boost', type='system',
+                               auto_link=platform_name() == 'windows',
+                               include_path=mock.ANY,
+                               library_path=mock.ANY,
+                               libraries=[],
+                               version=mock.ANY)
 
         pkgconfdir = os.path.join(self.stage, 'mopack', 'pkgconfig')
         version = call_pkg_config(['boost'], ['--modversion'], path=pkgconfdir,
                                   split=False)
 
-        self.assertPathUsage('boost', ['regex'], type='system',
-                             auto_link=platform_name() == 'windows',
-                             pcnames=(['boost'] if platform_name() == 'windows'
-                                      else ['boost[regex]']),
-                             include_path=mock.ANY,
-                             library_path=mock.ANY,
-                             libraries=([] if platform_name() == 'windows'
-                                        else ['boost_regex']),
-                             version=version)
+        self.assertPathLinkage(
+            'boost', ['regex'], type='system',
+            auto_link=platform_name() == 'windows',
+            pcnames=(['boost'] if platform_name() == 'windows'
+                     else ['boost[regex]']),
+            include_path=mock.ANY,
+            library_path=mock.ANY,
+            libraries=([] if platform_name() == 'windows'
+                       else ['boost_regex']),
+            version=version
+        )
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -41,7 +43,7 @@ class TestBoost(IntegrationTest):
                 cfg_system_pkg(
                     'boost', config,
                     submodules={'names': '*', 'required': False},
-                    usage=cfg_system_usage(
+                    linkage=cfg_system_linkage(
                         pcname='boost',
                         auto_link=platform_name() == 'windows',
                         explicit_version={

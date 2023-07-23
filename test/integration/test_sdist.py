@@ -29,7 +29,7 @@ class TestDirectory(SDistTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigUsage('hello')
+        self.assertPkgConfigLinkage('hello')
         implicit_cfg = os.path.join(test_data_dir, 'hello-bfg', 'mopack.yml')
         self.check_list_files([config], [implicit_cfg])
 
@@ -41,7 +41,7 @@ class TestDirectory(SDistTest):
                     'hello', config,
                     path={'base': 'cfgdir', 'path': 'hello-bfg'},
                     builder=cfg_bfg9000_builder('hello'),
-                    usage=cfg_pkg_config_usage(pcname='hello')
+                    linkage=cfg_pkg_config_linkage(pcname='hello')
                 ),
             ],
         })
@@ -57,7 +57,7 @@ class TestDirectory(SDistTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigUsage('hello')
+        self.assertPkgConfigLinkage('hello')
         implicit_cfg = os.path.join(test_data_dir, 'hello-bfg', 'mopack.yml')
         self.check_list_files([config], [implicit_cfg])
 
@@ -69,7 +69,7 @@ class TestDirectory(SDistTest):
                     'hello', config,
                     path={'base': 'cfgdir', 'path': 'hello-bfg'},
                     builder=cfg_bfg9000_builder('hello'),
-                    usage=cfg_pkg_config_usage(pcname='hello')
+                    linkage=cfg_pkg_config_linkage(pcname='hello')
                 ),
             ],
         })
@@ -88,7 +88,7 @@ class TestTarball(SDistTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigUsage('hello')
+        self.assertPkgConfigLinkage('hello')
         self.check_list_files([config])
 
         output = json.loads(slurp('mopack/mopack.json'))
@@ -103,7 +103,7 @@ class TestTarball(SDistTest):
                     path={'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
                     guessed_srcdir='hello-bfg',
                     builder=cfg_bfg9000_builder('hello'),
-                    usage=cfg_pkg_config_usage(pcname='hello')
+                    linkage=cfg_pkg_config_linkage(pcname='hello')
                 ),
             ],
         })
@@ -129,7 +129,7 @@ class TestTarballPatch(SDistTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigUsage('hello')
+        self.assertPkgConfigLinkage('hello')
         self.check_list_files([config])
 
         output = json.loads(slurp('mopack/mopack.json'))
@@ -145,7 +145,7 @@ class TestTarballPatch(SDistTest):
                     guessed_srcdir='hello-bfg',
                     patch={'base': 'cfgdir', 'path': 'hello-bfg.patch'},
                     builder=cfg_bfg9000_builder('hello'),
-                    usage=cfg_pkg_config_usage(pcname='hello')
+                    linkage=cfg_pkg_config_linkage(pcname='hello')
                 ),
             ],
         })
@@ -172,7 +172,7 @@ class TestGit(SDistTest):
         self.assertExists('mopack/logs/bencodehpp.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigUsage('bencodehpp')
+        self.assertPkgConfigLinkage('bencodehpp')
         implicit_cfg = os.path.join(self.stage, 'mopack', 'src', 'bencodehpp',
                                     'mopack.yml')
         self.check_list_files([config], [implicit_cfg])
@@ -189,7 +189,7 @@ class TestGit(SDistTest):
                     repository='https://github.com/jimporter/bencode.hpp.git',
                     rev=['tag', 'v1.0.1'],
                     builder=cfg_bfg9000_builder('bencodehpp'),
-                    usage=cfg_pkg_config_usage(pcname='bencodehpp')
+                    linkage=cfg_pkg_config_linkage(pcname='bencodehpp')
                 ),
             ],
         })

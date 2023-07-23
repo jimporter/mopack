@@ -1,7 +1,7 @@
 origin:
   '*':
     submodules: '*'
-usage:
+linkage:
   system:
     submodule_map:
       '*':

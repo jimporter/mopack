@@ -39,12 +39,12 @@ class TestNoneBuilder(BuilderTest):
             builder.clean(self.metadata, pkg)
             mrmtree.assert_not_called()
 
-    def test_usage(self):
+    def test_linkage(self):
         opts = self.make_options()
         pkg = DirectoryPackage('foo', path=self.srcdir, build='none',
-                               usage='pkg_config', _options=opts,
+                               linkage='pkg_config', _options=opts,
                                config_file=self.config_file)
-        pkg.get_usage(self.metadata, None)
+        pkg.get_linkage(self.metadata, None)
 
     def test_rehydrate(self):
         opts = self.make_options()

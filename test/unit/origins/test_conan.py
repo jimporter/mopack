@@ -52,16 +52,16 @@ class TestConan(OriginTest):
                 universal_newlines=True, check=True, env={}
             )
 
-    def check_usage(self, pkg, *, submodules=None, usage=None):
-        if usage is None:
+    def check_linkage(self, pkg, *, submodules=None, linkage=None):
+        if linkage is None:
             pcnames = ([] if pkg.submodules and pkg.submodules['required'] else
                        [pkg.name])
             pcnames.extend('{}_{}'.format(pkg.name, i)
                            for i in iterate(submodules))
-            usage = {'name': dependency_string(pkg.name, submodules),
-                     'type': 'pkg_config', 'pcnames': pcnames,
-                     'pkg_config_path': [self.pkgconfdir]}
-        self.assertEqual(pkg.get_usage(self.metadata, submodules), usage)
+            linkage = {'name': dependency_string(pkg.name, submodules),
+                       'type': 'pkg_config', 'pcnames': pcnames,
+                       'pkg_config_path': [self.pkgconfdir]}
+        self.assertEqual(pkg.get_linkage(self.metadata, submodules), linkage)
 
     def test_basic(self):
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable')
@@ -89,7 +89,7 @@ class TestConan(OriginTest):
                 check=True, stdout=subprocess.PIPE, universal_newlines=True
             )
 
-        self.check_usage(pkg)
+        self.check_linkage(pkg)
 
     def test_build(self):
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
@@ -110,7 +110,7 @@ class TestConan(OriginTest):
             PkgConfigDeps
         """), ['--build=foo'])
 
-        self.check_usage(pkg)
+        self.check_linkage(pkg)
 
     def test_options(self):
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
@@ -131,7 +131,7 @@ class TestConan(OriginTest):
             PkgConfigDeps
         """))
 
-        self.check_usage(pkg)
+        self.check_linkage(pkg)
 
     def test_this_options(self):
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
@@ -152,7 +152,7 @@ class TestConan(OriginTest):
             PkgConfigDeps
         """), ['--build=foo', '-gcmake'])
 
-        self.check_usage(pkg)
+        self.check_linkage(pkg)
 
     def test_this_options_build_all(self):
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
@@ -172,7 +172,7 @@ class TestConan(OriginTest):
             PkgConfigDeps
         """), ['--build'])
 
-        self.check_usage(pkg)
+        self.check_linkage(pkg)
 
     def test_this_options_merge_build(self):
         pkg = self.make_package(
@@ -194,7 +194,7 @@ class TestConan(OriginTest):
             PkgConfigDeps
         """), ['--build=foo', '--build=bar'])
 
-        self.check_usage(pkg)
+        self.check_linkage(pkg)
 
     def test_multiple(self):
         pkgs = [
@@ -216,7 +216,7 @@ class TestConan(OriginTest):
             """))
 
         for pkg in pkgs:
-            self.check_usage(pkg)
+            self.check_linkage(pkg)
 
     def test_submodules(self):
         submodules_required = {'names': '*', 'required': True}
@@ -224,13 +224,13 @@ class TestConan(OriginTest):
 
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
                                 submodules=submodules_required)
-        self.check_usage(pkg, submodules=['sub'])
+        self.check_linkage(pkg, submodules=['sub'])
 
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
-                                usage={'type': 'pkg_config', 'pcname': 'bar',
-                                       'pkg_config_path': '.'},
+                                linkage={'type': 'pkg_config', 'pcname': 'bar',
+                                         'pkg_config_path': '.'},
                                 submodules=submodules_required)
-        self.check_usage(pkg, submodules=['sub'], usage={
+        self.check_linkage(pkg, submodules=['sub'], linkage={
             'name': 'foo[sub]', 'type': 'pkg_config',
             'pcnames': ['bar', 'foo_sub'],
             'pkg_config_path': [self.pkgconfdir],
@@ -238,13 +238,13 @@ class TestConan(OriginTest):
 
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
                                 submodules=submodules_optional)
-        self.check_usage(pkg, submodules=['sub'])
+        self.check_linkage(pkg, submodules=['sub'])
 
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
-                                usage={'type': 'pkg_config', 'pcname': 'bar',
-                                       'pkg_config_path': '.'},
+                                linkage={'type': 'pkg_config', 'pcname': 'bar',
+                                         'pkg_config_path': '.'},
                                 submodules=submodules_optional)
-        self.check_usage(pkg, submodules=['sub'], usage={
+        self.check_linkage(pkg, submodules=['sub'], linkage={
             'name': 'foo[sub]', 'type': 'pkg_config',
             'pcnames': ['bar', 'foo_sub'],
             'pkg_config_path': [self.pkgconfdir],
@@ -256,7 +256,7 @@ class TestConan(OriginTest):
             submodules={'names': ['sub'], 'required': True}
         )
         with self.assertRaises(ValueError):
-            pkg.get_usage(self.metadata, ['invalid'])
+            pkg.get_linkage(self.metadata, ['invalid'])
 
     def test_deploy(self):
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable')
@@ -407,7 +407,7 @@ class TestConan(OriginTest):
         opts = self.make_options()
         data = {'origin': 'conan', '_version': 0, 'name': 'foo',
                 'remote': 'foo', 'build': False, 'options': None,
-                'usage': {'type': 'system', '_version': 0}}
+                'linkage': {'type': 'system', '_version': 0}}
         with mock.patch.object(ConanPackage, 'upgrade',
                                side_effect=ConanPackage.upgrade) as m:
             pkg = Package.rehydrate(data, _options=opts)

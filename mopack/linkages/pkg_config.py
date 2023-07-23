@@ -1,7 +1,7 @@
 import subprocess
 from collections import ChainMap
 
-from . import preferred_path_base, Usage
+from . import preferred_path_base, Linkage
 from . import submodules as submod
 from .. import types
 from ..environment import get_pkg_config, subprocess_run
@@ -19,7 +19,7 @@ class _SubmoduleMapping(FreezeDried):
 
         # Since we need to delay evaluating symbols until we know what the
         # selected submodule is, just store these values unevaluated. We'll
-        # evaluate them later during `mopack usage` via the fill() function.
+        # evaluate them later during `mopack linkage` via the fill() function.
         self.pcname = pcname
 
     def _fill(self, context, submodule_name='SUBMODULE'):
@@ -53,7 +53,7 @@ def _submodule_map(field, value):
     'pkg_config_path': ListFreezeDryer(Path),
     'submodule_map': DictFreezeDryer(value_type=_SubmoduleMapping),
 })
-class PkgConfigUsage(Usage):
+class PkgConfigLinkage(Linkage):
     type = 'pkg_config'
     _version = 1
 
@@ -109,7 +109,7 @@ class PkgConfigUsage(Usage):
         except KeyError:
             return self.submodule_map['*'].fill(submodule)
 
-    def get_usage(self, metadata, pkg, submodules):
+    def get_linkage(self, metadata, pkg, submodules):
         path_values = pkg.path_values(metadata, builder=True)
         pkgconfpath = [i.string(**path_values) for i in self.pkg_config_path]
 
@@ -123,5 +123,5 @@ class PkgConfigUsage(Usage):
             if i.pcname:
                 pcnames.append(i.pcname)
 
-        return self._usage(pkg, submodules, pcnames=pcnames,
-                           pkg_config_path=pkgconfpath)
+        return self._linkage(pkg, submodules, pcnames=pcnames,
+                             pkg_config_path=pkgconfpath)

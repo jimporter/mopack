@@ -15,14 +15,14 @@ distribution](packages.md#source-distributions).
 export:
   submodules: <submodules>
   build: <build>
-  usage: <usage>
+  linkage: <linkage>
 ```
 
 `submodules` <span class="subtitle">*optional, default*: `null`</span>
 : A list of available submodules, or `*` to indicate that any submodule name
   should be accepted. If this is specified, using this package via `mopack
-  usage` *must* specify a submodule. To declare that submodules are optional for
-  usage, you can specify a dictionary:
+  linkage` *must* specify a submodule. To declare that submodules are optional
+  for linkage, you can specify a dictionary:
 
         submodules:
           names: <submodules>
@@ -33,9 +33,9 @@ export:
   other packages using this one will have to define the `build` in their own
   mopack configuration.
 
-`usage` <span class="subtitle">*optional, default*: *from builder*</span>
-: The [usage](usage.md) to use when using this package. Some builders require
-  this to be set, but others provide a default usage specification; if
+`linkage` <span class="subtitle">*optional, default*: *from builder*</span>
+: The [linkage](linkage.md) to use when using this package. Some builders
+  require this to be set, but others provide a default linkage specification; if
   unspecified and the builder requires this to be set, then other packages using
   this one will need to define it.
 

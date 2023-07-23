@@ -17,9 +17,9 @@ class TestApt(IntegrationTest):
         self.assertExists('mopack/logs/apt.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPathUsage('ogg', type='system', version=mock.ANY)
-        self.assertPathUsage('zlib', type='system', version=mock.ANY,
-                             libraries=['z'])
+        self.assertPathLinkage('ogg', type='system', version=mock.ANY)
+        self.assertPathLinkage('zlib', type='system', version=mock.ANY,
+                               libraries=['z'])
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -28,7 +28,7 @@ class TestApt(IntegrationTest):
                 cfg_apt_pkg(
                     'ogg', config,
                     remote=['libogg-dev'],
-                    usage=cfg_system_usage(
+                    linkage=cfg_system_linkage(
                         pcname='ogg',
                         libraries=['ogg']
                     )
@@ -36,7 +36,7 @@ class TestApt(IntegrationTest):
                 cfg_apt_pkg(
                     'zlib', config,
                     remote=['zlib1g-dev'],
-                    usage=cfg_system_usage(
+                    linkage=cfg_system_linkage(
                         pcname='zlib',
                         libraries=['z']
                     )

@@ -18,15 +18,15 @@ function(mopack_resolve)
   )
 endfunction()
 
-function(mopack_usage package)
-  set(usage_file "${CMAKE_BINARY_DIR}/.cmake_mopack_usage")
+function(mopack_linkage package)
+  set(linkage_file "${CMAKE_BINARY_DIR}/.cmake_mopack_linkage")
   execute_process(
-    COMMAND mopack usage ${package} --json --directory ${CMAKE_BINARY_DIR}
-    OUTPUT_FILE ${usage_file}
+    COMMAND mopack linkage ${package} --json --directory ${CMAKE_BINARY_DIR}
+    OUTPUT_FILE ${linkage_file}
   )
 
-  _jq(${usage_file} QUERY ".pkg_config_path | join(\";\")" OUT pkgconf_path)
-  _jq(${usage_file} QUERY ".pcnames | join(\" \")" OUT pkgconf_pcnames)
+  _jq(${linkage_file} QUERY ".pkg_config_path | join(\";\")" OUT pkgconf_path)
+  _jq(${linkage_file} QUERY ".pcnames | join(\" \")" OUT pkgconf_pcnames)
 
   if(UNIX)
     string(REPLACE ";" ":" pkgconf_path "${pkgconf_path}")
