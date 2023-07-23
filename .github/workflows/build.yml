@@ -201,9 +201,10 @@ jobs:
           if(${LastExitCode} -le 7) { ${LastExitCode} = 0 }
       - name: Install Conan 1.x
         if: startsWith(matrix.conan-version, '1.')
+        # FIXME: Don't install conan from Git once they release v1.61.
         run: >
           C:\cygwin\bin\bash -lc
-          "pip3.8 install 'conan==${{ matrix.conan-version }}' &&
+          "pip3.8 install git+https://github.com/conan-io/conan.git@develop &&
           conan profile new default --detect &&
           conan profile update settings.os.subsystem=cygwin default &&
           echo tools.cmake.cmaketoolchain:generator=Ninja >> ~/.conan/global.conf"
