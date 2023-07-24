@@ -30,8 +30,9 @@ class SDistPackage(Package):
                  usage=types.Unset, submodules=types.Unset,
                  inherit_defaults=True, _options, **kwargs):
         if linkage is None and usage is not types.Unset:
-            # FIXME: Show where in the config file this occurred.
-            warnings.warn('`usage` is deprecated; use `linkage` instead')
+            warnings.warn(types.FieldKeyWarning(
+                '`usage` is deprecated; use `linkage` instead', 'usage'
+            ))
             linkage = usage
 
         super().__init__(name, inherit_defaults=inherit_defaults,

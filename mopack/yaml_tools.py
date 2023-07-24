@@ -64,6 +64,10 @@ class MarkedYAMLWarning(MarkedYAMLError, Warning):
     pass
 
 
+class MarkedYAMLOffsetWarning(MarkedYAMLOffsetError, MarkedYAMLWarning):
+    pass
+
+
 class YamlParseError(ConfigurationError):
     def __init__(self, message, mark, snippet):
         super().__init__(message)

@@ -127,8 +127,9 @@ class BinaryPackage(Package):
                  usage=types.Unset, inherit_defaults=False, _options,
                  _linkage_field='linkage', **kwargs):
         if linkage is types.Unset and usage is not types.Unset:
-            # FIXME: Show where in the config file this occurred.
-            warnings.warn('`usage` is deprecated; use `linkage` instead')
+            warnings.warn(types.FieldKeyWarning(
+                '`usage` is deprecated; use `linkage` instead', 'usage'
+            ))
             linkage = usage
         if linkage is types.Unset:
             raise TypeError('missing `linkage`')

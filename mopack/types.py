@@ -1,6 +1,7 @@
 import copy
 import os
 import re
+import warnings
 from contextlib import contextmanager
 
 from . import expression as expr, iterutils
@@ -8,7 +9,8 @@ from .exceptions import ConfigurationError
 from .path import Path
 from .placeholder import map_placeholder, PlaceholderString
 from .shell import ShellArguments, split_posix
-from .yaml_tools import MarkedDict, MarkedYAMLOffsetError
+from .yaml_tools import (MarkedDict, MarkedYAMLOffsetError,
+                         MarkedYAMLOffsetWarning)
 
 
 _unexpected_kwarg_ex = re.compile(
@@ -58,6 +60,18 @@ class FieldKeyError(FieldError):
 
 
 class FieldValueError(FieldError):
+    pass
+
+
+class FieldWarning(FieldError, Warning):
+    pass
+
+
+class FieldKeyWarning(FieldKeyError, FieldWarning):
+    pass
+
+
+class FieldValueWarning(FieldValueError, FieldWarning):
     pass
 
 
@@ -118,13 +132,7 @@ Unset = _UnsetType()
 
 @contextmanager
 def try_load_config(config, context, kind):
-    try:
-        yield
-    except TypeError as e:
-        if not isinstance(config, MarkedDict):
-            raise
-
-        e = kwarg_error_to_field_error(e, kind)
+    def to_yaml_error(e, error_type=MarkedYAMLOffsetError):
         msg = str(e)
         mark = config.mark
         offset = 0
@@ -136,9 +144,27 @@ def try_load_config(config, context, kind):
                      else x.marks)
             mark = marks[e.field[-1]]
             offset = e.offset
+        return error_type(context, config.mark, msg, mark, offset=offset)
 
-        raise MarkedYAMLOffsetError(context, config.mark, msg, mark,
-                                    offset=offset)
+    try:
+        old_showwarning = warnings.showwarning
+
+        def showwarning(message, category, *args, **kwargs):
+            if isinstance(config, MarkedDict):
+                message = to_yaml_error(message, MarkedYAMLOffsetWarning)
+                category = type(message)
+            return old_showwarning(message, category, *args, **kwargs)
+
+        warnings.showwarning = showwarning
+        yield
+    except TypeError as e:
+        if not isinstance(config, MarkedDict):
+            raise
+
+        e = kwarg_error_to_field_error(e, kind)
+        raise to_yaml_error(e)
+    finally:
+        warnings.showwarning = old_showwarning
 
 
 class TypeCheck:
