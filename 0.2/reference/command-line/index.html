@@ -81,7 +81,7 @@
 </li>
                                     
 <li >
-    <a href="../usage/">Usage</a>
+    <a href="../linkage/">Linkage</a>
 </li>
                                     
 <li >
@@ -178,17 +178,17 @@ GNU-like <a href="https://www.gnu.org/prep/standards/html_node/Directory-Variabl
 <h4 id="resolve-builder-option"><code>-B <em>OPTION</em>=<em>VALUE</em></code>, <code>--builder-option <em>OPTION</em>=<em>VALUE</em></code><a class="headerlink" href="#resolve-builder-option" title="Permanent link">§</a></h4>
 <p>Override the builder option <em>OPTION</em> to be <em>VALUE</em>.</p>
 <h4 id="resolve-strict"><code>--strict</code><a class="headerlink" href="#resolve-strict" title="Permanent link">§</a></h4>
-<p>Return an error during <a href="#usage"><code>mopack usage</code></a> if the requested dependency is
-not defined.</p>
-<h3 id="usage"><code>mopack usage [<em>DEPENDENCY</em>]</code><a class="headerlink" href="#usage" title="Permanent link">§</a></h3>
+<p>Return an error during <a href="#linkage"><code>mopack linkage</code></a> if the requested dependency
+is not defined.</p>
+<h3 id="linkage"><code>mopack linkage [<em>DEPENDENCY</em>]</code><a class="headerlink" href="#linkage" title="Permanent link">§</a></h3>
 <p>Retrieve information about how to use a dependency. This returns
-<a href="../usage/#usage-results">metadata</a> in YAML format (or JSON if <code>--json</code> is
+<a href="../linkage/#linkage-results">metadata</a> in YAML format (or JSON if <code>--json</code> is
 passed) pointing to a pkg-config .pc file.</p>
-<h4 id="usage-directory"><code>--directory <em>PATH</em></code><a class="headerlink" href="#usage-directory" title="Permanent link">§</a></h4>
+<h4 id="linkage-directory"><code>--directory <em>PATH</em></code><a class="headerlink" href="#linkage-directory" title="Permanent link">§</a></h4>
 <p>The directory storing the local package data; defaults to <code>./mopack</code>.</p>
-<h4 id="usage-json"><code>--json</code><a class="headerlink" href="#usage-json" title="Permanent link">§</a></h4>
-<p>Display usage results as JSON.</p>
-<h4 id="usage-strict"><code>--strict</code><a class="headerlink" href="#usage-strict" title="Permanent link">§</a></h4>
+<h4 id="linkage-json"><code>--json</code><a class="headerlink" href="#linkage-json" title="Permanent link">§</a></h4>
+<p>Display linkage results as JSON.</p>
+<h4 id="linkage-strict"><code>--strict</code><a class="headerlink" href="#linkage-strict" title="Permanent link">§</a></h4>
 <p>Return an error if the requested dependency is not defined.</p>
 <h3 id="deploy"><code>mopack deploy</code><a class="headerlink" href="#deploy" title="Permanent link">§</a></h3>
 <p>Copy the project's dependencies to an installation directory (e.g. as part of
@@ -207,7 +207,7 @@ running a command like <code>make install</code>).</p>
 <p>Include implicit input files.</p>
 <h4 id="list-files-json"><code>--json</code><a class="headerlink" href="#list-files-json" title="Permanent link">§</a></h4>
 <p>Display results as JSON.</p>
-<h4 id="usage-strict"><code>--strict</code><a class="headerlink" href="#usage-strict" title="Permanent link">§</a></h4>
+<h4 id="linkage-strict"><code>--strict</code><a class="headerlink" href="#linkage-strict" title="Permanent link">§</a></h4>
 <p>Return an error if the package directory does not exist.</p>
 <h3 id="list-packages"><code>mopack list-packages</code>, <code>mopack ls</code><a class="headerlink" href="#list-packages" title="Permanent link">§</a></h3>
 <p>List all the package dependencies.</p>

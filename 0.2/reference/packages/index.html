@@ -81,7 +81,7 @@
 </li>
                                     
 <li >
-    <a href="../usage/">Usage</a>
+    <a href="../linkage/">Linkage</a>
 </li>
                                     
 <li >
@@ -164,14 +164,14 @@ all the necessary details to actually use it in the parent project.</p>
 <dt><code>inherit_defaults</code> <span class="subtitle"><em>optional, default</em>: <code>false</code></span></dt>
 <dd>If true, inherit any unspecified values for this dependency from the defaults
   for the package. Defaults to false; however, any packages requested via
-  <code>mopack usage</code> but not defined will use the defaults.</dd>
+  <code>mopack linkage</code> but not defined will use the defaults.</dd>
 <dt><code>deploy</code> <span class="subtitle"><em>optional, default</em>: <code>true</code></span></dt>
 <dd>If true, deploy this package when calling <code>mopack deploy</code>.</dd>
 <dt><code>submodules</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dd>A list of available submodules, or <code>*</code> to indicate that any submodule name
   should be accepted. If this is specified, using this package via <code>mopack
-  usage</code> <em>must</em> specify a submodule. To declare that submodules are optional for
-  usage, you can specify a dictionary:<pre><code>submodules:
+  linkage</code> <em>must</em> specify a submodule. To declare that submodules are optional for
+  linkage, you can specify a dictionary:<pre><code>submodules:
   names: &lt;submodules&gt;
   required: false
 </code></pre>
@@ -186,7 +186,7 @@ all the necessary details to actually use it in the parent project.</p>
     origin: directory
     path: &lt;path&gt;
     build: &lt;build&gt;
-    usage: &lt;usage&gt;
+    linkage: &lt;linkage&gt;
 </code></pre>
 
 <dl>
@@ -196,10 +196,10 @@ all the necessary details to actually use it in the parent project.</p>
 <dd>The <a href="../builders/">builder</a> to use when resolving this package. Note that while
   this is required, it can be unset if the dependency defines the builder in its
   <a href="../file-structure/#exports"><code>export</code></a> section.</dd>
-<dt><code>usage</code> <span class="subtitle"><em>optional, default</em>: <em>from builder</em></span></dt>
-<dd>The <a href="../usage/">usage</a> to use when using this package. Some builders require
-  this to be set, but others provide a default usage specification; the
-  dependency can also define the usage in its
+<dt><code>linkage</code> <span class="subtitle"><em>optional, default</em>: <em>from builder</em></span></dt>
+<dd>The <a href="../linkage/">linkage</a> to use when using this package. Some builders require
+  this to be set, but others provide a default linkage specification; the
+  dependency can also define the linkage in its
   <a href="../file-structure/#exports"><code>export</code></a> section.</dd>
 </dl>
 <h3 id="git">git<a class="headerlink" href="#git" title="Permanent link">§</a></h3>
@@ -212,7 +212,7 @@ all the necessary details to actually use it in the parent project.</p>
     commit: &lt;commit_sha&gt;
     srcdir: &lt;inner_path&gt;
     build: &lt;build&gt;
-    usage: &lt;usage&gt;
+    linkage: &lt;linkage&gt;
 </code></pre>
 
 <dl>
@@ -229,10 +229,10 @@ all the necessary details to actually use it in the parent project.</p>
 <dd>The <a href="../builders/">builder</a> to use when resolving this package. Note that while
   this is required, it can be unset if the dependency defines the builder in its
   <code>export</code> section.</dd>
-<dt><code>usage</code> <span class="subtitle"><em>optional, default: from builder</em></span></dt>
-<dd>The <a href="../usage/">usage</a> to use when using this package. Some builders require
-  this to be set, but others provide a default usage specification; the
-  dependency can also define the usage in its <code>export</code> section.</dd>
+<dt><code>linkage</code> <span class="subtitle"><em>optional, default: from builder</em></span></dt>
+<dd>The <a href="../linkage/">linkage</a> to use when using this package. Some builders require
+  this to be set, but others provide a default linkage specification; the
+  dependency can also define the linkage in its <code>export</code> section.</dd>
 </dl>
 <h3 id="tarball">tarball<a class="headerlink" href="#tarball" title="Permanent link">§</a></h3>
 <pre><code class="yaml">packages:
@@ -244,7 +244,7 @@ all the necessary details to actually use it in the parent project.</p>
     srcdir: &lt;inner_path&gt;
     patch: &lt;path&gt;
     build: &lt;build&gt;
-    usage: &lt;usage&gt;
+    linkage: &lt;linkage&gt;
 </code></pre>
 
 <dl>
@@ -262,10 +262,10 @@ all the necessary details to actually use it in the parent project.</p>
 <dd>The <a href="../builders/">builder</a> to use when resolving this package. Note that while
   this is required, it can be unset if the dependency defines the builder in its
   <code>export</code> section.</dd>
-<dt><code>usage</code> <span class="subtitle"><em>optional, default: from builder</em></span></dt>
-<dd>The <a href="../usage/">usage</a> to use when using this package. Some builders require
-  this to be set, but others provide a default usage specification; the
-  dependency can also define the usage in its <code>export</code> section.</dd>
+<dt><code>linkage</code> <span class="subtitle"><em>optional, default: from builder</em></span></dt>
+<dd>The <a href="../linkage/">linkage</a> to use when using this package. Some builders require
+  this to be set, but others provide a default linkage specification; the
+  dependency can also define the linkage in its <code>export</code> section.</dd>
 </dl>
 <h2 id="other-origins">Other origins<a class="headerlink" href="#other-origins" title="Permanent link">§</a></h2>
 <h3 id="apt">apt<a class="headerlink" href="#apt" title="Permanent link">§</a></h3>
@@ -274,7 +274,7 @@ all the necessary details to actually use it in the parent project.</p>
     origin: apt
     remote: &lt;list[string]&gt;
     repository: &lt;string&gt;
-    usage: &lt;usage&gt;
+    linkage: &lt;linkage&gt;
 </code></pre>
 
 <dl>
@@ -283,8 +283,8 @@ all the necessary details to actually use it in the parent project.</p>
 <dt><code>repository</code> <span class="subtitle"><em>optional; default:</em> <code>null</code></span></dt>
 <dd>The Apt repository to fetch the package(s) from. If not specified, use the
   default repositories for the system.</dd>
-<dt><code>usage</code> <span class="subtitle"><em>optional, default:</em> <a href="../usage/#system"><code>system</code></a></span></dt>
-<dd>The <a href="../usage/">usage</a> to use when using this package.</dd>
+<dt><code>linkage</code> <span class="subtitle"><em>optional, default:</em> <a href="../linkage/#system"><code>system</code></a></span></dt>
+<dd>The <a href="../linkage/">linkage</a> to use when using this package.</dd>
 </dl>
 <h3 id="conan">conan<a class="headerlink" href="#conan" title="Permanent link">§</a></h3>
 <pre><code class="yaml">options:
@@ -311,7 +311,7 @@ all the necessary details to actually use it in the parent project.</p>
     build: &lt;boolean&gt;
     options:
       my_option: &lt;string | boolean&gt;
-    usage: &lt;usage&gt;
+    linkage: &lt;linkage&gt;
 </code></pre>
 
 <dl>
@@ -322,8 +322,8 @@ all the necessary details to actually use it in the parent project.</p>
 <dt><code>options</code> <span class="subtitle"><em>optional; default:</em> <code>{}</code></span></dt>
 <dd>A dictionary of options to pass to Conan; for example, you could pass
   <code>shared: true</code> to request a shared library configuration.</dd>
-<dt><code>usage</code> <span class="subtitle"><em>optional, default:</em> <a href="../usage/#pkg_config"><code>pkg_config</code></a></span></dt>
-<dd>The <a href="../usage/">usage</a> to use when using this package.</dd>
+<dt><code>linkage</code> <span class="subtitle"><em>optional, default:</em> <a href="../linkage/#pkg_config"><code>pkg_config</code></a></span></dt>
+<dd>The <a href="../linkage/">linkage</a> to use when using this package.</dd>
 </dl>
 <h3 id="system">system<a class="headerlink" href="#system" title="Permanent link">§</a></h3>
 <pre><code class="yaml">packages:
@@ -356,7 +356,7 @@ all the necessary details to actually use it in the parent project.</p>
 <dt><code>libraries</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dt><code>compile_flags</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dt><code>link_flags</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
-<dd>See <a href="../usage/#pathsystem"><code>system</code></a> usage.</dd>
+<dd>See <a href="../linkage/#pathsystem"><code>system</code></a> linkage.</dd>
 </dl></div>
         </div>
 

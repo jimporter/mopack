@@ -81,7 +81,7 @@
 </li>
                                     
 <li >
-    <a href="../usage/">Usage</a>
+    <a href="../linkage/">Linkage</a>
 </li>
                                     
 <li >
@@ -159,15 +159,15 @@ distribution</a>.</p>
 <pre><code class="yaml">export:
   submodules: &lt;submodules&gt;
   build: &lt;build&gt;
-  usage: &lt;usage&gt;
+  linkage: &lt;linkage&gt;
 </code></pre>
 
 <dl>
 <dt><code>submodules</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dd>A list of available submodules, or <code>*</code> to indicate that any submodule name
   should be accepted. If this is specified, using this package via <code>mopack
-  usage</code> <em>must</em> specify a submodule. To declare that submodules are optional for
-  usage, you can specify a dictionary:<pre><code>submodules:
+  linkage</code> <em>must</em> specify a submodule. To declare that submodules are optional
+  for linkage, you can specify a dictionary:<pre><code>submodules:
   names: &lt;submodules&gt;
   required: false
 </code></pre>
@@ -176,9 +176,9 @@ distribution</a>.</p>
 <dd>The <a href="../builders/">builder</a> to use when resolving this package. If unspecified,
   other packages using this one will have to define the <code>build</code> in their own
   mopack configuration.</dd>
-<dt><code>usage</code> <span class="subtitle"><em>optional, default</em>: <em>from builder</em></span></dt>
-<dd>The <a href="../usage/">usage</a> to use when using this package. Some builders require
-  this to be set, but others provide a default usage specification; if
+<dt><code>linkage</code> <span class="subtitle"><em>optional, default</em>: <em>from builder</em></span></dt>
+<dd>The <a href="../linkage/">linkage</a> to use when using this package. Some builders
+  require this to be set, but others provide a default linkage specification; if
   unspecified and the builder requires this to be set, then other packages using
   this one will need to define it.</dd>
 </dl>

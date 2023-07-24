@@ -81,7 +81,7 @@
 </li>
                                     
 <li >
-    <a href="../../reference/usage/">Usage</a>
+    <a href="../../reference/linkage/">Linkage</a>
 </li>
                                     
 <li >
@@ -141,7 +141,7 @@
     <ul class="nav bs-sidenav">
         <li class="main active"><a href="#resolving-packages-with-mopack">Resolving Packages With mopack</a></li>
             <li><a href="#resolution">Resolution</a></li>
-            <li><a href="#usage">Usage</a></li>
+            <li><a href="#linkage">Linkage</a></li>
             <li><a href="#deployment">Deployment</a></li>
     </ul>
 </div></div>
@@ -204,21 +204,22 @@ specified in the latter file will override those in the former. Thus, if both
 <pre><code class="sh">$ mopack resolve mopack.yml mopack-local.yml
 </code></pre>
 
-<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">§</a></h2>
+<h2 id="linkage">Linkage<a class="headerlink" href="#linkage" title="Permanent link">§</a></h2>
 <p>Once a project's dependencies are ready to use, the next step is actually using
 them. Generally, this step occurs <em>during</em> the root project's configuration
-step. To get a package's usage information, run the following command:</p>
-<pre><code class="sh">$ mopack usage some-package
+step. To get a package's linkage information, run the following command:</p>
+<pre><code class="sh">$ mopack linkage some-package
 </code></pre>
 
-<p>This will return the package's <a href="../../reference/usage/#usage-results">usage</a>
-information in YAML format (or JSON if <code>--json</code> is passed), which can then be
-fed to the dependent build steps.</p>
+<p>This will return the package's
+<a href="../../reference/linkage/#linkage-results">linkage</a> information in YAML format
+(or JSON if <code>--json</code> is passed), which can then be fed to the dependent build
+steps.</p>
 <p>Some packages contain <a href="../writing/#submodules">submodules</a>, representing optional
 components that you may or may not want to use (e.g. individual libraries from
 the Boost package). In this case, you can specify the submodules you want to use
-in a particular situation when invoking <code>mopack usage</code>:</p>
-<pre><code class="sh">$ mopack usage 'some-package[submodule1,submodule2]'
+in a particular situation when invoking <code>mopack linkage</code>:</p>
+<pre><code class="sh">$ mopack linkage 'some-package[submodule1,submodule2]'
 </code></pre>
 
 <h2 id="deployment">Deployment<a class="headerlink" href="#deployment" title="Permanent link">§</a></h2>

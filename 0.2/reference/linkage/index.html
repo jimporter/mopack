@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="../../img/favicon.ico">
-        <title>Usage - mopack</title>
+        <title>Linkage - mopack</title>
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome.min.css" rel="stylesheet">
         <link href="../../css/base.css" rel="stylesheet">
@@ -81,7 +81,7 @@
 </li>
                                     
 <li class="active">
-    <a href="./">Usage</a>
+    <a href="./">Linkage</a>
 </li>
                                     
 <li >
@@ -139,26 +139,26 @@
         <div class="container">
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#usage">Usage</a></li>
-            <li><a href="#usage-results">Usage results</a></li>
+        <li class="main active"><a href="#linkage">Linkage</a></li>
+            <li><a href="#linkage-results">Linkage results</a></li>
             <li><a href="#path-system">path/system</a></li>
             <li><a href="#pkg_config">pkg_config</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
 
-<h1 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">§</a></h1>
-<p>Usage defines how to include a package in part of your build process. These
+<h1 id="linkage">Linkage<a class="headerlink" href="#linkage" title="Permanent link">§</a></h1>
+<p>Linkage defines how to include a package in part of your build process. These
 definitions are used to generate a <a href="https://www.freedesktop.org/wiki/Software/pkg-config/">pkg-config</a> <code>.pc</code> file (or to
 point to an existing one), which can then be used when compiling or linking
 <em>your</em> project.</p>
 <pre><code class="yaml">packages:
   my_pkg:
     # ...
-    usage: &lt;usage_type&gt;
+    linkage: &lt;linkage_type&gt;
     # or...
-    usage:
-      type: &lt;usage_type&gt;
+    linkage:
+      type: &lt;linkage_type&gt;
       inherit_defaults: &lt;boolean&gt;
       submodule_map: &lt;submodule_map&gt;  # or...
       submodule_map:
@@ -168,22 +168,22 @@ point to an existing one), which can then be used when compiling or linking
 
 <dl>
 <dt><code>type</code> <span class="subtitle"><em>required</em></span></dt>
-<dd>The type of usage; see below for possible values.</dd>
+<dd>The type of linkage; see below for possible values.</dd>
 <dt><code>inherit_defaults</code> <span class="subtitle"><em>optional, default</em>: <code>false</code></span></dt>
-<dd>If true, inherit any unspecified values for this usage from the defaults for
+<dd>If true, inherit any unspecified values for this linkage from the defaults for
   the package. Defaults to false; however, any packages requested via <code>mopack
-  usage</code> but not defined will use the defaults.</dd>
+  linkage</code> but not defined will use the defaults.</dd>
 <dt><code>submodule_map</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dd>A mapping from submodule names to submodule-specific configuration; a key of
-  <code>'*'</code> refers to all submodules. See below for possible values for each usage
+  <code>'*'</code> refers to all submodules. See below for possible values for each linkage
   type.</dd>
 </dl>
-<h3 id="usage-results">Usage results<a class="headerlink" href="#usage-results" title="Permanent link">§</a></h3>
-<p>When calling <code>mopack usage &lt;dependency&gt;</code>, mopack will provide information about
-how to use that dependency in your project. At minimum, all dependencies will
-report the following information:</p>
+<h3 id="linkage-results">Linkage results<a class="headerlink" href="#linkage-results" title="Permanent link">§</a></h3>
+<p>When calling <code>mopack linkage &lt;dependency&gt;</code>, mopack will provide information
+about how to use that dependency in your project. At minimum, all dependencies
+will report the following information:</p>
 <pre><code class="yaml">name: &lt;string&gt;
-type: &lt;usage_type&gt;
+type: &lt;linkage_type&gt;
 pcnames: &lt;list[string]&gt;
 pkg_config_path: &lt;list[path]&gt;
 </code></pre>
@@ -192,7 +192,7 @@ pkg_config_path: &lt;list[path]&gt;
 <dt><code>name</code></dt>
 <dd>The name of the requested dependency.</dd>
 <dt><code>type</code></dt>
-<dd>The type of usage; see below for possible values.</dd>
+<dd>The type of linkage; see below for possible values.</dd>
 <dt><code>pcnames</code></dt>
 <dd>A list of pkg-config <code>.pc</code> file names, without the <code>.pc</code> extension.</dd>
 <dt><code>pkg_config_path</code></dt>
@@ -203,7 +203,7 @@ pkg_config_path: &lt;list[path]&gt;
 <pre><code class="yaml">packages:
   my_pkg:
     # ...
-    usage:
+    linkage:
       type: path  # or ...
       type: system
       auto_link: &lt;boolean&gt;
@@ -255,7 +255,7 @@ pkg_config_path: &lt;list[path]&gt;
 <pre><code class="yaml">packages:
   my_pkg:
     # ...
-    usage:
+    linkage:
       # ...
       submodule_map:
         my_submodule:
@@ -282,9 +282,9 @@ pkg_config_path: &lt;list[path]&gt;
 <dt><code>link_flags</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dd>As above.</dd>
 </dl>
-<h3 id="path-system-usage-results">Usage results<a class="headerlink" href="#path-system-usage-results" title="Permanent link">§</a></h3>
-<p>In addition to the required usage results data, <code>path</code>/<code>system</code> usage results
-can include the following extra data:</p>
+<h3 id="path-system-linkage-results">Linkage results<a class="headerlink" href="#path-system-linkage-results" title="Permanent link">§</a></h3>
+<p>In addition to the required linkage results data, <code>path</code>/<code>system</code> linkage
+results can include the following extra data:</p>
 <pre><code class="yaml">generated: &lt;boolean&gt;
 auto_link: &lt;boolean&gt;
 </code></pre>
@@ -303,7 +303,7 @@ auto_link: &lt;boolean&gt;
 <pre><code class="yaml">packages:
   my_pkg:
     # ...
-    usage:
+    linkage:
       type: pkg_config
       pcname: &lt;string&gt;
       pkg_config_path: &lt;list[path]&gt;
@@ -321,7 +321,7 @@ auto_link: &lt;boolean&gt;
 <pre><code class="yaml">packages:
   my_pkg:
     # ...
-    usage:
+    linkage:
       # ...
       submodule_map:
         my_submodule:

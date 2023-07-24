@@ -81,7 +81,7 @@
 </li>
                                     
 <li >
-    <a href="../../reference/usage/">Usage</a>
+    <a href="../../reference/linkage/">Linkage</a>
 </li>
                                     
 <li >
@@ -141,7 +141,7 @@
     <ul class="nav bs-sidenav">
         <li class="main active"><a href="#writing-mopackyml-configurations">Writing mopack.yml Configurations</a></li>
             <li><a href="#your-first-configuration">Your first configuration</a></li>
-            <li><a href="#configuring-buildsusage">Configuring builds/usage</a></li>
+            <li><a href="#configuring-buildslinkage">Configuring builds/linkage</a></li>
             <li><a href="#other-package-origins">Other package origins</a></li>
             <li><a href="#project-wide-options">Project-wide options</a></li>
             <li><a href="#nested-dependencies">Nested dependencies</a></li>
@@ -168,7 +168,7 @@ specifies a dependent package fetched and built from a tarball:</p>
 <p>This informs mopack that it should fetch a
 <a href="../../reference/packages/#tarball">tarball</a> from the specified URL and then
 build it using the <a href="../../reference/builders/#bfg9000">bfg9000</a> builder.</p>
-<h2 id="configuring-buildsusage">Configuring builds/usage<a class="headerlink" href="#configuring-buildsusage" title="Permanent link">§</a></h2>
+<h2 id="configuring-buildslinkage">Configuring builds/linkage<a class="headerlink" href="#configuring-buildslinkage" title="Permanent link">§</a></h2>
 <p>In the above example, mopack builds <code>foo_pkg</code> using the default settings for
 bfg9000. However, sometimes you may need to provide additional configuration
 options for the build:</p>
@@ -179,7 +179,7 @@ options for the build:</p>
     build:
       type: bfg9000
       extra_args: --extra
-    usage:
+    linkage:
       type: pkg_config
       pcname: foobar
 </code></pre>
@@ -188,8 +188,8 @@ options for the build:</p>
 type of the build and some extra arguments to be passed to it. Below, we'll show
 a more complex example taking advantage of <a href="#variable-interpolation">variable
 interpolation</a>.</p>
-<p>We also explicitly specify a <a href="../../reference/usage/"><em>usage</em></a>. A usage, as the
-name implies, describes how a package should be <em>used</em>, e.g. where to find
+<p>We also explicitly specify a <a href="../../reference/linkage/"><em>linkage</em></a>. A linkage,
+as the name implies, describes how to <em>link</em> to a package, e.g. where to find
 header files, what libraries to link to, etc.</p>
 <h2 id="other-package-origins">Other package origins<a class="headerlink" href="#other-package-origins" title="Permanent link">§</a></h2>
 <p>One of the primary benefits of mopack is that packages can come from multiple
@@ -302,7 +302,7 @@ using a <a href="../../reference/builders/#custom"><code>custom</code></a> build
         - bfg9000 configure $builddir
         - cd $builddir
         - ninja
-    usage: pkg_config
+    linkage: pkg_config
 </code></pre>
 
 <p>Here, <code>$builddir</code> represents a unique path for the current project that it can
@@ -329,7 +329,7 @@ arguments to bfg9000:</p>
         - ninja
       deploy_commands:
         - ninja install
-    usage: pkg_config
+    linkage: pkg_config
 </code></pre>
 
 <h3 id="conditional-package-specification">Conditional package specification<a class="headerlink" href="#conditional-package-specification" title="Permanent link">§</a></h3>
@@ -370,7 +370,7 @@ available submodule names:</p>
 </code></pre>
 
 <p>This specifies a package with two submodules, <em>requiring</em> at least one to be
-specified whenever <a href="../resolving/#usage"><code>mopack usage</code></a> is invoked.</p></div>
+specified whenever <a href="../resolving/#linkage"><code>mopack linkage</code></a> is invoked.</p></div>
         </div>
 
         <footer class="col-md-12">
