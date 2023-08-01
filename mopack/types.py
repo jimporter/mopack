@@ -76,7 +76,7 @@ class FieldValueWarning(FieldValueError, FieldWarning):
 
 
 def kwarg_error_to_field_error(e, kind):
-    if type(e) == TypeError:
+    if type(e) is TypeError:
         m = _unexpected_kwarg_ex.search(str(e))
         if m:
             msg = ('{} got an unexpected keyword argument {!r}'

@@ -90,7 +90,7 @@ class TestShowWarning(TestCase):
     def test_warn(self):
         class EqualWarning(UserWarning):
             def __eq__(self, rhs):
-                return type(self) == type(rhs)
+                return type(self) is type(rhs)
 
         with mock.patch('logging.log') as mlog:
             warnings.warn('message', EqualWarning)

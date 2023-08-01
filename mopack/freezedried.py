@@ -99,7 +99,7 @@ class FreezeDried:
             return {k: v for k, v in vars(obj).items() if
                     not self._skipped_field(k, True, skip_fields)}
 
-        return type(self) == type(rhs) and fields(self) == fields(rhs)
+        return type(self) is type(rhs) and fields(self) == fields(rhs)
 
     def __eq__(self, rhs):
         return self.equal(rhs)
