@@ -158,13 +158,12 @@ requested dependencies are assumed to be <a href="../../reference/packages/#syst
 dependencies</a>. However, that's not very
 interesting. Instead, let's look at a basic <code>mopack.yml</code> configuration that
 specifies a dependent package fetched and built from a tarball:</p>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   foo_pkg:
     origin: tarball
     url: https://phobos.uac/foo_pkg-1.0.tar.gz
     build: bfg9000
 </code></pre>
-
 <p>This informs mopack that it should fetch a
 <a href="../../reference/packages/#tarball">tarball</a> from the specified URL and then
 build it using the <a href="../../reference/builders/#bfg9000">bfg9000</a> builder.</p>
@@ -172,7 +171,7 @@ build it using the <a href="../../reference/builders/#bfg9000">bfg9000</a> build
 <p>In the above example, mopack builds <code>foo_pkg</code> using the default settings for
 bfg9000. However, sometimes you may need to provide additional configuration
 options for the build:</p>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   foo_pkg:
     origin: tarball
     url: https://phobos.uac/foo_pkg-1.0.tar.gz
@@ -183,7 +182,6 @@ options for the build:</p>
       type: pkg_config
       pcname: foobar
 </code></pre>
-
 <p>Here, instead of a string for <code>build</code>, we specify a dictionary indicating the
 type of the build and some extra arguments to be passed to it. Below, we'll show
 a more complex example taking advantage of <a href="#variable-interpolation">variable
@@ -199,17 +197,16 @@ to <a href="../../reference/packages/#tarball"><code>tarball</code></a>, such as
 <a href="../../reference/packages/#git"><code>git</code></a>, as well as full-fledged package managers
 like <a href="../../reference/packages/#apt"><code>apt</code></a> or
 <a href="../../reference/packages/#conan"><code>conan</code></a>:</p>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   zlib:
     origin: conan
     remote: zlib/1.2.13
 </code></pre>
-
 <h2 id="project-wide-options">Project-wide options<a class="headerlink" href="#project-wide-options" title="Permanent link">§</a></h2>
 <p>In addition to specifying configuration options for a particular package, you
 can also specify <a href="../../reference/file-structure/#options">options</a> for <em>all</em>
 packages, or all those of a particular type:</p>
-<pre><code class="yaml">options:
+<pre><code class="language-yaml">options:
   target_platform: linux
 
   builders:
@@ -222,7 +219,6 @@ packages, or all those of a particular type:</p>
 packages:
   # ...
 </code></pre>
-
 <p>This is especially useful for build system integration, e.g. for passing a
 toolchain file set during configuration of the root project on to package
 dependencies.</p>
@@ -233,18 +229,17 @@ nested dependencies to the list of packages to resolve. For example, if
 <code>foo_pkg</code> <a href="#your-first-configuration">above</a> contains a <code>mopack.yml</code> as follows,
 then when we resolve our main <code>mopack.yml</code> configuration, <code>bar_pkg</code> will be
 fetched and built so that <code>foo_pkg</code> can use it during its build:</p>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   bar_pkg:
     origin: tarball
     url: https://phobos.uac/bar_pkg-2.0.tar.gz
     build: bfg9000
 </code></pre>
-
 <h3 id="overriding-nested-dependencies">Overriding nested dependencies<a class="headerlink" href="#overriding-nested-dependencies" title="Permanent link">§</a></h3>
 <p>Sometimes, you may not want to use the nested dependencies as-is from other
 packages. In this case, you can simply provide your own configuration in the
 parent <code>mopack.yml</code>:</p>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   foo_pkg:
     origin: tarball
     url: https://phobos.uac/foo_pkg-1.0.tar.gz
@@ -254,7 +249,6 @@ parent <code>mopack.yml</code>:</p>
     url: https://phobos.uac/bar_pkg-2.1.tar.gz
     build: bfg9000
 </code></pre>
-
 <p>When doing so, mopack will automatically determine the appropriate order to
 build dependencies so that each package has all of its build requirements met.</p>
 <div class="admonition note">
@@ -271,18 +265,16 @@ package by <a href="../../reference/file-structure/#exports">exporting</a> its
 configuration. This allows users of your package to omit the details about how
 to build and use the package. For example, you can include the following in your
 package's <code>mopack.yml</code> file:</p>
-<pre><code class="yaml">export:
+<pre><code class="language-yaml">export:
   build: bfg9000
 </code></pre>
-
 <p>Then, users of your package can omit those fields from their configuration,
 relying on mopack to fill in the blanks:</p>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   foo_pkg:
     origin: tarball
     url: https://phobos.uac/foo_pkg-1.0.tar.gz
 </code></pre>
-
 <p>Of course, the parent configuration can still <em>override</em> the values set by a
 dependency simply by including the appropriate configuration setting, as in our
 <a href="#your-first-configuration">first example</a>.</p>
@@ -292,7 +284,7 @@ interpolation</a> to
 programmatically specify package configurations. For example, suppose we wanted
 to (partially) rewrite our <a href="#your-first-configuration">first configuration</a>
 using a <a href="../../reference/builders/#custom"><code>custom</code></a> builder:</p>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   foo_pkg:
     origin: tarball
     url: https://phobos.uac/foo_pkg-1.0.tar.gz
@@ -304,7 +296,6 @@ using a <a href="../../reference/builders/#custom"><code>custom</code></a> build
         - ninja
     linkage: pkg_config
 </code></pre>
-
 <p>Here, <code>$builddir</code> represents a unique path for the current project that it can
 use as a build directory. You can also spell this variable as <code>${{builddir}}</code>,
 which can be useful if you need to append some alphanumeric characters to the
@@ -314,7 +305,7 @@ variable's value.</p>
 we haven't told the build system where to copy <code>foo_pkg</code>'s files. Here, we can
 take advantage of expression interpolation to conditionally pass command line
 arguments to bfg9000:</p>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   foo_pkg:
     origin: tarball
     url: https://phobos.uac/foo_pkg-1.0.tar.gz
@@ -331,7 +322,6 @@ arguments to bfg9000:</p>
         - ninja install
     linkage: pkg_config
 </code></pre>
-
 <h3 id="conditional-package-specification">Conditional package specification<a class="headerlink" href="#conditional-package-specification" title="Permanent link">§</a></h3>
 <p>In some cases, a package's configuration should be <em>much</em> different depending on
 the state of a variable, and the variable interpolation described above isn't
@@ -339,7 +329,7 @@ flexible enough to support this easily. To support this, a package's
 configuration can be specified as a <em>list</em> of configurations with an added <code>if</code>
 key to describe the conditions to use a particular configuration. Note that,
 since <code>if</code> always takes an expression, the <code>$</code>/<code>${{ }}</code> sigil is not required:</p>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   foo_pkg:
     - if: host_platform == 'linux'
       origin: apt
@@ -347,7 +337,6 @@ since <code>if</code> always takes an expression, the <code>$</code>/<code>${{ }
       url: https://phobos.uac/foo_pkg-1.0.tar.gz
       build: bfg9000
 </code></pre>
-
 <p>The conditional for each configuration is evaluated in turn, selecting the first
 configuration where its conditional is true. If the last configuration has no
 <code>if</code> key, it will always be selected as a last resort; otherwise, if no
@@ -361,14 +350,13 @@ submodules. A submodule represents the smallest <em>usable</em> unit of a packag
 Boost's case, a single Boost library.</p>
 <p>At its simplest, defining submodules for a package consists of listing the
 available submodule names:</p>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   hello:
     origin: tarball
     path: greeter-1.0.tar.gz
     build: bfg9000
     submodules: ['french', 'english']
 </code></pre>
-
 <p>This specifies a package with two submodules, <em>requiring</em> at least one to be
 specified whenever <a href="../resolving/#linkage"><code>mopack linkage</code></a> is invoked.</p></div>
         </div>
@@ -383,8 +371,8 @@ specified whenever <a href="../resolving/#linkage"><code>mopack linkage</code></
                 shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
         </script>
         <script src="../../js/base.js" defer></script>
-        <script src="../../js/version-select.js" defer></script>
         <script src="../../search/main.js" defer></script>
+        <script src="../../js/version-select.js" defer></script>
 
         <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
     <div class="modal-dialog">

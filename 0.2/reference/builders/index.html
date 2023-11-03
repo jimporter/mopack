@@ -152,7 +152,7 @@
 <p>Builders define how <a href="../packages/#source-distributions">source distributions</a>
 should be built, allowing you to build dependencies from source even if they use
 a different build system.</p>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   my_pkg:
     # ...
     build: &lt;builder_type&gt;
@@ -160,63 +160,58 @@ a different build system.</p>
     build:
       type: &lt;builder_type&gt;
 </code></pre>
-
 <dl>
 <dt><code>type</code> <span class="subtitle"><em>required</em></span></dt>
 <dd>The type of builder; see below for possible values.</dd>
 </dl>
 <h2 id="bfg9000">bfg9000<a class="headerlink" href="#bfg9000" title="Permanent link">§</a></h2>
-<pre><code class="yaml">options:
+<pre><code class="language-yaml">options:
   builders:
     bfg9000:
       toolchain: &lt;path&gt;
 </code></pre>
-
 <dl>
 <dt><code>toolchain</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dd>The path to a bfg9000 toolchain file to use when building bfg-based
   dependencies.</dd>
 </dl>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   my_pkg:
     # ...
     builder:
       type: bfg9000
       extra_args: &lt;shell_args&gt;
 </code></pre>
-
 <dl>
 <dt><code>extra_args</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dd>A list of extra arguments to pass to <code>bfg9000 configure</code>. If a string is
   supplied, it will first be split according to POSIX shell rules.</dd>
 </dl>
 <h2 id="cmake">cmake<a class="headerlink" href="#cmake" title="Permanent link">§</a></h2>
-<pre><code class="yaml">options:
+<pre><code class="language-yaml">options:
   builders:
     cmake:
       toolchain: &lt;path&gt;
 </code></pre>
-
 <dl>
 <dt><code>toolchain</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dd>The path to a CMake toolchain file to use when building CMake-based
   dependencies.</dd>
 </dl>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   my_pkg:
     # ...
     builder:
       type: cmake
       extra_args: &lt;shell_args&gt;
 </code></pre>
-
 <dl>
 <dt><code>extra_args</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dd>A list of extra arguments to pass to <code>cmake</code>. If a string is supplied, it will
   first be split according to POSIX shell rules.</dd>
 </dl>
 <h2 id="custom">custom<a class="headerlink" href="#custom" title="Permanent link">§</a></h2>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   my_pkg:
     # ...
     builder:
@@ -224,7 +219,6 @@ a different build system.</p>
       build_commands: &lt;list[shell_args]&gt;
       deploy_commands: &lt;list[shell_args]&gt;
 </code></pre>
-
 <dl>
 <dt><code>build_commands</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dd>A list of shell commands to execute when building the dependency. Each command
@@ -236,7 +230,7 @@ a different build system.</p>
   into arguments according to POSIX shell rules).</dd>
 </dl>
 <h2 id="none">none<a class="headerlink" href="#none" title="Permanent link">§</a></h2>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   my_pkg:
     # ...
     builder:
@@ -254,8 +248,8 @@ a different build system.</p>
                 shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
         </script>
         <script src="../../js/base.js" defer></script>
-        <script src="../../js/version-select.js" defer></script>
         <script src="../../search/main.js" defer></script>
+        <script src="../../js/version-select.js" defer></script>
 
         <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
     <div class="modal-dialog">

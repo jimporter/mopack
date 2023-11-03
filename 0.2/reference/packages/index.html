@@ -149,14 +149,13 @@
 <h1 id="packages">Packages<a class="headerlink" href="#packages" title="Permanent link">§</a></h1>
 <p>Package configurations describe how to fetch a particular dependency as well as
 all the necessary details to actually use it in the parent project.</p>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   my_pkg:
     origin: &lt;package_origin&gt;
     inherit_defaults: &lt;boolean&gt;
     deploy: &lt;boolean&gt;
     submodules: &lt;submodules&gt;
 </code></pre>
-
 <dl>
 <dt><code>origin</code> <span class="subtitle"><em>required</em></span></dt>
 <dd>The type of dependency, corresponding to a particular origin (e.g. a package
@@ -181,14 +180,13 @@ all the necessary details to actually use it in the parent project.</p>
   section.</p>
 <h2 id="source-distributions">Source distributions<a class="headerlink" href="#source-distributions" title="Permanent link">§</a></h2>
 <h3 id="directory">directory<a class="headerlink" href="#directory" title="Permanent link">§</a></h3>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   my_pkg:
     origin: directory
     path: &lt;path&gt;
     build: &lt;build&gt;
     linkage: &lt;linkage&gt;
 </code></pre>
-
 <dl>
 <dt><code>path</code> <span class="subtitle"><em>required</em></span></dt>
 <dd>The path to the source directory of the dependency.</dd>
@@ -203,7 +201,7 @@ all the necessary details to actually use it in the parent project.</p>
   <a href="../file-structure/#exports"><code>export</code></a> section.</dd>
 </dl>
 <h3 id="git">git<a class="headerlink" href="#git" title="Permanent link">§</a></h3>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   my_pkg:
     origin: git
     repository: &lt;url | path&gt;
@@ -214,7 +212,6 @@ all the necessary details to actually use it in the parent project.</p>
     build: &lt;build&gt;
     linkage: &lt;linkage&gt;
 </code></pre>
-
 <dl>
 <dt><code>repository</code> <span class="subtitle"><em>required</em></span></dt>
 <dd>The URL or path to the repository.</dd>
@@ -235,7 +232,7 @@ all the necessary details to actually use it in the parent project.</p>
   dependency can also define the linkage in its <code>export</code> section.</dd>
 </dl>
 <h3 id="tarball">tarball<a class="headerlink" href="#tarball" title="Permanent link">§</a></h3>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   my_pkg:
     origin: tarball
     path: &lt;path&gt;  # or...
@@ -246,7 +243,6 @@ all the necessary details to actually use it in the parent project.</p>
     build: &lt;build&gt;
     linkage: &lt;linkage&gt;
 </code></pre>
-
 <dl>
 <dt><code>path</code> <span class="subtitle"><em>required</em></span></dt>
 <dt><code>url</code></dt>
@@ -269,14 +265,13 @@ all the necessary details to actually use it in the parent project.</p>
 </dl>
 <h2 id="other-origins">Other origins<a class="headerlink" href="#other-origins" title="Permanent link">§</a></h2>
 <h3 id="apt">apt<a class="headerlink" href="#apt" title="Permanent link">§</a></h3>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   my_pkg:
     origin: apt
     remote: &lt;list[string]&gt;
     repository: &lt;string&gt;
     linkage: &lt;linkage&gt;
 </code></pre>
-
 <dl>
 <dt><code>remote</code> <span class="subtitle"><em>optional; default:</em> <code>lib{package}-dev</code></span></dt>
 <dd>The Apt package(s) to fetch when resolving this package.</dd>
@@ -287,13 +282,12 @@ all the necessary details to actually use it in the parent project.</p>
 <dd>The <a href="../linkage/">linkage</a> to use when using this package.</dd>
 </dl>
 <h3 id="conan">conan<a class="headerlink" href="#conan" title="Permanent link">§</a></h3>
-<pre><code class="yaml">options:
+<pre><code class="language-yaml">options:
   origins:
     conan:
       build: &lt;list[string]&gt;
       extra_args: &lt;shell_args&gt;
 </code></pre>
-
 <dl>
 <dt><code>build</code> <span class="subtitle"><em>optional; default:</em> <code>null</code></span></dt>
 <dd>A string (or list of strings) of packages that Conan should explicitly build.
@@ -304,7 +298,7 @@ all the necessary details to actually use it in the parent project.</p>
 <dd>A list of extra arguments to pass to <code>conan install</code>. If a string is supplied,
   it will first be split according to POSIX shell rules.</dd>
 </dl>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   my_pkg:
     origin: conan
     remote: &lt;string&gt;
@@ -313,7 +307,6 @@ all the necessary details to actually use it in the parent project.</p>
       my_option: &lt;string | boolean&gt;
     linkage: &lt;linkage&gt;
 </code></pre>
-
 <dl>
 <dt><code>remote</code> <span class="subtitle"><em>required</em></span></dt>
 <dd>The specifier for the package in the Conan repository, e.g. <code>zlib/1.2.13</code>.</dd>
@@ -326,7 +319,7 @@ all the necessary details to actually use it in the parent project.</p>
 <dd>The <a href="../linkage/">linkage</a> to use when using this package.</dd>
 </dl>
 <h3 id="system">system<a class="headerlink" href="#system" title="Permanent link">§</a></h3>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   my_pkg:
     origin: system
     auto_link: &lt;boolean&gt;
@@ -344,7 +337,6 @@ all the necessary details to actually use it in the parent project.</p>
       my_submodule: &lt;submodule_map&gt;
       '*': &lt;submodule_map&gt;
 </code></pre>
-
 <dl>
 <dt><code>auto_link</code> <span class="subtitle"><em>optional, default</em>: <code>false</code></span></dt>
 <dt><code>version</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
@@ -370,8 +362,8 @@ all the necessary details to actually use it in the parent project.</p>
                 shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
         </script>
         <script src="../../js/base.js" defer></script>
-        <script src="../../js/version-select.js" defer></script>
         <script src="../../search/main.js" defer></script>
+        <script src="../../js/version-select.js" defer></script>
 
         <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
     <div class="modal-dialog">

@@ -156,7 +156,7 @@ configurations using expressions.</p>
 <h2 id="introducing-expressions">Introducing expressions<a class="headerlink" href="#introducing-expressions" title="Permanent link">§</a></h2>
 <p>You can introduce expressions with <code>${{ ... }}</code>, or <code>$</code> if the expression is
 just a variable name:</p>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   my_pkg:
     # ...
     build:
@@ -168,11 +168,10 @@ just a variable name:</p>
       # ...
       compile_flags: -I$srcdir/include
 </code></pre>
-
 <p>When defining the expression for <a href="../file-structure/#conditional-package-definitions">conditional package
 definitions</a>, this introducer
 isn't necessary (a conditional is always an expression to begin with):</p>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   hello:
     - if: host_platform == 'linux'
       origin: apt
@@ -180,7 +179,6 @@ isn't necessary (a conditional is always an expression to begin with):</p>
     - origin: tarball
       # ...
 </code></pre>
-
 <h2 id="literals">Literals<a class="headerlink" href="#literals" title="Permanent link">§</a></h2>
 <p>Within expressions, you can use a variety of literal types:</p>
 <ul>
@@ -346,8 +344,8 @@ to programmatically define how to resolve or use your dependencies.</p>
                 shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
         </script>
         <script src="../../js/base.js" defer></script>
-        <script src="../../js/version-select.js" defer></script>
         <script src="../../search/main.js" defer></script>
+        <script src="../../js/version-select.js" defer></script>
 
         <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
     <div class="modal-dialog">

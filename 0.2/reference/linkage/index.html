@@ -152,7 +152,7 @@
 definitions are used to generate a <a href="https://www.freedesktop.org/wiki/Software/pkg-config/">pkg-config</a> <code>.pc</code> file (or to
 point to an existing one), which can then be used when compiling or linking
 <em>your</em> project.</p>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   my_pkg:
     # ...
     linkage: &lt;linkage_type&gt;
@@ -165,7 +165,6 @@ point to an existing one), which can then be used when compiling or linking
         my_submodule: &lt;submodule_map&gt;
         '*': &lt;submodule_map&gt;
 </code></pre>
-
 <dl>
 <dt><code>type</code> <span class="subtitle"><em>required</em></span></dt>
 <dd>The type of linkage; see below for possible values.</dd>
@@ -182,12 +181,11 @@ point to an existing one), which can then be used when compiling or linking
 <p>When calling <code>mopack linkage &lt;dependency&gt;</code>, mopack will provide information
 about how to use that dependency in your project. At minimum, all dependencies
 will report the following information:</p>
-<pre><code class="yaml">name: &lt;string&gt;
+<pre><code class="language-yaml">name: &lt;string&gt;
 type: &lt;linkage_type&gt;
 pcnames: &lt;list[string]&gt;
 pkg_config_path: &lt;list[path]&gt;
 </code></pre>
-
 <dl>
 <dt><code>name</code></dt>
 <dd>The name of the requested dependency.</dd>
@@ -200,7 +198,7 @@ pkg_config_path: &lt;list[path]&gt;
   dependency's pkg-config <code>.pc</code> files.</dd>
 </dl>
 <h2 id="path-system">path/system<a class="headerlink" href="#path-system" title="Permanent link">§</a></h2>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   my_pkg:
     # ...
     linkage:
@@ -217,7 +215,6 @@ pkg_config_path: &lt;list[path]&gt;
       compile_flags: &lt;shell_args&gt;
       link_flags: &lt;shell_args&gt;
 </code></pre>
-
 <dl>
 <dt><code>auto_link</code> <span class="subtitle"><em>optional, default</em>: <code>false</code></span></dt>
 <dd>If true, the package requires a compiler that supports auto-link (e.g. MSVC).</dd>
@@ -252,7 +249,7 @@ pkg_config_path: &lt;list[path]&gt;
 <dt><code>link_flags</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dd>A list of extra flags to pass to the linker when linking with this dependency.</dd>
 </dl>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   my_pkg:
     # ...
     linkage:
@@ -268,7 +265,6 @@ pkg_config_path: &lt;list[path]&gt;
           compile_flags: &lt;shell_args&gt;
           link_flags: &lt;shell_args&gt;
 </code></pre>
-
 <dl>
 <dt><code>pcname</code> <span class="subtitle"><em>optional, default</em>: <code>{my_pkg}</code></span></dt>
 <dd>The name of the pkg-config <code>.pc</code> file, without the extension. If this file
@@ -285,10 +281,9 @@ pkg_config_path: &lt;list[path]&gt;
 <h3 id="path-system-linkage-results">Linkage results<a class="headerlink" href="#path-system-linkage-results" title="Permanent link">§</a></h3>
 <p>In addition to the required linkage results data, <code>path</code>/<code>system</code> linkage
 results can include the following extra data:</p>
-<pre><code class="yaml">generated: &lt;boolean&gt;
+<pre><code class="language-yaml">generated: &lt;boolean&gt;
 auto_link: &lt;boolean&gt;
 </code></pre>
-
 <dl>
 <dt><code>generated</code></dt>
 <dd>If true, the pkg-config <code>.pc</code> files for this dependency were automatically
@@ -300,7 +295,7 @@ auto_link: &lt;boolean&gt;
   building with Microsoft or Borland compilers.)</dd>
 </dl>
 <h2 id="pkg_config">pkg_config<a class="headerlink" href="#pkg_config" title="Permanent link">§</a></h2>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   my_pkg:
     # ...
     linkage:
@@ -308,7 +303,6 @@ auto_link: &lt;boolean&gt;
       pcname: &lt;string&gt;
       pkg_config_path: &lt;list[path]&gt;
 </code></pre>
-
 <dl>
 <dt><code>pcname</code> <span class="subtitle"><em>optional, default</em>: <code>{my_pkg}</code></span></dt>
 <dd>The name of the pkg-config <code>.pc</code> file, without the extension. If
@@ -318,7 +312,7 @@ auto_link: &lt;boolean&gt;
 <dd>The path to look for the pkg-config file in. If not specified, use the default
   path for pkg-config.</dd>
 </dl>
-<pre><code class="yaml">packages:
+<pre><code class="language-yaml">packages:
   my_pkg:
     # ...
     linkage:
@@ -327,7 +321,6 @@ auto_link: &lt;boolean&gt;
         my_submodule:
           pcname: &lt;string&gt;
 </code></pre>
-
 <dl>
 <dt><code>pcname</code> <span class="subtitle"><em>optional, default</em>: <code>{my_pkg}_{my_submodule}</code></span></dt>
 <dd>The name of the pkg-config <code>.pc</code> file for the submodule, without the
@@ -345,8 +338,8 @@ auto_link: &lt;boolean&gt;
                 shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
         </script>
         <script src="../../js/base.js" defer></script>
-        <script src="../../js/version-select.js" defer></script>
         <script src="../../search/main.js" defer></script>
+        <script src="../../js/version-select.js" defer></script>
 
         <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
     <div class="modal-dialog">
