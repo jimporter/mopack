@@ -9,9 +9,6 @@ theme:
   hljs_languages: [yaml]
 extra_css:
   - css/extra.css
-  - css/version-select.css
-extra_javascript:
-  - js/version-select.js
 
 markdown_extensions:
   - admonition
