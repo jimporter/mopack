@@ -8,13 +8,13 @@ from unittest import mock
 from . import MockPackage, through_json, LinkageTest
 from ... import call_pkg_config, test_stage_dir
 
+from mopack.linkages import Linkage
+from mopack.linkages.path_system import PathLinkage, SystemLinkage
 from mopack.options import Options
 from mopack.metadata import Metadata
 from mopack.path import Path
 from mopack.shell import ShellArguments
 from mopack.types import dependency_string, FieldValueError
-from mopack.linkages import Linkage
-from mopack.linkages.path_system import PathLinkage, SystemLinkage
 
 
 def abspath(p):

@@ -7,8 +7,8 @@ from .. import mock_open_log
 
 from mopack.builders import Builder, BuilderOptions
 from mopack.builders.cmake import CMakeBuilder
-from mopack.shell import ShellArguments
 from mopack.origins.sdist import DirectoryPackage
+from mopack.shell import ShellArguments
 from mopack.types import Unset
 
 

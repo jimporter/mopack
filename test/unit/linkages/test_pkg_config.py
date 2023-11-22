@@ -4,10 +4,10 @@ from unittest import mock
 
 from . import MockPackage, through_json, LinkageTest
 
-from mopack.path import Path
-from mopack.types import FieldError
 from mopack.linkages import Linkage
 from mopack.linkages.pkg_config import PkgConfigLinkage
+from mopack.path import Path
+from mopack.types import FieldError
 
 
 class TestPkgConfig(LinkageTest):

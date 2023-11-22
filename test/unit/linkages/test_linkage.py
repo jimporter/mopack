@@ -1,9 +1,9 @@
 from . import MockPackage, LinkageTest
 
 from mopack.types import FieldError
-from mopack.path import Path
 from mopack.linkages import make_linkage
 from mopack.linkages.pkg_config import PkgConfigLinkage
+from mopack.path import Path
 
 
 class TestMakeLinkage(LinkageTest):

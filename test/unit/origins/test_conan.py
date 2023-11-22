@@ -8,10 +8,10 @@ from . import OptionsTest, OriginTest, through_json
 from .. import assert_logging, mock_open_log
 
 from mopack.iterutils import iterate
-from mopack.shell import ShellArguments
 from mopack.origins import Package, PackageOptions
 from mopack.origins.apt import AptPackage
 from mopack.origins.conan import ConanPackage
+from mopack.shell import ShellArguments
 from mopack.types import dependency_string
 
 

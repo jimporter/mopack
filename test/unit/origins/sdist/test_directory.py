@@ -10,10 +10,10 @@ from .... import *
 
 from mopack.builders.bfg9000 import Bfg9000Builder
 from mopack.config import Config
-from mopack.path import Path
 from mopack.origins import Package
 from mopack.origins.apt import AptPackage
 from mopack.origins.sdist import DirectoryPackage
+from mopack.path import Path
 from mopack.types import ConfigurationError, FieldError
 from mopack.yaml_tools import SafeLineLoader, YamlParseError
 
