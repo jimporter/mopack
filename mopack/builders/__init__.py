@@ -3,7 +3,7 @@ import shutil
 from pkg_resources import load_entry_point
 
 from ..base_options import BaseOptions, OptionsHolder
-from ..freezedried import FreezeDried
+from ..freezedried import GenericFreezeDried
 from ..types import FieldValueError, wrap_field_error
 
 
@@ -14,6 +14,7 @@ def _get_builder_type(type, field='type'):
         raise FieldValueError('unknown builder {!r}'.format(type), field)
 
 
+@GenericFreezeDried.fields(skip={'name'})
 class Builder(OptionsHolder):
     _options_type = 'builders'
     _type_field = 'type'
@@ -24,6 +25,12 @@ class Builder(OptionsHolder):
     def __init__(self, pkg):
         super().__init__(pkg._options)
         self.name = pkg.name
+
+    @GenericFreezeDried.rehydrator
+    def rehydrate(cls, config, *, name, **kwargs):
+        result = super(Builder, cls).rehydrate(config, name=name, **kwargs)
+        result.name = name
+        return result
 
     def path_bases(self):
         return ('builddir',)
@@ -44,7 +51,7 @@ class Builder(OptionsHolder):
         return '<{}({!r})>'.format(type(self).__name__, self.name)
 
 
-class BuilderOptions(FreezeDried, BaseOptions):
+class BuilderOptions(GenericFreezeDried, BaseOptions):
     _type_field = 'type'
 
     @property

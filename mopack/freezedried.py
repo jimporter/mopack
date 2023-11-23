@@ -1,3 +1,4 @@
+import functools
 from itertools import chain
 
 from .iterutils import each_attr, merge_dicts
@@ -20,7 +21,6 @@ def auto_dehydrate(value, freezedryer=None):
 
 
 class FreezeDried:
-    _type_field = None
     _rehydrate_fields = {}
     _skip_fields = set()
     _skip_compare_fields = set()
@@ -53,12 +53,8 @@ class FreezeDried:
 
         return wrapper
 
-    def dehydrate(self):
-        if self._type_field is None:
-            result = {}
-        else:
-            result = {self._type_field: getattr(self, self._type_field)}
-
+    def dehydrate(self, *, extra_data={}):
+        result = {**extra_data}
         if hasattr(self, '_version'):
             result['_version'] = self._version
 
@@ -69,14 +65,13 @@ class FreezeDried:
         return result
 
     @classmethod
-    def rehydrate(cls, config, **kwargs):
+    def rehydrate(cls, config, *, _deduced_type=None, **kwargs):
         assert cls != FreezeDried
 
-        if cls._type_field is None:
-            this_type = cls
+        if _deduced_type is not None:
+            this_type = _deduced_type
         else:
-            typename = config.pop(cls._type_field)
-            this_type = cls._get_type(typename)
+            this_type = cls
 
         if '_version' in config:
             version = config.pop('_version')
@@ -103,6 +98,33 @@ class FreezeDried:
 
     def __eq__(self, rhs):
         return self.equal(rhs)
+
+
+def _generic_rehydrator(fn):
+    @functools.wraps(fn)
+    def wrapper(cls, config, _deduced_type=None, **kwargs):
+        if not _deduced_type:
+            _deduced_type = cls._get_type(config.pop(cls._type_field))
+            return _deduced_type.rehydrate(
+                config, _deduced_type=_deduced_type, **kwargs
+            )
+        return fn(cls, config, _deduced_type=_deduced_type, **kwargs)
+    return classmethod(wrapper)
+
+
+class GenericFreezeDried(FreezeDried):
+    _type_field = None
+
+    rehydrator = _generic_rehydrator
+
+    def dehydrate(self):
+        return super().dehydrate(extra_data={
+            self._type_field: getattr(self, self._type_field)
+        })
+
+    @_generic_rehydrator
+    def rehydrate(cls, config, **kwargs):
+        return super(GenericFreezeDried, cls).rehydrate(config, **kwargs)
 
 
 class PrimitiveFreezeDryer:

@@ -9,7 +9,7 @@ from .. import archive, log, types
 from ..builders import Builder, make_builder
 from ..config import ChildConfig
 from ..environment import get_cmd
-from ..freezedried import FreezeDried
+from ..freezedried import GenericFreezeDried
 from ..glob import filter_glob
 from ..log import LogFile
 from ..package_defaults import DefaultResolver
@@ -18,8 +18,8 @@ from ..linkages import make_linkage, Linkage
 from ..yaml_tools import to_parse_error
 
 
-@FreezeDried.fields(rehydrate={'builder': Builder, 'linkage': Linkage},
-                    skip_compare={'pending_linkage'})
+@GenericFreezeDried.fields(rehydrate={'builder': Builder, 'linkage': Linkage},
+                           skip_compare={'pending_linkage'})
 class SDistPackage(Package):
     @staticmethod
     def upgrade(config, version):
@@ -148,7 +148,7 @@ class SDistPackage(Package):
             self.builder.deploy(metadata, self)
 
 
-@FreezeDried.fields(rehydrate={'path': Path})
+@GenericFreezeDried.fields(rehydrate={'path': Path})
 class DirectoryPackage(SDistPackage):
     origin = 'directory'
     _version = 1
@@ -168,7 +168,8 @@ class DirectoryPackage(SDistPackage):
         return self._find_mopack(parent_config, path)
 
 
-@FreezeDried.fields(rehydrate={'path': Path}, skip_compare={'guessed_srcdir'})
+@GenericFreezeDried.fields(rehydrate={'path': Path},
+                           skip_compare={'guessed_srcdir'})
 class TarballPackage(SDistPackage):
     origin = 'tarball'
     _version = 1

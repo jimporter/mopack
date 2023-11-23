@@ -32,7 +32,7 @@ class TestSubmodules(IntegrationTest):
                         'required': True,
                     },
                     path={'base': 'cfgdir', 'path': 'hello-multi-bfg'},
-                    builder=cfg_bfg9000_builder('hello'),
+                    builder=cfg_bfg9000_builder(),
                     linkage=cfg_pkg_config_linkage(
                         pcname=None,
                         submodule_map={
@@ -83,7 +83,7 @@ class TestSubmodulesPath(IntegrationTest):
                         'required': True,
                     },
                     path={'base': 'cfgdir', 'path': 'hello-multi-bfg'},
-                    builder=cfg_bfg9000_builder('hello'),
+                    builder=cfg_bfg9000_builder(),
                     linkage=cfg_path_linkage(
                         include_path=[{'base': 'srcdir', 'path': 'include'}],
                         library_path=[{'base': 'builddir', 'path': ''}],

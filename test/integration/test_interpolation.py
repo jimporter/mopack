@@ -26,7 +26,7 @@ class TestInterpolation(IntegrationTest):
                     'hello', config,
                     path={'base': 'cfgdir', 'path': 'hello-bfg'},
                     builder=cfg_bfg9000_builder(
-                        'hello', extra_args=['--extra']
+                        extra_args=['--extra']
                     ),
                     linkage=cfg_pkg_config_linkage(pcname='hello')
                 )
@@ -50,7 +50,7 @@ class TestInterpolation(IntegrationTest):
                 cfg_directory_pkg(
                     'hello', config,
                     path={'base': 'cfgdir', 'path': 'hello-bfg'},
-                    builder=cfg_bfg9000_builder('hello'),
+                    builder=cfg_bfg9000_builder(),
                     linkage=cfg_pkg_config_linkage(pcname='hello')
                 )
             ],

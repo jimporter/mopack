@@ -2,7 +2,7 @@ import os
 
 from . import Builder
 from .. import types
-from ..freezedried import FreezeDried, ListFreezeDryer
+from ..freezedried import GenericFreezeDried, ListFreezeDryer
 from ..log import LogFile
 from ..path import pushd
 from ..shell import ShellArguments
@@ -13,14 +13,16 @@ _known_install_types = ('prefix', 'exec-prefix', 'bindir', 'libdir',
 CommandsFD = ListFreezeDryer(ShellArguments)
 
 
-@FreezeDried.fields(rehydrate={'build_commands': CommandsFD,
-                               'deploy_commands': CommandsFD})
+@GenericFreezeDried.fields(rehydrate={'build_commands': CommandsFD,
+                                      'deploy_commands': CommandsFD})
 class CustomBuilder(Builder):
     type = 'custom'
-    _version = 1
+    _version = 2
 
     @staticmethod
     def upgrade(config, version):
+        if version == 1:  # pragma: no branch
+            del config['name']
         return config
 
     def __init__(self, pkg, *, build_commands, deploy_commands=None,

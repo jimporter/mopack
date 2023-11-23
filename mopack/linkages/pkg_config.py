@@ -5,7 +5,8 @@ from . import preferred_path_base, Linkage
 from . import submodules as submod
 from .. import types
 from ..environment import get_pkg_config, subprocess_run
-from ..freezedried import DictFreezeDryer, FreezeDried, ListFreezeDryer
+from ..freezedried import (DictFreezeDryer, FreezeDried, GenericFreezeDried,
+                           ListFreezeDryer)
 from ..iterutils import listify
 from ..package_defaults import DefaultResolver
 from ..path import Path
@@ -49,7 +50,7 @@ def _submodule_map(field, value):
     return types.dict_of(types.string, check_item)(field, value)
 
 
-@FreezeDried.fields(rehydrate={
+@GenericFreezeDried.fields(rehydrate={
     'pkg_config_path': ListFreezeDryer(Path),
     'submodule_map': DictFreezeDryer(value_type=_SubmoduleMapping),
 })

@@ -3,7 +3,7 @@ import os.path
 from . import Builder, BuilderOptions
 from .. import types
 from ..environment import get_cmd
-from ..freezedried import FreezeDried
+from ..freezedried import GenericFreezeDried
 from ..log import LogFile
 from ..path import pushd
 from ..shell import ShellArguments
@@ -12,10 +12,10 @@ from ..shell import ShellArguments
 _known_install_types = ('prefix', 'bindir', 'libdir', 'includedir')
 
 
-@FreezeDried.fields(rehydrate={'extra_args': ShellArguments})
+@GenericFreezeDried.fields(rehydrate={'extra_args': ShellArguments})
 class CMakeBuilder(Builder):
     type = 'cmake'
-    _version = 1
+    _version = 2
 
     class Options(BuilderOptions):
         type = 'cmake'
@@ -37,6 +37,8 @@ class CMakeBuilder(Builder):
 
     @staticmethod
     def upgrade(config, version):
+        if version == 1:  # pragma: no branch
+            del config['name']
         return config
 
     def __init__(self, pkg, *, extra_args=None, **kwargs):

@@ -1,6 +1,6 @@
 from unittest import mock, TestCase
 
-from mopack.freezedried import FreezeDried
+from mopack.freezedried import *
 
 
 def _get_type(type):
@@ -9,7 +9,7 @@ def _get_type(type):
     raise TypeError()
 
 
-class Base(FreezeDried):
+class Base(GenericFreezeDried):
     _type_field = 'type'
     _get_type = _get_type
 
@@ -18,7 +18,7 @@ class Derived(Base):
     type = 'derived'
 
 
-class TestFreezeDriedType(TestCase):
+class TestGenericFreezeDriedType(TestCase):
     def test_dehydrate(self):
         config = Derived().dehydrate()
         self.assertEqual(config, {'type': 'derived'})

@@ -153,14 +153,15 @@ class TestCustomBuilder(BuilderTest):
         builder = CustomBuilder(MockPackage('foo', _options=opts),
                                 build_commands=['make'])
         data = through_json(builder.dehydrate())
-        self.assertEqual(builder, Builder.rehydrate(data, _options=opts))
+        self.assertEqual(builder, Builder.rehydrate(data, name='foo',
+                                                    _options=opts))
 
     def test_upgrade(self):
         opts = self.make_options()
-        data = {'type': 'custom', '_version': 0, 'name': 'foo',
+        data = {'type': 'custom', '_version': 1, 'name': 'bar',
                 'build_commands': [], 'deploy_commands': None}
         with mock.patch.object(CustomBuilder, 'upgrade',
                                side_effect=CustomBuilder.upgrade) as m:
-            pkg = Builder.rehydrate(data, _options=opts)
-            self.assertIsInstance(pkg, CustomBuilder)
+            builder = Builder.rehydrate(data, name='foo', _options=opts)
+            self.assertIsInstance(builder, CustomBuilder)
             m.assert_called_once()

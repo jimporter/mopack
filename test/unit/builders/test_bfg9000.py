@@ -100,16 +100,17 @@ class TestBfg9000Builder(BuilderTest):
         builder = Bfg9000Builder(MockPackage('foo', _options=opts),
                                  extra_args='--extra args')
         data = through_json(builder.dehydrate())
-        self.assertEqual(builder, Builder.rehydrate(data, _options=opts))
+        self.assertEqual(builder, Builder.rehydrate(data, name='foo',
+                                                    _options=opts))
 
     def test_upgrade(self):
         opts = self.make_options()
-        data = {'type': 'bfg9000', '_version': 0, 'name': 'foo',
+        data = {'type': 'bfg9000', '_version': 1, 'name': 'bar',
                 'extra_args': []}
         with mock.patch.object(Bfg9000Builder, 'upgrade',
                                side_effect=Bfg9000Builder.upgrade) as m:
-            pkg = Builder.rehydrate(data, _options=opts)
-            self.assertIsInstance(pkg, Bfg9000Builder)
+            builder = Builder.rehydrate(data, name='foo', _options=opts)
+            self.assertIsInstance(builder, Bfg9000Builder)
             m.assert_called_once()
 
 

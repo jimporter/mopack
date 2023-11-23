@@ -6,7 +6,7 @@ from itertools import chain
 from . import BinaryPackage, PackageOptions
 from .. import log, types
 from ..environment import get_cmd
-from ..freezedried import FreezeDried
+from ..freezedried import GenericFreezeDried
 from ..iterutils import uniques
 from ..path import pushd
 from ..shell import ShellArguments
@@ -16,7 +16,7 @@ class ConanPackage(BinaryPackage):
     origin = 'conan'
     _version = 1
 
-    @FreezeDried.fields(rehydrate={'extra_args': ShellArguments})
+    @GenericFreezeDried.fields(rehydrate={'extra_args': ShellArguments})
     class Options(PackageOptions):
         origin = 'conan'
         _version = 1

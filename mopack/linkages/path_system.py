@@ -7,7 +7,8 @@ from . import preferred_path_base, Linkage
 from . import submodules as submod
 from .. import types
 from ..environment import get_pkg_config, subprocess_run
-from ..freezedried import DictFreezeDryer, FreezeDried, ListFreezeDryer
+from ..freezedried import (DictFreezeDryer, FreezeDried, GenericFreezeDried,
+                           ListFreezeDryer)
 from ..iterutils import ismapping, listify, uniques
 from ..package_defaults import DefaultResolver
 from ..path import file_outdated, isfile, Path
@@ -116,7 +117,7 @@ class _PathSubmoduleMapping(FreezeDried):
         }
 
 
-@FreezeDried.fields(rehydrate={
+@GenericFreezeDried.fields(rehydrate={
     'include_path': _PathListFD, 'library_path': _PathListFD,
     'compile_flags': ShellArguments, 'link_flags': ShellArguments,
     'submodule_map': DictFreezeDryer(value_type=_PathSubmoduleMapping),
@@ -424,7 +425,7 @@ class _SystemSubmoduleMapping(_PathSubmoduleMapping):
         return result
 
 
-@FreezeDried.fields(rehydrate={
+@GenericFreezeDried.fields(rehydrate={
     'submodule_map': DictFreezeDryer(value_type=_SystemSubmoduleMapping),
 })
 class SystemLinkage(PathLinkage):

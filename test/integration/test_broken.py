@@ -34,7 +34,7 @@ class TestBroken(IntegrationTest):
                     resolved=False,
                     path={'base': 'cfgdir', 'path': 'broken-bfg.tar.gz'},
                     guessed_srcdir='hello-bfg',
-                    builder=cfg_bfg9000_builder('hello'),
+                    builder=cfg_bfg9000_builder(),
                     linkage=cfg_pkg_config_linkage(pcname='hello')
                 ),
             ],
@@ -76,7 +76,7 @@ class TestBrokenPatch(IntegrationTest):
                     path={'base': 'cfgdir', 'path': 'broken-bfg.tar.gz'},
                     guessed_srcdir='hello-bfg',
                     patch={'base': 'cfgdir', 'path': 'hello-bfg.patch'},
-                    builder=cfg_bfg9000_builder('hello'),
+                    builder=cfg_bfg9000_builder(),
                     linkage=cfg_pkg_config_linkage(pcname='hello')
                 ),
             ],

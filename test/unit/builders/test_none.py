@@ -50,13 +50,14 @@ class TestNoneBuilder(BuilderTest):
         opts = self.make_options()
         builder = NoneBuilder(MockPackage('foo', _options=opts))
         data = through_json(builder.dehydrate())
-        self.assertEqual(builder, Builder.rehydrate(data, _options=opts))
+        self.assertEqual(builder, Builder.rehydrate(data, name='foo',
+                                                    _options=opts))
 
     def test_upgrade(self):
         opts = self.make_options()
-        data = {'type': 'none', '_version': 0, 'name': 'foo'}
+        data = {'type': 'none', '_version': 1, 'name': 'bar'}
         with mock.patch.object(NoneBuilder, 'upgrade',
                                side_effect=NoneBuilder.upgrade) as m:
-            pkg = Builder.rehydrate(data, _options=opts)
-            self.assertIsInstance(pkg, NoneBuilder)
+            builder = Builder.rehydrate(data, name='foo', _options=opts)
+            self.assertIsInstance(builder, NoneBuilder)
             m.assert_called_once()

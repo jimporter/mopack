@@ -40,7 +40,7 @@ class TestDirectory(SDistTest):
                 cfg_directory_pkg(
                     'hello', config,
                     path={'base': 'cfgdir', 'path': 'hello-bfg'},
-                    builder=cfg_bfg9000_builder('hello'),
+                    builder=cfg_bfg9000_builder(),
                     linkage=cfg_pkg_config_linkage(pcname='hello')
                 ),
             ],
@@ -68,7 +68,7 @@ class TestDirectory(SDistTest):
                 cfg_directory_pkg(
                     'hello', config,
                     path={'base': 'cfgdir', 'path': 'hello-bfg'},
-                    builder=cfg_bfg9000_builder('hello'),
+                    builder=cfg_bfg9000_builder(),
                     linkage=cfg_pkg_config_linkage(pcname='hello')
                 ),
             ],
@@ -102,7 +102,7 @@ class TestTarball(SDistTest):
                     'hello', config,
                     path={'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
                     guessed_srcdir='hello-bfg',
-                    builder=cfg_bfg9000_builder('hello'),
+                    builder=cfg_bfg9000_builder(),
                     linkage=cfg_pkg_config_linkage(pcname='hello')
                 ),
             ],
@@ -144,7 +144,7 @@ class TestTarballPatch(SDistTest):
                     path={'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
                     guessed_srcdir='hello-bfg',
                     patch={'base': 'cfgdir', 'path': 'hello-bfg.patch'},
-                    builder=cfg_bfg9000_builder('hello'),
+                    builder=cfg_bfg9000_builder(),
                     linkage=cfg_pkg_config_linkage(pcname='hello')
                 ),
             ],
@@ -188,7 +188,7 @@ class TestGit(SDistTest):
                     'bencodehpp', config,
                     repository='https://github.com/jimporter/bencode.hpp.git',
                     rev=['tag', 'v1.0.1'],
-                    builder=cfg_bfg9000_builder('bencodehpp'),
+                    builder=cfg_bfg9000_builder(),
                     linkage=cfg_pkg_config_linkage(pcname='bencodehpp')
                 ),
             ],

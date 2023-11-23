@@ -29,7 +29,6 @@ class TestCustomBuilder(IntegrationTest):
                     path={'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
                     guessed_srcdir='hello-bfg',
                     builder=cfg_custom_builder(
-                        'hello',
                         build_commands=[
                             ['bfg9000', 'configure',
                              {'base': 'builddir', 'path': ''}],
@@ -72,7 +71,6 @@ class TestCustomBuilderDeploy(IntegrationTest):
                     path={'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
                     guessed_srcdir='hello-bfg',
                     builder=cfg_custom_builder(
-                        'hello',
                         build_commands=[
                             ['bfg9000', 'configure',
                              {'base': 'builddir', 'path': ''},

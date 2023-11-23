@@ -3,10 +3,12 @@ from . import Builder
 
 class NoneBuilder(Builder):
     type = 'none'
-    _version = 1
+    _version = 2
 
     @staticmethod
     def upgrade(config, version):
+        if version == 1:  # pragma: no branch
+            del config['name']
         return config
 
     def path_bases(self):

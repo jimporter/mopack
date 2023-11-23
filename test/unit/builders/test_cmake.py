@@ -103,16 +103,17 @@ class TestCMakeBuilder(BuilderTest):
         builder = CMakeBuilder(MockPackage('foo', _options=opts),
                                extra_args='--extra args')
         data = through_json(builder.dehydrate())
-        self.assertEqual(builder, Builder.rehydrate(data, _options=opts))
+        self.assertEqual(builder, Builder.rehydrate(data, name='foo',
+                                                    _options=opts))
 
     def test_upgrade(self):
         opts = self.make_options()
-        data = {'type': 'cmake', '_version': 0, 'name': 'foo',
+        data = {'type': 'cmake', '_version': 1, 'name': 'bar',
                 'extra_args': []}
         with mock.patch.object(CMakeBuilder, 'upgrade',
                                side_effect=CMakeBuilder.upgrade) as m:
-            pkg = Builder.rehydrate(data, _options=opts)
-            self.assertIsInstance(pkg, CMakeBuilder)
+            builder = Builder.rehydrate(data, name='foo', _options=opts)
+            self.assertIsInstance(builder, CMakeBuilder)
             m.assert_called_once()
 
 

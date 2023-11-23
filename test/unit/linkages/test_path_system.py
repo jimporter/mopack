@@ -816,12 +816,14 @@ class TestPath(LinkageTest):
         pkg = MockPackage('foo', _options=opts)
         linkage = self.linkage_type(pkg)
         data = linkage.dehydrate()
-        self.assertEqual(linkage, Linkage.rehydrate(data, _options=opts))
+        self.assertEqual(linkage, Linkage.rehydrate(data, name=pkg.name,
+                                                    _options=opts))
 
         linkage = self.linkage_type(pkg, compile_flags=['compile'],
                                     link_flags=['link'])
         data = through_json(linkage.dehydrate())
-        self.assertEqual(linkage, Linkage.rehydrate(data, _options=opts))
+        self.assertEqual(linkage, Linkage.rehydrate(data, name=pkg.name,
+                                                    _options=opts))
 
         pkg = MockPackage('foo', srcdir=self.srcdir, builddir=self.builddir,
                           submodules={'names': '*', 'required': False},
@@ -837,7 +839,8 @@ class TestPath(LinkageTest):
             },
         })
         data = through_json(linkage.dehydrate())
-        self.assertEqual(linkage, Linkage.rehydrate(data, _options=opts))
+        self.assertEqual(linkage, Linkage.rehydrate(data, name=pkg.name,
+                                                    _options=opts))
 
     def test_upgrade(self):
         opts = self.make_options()
@@ -845,7 +848,7 @@ class TestPath(LinkageTest):
                 'library_path': [], 'compile_flags': [], 'link_flags': []}
         with mock.patch.object(self.linkage_type, 'upgrade',
                                side_effect=self.linkage_type.upgrade) as m:
-            pkg = Linkage.rehydrate(data, _options=opts)
+            pkg = Linkage.rehydrate(data, name='foo', _options=opts)
             self.assertIsInstance(pkg, self.linkage_type)
             m.assert_called_once()
 

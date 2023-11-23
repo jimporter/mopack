@@ -1,6 +1,7 @@
 from pkg_resources import load_entry_point
 
 from ..base_options import OptionsHolder
+from ..freezedried import GenericFreezeDried
 from ..types import FieldValueError, dependency_string, wrap_field_error
 
 
@@ -20,6 +21,7 @@ def preferred_path_base(preferred, path_bases):
         return None
 
 
+@GenericFreezeDried.fields(skip={'name'})
 class Linkage(OptionsHolder):
     _default_genus = 'linkage'
     _type_field = 'type'
@@ -27,12 +29,19 @@ class Linkage(OptionsHolder):
 
     def __init__(self, pkg, *, inherit_defaults=False):
         super().__init__(pkg._options)
+        self.name = pkg.name
+
+    @classmethod
+    def rehydrate(cls, config, *, name, **kwargs):
+        result = super(Linkage, cls).rehydrate(config, name=name, **kwargs)
+        result.name = name
+        return result
 
     def version(self, metadata, pkg):
         raise NotImplementedError('Linkage.version not implemented')
 
     def _linkage(self, pkg, submodules, **kwargs):
-        return {'name': dependency_string(pkg.name, submodules),
+        return {'name': dependency_string(self.name, submodules),
                 'type': self.type, **kwargs}
 
     def get_linkage(self, metadata, pkg, submodules):

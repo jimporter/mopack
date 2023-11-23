@@ -4,7 +4,7 @@ from pkg_resources import load_entry_point
 
 from .. import types
 from ..base_options import BaseOptions, OptionsHolder
-from ..freezedried import FreezeDried
+from ..freezedried import GenericFreezeDried
 from ..iterutils import ismapping, listify
 from ..package_defaults import DefaultResolver
 from ..types import FieldKeyError, FieldValueError, try_load_config
@@ -36,7 +36,7 @@ def submodules_type(field, value):
     return _submodule_dict(field, value)
 
 
-@FreezeDried.fields(skip_compare={'parent', 'config_file', 'resolved'})
+@GenericFreezeDried.fields(skip_compare={'parent', 'config_file', 'resolved'})
 class Package(OptionsHolder):
     _options_type = 'origins'
     _default_genus = 'origin'
@@ -55,6 +55,12 @@ class Package(OptionsHolder):
 
         T = types.TypeCheck(locals(), self._expr_symbols)
         T.deploy(types.boolean, dest_field='should_deploy')
+
+    @GenericFreezeDried.rehydrator
+    def rehydrate(cls, config, **kwargs):
+        return super(Package, cls).rehydrate(
+            config, name=config['name'], **kwargs
+        )
 
     @property
     def _expr_symbols(self):
@@ -120,7 +126,7 @@ class Package(OptionsHolder):
         return '<{}({!r})>'.format(type(self).__name__, self.name)
 
 
-@FreezeDried.fields(rehydrate={'linkage': Linkage})
+@GenericFreezeDried.fields(rehydrate={'linkage': Linkage})
 class BinaryPackage(Package):
     # TODO: Remove `usage` after v0.2 is released.
     def __init__(self, name, *, submodules=types.Unset, linkage=types.Unset,
@@ -151,7 +157,7 @@ class BinaryPackage(Package):
         return {}
 
 
-class PackageOptions(FreezeDried, BaseOptions):
+class PackageOptions(GenericFreezeDried, BaseOptions):
     _type_field = 'origin'
 
     @property

@@ -166,29 +166,26 @@ def cfg_system_pkg(name, config_file, *, linkage, **kwargs):
     return result
 
 
-def cfg_bfg9000_builder(name, *, extra_args=[]):
+def cfg_bfg9000_builder(*, extra_args=[]):
     return {
         'type': 'bfg9000',
-        '_version': 1,
-        'name': name,
+        '_version': 2,
         'extra_args': extra_args,
     }
 
 
-def cfg_cmake_builder(name, *, extra_args=[]):
+def cfg_cmake_builder(*, extra_args=[]):
     return {
         'type': 'cmake',
-        '_version': 1,
-        'name': name,
+        '_version': 2,
         'extra_args': extra_args,
     }
 
 
-def cfg_custom_builder(name, *, build_commands=[], deploy_commands=[]):
+def cfg_custom_builder(*, build_commands=[], deploy_commands=[]):
     return {
         'type': 'custom',
-        '_version': 1,
-        'name': name,
+        '_version': 2,
         'build_commands': build_commands,
         'deploy_commands': deploy_commands,
     }
