@@ -124,5 +124,5 @@ class PkgConfigLinkage(Linkage):
             if i.pcname:
                 pcnames.append(i.pcname)
 
-        return self._linkage(pkg, submodules, pcnames=pcnames,
+        return self._linkage(submodules, pcnames=pcnames,
                              pkg_config_path=pkgconfpath)

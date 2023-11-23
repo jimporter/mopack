@@ -40,7 +40,7 @@ class Linkage(OptionsHolder):
     def version(self, metadata, pkg):
         raise NotImplementedError('Linkage.version not implemented')
 
-    def _linkage(self, pkg, submodules, **kwargs):
+    def _linkage(self, submodules, **kwargs):
         return {'name': dependency_string(self.name, submodules),
                 'type': self.type, **kwargs}
 

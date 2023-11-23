@@ -407,7 +407,7 @@ class PathLinkage(Linkage):
             pkgconfpath = data['pkg_config_path']
 
         return self._linkage(
-            pkg, submodules, generated=True, auto_link=auto_link,
+            submodules, generated=True, auto_link=auto_link,
             pcnames=pcnames, pkg_config_path=uniques(pkgconfpath)
         )
 
@@ -475,7 +475,7 @@ class SystemLinkage(PathLinkage):
                            stdout=subprocess.DEVNULL,
                            stderr=subprocess.DEVNULL,
                            env=env)
-            return self._linkage(pkg, submodules, pcnames=pcnames,
+            return self._linkage(submodules, pcnames=pcnames,
                                  pkg_config_path=[])
         except (OSError, subprocess.CalledProcessError):
             return super().get_linkage(metadata, pkg, submodules)
