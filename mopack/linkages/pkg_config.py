@@ -118,8 +118,9 @@ class PkgConfigLinkage(Linkage):
         pkgconfpath = [i.string(**path_values) for i in self.pkg_config_path]
 
         if submodules and self.submodule_map:
-            path_bases = pkg.path_bases(builder=True)
-            symbols = self._options.expr_symbols.augment(paths=path_bases)
+            symbols = self._options.expr_symbols.augment(
+                path_bases=pkg.path_bases(builder=True)
+            )
             mappings = [self._get_submodule_mapping(symbols, i)
                         for i in submodules]
         else:
