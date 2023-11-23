@@ -45,8 +45,9 @@ class CMakeBuilder(Builder):
     def __init__(self, pkg, *, extra_args=None, **kwargs):
         super().__init__(pkg, **kwargs)
 
-        path_bases = pkg.path_bases(builder=self)
-        symbols = self._options.expr_symbols.augment(paths=path_bases)
+        symbols = self._options.expr_symbols.augment_path_bases(
+            *pkg.path_bases(builder=self)
+        )
         T = types.TypeCheck(locals(), symbols)
         T.extra_args(types.shell_args(none_ok=True))
 

@@ -1,7 +1,7 @@
 import subprocess
 from collections import ChainMap
 
-from . import preferred_path_base, Linkage
+from . import Linkage
 from . import submodules as submod
 from .. import types
 from ..environment import get_pkg_config, subprocess_run
@@ -28,7 +28,7 @@ class _SubmoduleMapping(FreezeDried):
             return types.placeholder_fill(other, submod.placeholder,
                                           submodule_name)
 
-        symbols = symbols.augment(symbols=submod.expr_symbols)
+        symbols = symbols.augment_symbols(**submod.expr_symbols)
 
         result = type(self).__new__(type(self))
         T = types.TypeCheck(self.__dict__, symbols, dest=result)
@@ -68,11 +68,12 @@ class PkgConfigLinkage(Linkage):
                  submodule_map=types.Unset, inherit_defaults=False):
         super().__init__(pkg, inherit_defaults=inherit_defaults)
 
-        path_bases = pkg.path_bases(builder=True)
-        symbols = self._options.expr_symbols.augment(paths=path_bases)
+        symbols = self._options.expr_symbols.augment_path_bases(
+            *pkg.path_bases(builder=True)
+        )
         pkg_default = DefaultResolver(self, symbols, inherit_defaults,
                                       pkg.name)
-        buildbase = preferred_path_base('builddir', path_bases)
+        buildbase = symbols.best_path_base('builddir')
         if pkg.submodules and pkg.submodules['required']:
             # If submodules are required, default to an empty .pc file, since
             # we should usually have .pc files for the submodules that handle
@@ -118,8 +119,8 @@ class PkgConfigLinkage(Linkage):
         pkgconfpath = [i.string(**path_values) for i in self.pkg_config_path]
 
         if submodules and self.submodule_map:
-            symbols = self._options.expr_symbols.augment(
-                path_bases=pkg.path_bases(builder=True)
+            symbols = self._options.expr_symbols.augment_path_bases(
+                *pkg.path_bases(builder=True)
             )
             mappings = [self._get_submodule_mapping(symbols, i)
                         for i in submodules]

@@ -76,15 +76,19 @@ class TestCommonOptions(TestCase):
         opts = CommonOptions()
         opts.finalize()
 
-        self.assertIs(opts.expr_symbols.augment(), opts.expr_symbols)
-        self.assertEqual(
-            opts.expr_symbols.augment(paths=['cfgdir']),
-            {**opts.expr_symbols, 'cfgdir': placeholder(Path('', 'cfgdir'))}
-        )
-        self.assertEqual(
-            opts.expr_symbols.augment(symbols={'foo': 'bar'}),
-            {**opts.expr_symbols, 'foo': 'bar'}
-        )
+        symbols = opts.expr_symbols.augment_symbols(foo='bar')
+        self.assertEqual(symbols, {**opts.expr_symbols, 'foo': 'bar'})
+        self.assertEqual(symbols.path_bases, ())
+
+    def test_augment_path_bases(self):
+        opts = CommonOptions()
+        opts.finalize()
+
+        symbols = opts.expr_symbols.augment_path_bases('cfgdir')
+        self.assertEqual(symbols, {
+            **opts.expr_symbols, 'cfgdir': placeholder(Path('', 'cfgdir')),
+        })
+        self.assertEqual(symbols.path_bases, ('cfgdir',))
 
     def test_rehydrate(self):
         opts = CommonOptions()

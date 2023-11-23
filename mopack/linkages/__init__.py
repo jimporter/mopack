@@ -12,15 +12,6 @@ def _get_linkage_type(type, field='type'):
         raise FieldValueError('unknown linkage {!r}'.format(type), field)
 
 
-def preferred_path_base(preferred, path_bases):
-    if preferred in path_bases:
-        return preferred
-    elif len(path_bases) > 0:
-        return path_bases[0]
-    else:
-        return None
-
-
 @GenericFreezeDried.fields(skip={'name'})
 class Linkage(OptionsHolder):
     _default_genus = 'linkage'

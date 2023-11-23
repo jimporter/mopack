@@ -64,7 +64,7 @@ class Package(OptionsHolder):
 
     @property
     def _expr_symbols(self):
-        return self._options.expr_symbols.augment(paths=['cfgdir'])
+        return self._options.expr_symbols.augment_path_bases('cfgdir')
 
     @property
     def config_dir(self):
