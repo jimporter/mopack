@@ -12,14 +12,34 @@ from .origins import make_package_options, PackageOptions
 
 
 class ExprSymbols(dict):
-    def augment(self, *, paths=[], symbols={}):
-        if not paths and not symbols:
-            return self
-        return ExprSymbols(
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__path_bases = ()
+
+    def augment_symbols(self, **symbols):
+        result = ExprSymbols(**self, **symbols)
+        result.__path_bases = self.__path_bases
+        return result
+
+    @property
+    def path_bases(self):
+        return self.__path_bases
+
+    def best_path_base(self, preferred):
+        if preferred in self.__path_bases:
+            return preferred
+        elif len(self.__path_bases) > 0:
+            return self.__path_bases[0]
+        else:
+            return None
+
+    def augment_path_bases(self, *path_bases):
+        result = ExprSymbols(
             **self,
-            **({i: placeholder(Path('', i)) for i in paths}),
-            **symbols
+            **{i: placeholder(Path('', i)) for i in path_bases},
         )
+        result.__path_bases = self.__path_bases + path_bases
+        return result
 
 
 class CommonOptions(FreezeDried, BaseOptions):

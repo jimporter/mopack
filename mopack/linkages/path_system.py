@@ -3,7 +3,7 @@ import re
 import subprocess
 from itertools import chain
 
-from . import preferred_path_base, Linkage
+from . import Linkage
 from . import submodules as submod
 from .. import types
 from ..environment import get_pkg_config, subprocess_run
@@ -73,9 +73,9 @@ _PathListFD = ListFreezeDryer(Path)
 
 
 class _PathSubmoduleMapping(FreezeDried):
-    def __init__(self, symbols, path_bases, *, dependencies=None,
-                 include_path=None, library_path=None, headers=None,
-                 libraries=None, compile_flags=None, link_flags=None):
+    def __init__(self, symbols, *, dependencies=None, include_path=None,
+                 library_path=None, headers=None, libraries=None,
+                 compile_flags=None, link_flags=None):
         # Since we need to delay evaluating symbols until we know what the
         # selected submodule is, just store these values unevaluated. We'll
         # evaluate them later during `mopack linkage` via the fill() function.
@@ -88,24 +88,24 @@ class _PathSubmoduleMapping(FreezeDried):
         self.link_flags = link_flags
 
         # Just check that we can fill submodule values correctly.
-        self.fill(symbols, path_bases, 'SUBMODULE')
+        self.fill(symbols, 'SUBMODULE')
 
-    def fill(self, symbols, path_bases, submodule_name):
+    def fill(self, symbols, submodule_name):
         def P(other):
             return types.placeholder_fill(other, submod.placeholder,
                                           submodule_name)
 
-        symbols = symbols.augment(symbols=submod.expr_symbols)
+        symbols = symbols.augment_symbols(**submod.expr_symbols)
 
         result = type(self).__new__(type(self))
         T = types.TypeCheck(self.__dict__, symbols, dest=result)
-        for field, check in self._fields(path_bases).items():
+        for field, check in self._fields(symbols).items():
             T(field, P(check))
         return result
 
-    def _fields(self, path_bases):
-        srcbase = preferred_path_base('srcdir', path_bases)
-        buildbase = preferred_path_base('builddir', path_bases)
+    def _fields(self, symbols):
+        srcbase = symbols.best_path_base('srcdir')
+        buildbase = symbols.best_path_base('builddir')
         return {
             'dependencies':  _list_of_dependencies,
             'include_path':  _list_of_paths(srcbase),
@@ -138,12 +138,13 @@ class PathLinkage(Linkage):
                  inherit_defaults=False):
         super().__init__(pkg, inherit_defaults=inherit_defaults)
 
-        path_bases = pkg.path_bases(builder=True)
-        symbols = self._options.expr_symbols.augment(paths=path_bases)
+        symbols = self._options.expr_symbols.augment_path_bases(
+            *pkg.path_bases(builder=True)
+        )
         pkg_default = DefaultResolver(self, symbols, inherit_defaults,
                                       pkg.name)
-        srcbase = preferred_path_base('srcdir', path_bases)
-        buildbase = preferred_path_base('builddir', path_bases)
+        srcbase = symbols.best_path_base('srcdir')
+        buildbase = symbols.best_path_base('builddir')
 
         T = types.TypeCheck(locals(), symbols)
         # XXX: Maybe have the compiler tell *us* if it supports auto-linking,
@@ -176,17 +177,17 @@ class PathLinkage(Linkage):
 
         if pkg.submodules:
             T.submodule_map(pkg_default(
-                types.maybe(self._submodule_map(symbols, path_bases)),
+                types.maybe(self._submodule_map(symbols)),
                 default=pkg.name + '_$submodule',
                 extra_symbols=submod.expr_symbols,
                 evaluate=False
             ), evaluate=False)
 
     @classmethod
-    def _submodule_map(cls, symbols, path_bases):
+    def _submodule_map(cls, symbols):
         def check_item(field, value):
             with types.wrap_field_error(field):
-                return cls.SubmoduleMapping(symbols, path_bases, **value)
+                return cls.SubmoduleMapping(symbols, **value)
 
         def check(field, value):
             try:
@@ -200,12 +201,12 @@ class PathLinkage(Linkage):
 
         return check
 
-    def _get_submodule_mapping(self, symbols, path_bases, submodule):
+    def _get_submodule_mapping(self, symbols, submodule):
         try:
             mapping = self.submodule_map[submodule]
         except KeyError:
             mapping = self.submodule_map['*']
-        return mapping.fill(symbols, path_bases, submodule)
+        return mapping.fill(symbols, submodule)
 
     @staticmethod
     def _link_library(lib):
@@ -389,12 +390,13 @@ class PathLinkage(Linkage):
                 pkgconfpath.extend(data['pkg_config_path'])
                 version = data['version']
 
-            path_bases = pkg.path_bases(builder=True)
-            symbols = self._options.expr_symbols.augment(paths=path_bases)
+            symbols = self._options.expr_symbols.augment_path_bases(
+                *pkg.path_bases(builder=True)
+            )
 
             pcnames = []
             for i in submodules:
-                mapping = self._get_submodule_mapping(symbols, path_bases, i)
+                mapping = self._get_submodule_mapping(symbols, i)
                 data = self._write_pkg_config(metadata, pkg, i, version,
                                               requires, mappings + [mapping])
                 auto_link |= data['auto_link']
@@ -435,8 +437,9 @@ class SystemLinkage(PathLinkage):
     def __init__(self, pkg, *, pcname=Unset, inherit_defaults=False, **kwargs):
         super().__init__(pkg, inherit_defaults=inherit_defaults, **kwargs)
 
-        path_bases = pkg.path_bases(builder=True)
-        symbols = self._options.expr_symbols.augment(paths=path_bases)
+        symbols = self._options.expr_symbols.augment_path_bases(
+            *pkg.path_bases(builder=True)
+        )
         pkg_default = DefaultResolver(self, symbols, inherit_defaults,
                                       pkg.name)
 
@@ -459,10 +462,11 @@ class SystemLinkage(PathLinkage):
     def get_linkage(self, metadata, pkg, submodules):
         if submodules and self.submodule_map:
             pcnames = [] if pkg.submodules['required'] else [self.pcname]
-            path_bases = pkg.path_bases(builder=True)
-            symbols = self._options.expr_symbols.augment(paths=path_bases)
+            symbols = self._options.expr_symbols.augment_path_bases(
+                *pkg.path_bases(builder=True)
+            )
             for i in submodules:
-                mapping = self._get_submodule_mapping(symbols, path_bases, i)
+                mapping = self._get_submodule_mapping(symbols, i)
                 if mapping.pcname:
                     pcnames.append(mapping.pcname)
         else:
