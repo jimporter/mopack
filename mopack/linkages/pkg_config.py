@@ -14,40 +14,42 @@ from ..shell import join_paths
 
 
 class _SubmoduleMapping(FreezeDried):
-    def __init__(self, *, pcname=None):
-        # Just check that we can fill submodule values correctly.
-        self._fill(locals())
-
+    def __init__(self, symbols, *, pcname=None):
         # Since we need to delay evaluating symbols until we know what the
         # selected submodule is, just store these values unevaluated. We'll
         # evaluate them later during `mopack linkage` via the fill() function.
         self.pcname = pcname
 
-    def _fill(self, context, submodule_name='SUBMODULE'):
+        # Just check that we can fill submodule values correctly.
+        self.fill(symbols, 'SUBMODULE')
+
+    def fill(self, symbols, submodule_name):
         def P(other):
             return types.placeholder_fill(other, submod.placeholder,
                                           submodule_name)
 
+        symbols = symbols.augment(symbols=submod.expr_symbols)
+
         result = type(self).__new__(type(self))
-        T = types.TypeCheck(context, submod.expr_symbols, dest=result)
+        T = types.TypeCheck(self.__dict__, symbols, dest=result)
         T.pcname(P(types.maybe(types.string)))
         return result
 
-    def fill(self, submodule_name):
-        return self._fill(self.__dict__, submodule_name)
 
-
-def _submodule_map(field, value):
+def _submodule_map(symbols):
     def check_item(field, value):
         with types.wrap_field_error(field):
-            return _SubmoduleMapping(**value)
+            return _SubmoduleMapping(symbols, **value)
 
-    try:
-        value = {'*': {'pcname': types.placeholder_string(field, value)}}
-    except types.FieldError:
-        pass
+    def check(field, value):
+        try:
+            value = {'*': {'pcname': types.placeholder_string(field, value)}}
+        except types.FieldError:
+            pass
 
-    return types.dict_of(types.string, check_item)(field, value)
+        return types.dict_of(types.string, check_item)(field, value)
+
+    return check
 
 
 @GenericFreezeDried.fields(rehydrate={
@@ -86,7 +88,7 @@ class PkgConfigLinkage(Linkage):
 
         if pkg.submodules:
             T.submodule_map(pkg_default(
-                types.maybe(_submodule_map),
+                types.maybe(_submodule_map(symbols)),
                 default=pkg.name + '_$submodule',
                 extra_symbols=submod.expr_symbols,
                 evaluate=False
@@ -104,18 +106,22 @@ class PkgConfigLinkage(Linkage):
             stdout=subprocess.PIPE, universal_newlines=True, env=env
         ).stdout.strip()
 
-    def _get_submodule_mapping(self, submodule):
+    def _get_submodule_mapping(self, symbols, submodule):
         try:
-            return self.submodule_map[submodule].fill(submodule)
+            mapping = self.submodule_map[submodule]
         except KeyError:
-            return self.submodule_map['*'].fill(submodule)
+            mapping = self.submodule_map['*']
+        return mapping.fill(symbols, submodule)
 
     def get_linkage(self, metadata, pkg, submodules):
         path_values = pkg.path_values(metadata, builder=True)
         pkgconfpath = [i.string(**path_values) for i in self.pkg_config_path]
 
         if submodules and self.submodule_map:
-            mappings = [self._get_submodule_mapping(i) for i in submodules]
+            path_bases = pkg.path_bases(builder=True)
+            symbols = self._options.expr_symbols.augment(paths=path_bases)
+            mappings = [self._get_submodule_mapping(symbols, i)
+                        for i in submodules]
         else:
             mappings = []
 

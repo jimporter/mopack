@@ -7,6 +7,7 @@ from . import MockPackage, through_json, LinkageTest
 from mopack.linkages import Linkage
 from mopack.linkages.pkg_config import PkgConfigLinkage
 from mopack.path import Path
+from mopack.platforms import platform_name
 from mopack.types import FieldError
 
 
@@ -144,6 +145,19 @@ class TestPkgConfig(LinkageTest):
         self.assertEqual(
             linkage.get_linkage(self.metadata, pkg, ['sub']),
             {'name': 'foo[sub]', 'type': 'pkg_config', 'pcnames': ['sub'],
+             'pkg_config_path': [self.pkgconfdir]}
+        )
+
+        linkage = self.make_linkage('foo', submodule_map={
+            '*': {'pcname': '${{ submodule + "_" + target_platform }}'}
+        }, submodules=submodules_required)
+        self.assertEqual(linkage.pcname, None)
+        self.assertEqual(linkage.pkg_config_path,
+                         [Path('pkgconfig', 'builddir')])
+        self.assertEqual(
+            linkage.get_linkage(self.metadata, pkg, ['sub']),
+            {'name': 'foo[sub]', 'type': 'pkg_config',
+             'pcnames': ['sub_' + platform_name()],
              'pkg_config_path': [self.pkgconfdir]}
         )
 
