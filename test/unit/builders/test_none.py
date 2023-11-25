@@ -5,11 +5,13 @@ from . import BuilderTest, MockPackage, through_json
 
 from mopack.builders import Builder
 from mopack.builders.none import NoneBuilder
+from mopack.options import ExprSymbols
 from mopack.origins.sdist import DirectoryPackage
 
 
 class TestNoneBuilder(BuilderTest):
     builder_type = NoneBuilder
+    symbols = ExprSymbols(variable='foo')
 
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         return os.path.join(self.srcdir, pkgconfig)
@@ -44,7 +46,8 @@ class TestNoneBuilder(BuilderTest):
 
     def test_rehydrate(self):
         opts = self.make_options()
-        builder = NoneBuilder(MockPackage('foo', _options=opts))
+        builder = NoneBuilder(MockPackage('foo', _options=opts),
+                              _symbols=self.symbols)
         data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(data, name='foo',
                                                     _options=opts))

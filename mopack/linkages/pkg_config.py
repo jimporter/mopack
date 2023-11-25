@@ -65,12 +65,10 @@ class PkgConfigLinkage(Linkage):
         return config
 
     def __init__(self, pkg, *, pcname=types.Unset, pkg_config_path='pkgconfig',
-                 submodule_map=types.Unset, inherit_defaults=False):
-        super().__init__(pkg, inherit_defaults=inherit_defaults)
+                 submodule_map=types.Unset, inherit_defaults=False, **kwargs):
+        super().__init__(pkg, inherit_defaults=inherit_defaults, **kwargs)
 
-        symbols = self._options.expr_symbols.augment_path_bases(
-            *pkg.path_bases(builder=True)
-        )
+        symbols = self._expr_symbols
         pkg_default = DefaultResolver(self, symbols, inherit_defaults,
                                       pkg.name)
         buildbase = symbols.best_path_base('builddir')
@@ -119,10 +117,7 @@ class PkgConfigLinkage(Linkage):
         pkgconfpath = [i.string(**path_values) for i in self.pkg_config_path]
 
         if submodules and self.submodule_map:
-            symbols = self._options.expr_symbols.augment_path_bases(
-                *pkg.path_bases(builder=True)
-            )
-            mappings = [self._get_submodule_mapping(symbols, i)
+            mappings = [self._get_submodule_mapping(self._expr_symbols, i)
                         for i in submodules]
         else:
             mappings = []

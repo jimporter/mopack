@@ -813,17 +813,20 @@ class TestPath(LinkageTest):
 
     def test_rehydrate(self):
         opts = self.make_options()
+        symbols = opts.expr_symbols.augment_path_bases('builddir')
         pkg = MockPackage('foo', _options=opts)
-        linkage = self.linkage_type(pkg)
+        linkage = self.linkage_type(pkg, _symbols=symbols)
         data = linkage.dehydrate()
-        self.assertEqual(linkage, Linkage.rehydrate(data, name=pkg.name,
-                                                    _options=opts))
+        self.assertEqual(linkage, Linkage.rehydrate(
+            data, name=pkg.name, _options=opts, _symbols=symbols
+        ))
 
         linkage = self.linkage_type(pkg, compile_flags=['compile'],
-                                    link_flags=['link'])
+                                    link_flags=['link'], _symbols=symbols)
         data = through_json(linkage.dehydrate())
-        self.assertEqual(linkage, Linkage.rehydrate(data, name=pkg.name,
-                                                    _options=opts))
+        self.assertEqual(linkage, Linkage.rehydrate(
+            data, name=pkg.name, _options=opts, _symbols=symbols
+        ))
 
         pkg = MockPackage('foo', srcdir=self.srcdir, builddir=self.builddir,
                           submodules={'names': '*', 'required': False},
@@ -837,19 +840,22 @@ class TestPath(LinkageTest):
                 'compile_flags': 'compile',
                 'link_flags': 'link',
             },
-        })
+        }, _symbols=symbols)
         data = through_json(linkage.dehydrate())
-        self.assertEqual(linkage, Linkage.rehydrate(data, name=pkg.name,
-                                                    _options=opts))
+        self.assertEqual(linkage, Linkage.rehydrate(
+            data, name=pkg.name, _options=opts, _symbols=symbols
+        ))
 
     def test_upgrade(self):
         opts = self.make_options()
+        symbols = opts.expr_symbols.augment_path_bases('builddir')
         data = {'type': self.type, '_version': 0, 'include_path': [],
                 'library_path': [], 'compile_flags': [], 'link_flags': []}
         with mock.patch.object(self.linkage_type, 'upgrade',
                                side_effect=self.linkage_type.upgrade) as m:
-            pkg = Linkage.rehydrate(data, name='foo', _options=opts)
-            self.assertIsInstance(pkg, self.linkage_type)
+            linkage = Linkage.rehydrate(data, name='foo', _options=opts,
+                                        _symbols=symbols)
+            self.assertIsInstance(linkage, self.linkage_type)
             m.assert_called_once()
 
     def test_invalid_linkage(self):

@@ -12,20 +12,22 @@ def _get_linkage_type(type, field='type'):
         raise FieldValueError('unknown linkage {!r}'.format(type), field)
 
 
-@GenericFreezeDried.fields(skip={'name'})
+@GenericFreezeDried.fields(skip={'name', '_expr_symbols'})
 class Linkage(OptionsHolder):
     _default_genus = 'linkage'
     _type_field = 'type'
     _get_type = _get_linkage_type
 
-    def __init__(self, pkg, *, inherit_defaults=False):
+    def __init__(self, pkg, *, inherit_defaults=False, _symbols):
         super().__init__(pkg._options)
         self.name = pkg.name
+        self._expr_symbols = _symbols
 
     @GenericFreezeDried.rehydrator
-    def rehydrate(cls, config, rehydrate_parent, *, name, **kwargs):
+    def rehydrate(cls, config, rehydrate_parent, *, name, _symbols, **kwargs):
         result = rehydrate_parent(Linkage, config, name=name, **kwargs)
         result.name = name
+        result._expr_symbols = _symbols
         return result
 
     def version(self, metadata, pkg):

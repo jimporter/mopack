@@ -42,13 +42,11 @@ class CMakeBuilder(Builder):
             del config['name']
         return config
 
-    def __init__(self, pkg, *, extra_args=None, **kwargs):
+    def __init__(self, pkg, *, extra_args=None, _symbols, **kwargs):
         super().__init__(pkg, **kwargs)
 
-        symbols = self._options.expr_symbols.augment_path_bases(
-            *pkg.path_bases(builder=self)
-        )
-        T = types.TypeCheck(locals(), symbols)
+        _symbols = _symbols.augment_path_bases(*self.path_bases())
+        T = types.TypeCheck(locals(), _symbols)
         T.extra_args(types.shell_args(none_ok=True))
 
     def _toolchain_args(self, toolchain):

@@ -7,6 +7,7 @@ from .. import mock_open_log
 
 from mopack.builders import Builder, BuilderOptions
 from mopack.builders.bfg9000 import Bfg9000Builder
+from mopack.options import ExprSymbols
 from mopack.origins.sdist import DirectoryPackage
 from mopack.shell import ShellArguments
 from mopack.types import Unset
@@ -14,6 +15,7 @@ from mopack.types import Unset
 
 class TestBfg9000Builder(BuilderTest):
     builder_type = Bfg9000Builder
+    symbols = ExprSymbols(variable='foo')
 
     def check_build(self, pkg, extra_args=[]):
         builddir = os.path.join(self.pkgdir, 'build', pkg.name)
@@ -93,8 +95,10 @@ class TestBfg9000Builder(BuilderTest):
 
     def test_rehydrate(self):
         opts = self.make_options()
-        builder = Bfg9000Builder(MockPackage('foo', _options=opts),
-                                 extra_args='--extra args')
+        builder = Bfg9000Builder(
+            MockPackage('foo', _options=opts), extra_args='--extra args',
+            _symbols=self.symbols
+        )
         data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(data, name='foo',
                                                     _options=opts))
@@ -111,7 +115,7 @@ class TestBfg9000Builder(BuilderTest):
 
 
 class TestBfg9000Options(OptionsTest):
-    symbols = {'variable': 'foo'}
+    symbols = ExprSymbols(variable='foo')
 
     def test_default(self):
         opts = Bfg9000Builder.Options()

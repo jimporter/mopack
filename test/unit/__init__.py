@@ -83,11 +83,22 @@ class MockPackage:
         self._srcdir = srcdir
         self._options = _options
 
-    def path_bases(self, *, builder=None):
-        if builder is True:
-            builder = self.builder
-        return ( (('srcdir',) if self._srcdir else ()) +
-                 (builder.path_bases() if builder else ()) )
+    @property
+    def _builder_expr_symbols(self):
+        if self._srcdir:
+            return self._options.expr_symbols.augment_path_bases('srcdir')
+        raise AttributeError()
+
+    @property
+    def _linkage_expr_symbols(self):
+        if self._srcdir:
+            symbols = self._builder_expr_symbols
+        else:
+            symbols = self._options.expr_symbols
+
+        if self.builder:
+            symbols = symbols.augment_path_bases(*self.builder.path_bases())
+        return symbols
 
     def path_values(self, metadata):
         return {

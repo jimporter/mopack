@@ -14,11 +14,11 @@ from ..glob import filter_glob
 from ..log import LogFile
 from ..package_defaults import DefaultResolver
 from ..path import Path, pushd
-from ..linkages import make_linkage, Linkage
+from ..linkages import make_linkage
 from ..yaml_tools import to_parse_error
 
 
-@GenericFreezeDried.fields(rehydrate={'builder': Builder, 'linkage': Linkage},
+@GenericFreezeDried.fields(rehydrate={'builder': Builder},
                            skip_compare={'pending_linkage'})
 class SDistPackage(Package):
     @staticmethod
@@ -50,7 +50,7 @@ class SDistPackage(Package):
             pkg_default = DefaultResolver(self, symbols, inherit_defaults,
                                           name)
             T.submodules(pkg_default(submodules_type))
-            self.builder = make_builder(self, build)
+            self.builder = self._make_builder(build)
             self.linkage = self._make_linkage(linkage)
 
     def dehydrate(self):
@@ -59,6 +59,15 @@ class SDistPackage(Package):
                 'cannot dehydrate until `pending_linkage` is finalized'
             )
         return super().dehydrate()
+
+    @property
+    def _builder_expr_symbols(self):
+        return self._options.expr_symbols.augment_path_bases('srcdir')
+
+    @property
+    def _linkage_expr_symbols(self):
+        path_bases = self.builder.path_bases()
+        return self._builder_expr_symbols.augment_path_bases(*path_bases)
 
     @property
     def needs_dependencies(self):
@@ -72,18 +81,17 @@ class SDistPackage(Package):
             )
         return [self.builder.type]
 
-    def path_bases(self, *, builder=None):
-        if builder is True:
-            builder = self.builder
-        return ('srcdir',) + (builder.path_bases() if builder else ())
-
     def path_values(self, metadata):
         return {'srcdir': self._srcdir(metadata),
                 **self.builder.path_values(metadata)}
 
+    def _make_builder(self, config, **kwargs):
+        return make_builder(self, config, _symbols=self._builder_expr_symbols,
+                            **kwargs)
+
     def _make_linkage(self, linkage, **kwargs):
         return make_linkage(self, self.builder.filter_linkage(linkage),
-                            **kwargs)
+                            _symbols=self._linkage_expr_symbols, **kwargs)
 
     def _find_mopack(self, parent_config, srcdir):
         config = ChildConfig([srcdir], parent_config=parent_config,
@@ -107,7 +115,7 @@ class SDistPackage(Package):
         context = 'while constructing package {!r}'.format(self.name)
         with to_parse_error(export.config_file):
             with types.try_load_config(export.data, context, self.origin):
-                self.builder = make_builder(self, export.build)
+                self.builder = self._make_builder(export.build)
 
         if not self.pending_linkage and export.linkage:
             with to_parse_error(export.config_file):

@@ -43,7 +43,7 @@ class SDistTestCase(OriginTest):
                              linkage)
 
     def make_builder(self, builder_type, pkg, **kwargs):
-        return builder_type(pkg, **kwargs)
+        return builder_type(pkg, _symbols=pkg._builder_expr_symbols, **kwargs)
 
 
 def mock_open_after_first(*args, **kwargs):

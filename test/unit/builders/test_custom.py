@@ -7,6 +7,7 @@ from .. import mock_open_log
 
 from mopack.builders import Builder
 from mopack.builders.custom import CustomBuilder
+from mopack.options import ExprSymbols
 from mopack.origins.sdist import DirectoryPackage
 from mopack.path import Path
 from mopack.shell import ShellArguments
@@ -14,6 +15,7 @@ from mopack.shell import ShellArguments
 
 class TestCustomBuilder(BuilderTest):
     builder_type = CustomBuilder
+    symbols = ExprSymbols(variable='foo')
 
     def check_build(self, pkg, build_commands=None):
         if build_commands is None:
@@ -148,7 +150,7 @@ class TestCustomBuilder(BuilderTest):
     def test_rehydrate(self):
         opts = self.make_options()
         builder = CustomBuilder(MockPackage('foo', _options=opts),
-                                build_commands=['make'])
+                                build_commands=['make'], _symbols=self.symbols)
         data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(data, name='foo',
                                                     _options=opts))
