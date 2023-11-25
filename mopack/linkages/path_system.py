@@ -318,11 +318,11 @@ class PathLinkage(Linkage):
         auto_link = self.auto_link
         deps_requires = []
         deps_paths = [pkgconfdir]
-        for dep_pkg, dep_sub in chain_attr('dependencies'):
+        for dep_name, dep_subs in chain_attr('dependencies'):
             # XXX: Cache linkage so we don't repeatedly process the same
             # package.
-            pkg = metadata.get_package(dep_pkg)
-            linkage = pkg.get_linkage(metadata, dep_sub)
+            dep_pkg = metadata.get_package(dep_name)
+            linkage = dep_pkg.get_linkage(metadata, dep_subs)
 
             auto_link |= linkage.get('auto_link', False)
             deps_requires.extend(linkage.get('pcnames', []))
