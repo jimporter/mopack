@@ -7,7 +7,9 @@ from ... import assert_logging
 from .... import *
 
 from mopack.builders.bfg9000 import Bfg9000Builder
+from mopack.builders.none import NoneBuilder
 from mopack.config import Config
+from mopack.linkages.path_system import SystemLinkage
 from mopack.origins import Package
 from mopack.origins.apt import AptPackage
 from mopack.origins.sdist import GitPackage
@@ -578,15 +580,15 @@ class TestGit(SDistTestCase):
             'origin': 'git', '_version': 0, 'name': 'foo',
             'repository': 'repo', 'tag': None, 'branch': None, 'commit': None,
             'srcdir': '.',
-            'build': {
-                'type': 'none', '_version': 0,
-                'linkage': {'type': 'system', '_version': 0},
-            },
+            'builder': {'type': 'none', '_version': 0},
+            'linkage': {'type': 'system', '_version': 0},
         }
         with mock.patch.object(GitPackage, 'upgrade',
                                side_effect=GitPackage.upgrade) as m:
             pkg = Package.rehydrate(data, _options=opts)
             self.assertIsInstance(pkg, GitPackage)
+            self.assertIsInstance(pkg.builder, NoneBuilder)
+            self.assertIsInstance(pkg.linkage, SystemLinkage)
             m.assert_called_once()
 
     def test_builder_types(self):

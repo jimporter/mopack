@@ -7,7 +7,9 @@ from ... import assert_logging
 from .... import *
 
 from mopack.builders.bfg9000 import Bfg9000Builder
+from mopack.builders.none import NoneBuilder
 from mopack.config import Config
+from mopack.linkages.path_system import SystemLinkage
 from mopack.origins import Package
 from mopack.origins.apt import AptPackage
 from mopack.origins.sdist import TarballPackage
@@ -557,15 +559,15 @@ class TestTarball(SDistTestCase):
             'origin': 'tarball', '_version': 0, 'name': 'foo',
             'path': {'base': 'cfgdir', 'path': 'foo.tar.gz'}, 'url': None,
             'files': [], 'srcdir': '.', 'patch': None,
-            'build': {
-                'type': 'none', '_version': 0,
-                'linkage': {'type': 'system', '_version': 0},
-            },
+            'builder': {'type': 'none', '_version': 0},
+            'linkage': {'type': 'system', '_version': 0},
         }
         with mock.patch.object(TarballPackage, 'upgrade',
                                side_effect=TarballPackage.upgrade) as m:
             pkg = Package.rehydrate(data, _options=opts)
             self.assertIsInstance(pkg, TarballPackage)
+            self.assertIsInstance(pkg.builder, NoneBuilder)
+            self.assertIsInstance(pkg.linkage, SystemLinkage)
             m.assert_called_once()
 
     def test_builder_types(self):

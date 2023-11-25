@@ -9,7 +9,9 @@ from ... import assert_logging, mock_open_data
 from .... import *
 
 from mopack.builders.bfg9000 import Bfg9000Builder
+from mopack.builders.none import NoneBuilder
 from mopack.config import Config
+from mopack.linkages.path_system import SystemLinkage
 from mopack.origins import Package
 from mopack.origins.apt import AptPackage
 from mopack.origins.sdist import DirectoryPackage
@@ -495,15 +497,15 @@ class TestDirectory(SDistTestCase):
         data = {
             'origin': 'directory', '_version': 0, 'name': 'foo',
             'path': {'base': 'cfgdir', 'path': '.'},
-            'build': {
-                'type': None, '_version': 0,
-                'linkage': {'type': 'system', '_version': 0},
-            },
+            'builder': {'type': 'none', '_version': 0},
+            'linkage': {'type': 'system', '_version': 0},
         }
         with mock.patch.object(DirectoryPackage, 'upgrade',
                                side_effect=DirectoryPackage.upgrade) as m:
             pkg = Package.rehydrate(data, _options=opts)
             self.assertIsInstance(pkg, DirectoryPackage)
+            self.assertIsInstance(pkg.builder, NoneBuilder)
+            self.assertIsInstance(pkg.linkage, SystemLinkage)
             m.assert_called_once()
 
     def test_builder_types(self):
