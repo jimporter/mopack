@@ -57,9 +57,9 @@ class Package(OptionsHolder):
         T.deploy(types.boolean, dest_field='should_deploy')
 
     @GenericFreezeDried.rehydrator
-    def rehydrate(cls, config, **kwargs):
-        return super(Package, cls).rehydrate(
-            config, name=config['name'], **kwargs
+    def rehydrate(cls, config, rehydrate_parent, **kwargs):
+        return rehydrate_parent(
+            Package, config, name=config['name'], **kwargs
         )
 
     @property

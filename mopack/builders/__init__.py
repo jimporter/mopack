@@ -27,8 +27,8 @@ class Builder(OptionsHolder):
         self.name = pkg.name
 
     @GenericFreezeDried.rehydrator
-    def rehydrate(cls, config, *, name, **kwargs):
-        result = super(Builder, cls).rehydrate(config, name=name, **kwargs)
+    def rehydrate(cls, config, rehydrate_parent, *, name, **kwargs):
+        result = rehydrate_parent(Builder, config, name=name, **kwargs)
         result.name = name
         return result
 

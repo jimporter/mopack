@@ -15,9 +15,9 @@ class OptionsHolder(GenericFreezeDried):
         self._options = options
 
     @GenericFreezeDried.rehydrator
-    def rehydrate(cls, config, *, _options, **kwargs):
-        result = super(OptionsHolder, cls).rehydrate(
-            config, _options=_options, **kwargs
+    def rehydrate(cls, config, rehydrate_parent, *, _options, **kwargs):
+        result = rehydrate_parent(
+            OptionsHolder, config, _options=_options, **kwargs
         )
         result._options = _options
         return result

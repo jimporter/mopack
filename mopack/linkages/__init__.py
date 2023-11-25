@@ -31,9 +31,9 @@ class Linkage(OptionsHolder):
         super().__init__(pkg._options)
         self.name = pkg.name
 
-    @classmethod
-    def rehydrate(cls, config, *, name, **kwargs):
-        result = super(Linkage, cls).rehydrate(config, name=name, **kwargs)
+    @GenericFreezeDried.rehydrator
+    def rehydrate(cls, config, rehydrate_parent, *, name, **kwargs):
+        result = rehydrate_parent(Linkage, config, name=name, **kwargs)
         result.name = name
         return result
 

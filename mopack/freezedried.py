@@ -65,26 +65,21 @@ class FreezeDried:
         return result
 
     @classmethod
-    def rehydrate(cls, config, *, _deduced_type=None, **kwargs):
+    def rehydrate(cls, config, **kwargs):
         assert cls != FreezeDried
-
-        if _deduced_type is not None:
-            this_type = _deduced_type
-        else:
-            this_type = cls
 
         if '_version' in config:
             version = config.pop('_version')
-            if version < this_type._version:
-                config = this_type.upgrade(config, version)
-            elif version > this_type._version:
+            if version < cls._version:
+                config = cls.upgrade(config, version)
+            elif version > cls._version:
                 raise TypeError('saved version exceeds expected version')
 
-        result = this_type.__new__(this_type)
+        result = cls.__new__(cls)
 
         for k, v in config.items():
-            if k in this_type._rehydrate_fields and v is not None:
-                v = this_type._rehydrate_fields[k].rehydrate(v, **kwargs)
+            if k in cls._rehydrate_fields and v is not None:
+                v = cls._rehydrate_fields[k].rehydrate(v, **kwargs)
             setattr(result, k, v)
 
         return result
@@ -102,13 +97,22 @@ class FreezeDried:
 
 def _generic_rehydrator(fn):
     @functools.wraps(fn)
-    def wrapper(cls, config, _deduced_type=None, **kwargs):
-        if not _deduced_type:
-            _deduced_type = cls._get_type(config.pop(cls._type_field))
-            return _deduced_type.rehydrate(
-                config, _deduced_type=_deduced_type, **kwargs
+    def wrapper(cls, config, _found=False, **kwargs):
+        # First, find the most-specific type, and call its `rehydrate` method.
+        if not _found:
+            deduced_type = cls._get_type(config.pop(cls._type_field))
+            return deduced_type.rehydrate(
+                config, _found=True, **kwargs
             )
-        return fn(cls, config, _deduced_type=_deduced_type, **kwargs)
+
+        # Now, call the wrapped function, and provide it a helper function to
+        # call the parent's `rehydrate` method correctly.
+        def rehydrate_parent(parent_cls, config, **kwargs):
+            return super(parent_cls, cls).rehydrate.__wrapped__(
+                cls, config, rehydrate_parent, **kwargs
+            )
+        return fn(cls, config, rehydrate_parent, **kwargs)
+
     return classmethod(wrapper)
 
 
@@ -123,7 +127,7 @@ class GenericFreezeDried(FreezeDried):
         })
 
     @_generic_rehydrator
-    def rehydrate(cls, config, **kwargs):
+    def rehydrate(cls, config, rehydrate_parent, **kwargs):
         return super(GenericFreezeDried, cls).rehydrate(config, **kwargs)
 
 
