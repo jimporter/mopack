@@ -244,24 +244,29 @@ class TestPkgConfig(LinkageTest):
 
     def test_rehydrate(self):
         opts = self.make_options()
+        symbols = opts.expr_symbols.augment_path_bases('builddir')
         pkg = MockPackage('foo', srcdir=self.srcdir, builddir=self.builddir,
                           _options=opts)
-        linkage = PkgConfigLinkage(pkg)
+        linkage = PkgConfigLinkage(pkg, _symbols=symbols)
         data = through_json(linkage.dehydrate())
-        self.assertEqual(linkage, Linkage.rehydrate(data, name=pkg.name,
-                                                    _options=opts))
+        self.assertEqual(linkage, Linkage.rehydrate(
+            data, name=pkg.name, _options=opts, _symbols=symbols
+        ))
 
-        linkage = PkgConfigLinkage(pkg, pcname='foopc')
+        linkage = PkgConfigLinkage(pkg, pcname='foopc', _symbols=symbols)
         data = through_json(linkage.dehydrate())
-        self.assertEqual(linkage, Linkage.rehydrate(data, name=pkg.name,
-                                                    _options=opts))
+        self.assertEqual(linkage, Linkage.rehydrate(
+            data, name=pkg.name, _options=opts, _symbols=symbols
+        ))
 
     def test_upgrade(self):
         opts = self.make_options()
+        symbols = opts.expr_symbols.augment_path_bases('builddir')
         data = {'type': 'pkg_config', '_version': 0, 'pcname': 'foo'}
         with mock.patch.object(PkgConfigLinkage, 'upgrade',
                                side_effect=PkgConfigLinkage.upgrade) as m:
-            pkg = Linkage.rehydrate(data, name='foo', _options=opts)
+            pkg = Linkage.rehydrate(data, name='foo', _options=opts,
+                                    _symbols=symbols)
             self.assertIsInstance(pkg, PkgConfigLinkage)
             m.assert_called_once()
 

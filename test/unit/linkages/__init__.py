@@ -27,4 +27,4 @@ class LinkageTest(OptionsTest):
             pkg = MockPackage(pkg, srcdir=self.srcdir, builddir=self.builddir,
                               submodules=submodules, _options=options)
 
-        return linkage_type(pkg, **kwargs)
+        return linkage_type(pkg, _symbols=pkg._linkage_expr_symbols, **kwargs)

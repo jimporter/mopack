@@ -56,6 +56,13 @@ class ConanPackage(BinaryPackage):
         value_type = types.one_of(types.string, types.boolean, desc='a value')
         T.options(types.maybe(types.dict_of(types.string, value_type), {}))
 
+    @property
+    def _linkage_expr_symbols(self):
+        return self._options.expr_symbols.augment_path_bases('builddir')
+
+    def path_bases(self, *, builder=None):
+        return ('builddir',) if builder else ()
+
     @staticmethod
     def _installdir(metadata):
         return os.path.join(metadata.pkgdir, 'conan')
@@ -72,9 +79,6 @@ class ConanPackage(BinaryPackage):
     @property
     def remote_name(self):
         return self.remote.split('/')[0]
-
-    def path_bases(self, *, builder=None):
-        return ('builddir',) if builder else ()
 
     def path_values(self, metadata):
         return {'builddir': self._installdir(metadata)}

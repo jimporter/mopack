@@ -36,7 +36,8 @@ def submodules_type(field, value):
     return _submodule_dict(field, value)
 
 
-@GenericFreezeDried.fields(skip_compare={'parent', 'config_file', 'resolved'})
+@GenericFreezeDried.fields(rehydrate={'linkage': Linkage},
+                           skip_compare={'parent', 'config_file', 'resolved'})
 class Package(OptionsHolder):
     _options_type = 'origins'
     _default_genus = 'origin'
@@ -58,13 +59,22 @@ class Package(OptionsHolder):
 
     @GenericFreezeDried.rehydrator
     def rehydrate(cls, config, rehydrate_parent, **kwargs):
-        return rehydrate_parent(
-            Package, config, name=config['name'], **kwargs
+        kwargs['name'] = config['name']
+        linkage_cfg = config.pop('linkage')
+
+        pkg = rehydrate_parent(Package, config, **kwargs)
+        pkg.linkage = Linkage.rehydrate(
+            linkage_cfg, _symbols=pkg._linkage_expr_symbols, **kwargs
         )
+        return pkg
 
     @property
     def _expr_symbols(self):
         return self._options.expr_symbols.augment_path_bases('cfgdir')
+
+    @property
+    def _linkage_expr_symbols(self):
+        return self._options.expr_symbols
 
     @property
     def config_dir(self):
@@ -104,9 +114,6 @@ class Package(OptionsHolder):
     def builder_types(self):
         return []
 
-    def path_bases(self, *, builder=None):
-        return ()
-
     def path_values(self, metadata):
         return {}
 
@@ -132,7 +139,6 @@ class Package(OptionsHolder):
         return '<{}({!r})>'.format(type(self).__name__, self.name)
 
 
-@GenericFreezeDried.fields(rehydrate={'linkage': Linkage})
 class BinaryPackage(Package):
     # TODO: Remove `usage` after v0.2 is released.
     def __init__(self, name, *, submodules=types.Unset, linkage=types.Unset,
@@ -154,7 +160,8 @@ class BinaryPackage(Package):
         T = types.TypeCheck(locals(), symbols)
         T.submodules(pkg_default(submodules_type))
 
-        self.linkage = make_linkage(self, linkage, field=_linkage_field)
+        self.linkage = make_linkage(self, linkage, field=_linkage_field,
+                                    _symbols=self._linkage_expr_symbols)
 
 
 class PackageOptions(GenericFreezeDried, BaseOptions):

@@ -44,5 +44,6 @@ class BuilderTest(OptionsTest):
             name, builder_type, common_options=common_options,
             this_options=this_options, deploy_dirs=deploy_dirs
         )
-        pkg.builder = builder_type(pkg, **kwargs)
+        pkg.builder = builder_type(pkg, _symbols=pkg._builder_expr_symbols,
+                                   **kwargs)
         return pkg

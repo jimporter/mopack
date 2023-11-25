@@ -135,12 +135,10 @@ class PathLinkage(Linkage):
                  dependencies=Unset, include_path=Unset, library_path=Unset,
                  headers=Unset, libraries=Unset, compile_flags=Unset,
                  link_flags=Unset, submodule_map=Unset,
-                 inherit_defaults=False):
-        super().__init__(pkg, inherit_defaults=inherit_defaults)
+                 inherit_defaults=False, **kwargs):
+        super().__init__(pkg, inherit_defaults=inherit_defaults, **kwargs)
 
-        symbols = self._options.expr_symbols.augment_path_bases(
-            *pkg.path_bases(builder=True)
-        )
+        symbols = self._expr_symbols
         pkg_default = DefaultResolver(self, symbols, inherit_defaults,
                                       pkg.name)
         srcbase = symbols.best_path_base('srcdir')
@@ -390,13 +388,9 @@ class PathLinkage(Linkage):
                 pkgconfpath.extend(data['pkg_config_path'])
                 version = data['version']
 
-            symbols = self._options.expr_symbols.augment_path_bases(
-                *pkg.path_bases(builder=True)
-            )
-
             pcnames = []
             for i in submodules:
-                mapping = self._get_submodule_mapping(symbols, i)
+                mapping = self._get_submodule_mapping(self._expr_symbols, i)
                 data = self._write_pkg_config(metadata, pkg, i, version,
                                               requires, mappings + [mapping])
                 auto_link |= data['auto_link']
@@ -437,9 +431,7 @@ class SystemLinkage(PathLinkage):
     def __init__(self, pkg, *, pcname=Unset, inherit_defaults=False, **kwargs):
         super().__init__(pkg, inherit_defaults=inherit_defaults, **kwargs)
 
-        symbols = self._options.expr_symbols.augment_path_bases(
-            *pkg.path_bases(builder=True)
-        )
+        symbols = self._expr_symbols
         pkg_default = DefaultResolver(self, symbols, inherit_defaults,
                                       pkg.name)
 
@@ -462,11 +454,8 @@ class SystemLinkage(PathLinkage):
     def get_linkage(self, metadata, pkg, submodules):
         if submodules and self.submodule_map:
             pcnames = [] if pkg.submodules['required'] else [self.pcname]
-            symbols = self._options.expr_symbols.augment_path_bases(
-                *pkg.path_bases(builder=True)
-            )
             for i in submodules:
-                mapping = self._get_submodule_mapping(symbols, i)
+                mapping = self._get_submodule_mapping(self._expr_symbols, i)
                 if mapping.pcname:
                     pcnames.append(mapping.pcname)
         else:

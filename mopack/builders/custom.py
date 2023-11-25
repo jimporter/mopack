@@ -11,6 +11,7 @@ _known_install_types = ('prefix', 'exec-prefix', 'bindir', 'libdir',
                         'includedir')
 
 CommandsFD = ListFreezeDryer(ShellArguments)
+_cmds_type = types.maybe(types.list_of(types.shell_args()), default=[])
 
 
 @GenericFreezeDried.fields(rehydrate={'build_commands': CommandsFD,
@@ -27,17 +28,13 @@ class CustomBuilder(Builder):
         return config
 
     def __init__(self, pkg, *, build_commands, deploy_commands=None,
-                 **kwargs):
+                 _symbols, **kwargs):
         super().__init__(pkg, **kwargs)
 
-        symbols = self._options.expr_symbols.augment_path_bases(
-            *pkg.path_bases(builder=self)
-        )
-        cmds_type = types.maybe(types.list_of(types.shell_args()), default=[])
-
-        T = types.TypeCheck(locals(), symbols)
-        T.build_commands(cmds_type)
-        T.deploy_commands(cmds_type)
+        _symbols = _symbols.augment_path_bases(*self.path_bases())
+        T = types.TypeCheck(locals(), _symbols)
+        T.build_commands(_cmds_type)
+        T.deploy_commands(_cmds_type)
 
     def _execute(self, logfile, commands, path_values):
         for line in commands:

@@ -7,6 +7,7 @@ from .. import mock_open_log
 
 from mopack.builders import Builder, BuilderOptions
 from mopack.builders.cmake import CMakeBuilder
+from mopack.options import ExprSymbols
 from mopack.origins.sdist import DirectoryPackage
 from mopack.shell import ShellArguments
 from mopack.types import Unset
@@ -14,6 +15,7 @@ from mopack.types import Unset
 
 class TestCMakeBuilder(BuilderTest):
     builder_type = CMakeBuilder
+    symbols = ExprSymbols(variable='foo')
 
     def check_build(self, pkg, extra_args=[]):
         with mock_open_log() as mopen, \
@@ -96,8 +98,10 @@ class TestCMakeBuilder(BuilderTest):
 
     def test_rehydrate(self):
         opts = self.make_options()
-        builder = CMakeBuilder(MockPackage('foo', _options=opts),
-                               extra_args='--extra args')
+        builder = CMakeBuilder(
+            MockPackage('foo', _options=opts), extra_args='--extra args',
+            _symbols=self.symbols
+        )
         data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(data, name='foo',
                                                     _options=opts))
@@ -114,7 +118,7 @@ class TestCMakeBuilder(BuilderTest):
 
 
 class TestCMakeOptions(OptionsTest):
-    symbols = {'variable': 'foo'}
+    symbols = ExprSymbols(variable='foo')
 
     def test_default(self):
         opts = CMakeBuilder.Options()
