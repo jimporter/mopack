@@ -15,20 +15,18 @@ from mopack.shell import ShellArguments
 class TestCustomBuilder(BuilderTest):
     builder_type = CustomBuilder
 
-    def check_build(self, builder, build_commands=None, *, pkg=None):
-        if pkg is None:
-            pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
+    def check_build(self, pkg, build_commands=None):
         if build_commands is None:
-            builddir = os.path.join(self.pkgdir, 'build', builder.name)
+            builddir = os.path.join(self.pkgdir, 'build', pkg.name)
             build_commands = [i.fill(srcdir=self.srcdir, builddir=builddir)
-                              for i in builder.build_commands]
+                              for i in pkg.builder.build_commands]
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.custom.pushd'), \
              mock.patch('subprocess.run') as mcall:
-            builder.build(self.metadata, pkg)
+            pkg.builder.build(self.metadata, pkg)
             mopen.assert_called_with(os.path.join(
-                self.pkgdir, 'logs', 'foo.log'
+                self.pkgdir, 'logs', pkg.name + '.log'
             ), 'a')
             for line in build_commands:
                 mcall.assert_any_call(
@@ -37,62 +35,61 @@ class TestCustomBuilder(BuilderTest):
                 )
 
     def test_basic(self):
-        builder = self.make_builder('foo', build_commands=[
+        pkg = self.make_package_and_builder('foo', build_commands=[
             'configure', 'make',
         ])
-        self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.build_commands, [
+        self.assertEqual(pkg.builder.name, 'foo')
+        self.assertEqual(pkg.builder.build_commands, [
             ShellArguments(['configure']),
             ShellArguments(['make']),
         ])
-        self.assertEqual(builder.deploy_commands, [])
-        self.check_build(builder)
+        self.assertEqual(pkg.builder.deploy_commands, [])
+        self.check_build(pkg)
 
     def test_build_list(self):
-        builder = self.make_builder('foo', build_commands=[
+        pkg = self.make_package_and_builder('foo', build_commands=[
             ['configure', '--foo'], ['make', '-j2']
         ])
-        self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.build_commands, [
+        self.assertEqual(pkg.builder.name, 'foo')
+        self.assertEqual(pkg.builder.build_commands, [
             ShellArguments(['configure', '--foo']),
             ShellArguments(['make', '-j2']),
         ])
-        self.assertEqual(builder.deploy_commands, [])
-        self.check_build(builder)
+        self.assertEqual(pkg.builder.deploy_commands, [])
+        self.check_build(pkg)
 
     def test_path_objects(self):
-        builder = self.make_builder('foo', build_commands=[
+        pkg = self.make_package_and_builder('foo', build_commands=[
             'configure $srcdir/build',
             ['make', '-C', '$builddir'],
         ])
-        self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.build_commands, [
+        self.assertEqual(pkg.builder.name, 'foo')
+        self.assertEqual(pkg.builder.build_commands, [
             ShellArguments(['configure', (Path('', 'srcdir'), '/build')]),
             ShellArguments(['make', '-C', Path('', 'builddir')]),
         ])
-        self.assertEqual(builder.deploy_commands, [])
-        self.check_build(builder, build_commands=[
+        self.assertEqual(pkg.builder.deploy_commands, [])
+        self.check_build(pkg, build_commands=[
             ['configure', self.srcdir + '/build'],
             ['make', '-C', os.path.join(self.pkgdir, 'build', 'foo')],
         ])
 
     def test_deploy(self):
-        pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
-        builder = self.make_builder(pkg, build_commands=['make'],
-                                    deploy_commands=['make install'])
-        self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.build_commands, [
+        pkg = self.make_package_and_builder('foo', build_commands=['make'],
+                                            deploy_commands=['make install'])
+        self.assertEqual(pkg.builder.name, 'foo')
+        self.assertEqual(pkg.builder.build_commands, [
             ShellArguments(['make']),
         ])
-        self.assertEqual(builder.deploy_commands, [
+        self.assertEqual(pkg.builder.deploy_commands, [
             ShellArguments(['make', 'install']),
         ])
-        self.check_build(builder)
+        self.check_build(pkg)
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.custom.pushd'), \
              mock.patch('subprocess.run') as mcall:
-            builder.deploy(self.metadata, pkg)
+            pkg.builder.deploy(self.metadata, pkg)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'deploy', 'foo.log'
             ), 'a')
@@ -103,13 +100,13 @@ class TestCustomBuilder(BuilderTest):
             )
 
     def test_cd(self):
-        builder = self.make_builder('foo', build_commands=[
+        pkg = self.make_package_and_builder('foo', build_commands=[
             'configure $srcdir/build',
             'cd $builddir',
             'make',
         ])
-        self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.build_commands, [
+        self.assertEqual(pkg.builder.name, 'foo')
+        self.assertEqual(pkg.builder.build_commands, [
             ShellArguments(['configure', (Path('', 'srcdir'), '/build')]),
             ShellArguments(['cd', Path('', 'builddir')]),
             ShellArguments(['make']),
@@ -117,28 +114,28 @@ class TestCustomBuilder(BuilderTest):
 
         with mock.patch('os.chdir') as mcd:
             builddir = os.path.join(self.pkgdir, 'build', 'foo')
-            self.check_build(builder, build_commands=[
+            self.check_build(pkg, build_commands=[
                 ['configure', self.srcdir + '/build'],
                 ['make'],
             ])
             mcd.assert_called_once_with(builddir)
 
     def test_cd_invalid(self):
-        pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
-        builder = self.make_builder(pkg, build_commands=['cd foo bar'])
+        pkg = self.make_package_and_builder('foo', build_commands=[
+            'cd foo bar',
+        ])
 
         with mock_open_log(), \
              mock.patch('mopack.builders.custom.pushd'), \
              self.assertRaises(RuntimeError):
-            builder.build(self.metadata, pkg)
+            pkg.builder.build(self.metadata, pkg)
 
     def test_clean(self):
-        pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
-        builder = self.make_builder(pkg, build_commands=['make'])
+        pkg = self.make_package_and_builder('foo', build_commands=['make'])
         builddir = os.path.join(self.pkgdir, 'build', 'foo')
 
         with mock.patch('shutil.rmtree') as mrmtree:
-            builder.clean(self.metadata, pkg)
+            pkg.builder.clean(self.metadata, pkg)
             mrmtree.assert_called_once_with(builddir, ignore_errors=True)
 
     def test_linkage(self):

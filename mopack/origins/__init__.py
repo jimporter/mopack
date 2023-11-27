@@ -104,6 +104,12 @@ class Package(OptionsHolder):
     def builder_types(self):
         return []
 
+    def path_bases(self, *, builder=None):
+        return ()
+
+    def path_values(self, metadata):
+        return {}
+
     def clean_pre(self, metadata, new_package, quiet=False):
         return False
 
@@ -149,12 +155,6 @@ class BinaryPackage(Package):
         T.submodules(pkg_default(submodules_type))
 
         self.linkage = make_linkage(self, linkage, field=_linkage_field)
-
-    def path_bases(self, *, builder=None):
-        return ()
-
-    def path_values(self, metadata, *, builder=None):
-        return {}
 
 
 class PackageOptions(GenericFreezeDried, BaseOptions):

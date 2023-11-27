@@ -63,7 +63,7 @@ class CMakeBuilder(Builder):
         return args
 
     def build(self, metadata, pkg):
-        path_values = pkg.path_values(metadata, builder=self)
+        path_values = pkg.path_values(metadata)
 
         env = self._common_options.env
         cmake = get_cmd(env, 'CMAKE', 'cmake')
@@ -80,7 +80,7 @@ class CMakeBuilder(Builder):
                 logfile.check_call(ninja, env=env)
 
     def deploy(self, metadata, pkg):
-        path_values = pkg.path_values(metadata, builder=self)
+        path_values = pkg.path_values(metadata)
 
         env = self._common_options.env
         ninja = get_cmd(env, 'NINJA', 'ninja')

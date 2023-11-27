@@ -15,15 +15,13 @@ from mopack.types import Unset
 class TestCMakeBuilder(BuilderTest):
     builder_type = CMakeBuilder
 
-    def check_build(self, builder, extra_args=[], *, pkg=None):
-        if pkg is None:
-            pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
+    def check_build(self, pkg, extra_args=[]):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.cmake.pushd'), \
              mock.patch('subprocess.run') as mcall:
-            builder.build(self.metadata, pkg)
+            pkg.builder.build(self.metadata, pkg)
             mopen.assert_called_with(os.path.join(
-                self.pkgdir, 'logs', 'foo.log'
+                self.pkgdir, 'logs', pkg.name + '.log'
             ), 'a')
             mcall.assert_any_call(
                 ['cmake', self.srcdir, '-G', 'Ninja'] + extra_args,
@@ -36,16 +34,15 @@ class TestCMakeBuilder(BuilderTest):
             )
 
     def test_basic(self):
-        pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
-        builder = self.make_builder(pkg)
-        self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.extra_args, ShellArguments())
-        self.check_build(builder)
+        pkg = self.make_package_and_builder('foo')
+        self.assertEqual(pkg.builder.name, 'foo')
+        self.assertEqual(pkg.builder.extra_args, ShellArguments())
+        self.check_build(pkg)
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.cmake.pushd'), \
              mock.patch('subprocess.run') as mcall:
-            builder.deploy(self.metadata, pkg)
+            pkg.builder.deploy(self.metadata, pkg)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'deploy', 'foo.log'
             ), 'a')
@@ -56,39 +53,38 @@ class TestCMakeBuilder(BuilderTest):
             )
 
     def test_extra_args(self):
-        builder = self.make_builder('foo', extra_args='--extra args')
-        self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.extra_args,
+        pkg = self.make_package_and_builder('foo', extra_args='--extra args')
+        self.assertEqual(pkg.builder.name, 'foo')
+        self.assertEqual(pkg.builder.extra_args,
                          ShellArguments(['--extra', 'args']))
-        self.check_build(builder, extra_args=['--extra', 'args'])
+        self.check_build(pkg, extra_args=['--extra', 'args'])
 
     def test_toolchain(self):
-        builder = self.make_builder(
-            'foo', this_options={'toolchain': 'toolchain.cmake'}
-        )
-        self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.extra_args, ShellArguments())
-        self.check_build(builder, extra_args=[
+        pkg = self.make_package_and_builder('foo', this_options={
+            'toolchain': 'toolchain.cmake',
+        })
+        self.assertEqual(pkg.builder.name, 'foo')
+        self.assertEqual(pkg.builder.extra_args, ShellArguments())
+        self.check_build(pkg, extra_args=[
             '-DCMAKE_TOOLCHAIN_FILE=' +
             os.path.join(self.config_dir, 'toolchain.cmake')
         ])
 
     def test_deploy_dirs(self):
         deploy_dirs = {'prefix': '/usr/local', 'goofy': '/foo/bar'}
-        builder = self.make_builder('foo', deploy_dirs=deploy_dirs)
-        self.assertEqual(builder.name, 'foo')
-        self.assertEqual(builder.extra_args, ShellArguments())
-        self.check_build(builder, extra_args=[
+        pkg = self.make_package_and_builder('foo', deploy_dirs=deploy_dirs)
+        self.assertEqual(pkg.builder.name, 'foo')
+        self.assertEqual(pkg.builder.extra_args, ShellArguments())
+        self.check_build(pkg, extra_args=[
             '-DCMAKE_INSTALL_PREFIX:PATH=' + os.path.abspath('/usr/local')
         ])
 
     def test_clean(self):
-        pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
-        builder = self.make_builder(pkg)
+        pkg = self.make_package_and_builder('foo')
         builddir = os.path.join(self.pkgdir, 'build', 'foo')
 
         with mock.patch('shutil.rmtree') as mrmtree:
-            builder.clean(self.metadata, pkg)
+            pkg.builder.clean(self.metadata, pkg)
             mrmtree.assert_called_once_with(builddir, ignore_errors=True)
 
     def test_linkage(self):

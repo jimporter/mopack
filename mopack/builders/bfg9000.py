@@ -67,7 +67,7 @@ class Bfg9000Builder(Builder):
         return args
 
     def build(self, metadata, pkg):
-        path_values = pkg.path_values(metadata, builder=self)
+        path_values = pkg.path_values(metadata)
 
         env = self._common_options.env
         bfg9000 = get_cmd(env, 'BFG9000', 'bfg9000')
@@ -85,7 +85,7 @@ class Bfg9000Builder(Builder):
                 logfile.check_call(ninja, env=env)
 
     def deploy(self, metadata, pkg):
-        path_values = pkg.path_values(metadata, builder=self)
+        path_values = pkg.path_values(metadata)
 
         env = self._common_options.env
         ninja = get_cmd(env, 'NINJA', 'ninja')

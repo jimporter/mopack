@@ -14,29 +14,25 @@ class TestNoneBuilder(BuilderTest):
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         return os.path.join(self.srcdir, pkgconfig)
 
-    def check_build(self, builder, extra_args=[], *, pkg=None):
-        if pkg is None:
-            pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
+    def check_build(self, pkg, extra_args=[]):
         with mock.patch('subprocess.run') as mcall:
-            builder.build(self.metadata, pkg)
+            pkg.builder.build(self.metadata, pkg)
             mcall.assert_not_called()
 
     def test_basic(self):
-        pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
-        builder = self.make_builder(pkg)
-        self.assertEqual(builder.name, 'foo')
-        self.check_build(builder)
+        pkg = self.make_package_and_builder('foo')
+        self.assertEqual(pkg.builder.name, 'foo')
+        self.check_build(pkg)
 
         with mock.patch('subprocess.run') as mcall:
-            builder.deploy(self.metadata, pkg)
+            pkg.builder.deploy(self.metadata, pkg)
             mcall.assert_not_called()
 
     def test_clean(self):
-        pkg = MockPackage(srcdir=self.srcdir, _options=self.make_options())
-        builder = self.make_builder(pkg)
+        pkg = self.make_package_and_builder('foo')
 
         with mock.patch('shutil.rmtree') as mrmtree:
-            builder.clean(self.metadata, pkg)
+            pkg.builder.clean(self.metadata, pkg)
             mrmtree.assert_not_called()
 
     def test_linkage(self):
