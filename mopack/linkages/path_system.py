@@ -287,7 +287,7 @@ class PathLinkage(Linkage):
             return pkg.guessed_version(metadata)
 
     def version(self, metadata, pkg):
-        path_values = pkg.path_values(metadata, builder=True)
+        path_values = pkg.path_values(metadata)
         try:
             include_dirs = self._include_dirs(
                 self.headers, self.include_path, path_values
@@ -310,7 +310,7 @@ class PathLinkage(Linkage):
             for i in mappings:
                 yield from getattr(i, key)
 
-        path_values = pkg.path_values(metadata, builder=True)
+        path_values = pkg.path_values(metadata)
         pkgconfdir = generated_pkg_config_dir(metadata.pkgdir)
         pcname = dependency_string(pkg.name, listify(submodule))
         pcpath = os.path.join(pkgconfdir, pcname + '.pc')

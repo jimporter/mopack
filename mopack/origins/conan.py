@@ -76,8 +76,8 @@ class ConanPackage(BinaryPackage):
     def path_bases(self, *, builder=None):
         return ('builddir',) if builder else ()
 
-    def path_values(self, metadata, *, builder=None):
-        return {'builddir': self._installdir(metadata)} if builder else {}
+    def path_values(self, metadata):
+        return {'builddir': self._installdir(metadata)}
 
     def version(self, metadata):
         # Inspect the local conan cache to get the package's version.

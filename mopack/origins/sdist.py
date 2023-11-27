@@ -77,11 +77,9 @@ class SDistPackage(Package):
             builder = self.builder
         return ('srcdir',) + (builder.path_bases() if builder else ())
 
-    def path_values(self, metadata, *, builder=None):
-        if builder is True:
-            builder = self.builder
+    def path_values(self, metadata):
         return {'srcdir': self._srcdir(metadata),
-                **(builder.path_values(metadata) if builder else {})}
+                **self.builder.path_values(metadata)}
 
     def _make_linkage(self, linkage, **kwargs):
         return make_linkage(self, self.builder.filter_linkage(linkage),

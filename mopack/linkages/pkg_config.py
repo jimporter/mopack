@@ -97,7 +97,7 @@ class PkgConfigLinkage(Linkage):
 
     def version(self, metadata, pkg):
         pkg_config = get_pkg_config(self._common_options.env)
-        path_values = pkg.path_values(metadata, builder=True)
+        path_values = pkg.path_values(metadata)
         pkgconfpath = [i.string(**path_values) for i in self.pkg_config_path]
         env = ChainMap({'PKG_CONFIG_PATH': join_paths(pkgconfpath)},
                        self._common_options.env)
@@ -115,7 +115,7 @@ class PkgConfigLinkage(Linkage):
         return mapping.fill(symbols, submodule)
 
     def get_linkage(self, metadata, pkg, submodules):
-        path_values = pkg.path_values(metadata, builder=True)
+        path_values = pkg.path_values(metadata)
         pkgconfpath = [i.string(**path_values) for i in self.pkg_config_path]
 
         if submodules and self.submodule_map:

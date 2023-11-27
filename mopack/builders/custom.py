@@ -51,14 +51,14 @@ class CustomBuilder(Builder):
                 logfile.check_call(line, env=self._common_options.env)
 
     def build(self, metadata, pkg):
-        path_values = pkg.path_values(metadata, builder=self)
+        path_values = pkg.path_values(metadata)
 
         with LogFile.open(metadata.pkgdir, self.name) as logfile:
             with pushd(path_values['srcdir']):
                 self._execute(logfile, self.build_commands, path_values)
 
     def deploy(self, metadata, pkg):
-        path_values = pkg.path_values(metadata, builder=self)
+        path_values = pkg.path_values(metadata)
 
         with LogFile.open(metadata.pkgdir, self.name,
                           kind='deploy') as logfile:

@@ -44,7 +44,7 @@ class Builder(OptionsHolder):
         return linkage
 
     def clean(self, metadata, pkg):
-        path_values = pkg.path_values(metadata, builder=self)
+        path_values = pkg.path_values(metadata)
         shutil.rmtree(path_values['builddir'], ignore_errors=True)
 
     def __repr__(self):

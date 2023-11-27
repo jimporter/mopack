@@ -74,7 +74,7 @@ class MockBuilder:
 
 
 class MockPackage:
-    def __init__(self, name='foo', version=None, srcdir=None, builddir=None,
+    def __init__(self, name='foo', *, version=None, srcdir=None, builddir=None,
                  submodules=None, _options=None):
         self.name = name
         self.submodules = submodules
@@ -89,12 +89,10 @@ class MockPackage:
         return ( (('srcdir',) if self._srcdir else ()) +
                  (builder.path_bases() if builder else ()) )
 
-    def path_values(self, metadata, *, builder=None):
-        if builder is True:
-            builder = self.builder
+    def path_values(self, metadata):
         return {
             **({'srcdir': self._srcdir} if self._srcdir else {}),
-            **(builder.path_values(metadata) if builder else {}),
+            **(self.builder.path_values(metadata) if self.builder else {}),
         }
 
     def guessed_version(self, metadata):

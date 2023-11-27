@@ -27,19 +27,22 @@ class BuilderTest(OptionsTest):
             )
         return options
 
-    def make_builder(self, *args, common_options=None, this_options=None,
-                     deploy_dirs=None, linkage=None, **kwargs):
-        if len(args) == 1:
-            builder_type = self.builder_type
-            pkg = args[0]
-        else:
-            builder_type, pkg = args
+    def make_package(self, name, builder_type=None, *, common_options=None,
+                     this_options=None, deploy_dirs=None, **kwargs):
+        options = self.make_options(
+            builder_type, common_options=common_options,
+            this_options=this_options, deploy_dirs=deploy_dirs
+        )
+        return MockPackage(name, srcdir=self.srcdir, _options=options,
+                           **kwargs)
 
-        if isinstance(pkg, str):
-            options = self.make_options(
-                builder_type, common_options=common_options,
-                this_options=this_options, deploy_dirs=deploy_dirs
-            )
-            pkg = MockPackage(pkg, srcdir=self.srcdir, _options=options)
-
-        return builder_type(pkg, **kwargs)
+    def make_package_and_builder(self, name, builder_type=None, *,
+                                 common_options=None, this_options=None,
+                                 deploy_dirs=None, **kwargs):
+        builder_type = builder_type or self.builder_type
+        pkg = self.make_package(
+            name, builder_type, common_options=common_options,
+            this_options=this_options, deploy_dirs=deploy_dirs
+        )
+        pkg.builder = builder_type(pkg, **kwargs)
+        return pkg
