@@ -38,8 +38,9 @@ class TestDirectory(SDistTestCase):
 
     def test_resolve(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000')
+        builder = self.make_builder(Bfg9000Builder, pkg)
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
+        self.assertEqual(pkg.builders, [builder])
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
@@ -51,15 +52,22 @@ class TestDirectory(SDistTestCase):
         build = {'type': 'bfg9000', 'extra_args': '--extra'}
         pkg = self.make_package('foo', path=self.srcpath, build=build,
                                 linkage='pkg_config')
+        builder = self.make_builder(Bfg9000Builder, pkg, extra_args='--extra')
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builder, self.make_builder(
-            Bfg9000Builder, pkg, extra_args='--extra'
-        ))
+        self.assertEqual(pkg.builders, [builder])
         self.assertEqual(pkg.should_deploy, True)
 
         with assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]):
             pkg.fetch(self.metadata, self.config)
         self.check_resolve(pkg)
+
+    def test_build_duplicate_base(self):
+        msg = "'builddir' already defined by 'bfg9000' builder"
+        with self.assertRaisesRegex(TypeError, msg):
+            self.make_package(
+                'foo', path=self.srcpath, build=['bfg9000', 'cmake'],
+                linkage='pkg_config'
+            )
 
     def test_infer_build(self):
         mock_open = mock_open_data(
@@ -68,7 +76,7 @@ class TestDirectory(SDistTestCase):
 
         # Basic inference
         pkg = self.make_package('foo', path=self.srcpath)
-        self.assertEqual(pkg.builder, None)
+        self.assertEqual(pkg.builders, None)
 
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
@@ -85,7 +93,7 @@ class TestDirectory(SDistTestCase):
         # Infer but override linkage
         pkg = self.make_package('foo', path=self.srcpath,
                                 linkage={'type': 'system'})
-        self.assertEqual(pkg.builder, None)
+        self.assertEqual(pkg.builders, None)
 
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
@@ -136,8 +144,9 @@ class TestDirectory(SDistTestCase):
 
         srcpath = os.path.join(test_data_dir, 'hello-multi-bfg')
         pkg = self.make_package('foo', path=srcpath)
-        self.assertEqual(pkg.builder, None)
+        self.assertEqual(pkg.builders, None)
 
+        builder = self.make_builder(Bfg9000Builder, pkg)
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('builtins.open', mock_open):
@@ -146,13 +155,11 @@ class TestDirectory(SDistTestCase):
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(config.export.submodules,
                              ['french', 'english'])
-            self.assertEqual(pkg.builder, self.make_builder(
-                Bfg9000Builder, pkg
-            ))
+            self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg, submodules=['french'])
 
         pkg = self.make_package('foo', path=srcpath, submodules=['sub'])
-        self.assertEqual(pkg.builder, None)
+        self.assertEqual(pkg.builders, None)
 
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
@@ -162,9 +169,7 @@ class TestDirectory(SDistTestCase):
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(config.export.submodules,
                              ['french', 'english'])
-            self.assertEqual(pkg.builder, self.make_builder(
-                Bfg9000Builder, pkg
-            ))
+            self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg, submodules=['sub'])
 
     def test_infer_build_invalid(self):
@@ -245,8 +250,9 @@ class TestDirectory(SDistTestCase):
     def test_linkage(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 linkage='pkg_config')
+        builder = self.make_builder(Bfg9000Builder, pkg)
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
+        self.assertEqual(pkg.builders, [builder])
 
         with assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]):
             pkg.fetch(self.metadata, self.config)
@@ -264,7 +270,7 @@ class TestDirectory(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 linkage=linkage)
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
+        self.assertEqual(pkg.builders, [builder])
 
         with assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]):
             pkg.fetch(self.metadata, self.config)
@@ -277,7 +283,7 @@ class TestDirectory(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 linkage=linkage)
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
+        self.assertEqual(pkg.builders, [builder])
 
         with assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]):
             pkg.fetch(self.metadata, self.config)
@@ -504,8 +510,8 @@ class TestDirectory(SDistTestCase):
                                side_effect=DirectoryPackage.upgrade) as m:
             pkg = Package.rehydrate(data, _options=opts)
             self.assertIsInstance(pkg, DirectoryPackage)
-            self.assertIsInstance(pkg.builder, NoneBuilder)
             self.assertIsInstance(pkg.linkage, SystemLinkage)
+            self.assertEqual([type(i) for i in pkg.builders], [NoneBuilder])
             m.assert_called_once()
 
     def test_builder_types(self):

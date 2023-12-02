@@ -46,10 +46,11 @@ class TestTarball(SDistTestCase):
 
     def test_url(self):
         pkg = self.make_package('foo', url=self.srcurl, build='bfg9000')
+        builder = self.make_builder(Bfg9000Builder, pkg)
         self.assertEqual(pkg.url, self.srcurl)
         self.assertEqual(pkg.path, None)
         self.assertEqual(pkg.patch, None)
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
+        self.assertEqual(pkg.builders, [builder])
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
@@ -58,10 +59,11 @@ class TestTarball(SDistTestCase):
 
     def test_path(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000')
+        builder = self.make_builder(Bfg9000Builder, pkg)
         self.assertEqual(pkg.url, None)
         self.assertEqual(pkg.path, Path(self.srcpath))
         self.assertEqual(pkg.patch, None)
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
+        self.assertEqual(pkg.builders, [builder])
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
@@ -71,9 +73,10 @@ class TestTarball(SDistTestCase):
     def test_zip_path(self):
         srcpath = os.path.join(test_data_dir, 'hello-bfg.zip')
         pkg = self.make_package('foo', build='bfg9000', path=srcpath)
+        builder = self.make_builder(Bfg9000Builder, pkg)
         self.assertEqual(pkg.url, None)
         self.assertEqual(pkg.path, Path(srcpath))
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
+        self.assertEqual(pkg.builders, [builder])
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
@@ -142,10 +145,9 @@ class TestTarball(SDistTestCase):
         build = {'type': 'bfg9000', 'extra_args': '--extra'}
         pkg = self.make_package('foo', path=self.srcpath, build=build,
                                 linkage='pkg_config')
+        builder = self.make_builder(Bfg9000Builder, pkg, extra_args='--extra')
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builder, self.make_builder(
-            Bfg9000Builder, pkg, extra_args='--extra'
-        ))
+        self.assertEqual(pkg.builders, [builder])
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
@@ -153,7 +155,7 @@ class TestTarball(SDistTestCase):
     def test_infer_build(self):
         # Basic inference
         pkg = self.make_package('foo', path=self.srcpath)
-        self.assertEqual(pkg.builder, None)
+        self.assertEqual(pkg.builders, None)
 
         with mock.patch('os.path.exists', mock_exists), \
              mock.patch('tarfile.TarFile.extractall'), \
@@ -172,7 +174,7 @@ class TestTarball(SDistTestCase):
         # Infer but override linkage and version
         pkg = self.make_package('foo', path=self.srcpath,
                                 linkage={'type': 'system'})
-        self.assertEqual(pkg.builder, None)
+        self.assertEqual(pkg.builders, None)
 
         with mock.patch('os.path.exists', mock_exists), \
              mock.patch('tarfile.TarFile.extractall'), \
@@ -222,8 +224,9 @@ class TestTarball(SDistTestCase):
     def test_linkage(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 linkage='pkg_config')
+        builder = self.make_builder(Bfg9000Builder, pkg)
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
+        self.assertEqual(pkg.builders, [builder])
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
@@ -240,7 +243,7 @@ class TestTarball(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 linkage=linkage)
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
+        self.assertEqual(pkg.builders, [builder])
 
         self.check_fetch(pkg)
         self.check_resolve(pkg, linkage={
@@ -252,7 +255,7 @@ class TestTarball(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 linkage=linkage)
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
+        self.assertEqual(pkg.builders, [builder])
 
         self.check_fetch(pkg)
         self.check_resolve(pkg, linkage={
@@ -566,8 +569,8 @@ class TestTarball(SDistTestCase):
                                side_effect=TarballPackage.upgrade) as m:
             pkg = Package.rehydrate(data, _options=opts)
             self.assertIsInstance(pkg, TarballPackage)
-            self.assertIsInstance(pkg.builder, NoneBuilder)
             self.assertIsInstance(pkg.linkage, SystemLinkage)
+            self.assertEqual([type(i) for i in pkg.builders], [NoneBuilder])
             m.assert_called_once()
 
     def test_builder_types(self):

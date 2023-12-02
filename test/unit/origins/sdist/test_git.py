@@ -51,10 +51,11 @@ class TestGit(SDistTestCase):
 
     def test_url(self):
         pkg = self.make_package('foo', repository=self.srcurl, build='bfg9000')
+        builder = self.make_builder(Bfg9000Builder, pkg)
         self.assertEqual(pkg.repository, self.srcurl)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
+        self.assertEqual(pkg.builders, [builder])
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
@@ -63,10 +64,11 @@ class TestGit(SDistTestCase):
 
     def test_path(self):
         pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000')
+        builder = self.make_builder(Bfg9000Builder, pkg)
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
+        self.assertEqual(pkg.builders, [builder])
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
@@ -76,10 +78,11 @@ class TestGit(SDistTestCase):
     def test_tag(self):
         pkg = self.make_package('foo', repository=self.srcssh, tag='v1.0',
                                 build='bfg9000')
+        builder = self.make_builder(Bfg9000Builder, pkg)
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['tag', 'v1.0'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
+        self.assertEqual(pkg.builders, [builder])
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
@@ -89,10 +92,11 @@ class TestGit(SDistTestCase):
     def test_branch(self):
         pkg = self.make_package('foo', repository=self.srcssh,
                                 branch='mybranch', build='bfg9000')
+        builder = self.make_builder(Bfg9000Builder, pkg)
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'mybranch'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
+        self.assertEqual(pkg.builders, [builder])
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
@@ -102,10 +106,11 @@ class TestGit(SDistTestCase):
     def test_commit(self):
         pkg = self.make_package('foo', repository=self.srcssh,
                                 commit='abcdefg', build='bfg9000')
+        builder = self.make_builder(Bfg9000Builder, pkg)
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['commit', 'abcdefg'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
+        self.assertEqual(pkg.builders, [builder])
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
@@ -131,10 +136,11 @@ class TestGit(SDistTestCase):
     def test_srdir(self):
         pkg = self.make_package('foo', repository=self.srcssh, srcdir='dir',
                                 build='bfg9000')
+        builder = self.make_builder(Bfg9000Builder, pkg)
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, 'dir')
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
+        self.assertEqual(pkg.builders, [builder])
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
@@ -143,12 +149,11 @@ class TestGit(SDistTestCase):
         build = {'type': 'bfg9000', 'extra_args': '--extra'}
         pkg = self.make_package('foo', repository=self.srcssh, build=build,
                                 linkage='pkg_config')
+        builder = self.make_builder(Bfg9000Builder, pkg, extra_args='--extra')
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builder, self.make_builder(
-            Bfg9000Builder, pkg, extra_args='--extra'
-        ))
+        self.assertEqual(pkg.builders, [builder])
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
@@ -156,7 +161,7 @@ class TestGit(SDistTestCase):
     def test_infer_build(self):
         # Basic inference
         pkg = self.make_package('foo', repository=self.srcssh)
-        self.assertEqual(pkg.builder, None)
+        self.assertEqual(pkg.builders, None)
 
         with mock_open_log(), \
              mock.patch('os.path.exists', mock_exists), \
@@ -176,7 +181,7 @@ class TestGit(SDistTestCase):
         # Infer but override linkage and version
         pkg = self.make_package('foo', repository=self.srcssh,
                                 linkage={'type': 'system'})
-        self.assertEqual(pkg.builder, None)
+        self.assertEqual(pkg.builders, None)
 
         with mock_open_log(), \
              mock.patch('os.path.exists', mock_exists), \
@@ -229,10 +234,11 @@ class TestGit(SDistTestCase):
     def test_linkage(self):
         pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000',
                                 linkage='pkg_config')
+        builder = self.make_builder(Bfg9000Builder, pkg)
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
+        self.assertEqual(pkg.builders, [builder])
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
@@ -251,7 +257,7 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
+        self.assertEqual(pkg.builders, [builder])
 
         self.check_fetch(pkg)
         self.check_resolve(pkg, linkage={
@@ -265,7 +271,7 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builder, self.make_builder(Bfg9000Builder, pkg))
+        self.assertEqual(pkg.builders, [builder])
 
         self.check_fetch(pkg)
         self.check_resolve(pkg, linkage={
@@ -587,8 +593,8 @@ class TestGit(SDistTestCase):
                                side_effect=GitPackage.upgrade) as m:
             pkg = Package.rehydrate(data, _options=opts)
             self.assertIsInstance(pkg, GitPackage)
-            self.assertIsInstance(pkg.builder, NoneBuilder)
             self.assertIsInstance(pkg.linkage, SystemLinkage)
+            self.assertEqual([type(i) for i in pkg.builders], [NoneBuilder])
             m.assert_called_once()
 
     def test_builder_types(self):

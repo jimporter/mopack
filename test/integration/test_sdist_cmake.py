@@ -38,7 +38,7 @@ class TestInnerCMake(IntegrationTest):
                 cfg_directory_pkg(
                     'hello', config,
                     path={'base': 'cfgdir', 'path': 'hello-cmake'},
-                    builder=cfg_cmake_builder(),
+                    builders=[cfg_cmake_builder()],
                     linkage=cfg_path_linkage(
                         explicit_version='1.0',
                         compile_flags=[[
@@ -52,7 +52,7 @@ class TestInnerCMake(IntegrationTest):
                 cfg_directory_pkg(
                     'greeter', config,
                     path={'base': 'cfgdir', 'path': 'greeter-bfg'},
-                    builder=cfg_bfg9000_builder(),
+                    builders=[cfg_bfg9000_builder()],
                     linkage=cfg_pkg_config_linkage(pcname='greeter')
                 ),
             ],
@@ -102,13 +102,13 @@ class TestOuterCMake(IntegrationTest):
                     path={'base': 'cfgdir',
                           'path': os.path.join('..', 'hello-bfg.tar.gz')},
                     guessed_srcdir='hello-bfg',
-                    builder=cfg_bfg9000_builder(),
+                    builders=[cfg_bfg9000_builder()],
                     linkage=cfg_pkg_config_linkage(pcname='hello')
                 ),
                 cfg_directory_pkg(
                     'greeter', config,
                     path={'base': 'cfgdir', 'path': 'greeter-cmake'},
-                    builder=cfg_cmake_builder(),
+                    builders=[cfg_cmake_builder()],
                     linkage=cfg_path_linkage(
                         explicit_version='1.0',
                         compile_flags=[[

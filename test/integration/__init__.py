@@ -95,20 +95,21 @@ def _cfg_package(origin, api_version, name, config_file, parent=None,
     }
 
 
-def cfg_directory_pkg(name, config_file, *, path, builder, linkage, **kwargs):
-    result = _cfg_package('directory', 1, name, config_file, **kwargs)
+def cfg_directory_pkg(name, config_file, *, path, builders=[], linkage,
+                      **kwargs):
+    result = _cfg_package('directory', 2, name, config_file, **kwargs)
     result.update({
         'path': path,
-        'builder': builder,
+        'builders': builders,
         'linkage': linkage,
     })
     return result
 
 
 def cfg_tarball_pkg(name, config_file, *, path=None, url=None, files=[],
-                    srcdir=None, guessed_srcdir=None, patch=None, builder,
+                    srcdir=None, guessed_srcdir=None, patch=None, builders=[],
                     linkage, **kwargs):
-    result = _cfg_package('tarball', 1, name, config_file, **kwargs)
+    result = _cfg_package('tarball', 2, name, config_file, **kwargs)
     result.update({
         'path': path,
         'url': url,
@@ -116,20 +117,20 @@ def cfg_tarball_pkg(name, config_file, *, path=None, url=None, files=[],
         'srcdir': srcdir,
         'guessed_srcdir': guessed_srcdir,
         'patch': patch,
-        'builder': builder,
+        'builders': builders,
         'linkage': linkage,
     })
     return result
 
 
-def cfg_git_pkg(name, config_file, *, repository, rev, srcdir='.', builder,
+def cfg_git_pkg(name, config_file, *, repository, rev, srcdir='.', builders=[],
                 linkage, **kwargs):
-    result = _cfg_package('git', 1, name, config_file, **kwargs)
+    result = _cfg_package('git', 2, name, config_file, **kwargs)
     result.update({
         'repository': repository,
         'rev': rev,
         'srcdir': srcdir,
-        'builder': builder,
+        'builders': builders,
         'linkage': linkage,
     })
     return result
