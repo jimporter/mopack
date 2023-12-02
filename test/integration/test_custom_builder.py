@@ -28,7 +28,7 @@ class TestCustomBuilder(IntegrationTest):
                     'hello', config,
                     path={'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
                     guessed_srcdir='hello-bfg',
-                    builder=cfg_custom_builder(
+                    builders=[cfg_custom_builder(
                         build_commands=[
                             ['bfg9000', 'configure',
                              {'base': 'builddir', 'path': ''}],
@@ -38,7 +38,7 @@ class TestCustomBuilder(IntegrationTest):
                         deploy_commands=[
                             ['ninja', 'install'],
                         ]
-                    ),
+                    )],
                     linkage=cfg_pkg_config_linkage(pcname='hello')
                 ),
             ],
@@ -70,7 +70,7 @@ class TestCustomBuilderDeploy(IntegrationTest):
                     'hello', config,
                     path={'base': 'cfgdir', 'path': 'hello-bfg.tar.gz'},
                     guessed_srcdir='hello-bfg',
-                    builder=cfg_custom_builder(
+                    builders=[cfg_custom_builder(
                         build_commands=[
                             ['bfg9000', 'configure',
                              {'base': 'builddir', 'path': ''},
@@ -82,7 +82,7 @@ class TestCustomBuilderDeploy(IntegrationTest):
                         deploy_commands=[
                             ['ninja', 'install'],
                         ]
-                    ),
+                    )],
                     linkage=cfg_pkg_config_linkage(pcname='hello')
                 ),
             ],

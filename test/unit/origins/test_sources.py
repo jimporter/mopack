@@ -31,7 +31,7 @@ class TestMakePackage(OriginTest):
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         self.assertEqual(pkg.path, Path('/path'))
-        self.assertEqual(pkg.builder.type, 'bfg9000')
+        self.assertEqual(pkg.builder_types, ['bfg9000'])
 
         self.assertEqual(pkg.get_linkage(self.metadata, None), {
             'name': 'foo', 'type': 'pkg_config', 'pcnames': ['foo'],
@@ -51,7 +51,7 @@ class TestMakePackage(OriginTest):
         self.assertEqual(pkg.should_deploy, False)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         self.assertEqual(pkg.path, Path('/path'))
-        self.assertEqual(pkg.builder.type, 'bfg9000')
+        self.assertEqual(pkg.builder_types, ['bfg9000'])
 
         self.assertEqual(pkg.get_linkage(self.metadata, None), {
             'name': 'foo', 'type': 'pkg_config', 'pcnames': ['foo'],

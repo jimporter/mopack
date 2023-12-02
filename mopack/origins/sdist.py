@@ -9,22 +9,21 @@ from .. import archive, log, types
 from ..builders import Builder, make_builder
 from ..config import ChildConfig
 from ..environment import get_cmd
-from ..freezedried import GenericFreezeDried
+from ..freezedried import GenericFreezeDried, ListFreezeDryer
 from ..glob import filter_glob
+from ..iterutils import flatten, isiterable
 from ..log import LogFile
+from ..options import DuplicateSymbolError
 from ..package_defaults import DefaultResolver
 from ..path import Path, pushd
 from ..linkages import make_linkage
+from ..types import FieldValueError
 from ..yaml_tools import to_parse_error
 
 
-@GenericFreezeDried.fields(rehydrate={'builder': Builder},
+@GenericFreezeDried.fields(rehydrate={'builders': ListFreezeDryer(Builder)},
                            skip_compare={'pending_linkage'})
 class SDistPackage(Package):
-    @staticmethod
-    def upgrade(config, version):
-        return config
-
     # TODO: Remove `usage` after v0.2 is released.
     def __init__(self, name, *, build=None, linkage=None,
                  usage=types.Unset, submodules=types.Unset,
@@ -43,14 +42,14 @@ class SDistPackage(Package):
         if build is None:
             if submodules is not types.Unset:
                 T.submodules(submodules_type)
-            self.builder = None
+            self.builders = None
             self.linkage = None
             self.pending_linkage = linkage
         else:
             pkg_default = DefaultResolver(self, symbols, inherit_defaults,
                                           name)
             T.submodules(pkg_default(submodules_type))
-            self.builder = self._make_builder(build)
+            self.builders = self._make_builders(build)
             self.linkage = self._make_linkage(linkage)
 
     def dehydrate(self):
@@ -66,7 +65,7 @@ class SDistPackage(Package):
 
     @property
     def _linkage_expr_symbols(self):
-        path_bases = self.builder.path_bases()
+        path_bases = flatten(i.path_bases() for i in self.builders)
         return self._builder_expr_symbols.augment_path_bases(*path_bases)
 
     @property
@@ -75,29 +74,55 @@ class SDistPackage(Package):
 
     @property
     def builder_types(self):
-        if self.builder is None:
+        if self.builders is None:
             raise types.ConfigurationError(
-                'cannot get builder types until builder is finalized'
+                'cannot get builder types until builders are finalized'
             )
-        return [self.builder.type]
+        return [i.type for i in self.builders]
 
     def path_values(self, metadata):
-        return {'srcdir': self._srcdir(metadata),
-                **self.builder.path_values(metadata)}
+        values = {'srcdir': self._srcdir(metadata)}
+        for i in self.builders:
+            values.update(**i.path_values(metadata))
+        return values
 
-    def _make_builder(self, config, **kwargs):
-        return make_builder(self, config, _symbols=self._builder_expr_symbols,
-                            **kwargs)
+    def _make_builders(self, builders, **kwargs):
+        path_owners = {}
+        symbols = self._builder_expr_symbols
+
+        def do_make(builder, field):
+            nonlocal symbols
+            try:
+                result = make_builder(self, builder, _symbols=symbols,
+                                      field=field, **kwargs)
+                bases = result.path_bases()
+                symbols = symbols.augment_path_bases(*bases)
+                path_owners.update({i: result for i in bases})
+                return result
+            except DuplicateSymbolError as e:
+                msg = '{!r} already defined'.format(e.symbol)
+                if e.symbol in path_owners:
+                    msg += (' by {!r} builder'
+                            .format(path_owners[e.symbol].type))
+                raise FieldValueError(msg, field)
+
+        if not isiterable(builders):
+            return [do_make(builders, 'build')]
+        else:
+            return [do_make(builder, ('build', i))
+                    for i, builder in enumerate(builders)]
 
     def _make_linkage(self, linkage, **kwargs):
-        return make_linkage(self, self.builder.filter_linkage(linkage),
-                            _symbols=self._linkage_expr_symbols, **kwargs)
+        for i in self.builders:
+            linkage = i.filter_linkage(linkage)
+        return make_linkage(self, linkage, _symbols=self._linkage_expr_symbols,
+                            **kwargs)
 
     def _find_mopack(self, parent_config, srcdir):
         config = ChildConfig([srcdir], parent_config=parent_config,
                              parent_package=self)
 
-        if self.builder:
+        if self.builders:
             return config
 
         if not config or not config.export:
@@ -115,7 +140,7 @@ class SDistPackage(Package):
         context = 'while constructing package {!r}'.format(self.name)
         with to_parse_error(export.config_file):
             with types.try_load_config(export.data, context, self.origin):
-                self.builder = self._make_builder(export.build)
+                self.builders = self._make_builders(export.build)
 
         if not self.pending_linkage and export.linkage:
             with to_parse_error(export.config_file):
@@ -140,24 +165,34 @@ class SDistPackage(Package):
 
         if not quiet:
             log.pkg_clean(self.name)
-        self.builder.clean(metadata, self)
+        for i in self.builders:
+            i.clean(metadata, self)
         return True
 
     def resolve(self, metadata):
         log.pkg_resolve(self.name)
-        self.builder.build(metadata, self)
+        for i in self.builders:
+            i.build(metadata, self)
         self.resolved = True
 
     def deploy(self, metadata):
         if self.should_deploy:
             log.pkg_deploy(self.name)
-            self.builder.deploy(metadata, self)
+            if self.builders:
+                self.builders[-1].deploy(metadata, self)
 
 
 @GenericFreezeDried.fields(rehydrate={'path': Path})
 class DirectoryPackage(SDistPackage):
     origin = 'directory'
-    _version = 1
+    _version = 2
+
+    @staticmethod
+    def upgrade(config, version):
+        # v2 adds support for multiple builders
+        if version < 2:  # pragma: no branch
+            config['builders'] = [config.pop('builder')]
+        return config
 
     def __init__(self, name, *, path, **kwargs):
         super().__init__(name, **kwargs)
@@ -178,7 +213,14 @@ class DirectoryPackage(SDistPackage):
                            skip_compare={'guessed_srcdir'})
 class TarballPackage(SDistPackage):
     origin = 'tarball'
-    _version = 1
+    _version = 2
+
+    @staticmethod
+    def upgrade(config, version):
+        # v2 adds support for multiple builders
+        if version < 2:  # pragma: no branch
+            config['builders'] = [config.pop('builder')]
+        return config
 
     def __init__(self, name, *, path=None, url=None, files=None, srcdir=None,
                  patch=None, **kwargs):
@@ -256,7 +298,14 @@ class TarballPackage(SDistPackage):
 
 class GitPackage(SDistPackage):
     origin = 'git'
-    _version = 1
+    _version = 2
+
+    @staticmethod
+    def upgrade(config, version):
+        # v2 adds support for multiple builders
+        if version < 2:  # pragma: no branch
+            config['builders'] = [config.pop('builder')]
+        return config
 
     def __init__(self, name, *, repository, tag=None, branch=None, commit=None,
                  srcdir='.', **kwargs):
