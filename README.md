@@ -54,8 +54,8 @@ This project is licensed under the [BSD 3-clause license](LICENSE).
 [pypi-link]: https://pypi.python.org/pypi/mopack
 [documentation-image]: https://img.shields.io/badge/docs-mopack-blue.svg
 [documentation-link]: https://jimporter.github.io/mopack/
-[ci-image]: https://github.com/jimporter/mopack/workflows/build/badge.svg
-[ci-link]: https://github.com/jimporter/mopack/actions?query=branch%3Amaster+workflow%3Abuild
+[ci-image]: https://github.com/jimporter/mopack/actions/workflows/build.yml/badge.svg
+[ci-link]: https://github.com/jimporter/mopack/actions/workflows/build.yml?query=branch%3Amaster
 [codecov-image]: https://codecov.io/gh/jimporter/mopack/branch/master/graph/badge.svg
 [codecov-link]: https://codecov.io/gh/jimporter/mopack
 [setuptools]: https://pythonhosted.org/setuptools/
