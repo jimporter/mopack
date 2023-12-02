@@ -209,7 +209,7 @@ class TarballPackage(SDistPackage):
             return False
 
         if not quiet:
-            log.pkg_clean(self.name, 'origins')
+            log.pkg_clean(self.name, 'sources')
         shutil.rmtree(self._base_srcdir(metadata), ignore_errors=True)
         return True
 
@@ -290,7 +290,7 @@ class GitPackage(SDistPackage):
             return False
 
         if not quiet:
-            log.pkg_clean(self.name, 'origins')
+            log.pkg_clean(self.name, 'sources')
         shutil.rmtree(self._base_srcdir(metadata), ignore_errors=True)
         return True
 
