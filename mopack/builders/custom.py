@@ -21,7 +21,8 @@ class CustomBuilder(Builder):
 
     @staticmethod
     def upgrade(config, version):
-        if version == 1:  # pragma: no branch
+        # v2 removes the name field.
+        if version < 2:  # pragma: no branch
             del config['name']
         return config
 
