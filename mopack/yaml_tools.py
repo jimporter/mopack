@@ -29,6 +29,7 @@ import warnings
 import yaml
 from collections import namedtuple
 from contextlib import contextmanager
+from copy import deepcopy
 from yaml.error import Mark, MarkedYAMLError
 from yaml.loader import SafeLoader
 from yaml.nodes import MappingNode, SequenceNode
@@ -257,9 +258,8 @@ class MarkedList(MarkedCollection, collections.abc.Sequence):
         return self.copy()
 
     def __deepcopy__(self, memo):
-        import copy
         result = MarkedList()
-        result.data.extend(copy.deepcopy(i, memo) for i in self)
+        result.data.extend(deepcopy(i, memo) for i in self)
         result._extend_marks(self)
         return result
 
@@ -307,9 +307,8 @@ class MarkedDict(MarkedCollection, collections.abc.Mapping):
         return self.copy()
 
     def __deepcopy__(self, memo):
-        import copy
         result = MarkedDict()
-        result.data.update({copy.deepcopy(k, memo): copy.deepcopy(v, memo)
+        result.data.update({deepcopy(k, memo): deepcopy(v, memo)
                             for k, v in self.items()})
         result._update_marks(self)
         return result
