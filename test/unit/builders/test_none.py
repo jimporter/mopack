@@ -53,7 +53,7 @@ class TestNoneBuilder(BuilderTest):
         self.assertEqual(builder, Builder.rehydrate(data, name='foo',
                                                     _options=opts))
 
-    def test_upgrade(self):
+    def test_upgrade_from_v1(self):
         opts = self.make_options()
         data = {'type': 'none', '_version': 1, 'name': 'bar'}
         with mock.patch.object(NoneBuilder, 'upgrade',

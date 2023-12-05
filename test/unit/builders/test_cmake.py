@@ -106,7 +106,7 @@ class TestCMakeBuilder(BuilderTest):
         self.assertEqual(builder, Builder.rehydrate(data, name='foo',
                                                     _options=opts))
 
-    def test_upgrade(self):
+    def test_upgrade_from_v1(self):
         opts = self.make_options()
         data = {'type': 'cmake', '_version': 1, 'name': 'bar',
                 'extra_args': []}

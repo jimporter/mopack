@@ -559,8 +559,8 @@ class TestTarball(SDistTestCase):
             'origin': 'tarball', '_version': 0, 'name': 'foo',
             'path': {'base': 'cfgdir', 'path': 'foo.tar.gz'}, 'url': None,
             'files': [], 'srcdir': '.', 'patch': None,
-            'builder': {'type': 'none', '_version': 0},
-            'linkage': {'type': 'system', '_version': 0},
+            'builder': {'type': 'none', '_version': 1, 'name': 'foo'},
+            'linkage': {'type': 'system', '_version': 1},
         }
         with mock.patch.object(TarballPackage, 'upgrade',
                                side_effect=TarballPackage.upgrade) as m:

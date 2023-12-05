@@ -73,7 +73,10 @@ class FreezeDried:
             if version < cls._version:
                 config = cls.upgrade(config, version)
             elif version > cls._version:
-                raise TypeError('saved version exceeds expected version')
+                raise TypeError(
+                    'saved version of {!r} exceeds expected version'
+                    .format(cls.__name__)
+                )
 
         result = cls.__new__(cls)
 
