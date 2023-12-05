@@ -1,4 +1,5 @@
 import os
+from copy import deepcopy
 
 from . import types
 from .base_options import BaseOptions
@@ -11,14 +12,26 @@ from .platforms import platform_name
 from .origins import make_package_options, PackageOptions
 
 
+class DuplicateSymbolError(ValueError):
+    def __init__(self, symbol):
+        super().__init__('symbol {!r} already defined'.format(symbol))
+        self.symbol = symbol
+
+
 class ExprSymbols(dict):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__path_bases = ()
 
+    def _ensure_unique_symbols(self, new_symbols):
+        for i in new_symbols:
+            if i in self:
+                raise DuplicateSymbolError(i)
+
     def augment_symbols(self, **symbols):
-        result = ExprSymbols(**self, **symbols)
-        result.__path_bases = self.__path_bases
+        self._ensure_unique_symbols(symbols.keys())
+        result = self.copy()
+        result.update(symbols)
         return result
 
     @property
@@ -34,11 +47,24 @@ class ExprSymbols(dict):
             return None
 
     def augment_path_bases(self, *path_bases):
-        result = ExprSymbols(
-            **self,
-            **{i: placeholder(Path('', i)) for i in path_bases},
-        )
-        result.__path_bases = self.__path_bases + path_bases
+        self._ensure_unique_symbols(path_bases)
+        result = self.copy()
+        result.update({i: placeholder(Path('', i)) for i in path_bases})
+        result.__path_bases += path_bases
+        return result
+
+    def copy(self):
+        result = ExprSymbols(**self)
+        result.__path_bases = self.__path_bases
+        return result
+
+    def __copy__(self):
+        return self.copy()  # pragma: no cover
+
+    def __deepcopy__(self, memo):
+        result = ExprSymbols(**{deepcopy(k, memo): deepcopy(v, memo)
+                                for k, v in self.items()})
+        result.__path_bases = self.__path_bases
         return result
 
 

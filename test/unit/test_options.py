@@ -1,12 +1,88 @@
+import copy
 import os
 from unittest import mock, TestCase
 
 from . import through_json
 
-from mopack.options import CommonOptions
+from mopack.options import *
 from mopack.path import Path
 from mopack.placeholder import placeholder
 from mopack.platforms import platform_name
+
+
+class TestExprSymbols(TestCase):
+    def test_empty(self):
+        symbols = ExprSymbols()
+        self.assertEqual(symbols, {})
+        self.assertEqual(symbols.path_bases, ())
+
+    def test_augment_symbols(self):
+        symbols = ExprSymbols(foo='bar')
+
+        symbols = symbols.augment_symbols(baz='quux')
+        self.assertEqual(symbols, {'foo': 'bar', 'baz': 'quux'})
+        self.assertEqual(symbols.path_bases, ())
+
+    def test_augment_path_bases(self):
+        symbols = ExprSymbols(foo='bar')
+
+        symbols = symbols.augment_path_bases('cfgdir')
+        self.assertEqual(symbols, {
+            'foo': 'bar',
+            'cfgdir': placeholder(Path('', 'cfgdir')),
+        })
+        self.assertEqual(symbols.path_bases, ('cfgdir',))
+
+        symbols = symbols.augment_path_bases('srcdir')
+        self.assertEqual(symbols, {
+            'foo': 'bar',
+            'cfgdir': placeholder(Path('', 'cfgdir')),
+            'srcdir': placeholder(Path('', 'srcdir')),
+        })
+        self.assertEqual(symbols.path_bases, ('cfgdir', 'srcdir'))
+
+    def test_augment_duplicate(self):
+        symbols = ExprSymbols(foo='bar')
+        with self.assertRaises(DuplicateSymbolError):
+            symbols.augment_symbols(foo='baz')
+        with self.assertRaises(DuplicateSymbolError):
+            symbols.augment_path_bases('foo')
+
+    def test_best_path_base(self):
+        symbols = ExprSymbols()
+        self.assertEqual(symbols.best_path_base('srcdir'), None)
+
+        symbols = symbols.augment_path_bases('srcdir', 'builddir')
+        self.assertEqual(symbols.best_path_base('srcdir'), 'srcdir')
+        self.assertEqual(symbols.best_path_base('builddir'), 'builddir')
+        self.assertEqual(symbols.best_path_base('otherdir'), 'srcdir')
+
+    def test_copy(self):
+        symbols = ExprSymbols(foo='bar')
+
+        symbols2 = symbols.copy()
+        self.assertIsNot(symbols, symbols2)
+        self.assertEqual(symbols, symbols2)
+        self.assertEqual(symbols.path_bases, symbols2.path_bases)
+
+        symbols2['baz'] = 'quux'
+        self.assertNotEqual(symbols, symbols2)
+
+        symbols3 = copy.copy(symbols)
+        self.assertIsNot(symbols, symbols3)
+        self.assertEqual(symbols, symbols3)
+        self.assertEqual(symbols.path_bases, symbols3.path_bases)
+
+    def test_deepcopy(self):
+        symbols = ExprSymbols(foo='bar')
+
+        symbols2 = copy.deepcopy(symbols)
+        self.assertIsNot(symbols, symbols2)
+        self.assertEqual(symbols, symbols2)
+        self.assertEqual(symbols.path_bases, symbols2.path_bases)
+
+        symbols2['baz'] = 'quux'
+        self.assertNotEqual(symbols, symbols2)
 
 
 class TestCommonOptions(TestCase):
@@ -72,23 +148,16 @@ class TestCommonOptions(TestCase):
             opts.finalize()
         self.assertEqual(opts.env, {'FOO': 'foo', 'BAR': 'bar', 'ENV': 'env'})
 
-    def test_augment_symbols(self):
+    def test_expr_symbols(self):
         opts = CommonOptions()
         opts.finalize()
 
-        symbols = opts.expr_symbols.augment_symbols(foo='bar')
-        self.assertEqual(symbols, {**opts.expr_symbols, 'foo': 'bar'})
-        self.assertEqual(symbols.path_bases, ())
-
-    def test_augment_path_bases(self):
-        opts = CommonOptions()
-        opts.finalize()
-
-        symbols = opts.expr_symbols.augment_path_bases('cfgdir')
-        self.assertEqual(symbols, {
-            **opts.expr_symbols, 'cfgdir': placeholder(Path('', 'cfgdir')),
+        self.assertEqual(opts.expr_symbols, {
+            'host_platform': platform_name(),
+            'target_platform': platform_name(),
+            'env': os.environ,
+            'deploy_dirs': {},
         })
-        self.assertEqual(symbols.path_bases, ('cfgdir',))
 
     def test_rehydrate(self):
         opts = CommonOptions()
