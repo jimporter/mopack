@@ -36,8 +36,20 @@ packages:
     # ...
     builder:
       type: bfg9000
+      directory: <path>
+      build: <boolean>
       extra_args: <shell_args>
 ```
+
+`directory` <span class="subtitle">*optional, default*: *last directory*</span>
+: The directory where the `build.bfg` file is located. By default, this is the
+  last directory specified by the package configuration, usually `$srcdir`. (If
+  a previous builder for this package defines a new directory, that will be used
+  by default instead.)
+
+`build` <span class="subtitle">*optional, default*: `true`</span>
+: If true, automatically call [`ninja`][#ninja] to build the dependency after
+  running `bfg9000 configure`.
 
 `extra_args` <span class="subtitle">*optional, default*: `null`</span>
 : A list of extra arguments to pass to `bfg9000 configure`. If a string is
@@ -62,12 +74,46 @@ packages:
     # ...
     builder:
       type: cmake
+      directory: <path>
+      build: <boolean>
       extra_args: <shell_args>
 ```
+
+`directory` <span class="subtitle">*optional, default*: *last directory*</span>
+: The directory where the `CMakeLists.txt` file is located. By default, this is
+  the last directory specified by the package configuration, usually `$srcdir`.
+  (If a previous builder for this package defines a new directory, that will be
+  used by default instead.)
+
+`build` <span class="subtitle">*optional, default*: `true`</span>
+: If true, automatically call [`ninja`][#ninja] to build the dependency after
+  running `cmake`.
 
 `extra_args` <span class="subtitle">*optional, default*: `null`</span>
 : A list of extra arguments to pass to `cmake`. If a string is supplied, it will
   first be split according to POSIX shell rules.
+
+## ninja
+
+```yaml
+packages:
+  my_pkg:
+    # ...
+    builder:
+      type: ninja
+      directory: <path>
+      extra_args: <shell_args>
+```
+
+`directory` <span class="subtitle">*optional, default*: *last directory*</span>
+: The directory where the `build.ninja` file is located. By default, this is
+  the last directory specified by the package configuration, usually `$srcdir`.
+  (If a previous builder for this package defines a new directory, that will be
+  used by default instead.)
+
+`extra_args` <span class="subtitle">*optional, default*: `null`</span>
+: A list of extra arguments to pass to `ninja`. If a string is
+  supplied, it will first be split according to POSIX shell rules.
 
 ## custom
 
@@ -77,11 +123,18 @@ packages:
     # ...
     builder:
       type: custom
+      directory: <path>
       build_commands: <list[shell_args]>
       deploy_commands: <list[shell_args]>
 ```
 
-`build_commands` <span class="subtitle">*optional, default*: `null`</span>
+`directory` <span class="subtitle">*optional, default*: *last directory*</span>
+: The directory where to run `build_commands` from. By default, this is the last
+  directory specified by the package configuration, usually `$srcdir`. (If a
+  previous builder for this package defines a new directory, that will be used
+  by default instead.)
+
+`build_commands` <span class="subtitle">*required*</span>
 : A list of shell commands to execute when building the dependency. Each command
   can be a list of arguments or a single string (which will be split into
   arguments according to POSIX shell rules).

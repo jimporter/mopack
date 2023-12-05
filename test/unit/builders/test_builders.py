@@ -7,7 +7,7 @@ from mopack.types import FieldError
 
 
 class TestMakeBuilder(BuilderTest):
-    symbols = ExprSymbols(variable='foo')
+    symbols = ExprSymbols(variable='foo').augment_path_bases('srcdir')
 
     def setUp(self):
         self.pkg = MockPackage('foo', _options=self.make_options())

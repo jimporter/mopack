@@ -1,17 +1,19 @@
 import os
 import shutil
+
 from pkg_resources import load_entry_point
 
+from .. import types
 from ..base_options import BaseOptions, OptionsHolder
 from ..freezedried import GenericFreezeDried
-from ..types import FieldValueError, wrap_field_error
+from ..path import Path
 
 
 def _get_builder_type(type, field='type'):
     try:
         return load_entry_point('mopack', 'mopack.builders', type)
     except ImportError:
-        raise FieldValueError('unknown builder {!r}'.format(type), field)
+        raise types.FieldValueError('unknown builder {!r}'.format(type), field)
 
 
 @GenericFreezeDried.fields(skip={'name'})
@@ -33,6 +35,48 @@ class Builder(OptionsHolder):
         return result
 
     def path_bases(self):
+        return ()
+
+    def path_values(self, metadata):
+        return {}
+
+    def filter_linkage(self, linkage):
+        return linkage
+
+    def clean(self, metadata, pkg):
+        pass
+
+    def build(self, metadata, pkg):
+        pass
+
+    def deploy(self, metadata, pkg):
+        pass
+
+    def __repr__(self):
+        return '<{}({!r})>'.format(type(self).__name__, self.name)
+
+
+@GenericFreezeDried.fields(rehydrate={'directory': Path})
+class DirectoryBuilder(Builder):
+    def __init__(self, pkg, *, directory=None, _symbols, **kwargs):
+        super().__init__(pkg, **kwargs)
+        if directory is None and _symbols.path_bases:
+            directory = '$' + _symbols.path_bases[-1]
+        T = types.TypeCheck(locals(), _symbols)
+        T.directory(types.any_path('cfgdir'))
+
+
+@GenericFreezeDried.fields(rehydrate={'child_builder': Builder})
+class ConfiguringBuilder(DirectoryBuilder):
+    def __init__(self, pkg, *, build=True, _symbols, _child_builder, **kwargs):
+        super().__init__(pkg, _symbols=_symbols, **kwargs)
+        if build:
+            _symbols = _symbols.augment_path_bases(*self.path_bases())
+            self.child_builder = _child_builder(pkg, _symbols=_symbols)
+        else:
+            self.child_builder = None
+
+    def path_bases(self):
         return ('builddir',)
 
     def path_values(self, metadata):
@@ -40,15 +84,17 @@ class Builder(OptionsHolder):
                                                 self.name))
         return {'builddir': builddir}
 
-    def filter_linkage(self, linkage):
-        return linkage
-
     def clean(self, metadata, pkg):
         path_values = pkg.path_values(metadata)
         shutil.rmtree(path_values['builddir'], ignore_errors=True)
 
-    def __repr__(self):
-        return '<{}({!r})>'.format(type(self).__name__, self.name)
+    def build(self, metadata, pkg):
+        if self.child_builder:
+            self.child_builder.build(metadata, pkg)
+
+    def deploy(self, metadata, pkg):
+        if self.child_builder:
+            self.child_builder.deploy(metadata, pkg)
 
 
 class BuilderOptions(GenericFreezeDried, BaseOptions):
@@ -76,7 +122,7 @@ def make_builder(pkg, config, *, field='build', **kwargs):
         config = config.copy()
         type = config.pop('type')
 
-    with wrap_field_error(field, type):
+    with types.wrap_field_error(field, type):
         return _get_builder_type(type, type_field)(pkg, **config, **kwargs)
 
 

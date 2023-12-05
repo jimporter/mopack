@@ -1,11 +1,12 @@
 import os
 
-from . import Builder, BuilderOptions
+from . import ConfiguringBuilder, BuilderOptions
+from .ninja import NinjaBuilder
 from .. import types
 from ..environment import get_cmd
 from ..freezedried import GenericFreezeDried
 from ..log import LogFile
-from ..path import pushd
+from ..path import Path, pushd
 from ..shell import ShellArguments
 
 _known_install_types = ('prefix', 'exec-prefix', 'bindir', 'libdir',
@@ -13,9 +14,9 @@ _known_install_types = ('prefix', 'exec-prefix', 'bindir', 'libdir',
 
 
 @GenericFreezeDried.fields(rehydrate={'extra_args': ShellArguments})
-class Bfg9000Builder(Builder):
+class Bfg9000Builder(ConfiguringBuilder):
     type = 'bfg9000'
-    _version = 2
+    _version = 3
 
     class Options(BuilderOptions):
         type = 'bfg9000'
@@ -37,13 +38,19 @@ class Bfg9000Builder(Builder):
 
     @staticmethod
     def upgrade(config, version):
-        # v2 removes the name field.
+        # v2 removes the `name` field.
         if version < 2:  # pragma: no branch
             del config['name']
+
+        # v3 adds `directory`.
+        if version < 3:  # pragma: no branch
+            config['directory'] = Path('', Path.Base.srcdir).dehydrate()
+
         return config
 
     def __init__(self, pkg, *, extra_args=None, _symbols, **kwargs):
-        super().__init__(pkg, **kwargs)
+        super().__init__(pkg, _symbols=_symbols, _child_builder=NinjaBuilder,
+                         **kwargs)
 
         _symbols = _symbols.augment_path_bases(*self.path_bases())
         T = types.TypeCheck(locals(), _symbols)
@@ -69,9 +76,8 @@ class Bfg9000Builder(Builder):
 
         env = self._common_options.env
         bfg9000 = get_cmd(env, 'BFG9000', 'bfg9000')
-        ninja = get_cmd(env, 'NINJA', 'ninja')
         with LogFile.open(metadata.pkgdir, self.name) as logfile:
-            with pushd(path_values['srcdir']):
+            with pushd(self.directory.string(**path_values)):
                 logfile.check_call(
                     bfg9000 + ['configure', path_values['builddir']] +
                     self._toolchain_args(self._this_options.toolchain) +
@@ -79,15 +85,4 @@ class Bfg9000Builder(Builder):
                     self.extra_args.fill(**path_values),
                     env=env
                 )
-            with pushd(path_values['builddir']):
-                logfile.check_call(ninja, env=env)
-
-    def deploy(self, metadata, pkg):
-        path_values = pkg.path_values(metadata)
-
-        env = self._common_options.env
-        ninja = get_cmd(env, 'NINJA', 'ninja')
-        with LogFile.open(metadata.pkgdir, self.name,
-                          kind='deploy') as logfile:
-            with pushd(path_values['builddir']):
-                logfile.check_call(ninja + ['install'], env=env)
+        super().build(metadata, pkg)

@@ -30,6 +30,7 @@ class SDistTestCase(OriginTest):
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
+             mock.patch('mopack.builders.ninja.pushd'), \
              mock.patch('subprocess.run'):
             with assert_logging([('resolve', pkg.name)]):
                 pkg.resolve(self.metadata)

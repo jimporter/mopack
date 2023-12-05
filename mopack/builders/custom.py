@@ -1,10 +1,11 @@
 import os
+import shutil
 
-from . import Builder
+from . import DirectoryBuilder
 from .. import types
 from ..freezedried import GenericFreezeDried, ListFreezeDryer
 from ..log import LogFile
-from ..path import pushd
+from ..path import Path, pushd
 from ..shell import ShellArguments
 
 _known_install_types = ('prefix', 'exec-prefix', 'bindir', 'libdir',
@@ -16,20 +17,25 @@ _cmds_type = types.maybe(types.list_of(types.shell_args()), default=[])
 
 @GenericFreezeDried.fields(rehydrate={'build_commands': CommandsFD,
                                       'deploy_commands': CommandsFD})
-class CustomBuilder(Builder):
+class CustomBuilder(DirectoryBuilder):
     type = 'custom'
-    _version = 2
+    _version = 3
 
     @staticmethod
     def upgrade(config, version):
-        # v2 removes the name field.
+        # v2 removes the `name` field.
         if version < 2:  # pragma: no branch
             del config['name']
+
+        # v3 adds `directory`.
+        if version < 3:  # pragma: no branch
+            config['directory'] = Path('', Path.Base.srcdir).dehydrate()
+
         return config
 
-    def __init__(self, pkg, *, build_commands, deploy_commands=None,
-                 _symbols, **kwargs):
-        super().__init__(pkg, **kwargs)
+    def __init__(self, pkg, *, build_commands, deploy_commands=None, _symbols,
+                 **kwargs):
+        super().__init__(pkg, _symbols=_symbols, **kwargs)
 
         _symbols = _symbols.augment_path_bases(*self.path_bases())
         T = types.TypeCheck(locals(), _symbols)
@@ -47,11 +53,23 @@ class CustomBuilder(Builder):
             else:
                 logfile.check_call(line, env=self._common_options.env)
 
+    def path_bases(self):
+        return ('builddir',)
+
+    def path_values(self, metadata):
+        builddir = os.path.abspath(os.path.join(metadata.pkgdir, 'build',
+                                                self.name))
+        return {'builddir': builddir}
+
+    def clean(self, metadata, pkg):
+        path_values = pkg.path_values(metadata)
+        shutil.rmtree(path_values['builddir'], ignore_errors=True)
+
     def build(self, metadata, pkg):
         path_values = pkg.path_values(metadata)
 
         with LogFile.open(metadata.pkgdir, self.name) as logfile:
-            with pushd(path_values['srcdir']):
+            with pushd(self.directory.string(**path_values)):
                 self._execute(logfile, self.build_commands, path_values)
 
     def deploy(self, metadata, pkg):

@@ -14,18 +14,3 @@ class NoneBuilder(Builder):
         if version < 2:  # pragma: no branch
             del config['name']
         return config
-
-    def path_bases(self):
-        return ()
-
-    def path_values(self, metadata):
-        return {}
-
-    def clean(self, metadata, pkg):
-        pass
-
-    def build(self, metadata, pkg):
-        pass
-
-    def deploy(self, metadata, pkg):
-        pass

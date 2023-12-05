@@ -15,7 +15,7 @@ from mopack.shell import ShellArguments
 
 class TestCustomBuilder(BuilderTest):
     builder_type = CustomBuilder
-    symbols = ExprSymbols(variable='foo')
+    symbols = ExprSymbols(variable='foo').augment_path_bases('srcdir')
 
     def check_build(self, pkg, build_commands=None):
         if build_commands is None:

@@ -386,6 +386,7 @@ class TestGit(SDistTestCase):
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
+             mock.patch('mopack.builders.ninja.pushd'), \
              mock.patch('subprocess.run') as mrun:
             with assert_logging([('resolve', 'foo')]):
                 pkg.resolve(self.metadata)
@@ -401,6 +402,7 @@ class TestGit(SDistTestCase):
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
+             mock.patch('mopack.builders.ninja.pushd'), \
              mock.patch('subprocess.run'):
             with assert_logging([('deploy', 'foo')]):
                 pkg.deploy(self.metadata)

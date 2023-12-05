@@ -15,12 +15,13 @@ from mopack.types import Unset
 
 class TestBfg9000Builder(BuilderTest):
     builder_type = Bfg9000Builder
-    symbols = ExprSymbols(variable='foo')
+    symbols = ExprSymbols(variable='foo').augment_path_bases('srcdir')
 
     def check_build(self, pkg, extra_args=[]):
         builddir = os.path.join(self.pkgdir, 'build', pkg.name)
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
+             mock.patch('mopack.builders.ninja.pushd'), \
              mock.patch('subprocess.run') as mcall:
             pkg.builder.build(self.metadata, pkg)
             mopen.assert_called_with(os.path.join(
@@ -44,6 +45,7 @@ class TestBfg9000Builder(BuilderTest):
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
+             mock.patch('mopack.builders.ninja.pushd'), \
              mock.patch('subprocess.run') as mcall:
             pkg.builder.deploy(self.metadata, pkg)
             mopen.assert_called_with(os.path.join(

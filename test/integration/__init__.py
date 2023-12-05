@@ -11,6 +11,7 @@ from .. import *
 from mopack.iterutils import iterate, listify
 from mopack.platforms import platform_name
 from mopack.types import dependency_string
+from mopack.path import Path
 
 
 # Also supported: 'apt', 'mingw-cross'
@@ -167,26 +168,47 @@ def cfg_system_pkg(name, config_file, *, linkage, **kwargs):
     return result
 
 
-def cfg_bfg9000_builder(*, extra_args=[]):
+def cfg_ninja_builder(*, directory=Path('', Path.Base.srcdir), extra_args=[]):
+    return {
+        'type': 'ninja',
+        '_version': 1,
+        'directory': directory.dehydrate(),
+        'extra_args': extra_args,
+    }
+
+
+def cfg_bfg9000_builder(*, directory=Path('', Path.Base.srcdir), extra_args=[],
+                        child_builder=cfg_ninja_builder(
+                            directory=Path('', Path.Base.builddir)
+                        )):
     return {
         'type': 'bfg9000',
-        '_version': 2,
+        '_version': 3,
+        'directory': directory.dehydrate(),
         'extra_args': extra_args,
+        'child_builder': child_builder,
     }
 
 
-def cfg_cmake_builder(*, extra_args=[]):
+def cfg_cmake_builder(*, directory=Path('', Path.Base.srcdir), extra_args=[],
+                      child_builder=cfg_ninja_builder(
+                          directory=Path('', Path.Base.builddir)
+                      )):
     return {
         'type': 'cmake',
-        '_version': 2,
+        '_version': 3,
+        'directory': directory.dehydrate(),
         'extra_args': extra_args,
+        'child_builder': child_builder,
     }
 
 
-def cfg_custom_builder(*, build_commands=[], deploy_commands=[]):
+def cfg_custom_builder(*, directory=Path('', Path.Base.srcdir),
+                       build_commands=[], deploy_commands=[]):
     return {
         'type': 'custom',
-        '_version': 2,
+        '_version': 3,
+        'directory': directory.dehydrate(),
         'build_commands': build_commands,
         'deploy_commands': deploy_commands,
     }
