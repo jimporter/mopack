@@ -36,8 +36,13 @@ packages:
     # ...
     builder:
       type: bfg9000
+      build: <boolean>
       extra_args: <shell_args>
 ```
+
+`build` <span class="subtitle">*optional, default*: `true`</span>
+: If true, automatically call [`ninja`][#ninja] to build the dependency after
+  running `bfg9000 configure`.
 
 `extra_args` <span class="subtitle">*optional, default*: `null`</span>
 : A list of extra arguments to pass to `bfg9000 configure`. If a string is
@@ -62,8 +67,13 @@ packages:
     # ...
     builder:
       type: cmake
+      build: <boolean>
       extra_args: <shell_args>
 ```
+
+`build` <span class="subtitle">*optional, default*: `true`</span>
+: If true, automatically call [`ninja`][#ninja] to build the dependency after
+  running `cmake`.
 
 `extra_args` <span class="subtitle">*optional, default*: `null`</span>
 : A list of extra arguments to pass to `cmake`. If a string is supplied, it will
@@ -90,6 +100,21 @@ packages:
 : A list of shell commands to execute when deploying the dependency. Each
   command can be a list of arguments or a single string (which will be split
   into arguments according to POSIX shell rules).
+
+## ninja
+
+```yaml
+packages:
+  my_pkg:
+    # ...
+    builder:
+      type: ninja
+      extra_args: <shell_args>
+```
+
+`extra_args` <span class="subtitle">*optional, default*: `null`</span>
+: A list of extra arguments to pass to `ninja`. If a string is
+  supplied, it will first be split according to POSIX shell rules.
 
 ## none
 

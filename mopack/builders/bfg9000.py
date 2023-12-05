@@ -1,6 +1,7 @@
 import os
 
-from . import Builder, BuilderOptions
+from . import ConfiguringBuilder, BuilderOptions
+from .ninja import NinjaBuilder
 from .. import types
 from ..environment import get_cmd
 from ..freezedried import GenericFreezeDried
@@ -13,7 +14,7 @@ _known_install_types = ('prefix', 'exec-prefix', 'bindir', 'libdir',
 
 
 @GenericFreezeDried.fields(rehydrate={'extra_args': ShellArguments})
-class Bfg9000Builder(Builder):
+class Bfg9000Builder(ConfiguringBuilder):
     type = 'bfg9000'
     _version = 2
 
@@ -43,9 +44,10 @@ class Bfg9000Builder(Builder):
         return config
 
     def __init__(self, pkg, *, extra_args=None, _symbols, **kwargs):
-        super().__init__(pkg, **kwargs)
-
         _symbols = _symbols.augment_path_bases(*self.path_bases())
+        super().__init__(pkg, _symbols=_symbols, _child_builder=NinjaBuilder,
+                         **kwargs)
+
         T = types.TypeCheck(locals(), _symbols)
         T.extra_args(types.shell_args(none_ok=True))
 
@@ -69,7 +71,6 @@ class Bfg9000Builder(Builder):
 
         env = self._common_options.env
         bfg9000 = get_cmd(env, 'BFG9000', 'bfg9000')
-        ninja = get_cmd(env, 'NINJA', 'ninja')
         with LogFile.open(metadata.pkgdir, self.name) as logfile:
             with pushd(path_values['srcdir']):
                 logfile.check_call(
@@ -79,15 +80,4 @@ class Bfg9000Builder(Builder):
                     self.extra_args.fill(**path_values),
                     env=env
                 )
-            with pushd(path_values['builddir']):
-                logfile.check_call(ninja, env=env)
-
-    def deploy(self, metadata, pkg):
-        path_values = pkg.path_values(metadata)
-
-        env = self._common_options.env
-        ninja = get_cmd(env, 'NINJA', 'ninja')
-        with LogFile.open(metadata.pkgdir, self.name,
-                          kind='deploy') as logfile:
-            with pushd(path_values['builddir']):
-                logfile.check_call(ninja + ['install'], env=env)
+        super().build(metadata, pkg)

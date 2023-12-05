@@ -54,8 +54,9 @@ packages:
 : The path to the source directory of the dependency.
 
 `build` <span class="subtitle">*required*</span>
-: The [builder](builders.md) to use when resolving this package. Note that while
-  this is required, it can be unset if the dependency defines the builder in its
+: The [builders](builders.md) to use when resolving this package. This can
+  either be a single builder or a list thereof. Note that while this is
+  required, it can be unset if the dependency defines the builder in its
   [`export`](file-structure.md#exports) section.
 
 `linkage` <span class="subtitle">*optional, default*: *from builder*</span>
@@ -92,9 +93,10 @@ packages:
 : The directory within the repository containing the dependency's source code.
 
 `build` <span class="subtitle">*required*</span>
-: The [builder](builders.md) to use when resolving this package. Note that while
-  this is required, it can be unset if the dependency defines the builder in its
-  `export` section.
+: The [builders](builders.md) to use when resolving this package. This can
+  either be a single builder or a list thereof. Note that while this is
+  required, it can be unset if the dependency defines the builder in its
+  [`export`](file-structure.md#exports) section.
 
 `linkage` <span class="subtitle">*optional, default: from builder*</span>
 : The [linkage](linkage.md) to use when using this package. Some builders require
@@ -131,9 +133,10 @@ packages:
 : The path to a patch file to apply to the extract source files.
 
 `build` <span class="subtitle">*required*</span>
-: The [builder](builders.md) to use when resolving this package. Note that while
-  this is required, it can be unset if the dependency defines the builder in its
-  `export` section.
+: The [builders](builders.md) to use when resolving this package. This can
+  either be a single builder or a list thereof. Note that while this is
+  required, it can be unset if the dependency defines the builder in its
+  [`export`](file-structure.md#exports) section.
 
 `linkage` <span class="subtitle">*optional, default: from builder*</span>
 : The [linkage](linkage.md) to use when using this package. Some builders require

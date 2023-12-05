@@ -167,18 +167,28 @@ def cfg_system_pkg(name, config_file, *, linkage, **kwargs):
     return result
 
 
-def cfg_bfg9000_builder(*, extra_args=[]):
+def cfg_ninja_builder(*, extra_args=[]):
     return {
-        'type': 'bfg9000',
-        '_version': 2,
+        'type': 'ninja',
+        '_version': 1,
         'extra_args': extra_args,
     }
 
 
-def cfg_cmake_builder(*, extra_args=[]):
+def cfg_bfg9000_builder(*, extra_args=[], child_builder=cfg_ninja_builder()):
+    return {
+        'type': 'bfg9000',
+        '_version': 2,
+        'child_builder': child_builder,
+        'extra_args': extra_args,
+    }
+
+
+def cfg_cmake_builder(*, extra_args=[], child_builder=cfg_ninja_builder()):
     return {
         'type': 'cmake',
         '_version': 2,
+        'child_builder': child_builder,
         'extra_args': extra_args,
     }
 

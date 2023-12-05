@@ -20,6 +20,7 @@ class TestCMakeBuilder(BuilderTest):
     def check_build(self, pkg, extra_args=[]):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.cmake.pushd'), \
+             mock.patch('mopack.builders.ninja.pushd'), \
              mock.patch('subprocess.run') as mcall:
             pkg.builder.build(self.metadata, pkg)
             mopen.assert_called_with(os.path.join(
@@ -43,6 +44,7 @@ class TestCMakeBuilder(BuilderTest):
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.cmake.pushd'), \
+             mock.patch('mopack.builders.ninja.pushd'), \
              mock.patch('subprocess.run') as mcall:
             pkg.builder.deploy(self.metadata, pkg)
             mopen.assert_called_with(os.path.join(

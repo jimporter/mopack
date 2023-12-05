@@ -175,6 +175,7 @@ setup(
             'bfg9000=mopack.builders.bfg9000:Bfg9000Builder',
             'cmake=mopack.builders.cmake:CMakeBuilder',
             'custom=mopack.builders.custom:CustomBuilder',
+            'ninja=mopack.builders.ninja:NinjaBuilder',
             'none=mopack.builders.none:NoneBuilder',
         ],
         'mopack.linkages': [

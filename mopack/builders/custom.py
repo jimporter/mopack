@@ -1,4 +1,5 @@
 import os
+import shutil
 
 from . import Builder
 from .. import types
@@ -29,9 +30,9 @@ class CustomBuilder(Builder):
 
     def __init__(self, pkg, *, build_commands, deploy_commands=None,
                  _symbols, **kwargs):
+        _symbols = _symbols.augment_path_bases(*self.path_bases())
         super().__init__(pkg, **kwargs)
 
-        _symbols = _symbols.augment_path_bases(*self.path_bases())
         T = types.TypeCheck(locals(), _symbols)
         T.build_commands(_cmds_type)
         T.deploy_commands(_cmds_type)
@@ -46,6 +47,18 @@ class CustomBuilder(Builder):
                     os.chdir(line[1])
             else:
                 logfile.check_call(line, env=self._common_options.env)
+
+    def path_bases(self):
+        return ('builddir',)
+
+    def path_values(self, metadata):
+        builddir = os.path.abspath(os.path.join(metadata.pkgdir, 'build',
+                                                self.name))
+        return {'builddir': builddir}
+
+    def clean(self, metadata, pkg):
+        path_values = pkg.path_values(metadata)
+        shutil.rmtree(path_values['builddir'], ignore_errors=True)
 
     def build(self, metadata, pkg):
         path_values = pkg.path_values(metadata)

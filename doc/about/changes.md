@@ -4,6 +4,9 @@
 in progress
 {: .subtitle}
 
+### New features
+- `build` field for source distributions can now take a list of builders
+
 ### Breaking changes
 - `usage`/`usages` are now `linkage`/`linkages`
 
