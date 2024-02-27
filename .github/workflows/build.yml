@@ -57,7 +57,7 @@ jobs:
       MOPACK_SKIPPED_TESTS: ${{ join(matrix.skipped-tests, ' ') }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Cache Boost binaries
         if: startsWith(matrix.os, 'windows-') && matrix.boost-version
         uses: actions/cache@v3
@@ -69,7 +69,7 @@ jobs:
             matrix.msvc-version }}-python-${{ matrix.python-version }}-${{
             hashFiles('.github/workflows/build.yml') }}
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Initialize MSVC ${{ matrix.msvc-version }}
@@ -162,7 +162,7 @@ jobs:
           python setup.py coverage -q
           coverage xml
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: ./coverage.xml
   build-cygwin:
@@ -182,7 +182,7 @@ jobs:
       MOPACK_SKIPPED_TESTS: qt
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install Cygwin
         shell: cmd
         run: >
@@ -233,16 +233,16 @@ jobs:
         run: |
           copy C:\cygwin\home\runneradmin\mopack\coverage.xml .
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: ./coverage.xml
   lint:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python 3.11
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - name: Install dependencies
