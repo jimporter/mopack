@@ -51,6 +51,8 @@ jobs:
             compiler: msvc
           - os: macos-latest
             compiler: msvc
+          - os: macos-latest
+            python-version: '3.7'
       fail-fast: false
     env:
       MOPACK_EXTRA_TESTS: ${{ join(matrix.extra-tests, ' ') }}
@@ -142,9 +144,9 @@ jobs:
         run: |
           brew install ninja pkg-config boost qt5
           brew link qt5 --force
-          echo "MOPACK_INCLUDE_PATH=/usr/local/include" >> .mopack_test_env
+          echo "MOPACK_INCLUDE_PATH=/usr/local/include:/opt/homebrew/include" >> .mopack_test_env
           echo "MOPACK_LIB_NAMES=lib{}.dylib" >> .mopack_test_env
-          echo "MOPACK_LIB_PATH=/usr/local/lib" >> .mopack_test_env
+          echo "MOPACK_LIB_PATH=/usr/local/lib:/opt/homebrew/lib" >> .mopack_test_env
       - name: Set up cl.exe
         if: matrix.compiler == 'msvc'
         run: |
