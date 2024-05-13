@@ -312,6 +312,7 @@ class SubprocessTestCase(unittest.TestCase):
 
 class IntegrationTest(SubprocessTestCase):
     deploy = False
+    maxDiff = None
 
     def setUp(self):
         self.stage = stage_dir(self.name)
