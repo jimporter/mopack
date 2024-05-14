@@ -191,8 +191,9 @@ all the necessary details to actually use it in the parent project.</p>
 <dt><code>path</code> <span class="subtitle"><em>required</em></span></dt>
 <dd>The path to the source directory of the dependency.</dd>
 <dt><code>build</code> <span class="subtitle"><em>required</em></span></dt>
-<dd>The <a href="../builders/">builder</a> to use when resolving this package. Note that while
-  this is required, it can be unset if the dependency defines the builder in its
+<dd>The <a href="../builders/">builders</a> to use when resolving this package. This can
+  either be a single builder or a list thereof. Note that while this is
+  required, it can be unset if the dependency defines the builder in its
   <a href="../file-structure/#exports"><code>export</code></a> section.</dd>
 <dt><code>linkage</code> <span class="subtitle"><em>optional, default</em>: <em>from builder</em></span></dt>
 <dd>The <a href="../linkage/">linkage</a> to use when using this package. Some builders require
@@ -223,9 +224,10 @@ all the necessary details to actually use it in the parent project.</p>
 <dt><code>srcdir</code> <span class="subtitle"><em>optional; default:</em> <code>.</code></span></dt>
 <dd>The directory within the repository containing the dependency's source code.</dd>
 <dt><code>build</code> <span class="subtitle"><em>required</em></span></dt>
-<dd>The <a href="../builders/">builder</a> to use when resolving this package. Note that while
-  this is required, it can be unset if the dependency defines the builder in its
-  <code>export</code> section.</dd>
+<dd>The <a href="../builders/">builders</a> to use when resolving this package. This can
+  either be a single builder or a list thereof. Note that while this is
+  required, it can be unset if the dependency defines the builder in its
+  <a href="../file-structure/#exports"><code>export</code></a> section.</dd>
 <dt><code>linkage</code> <span class="subtitle"><em>optional, default: from builder</em></span></dt>
 <dd>The <a href="../linkage/">linkage</a> to use when using this package. Some builders require
   this to be set, but others provide a default linkage specification; the
@@ -255,9 +257,10 @@ all the necessary details to actually use it in the parent project.</p>
 <dt><code>patch</code> <span class="subtitle"><em>optional; default:</em> <code>null</code></span></dt>
 <dd>The path to a patch file to apply to the extract source files.</dd>
 <dt><code>build</code> <span class="subtitle"><em>required</em></span></dt>
-<dd>The <a href="../builders/">builder</a> to use when resolving this package. Note that while
-  this is required, it can be unset if the dependency defines the builder in its
-  <code>export</code> section.</dd>
+<dd>The <a href="../builders/">builders</a> to use when resolving this package. This can
+  either be a single builder or a list thereof. Note that while this is
+  required, it can be unset if the dependency defines the builder in its
+  <a href="../file-structure/#exports"><code>export</code></a> section.</dd>
 <dt><code>linkage</code> <span class="subtitle"><em>optional, default: from builder</em></span></dt>
 <dd>The <a href="../linkage/">linkage</a> to use when using this package. Some builders require
   this to be set, but others provide a default linkage specification; the

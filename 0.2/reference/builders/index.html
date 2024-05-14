@@ -142,6 +142,7 @@
         <li class="main active"><a href="#builders">Builders</a></li>
             <li><a href="#bfg9000">bfg9000</a></li>
             <li><a href="#cmake">cmake</a></li>
+            <li><a href="#ninja">ninja</a></li>
             <li><a href="#custom">custom</a></li>
             <li><a href="#none">none</a></li>
     </ul>
@@ -180,9 +181,19 @@ a different build system.</p>
     # ...
     builder:
       type: bfg9000
+      directory: &lt;path&gt;
+      build: &lt;boolean&gt;
       extra_args: &lt;shell_args&gt;
 </code></pre>
 <dl>
+<dt><code>directory</code> <span class="subtitle"><em>optional, default</em>: <em>last directory</em></span></dt>
+<dd>The directory where the <code>build.bfg</code> file is located. By default, this is the
+  last directory specified by the package configuration, usually <code>$srcdir</code>. (If
+  a previous builder for this package defines a new directory, that will be used
+  by default instead.)</dd>
+<dt><code>build</code> <span class="subtitle"><em>optional, default</em>: <code>true</code></span></dt>
+<dd>If true, automatically call [<code>ninja</code>][#ninja] to build the dependency after
+  running <code>bfg9000 configure</code>.</dd>
 <dt><code>extra_args</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dd>A list of extra arguments to pass to <code>bfg9000 configure</code>. If a string is
   supplied, it will first be split according to POSIX shell rules.</dd>
@@ -203,12 +214,41 @@ a different build system.</p>
     # ...
     builder:
       type: cmake
+      directory: &lt;path&gt;
+      build: &lt;boolean&gt;
       extra_args: &lt;shell_args&gt;
 </code></pre>
 <dl>
+<dt><code>directory</code> <span class="subtitle"><em>optional, default</em>: <em>last directory</em></span></dt>
+<dd>The directory where the <code>CMakeLists.txt</code> file is located. By default, this is
+  the last directory specified by the package configuration, usually <code>$srcdir</code>.
+  (If a previous builder for this package defines a new directory, that will be
+  used by default instead.)</dd>
+<dt><code>build</code> <span class="subtitle"><em>optional, default</em>: <code>true</code></span></dt>
+<dd>If true, automatically call [<code>ninja</code>][#ninja] to build the dependency after
+  running <code>cmake</code>.</dd>
 <dt><code>extra_args</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dd>A list of extra arguments to pass to <code>cmake</code>. If a string is supplied, it will
   first be split according to POSIX shell rules.</dd>
+</dl>
+<h2 id="ninja">ninja<a class="headerlink" href="#ninja" title="Permanent link">§</a></h2>
+<pre><code class="language-yaml">packages:
+  my_pkg:
+    # ...
+    builder:
+      type: ninja
+      directory: &lt;path&gt;
+      extra_args: &lt;shell_args&gt;
+</code></pre>
+<dl>
+<dt><code>directory</code> <span class="subtitle"><em>optional, default</em>: <em>last directory</em></span></dt>
+<dd>The directory where the <code>build.ninja</code> file is located. By default, this is
+  the last directory specified by the package configuration, usually <code>$srcdir</code>.
+  (If a previous builder for this package defines a new directory, that will be
+  used by default instead.)</dd>
+<dt><code>extra_args</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>A list of extra arguments to pass to <code>ninja</code>. If a string is
+  supplied, it will first be split according to POSIX shell rules.</dd>
 </dl>
 <h2 id="custom">custom<a class="headerlink" href="#custom" title="Permanent link">§</a></h2>
 <pre><code class="language-yaml">packages:
@@ -216,11 +256,17 @@ a different build system.</p>
     # ...
     builder:
       type: custom
+      directory: &lt;path&gt;
       build_commands: &lt;list[shell_args]&gt;
       deploy_commands: &lt;list[shell_args]&gt;
 </code></pre>
 <dl>
-<dt><code>build_commands</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dt><code>directory</code> <span class="subtitle"><em>optional, default</em>: <em>last directory</em></span></dt>
+<dd>The directory where to run <code>build_commands</code> from. By default, this is the last
+  directory specified by the package configuration, usually <code>$srcdir</code>. (If a
+  previous builder for this package defines a new directory, that will be used
+  by default instead.)</dd>
+<dt><code>build_commands</code> <span class="subtitle"><em>required</em></span></dt>
 <dd>A list of shell commands to execute when building the dependency. Each command
   can be a list of arguments or a single string (which will be split into
   arguments according to POSIX shell rules).</dd>
