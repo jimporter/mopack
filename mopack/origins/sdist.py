@@ -81,7 +81,8 @@ class SDistPackage(Package):
         return [i.type for i in self.builders]
 
     def path_values(self, metadata):
-        values = {'srcdir': self._srcdir(metadata)}
+        srcdir = self._srcdir(metadata)
+        values = {'srcdir': srcdir} if srcdir is not None else {}
         for i in self.builders:
             values.update(**i.path_values(metadata))
         return values
@@ -241,8 +242,10 @@ class TarballPackage(SDistPackage):
         return os.path.join(metadata.pkgdir, 'src', self.name)
 
     def _srcdir(self, metadata):
-        return os.path.join(self._base_srcdir(metadata),
-                            self.srcdir or self.guessed_srcdir)
+        srcdir = self.srcdir or self.guessed_srcdir
+        if srcdir is not None:
+            return os.path.join(self._base_srcdir(metadata), srcdir)
+        return None
 
     def _urlopen(self, url):
         with urlopen(url) as f:
