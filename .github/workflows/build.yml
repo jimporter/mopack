@@ -34,7 +34,7 @@ jobs:
           - {os: windows-latest, compiler: cc, python-version: '3.11',
              conan-version: '2.*', skipped-tests: [boost, qt]}
           - {os: windows-latest, compiler: msvc, python-version: '3.11',
-             conan-version: '2.*', msvc-version: '14.3',
+             conan-version: '2.*', msvc-version: '14.4',
              win-sdk: '10.0.20348.0', boost-version: '1.80.0',
              qt-version: '5.15.2'}
           - {os: macos-latest, compiler: cc, python-version: '3.11',
@@ -43,7 +43,7 @@ jobs:
           # Extra settings for matrix builds
           - {os: ubuntu-latest, extra-tests: [apt, mingw-cross]}
           - {os: windows-latest, compiler: cc, skipped-tests: [boost, qt]}
-          - {os: windows-latest, compiler: msvc, msvc-version: '14.3',
+          - {os: windows-latest, compiler: msvc, msvc-version: '14.4',
              win-sdk: '10.0.20348.0', boost-version: '1.80.0',
              qt-version: '5.15.2'}
         exclude:
@@ -103,7 +103,7 @@ jobs:
         if: startsWith(matrix.os, 'windows-') && matrix.boost-version
         run: |
           ${boostroot} = "C:\boost-${{ matrix.boost-version }}"
-          ${msvcver} = "${{ matrix.msvc-version }}" -replace '(\d+\.\d).*','$1'
+          ${msvcver} = "${{ matrix.msvc-version }}" -replace '14.4','14.3'
           if ("${{ steps.cache-boost.outputs.cache-hit }}" -ne "true" ) {
             ${boost_ver} = "${{ matrix.boost-version }}" -replace '\.','_'
             ${boostexe} = "boost_${boost_ver}-msvc-${msvcver}-64.exe"
