@@ -44,7 +44,7 @@ class Bfg9000Builder(ConfiguringBuilder):
 
         # v3 adds `directory`.
         if version < 3:  # pragma: no branch
-            config['directory'] = Path('', Path.Base.srcdir).dehydrate()
+            config['directory'] = Path('', 'srcdir').dehydrate()
 
         return config
 

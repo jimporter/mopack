@@ -1,7 +1,6 @@
 import functools
 import os
 from contextlib import contextmanager
-from enum import Enum
 
 from .freezedried import FreezeDried
 from .iterutils import ismapping
@@ -51,55 +50,39 @@ islink = _wrap_ospath(os.path.islink)
 
 
 class Path(FreezeDried):
-    class Base(Enum):
-        absolute = 0
-        cfgdir = 1
-        srcdir = 2
-        builddir = 3
-
-        @classmethod
-        def ensure_base(cls, base):
-            if isinstance(base, cls):
-                return base
-            try:
-                return cls[base]
-            except KeyError:
-                raise TypeError('{!r} is not a valid base'.format(base))
-
-        @classmethod
-        def filter(cls, bases, filter_bases):
-            bases = (cls.ensure_base(i) for i in bases)
-            filter_bases = {cls.ensure_base(i) for i in filter_bases}
-            return [i for i in bases if i in filter_bases]
-
-    def __init__(self, path, base=Base.absolute):
-        base = self.Base.ensure_base(base)
+    def __init__(self, path, base=None):
         if not isinstance(path, str):
             raise TypeError('expected a string')
         self.path = os.path.normpath(path)
         if self.path == os.path.curdir:
             self.path = ''
 
+        if base == 'absolute':
+            base = None
+        elif base is not None and not base.endswith('dir'):
+            raise ValueError('invalid path base {!r}'.format(base))
+
         if os.path.isabs(self.path):
-            self.base = self.Base.absolute
+            self.base = None
         elif os.path.splitdrive(self.path)[0]:
             raise ValueError('relative paths with drives not supported')
-        elif base == self.Base.absolute:
+        elif base is None:
             raise ValueError('base is absolute, but path is relative')
         else:
-            self.base = self.Base.ensure_base(base)
+            self.base = base
 
     def dehydrate(self):
-        return {'base': self.base.name, 'path': self.path}
+        base = 'absolute' if self.base is None else self.base
+        return {'base': base, 'path': self.path}
 
     @classmethod
     def rehydrate(cls, config, **kwargs):
         if not ismapping(config):
             raise TypeError('expected a dict')
-        return cls(config['path'], cls.Base[config['base']])
+        return cls(config['path'], config['base'])
 
     @classmethod
-    def ensure_path(cls, path, base=Base.absolute):
+    def ensure_path(cls, path, base=None):
         if isinstance(path, PlaceholderString):
             bits = path.unbox()
             types = [type(i) for i in bits]
@@ -121,7 +104,7 @@ class Path(FreezeDried):
         return cls(path, base)
 
     def is_abs(self):
-        return self.base == self.Base.absolute
+        return self.base is None
 
     def is_inner(self):
         return (self.path != os.path.pardir and
@@ -139,9 +122,9 @@ class Path(FreezeDried):
         return self.base == rhs.base and self.path == rhs.path
 
     def string(self, **kwargs):
-        if self.base == self.Base.absolute:
+        if self.is_abs():
             return os.path.abspath(self.path)
-        base = kwargs[self.base.name]
+        base = kwargs[self.base]
         path = os.path.join(base, self.path) if self.path else base
         return path
 
@@ -150,10 +133,10 @@ class Path(FreezeDried):
                                   .format(type(self).__name__))
 
     def __repr__(self):
-        if self.base == self.Base.absolute:
+        if self.is_abs():
             path = self.path
         elif self.path == '':
-            path = '$({})'.format(self.base.name)
+            path = '$({})'.format(self.base)
         else:
-            path = '$({})/{}'.format(self.base.name, self.path)
+            path = '$({})/{}'.format(self.base, self.path)
         return '<{}({!r})>'.format(type(self).__name__, path)

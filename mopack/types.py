@@ -376,7 +376,7 @@ def path_string(base):
 def abs_or_inner_path(base):
     def check(field, value):
         with ensure_field_error(field):
-            value = Path.ensure_path(value, base or Path.Base.absolute)
+            value = Path.ensure_path(value, base)
             if not value.is_abs() and not value.is_inner():
                 raise FieldValueError('expected an absolute or inner path',
                                       field)

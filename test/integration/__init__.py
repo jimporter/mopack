@@ -175,7 +175,7 @@ def cfg_system_pkg(name, config_file, *, linkage, **kwargs):
     return result
 
 
-def cfg_ninja_builder(*, directory=Path('', Path.Base.srcdir), extra_args=[]):
+def cfg_ninja_builder(*, directory=Path('', 'srcdir'), extra_args=[]):
     return {
         'type': 'ninja',
         '_version': 1,
@@ -184,9 +184,9 @@ def cfg_ninja_builder(*, directory=Path('', Path.Base.srcdir), extra_args=[]):
     }
 
 
-def cfg_bfg9000_builder(*, directory=Path('', Path.Base.srcdir), extra_args=[],
+def cfg_bfg9000_builder(*, directory=Path('', 'srcdir'), extra_args=[],
                         child_builder=cfg_ninja_builder(
-                            directory=Path('', Path.Base.builddir)
+                            directory=Path('', 'builddir')
                         )):
     return {
         'type': 'bfg9000',
@@ -197,9 +197,9 @@ def cfg_bfg9000_builder(*, directory=Path('', Path.Base.srcdir), extra_args=[],
     }
 
 
-def cfg_cmake_builder(*, directory=Path('', Path.Base.srcdir), extra_args=[],
+def cfg_cmake_builder(*, directory=Path('', 'srcdir'), extra_args=[],
                       child_builder=cfg_ninja_builder(
-                          directory=Path('', Path.Base.builddir)
+                          directory=Path('', 'builddir')
                       )):
     return {
         'type': 'cmake',
@@ -210,7 +210,7 @@ def cfg_cmake_builder(*, directory=Path('', Path.Base.srcdir), extra_args=[],
     }
 
 
-def cfg_custom_builder(*, directory=Path('', Path.Base.srcdir),
+def cfg_custom_builder(*, directory=Path('', 'srcdir'),
                        build_commands=[], deploy_commands=[]):
     return {
         'type': 'custom',
