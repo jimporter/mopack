@@ -163,6 +163,7 @@ class LogFile:
             with proc.stdout:
                 while proc.poll() is None:
                     self._print_verbose(proc.stdout.readline(), end='')
+                self._print_verbose(proc.stdout.read(), end='')
         except Exception as e:
             print(str(e), file=self.file)
             raise type(e)("Command '{}' failed:\n{}".format(

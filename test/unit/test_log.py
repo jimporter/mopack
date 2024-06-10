@@ -7,6 +7,7 @@ from subprocess import SubprocessError
 from unittest import mock, TestCase
 
 from mopack import log
+from mopack.iterutils import listify
 
 # Make sure we're referring to the .py file, not the .pyc file.
 this_file = __file__.rstrip('c')
@@ -148,12 +149,17 @@ class TestInit(TestCase):
 
 class TestLogFile(TestCase):
     @staticmethod
-    def mock_popen(returncode, stdout=''):
+    def mock_popen(returncode, *, cycles=1, stdout=''):
+        stdout = listify(stdout)
+        readline = stdout[:-1] + [''] * (cycles + 1 - len(stdout))
+        read = stdout[-1] or ''
+
         mpopen = mock.MagicMock()
         mpopen.configure_mock(**{
             'returncode': returncode,
-            'poll.side_effect': (None, returncode),
-            'stdout.readline.return_value': stdout
+            'poll.side_effect': [None] * cycles + [returncode],
+            'stdout.readline.side_effect': readline,
+            'stdout.read.return_value': read,
         })
         return mpopen
 
@@ -170,13 +176,13 @@ class TestLogFile(TestCase):
             mopen().close.assert_called_once_with()
 
     def test_check_call(self):
+        proc = self.mock_popen(0, stdout=['stdout\n', 'end\n'])
         with mock.patch('builtins.open', mock.mock_open()) as mopen, \
-             mock.patch('subprocess.Popen',
-                        return_value=self.mock_popen(0, 'stdout\n')):
+             mock.patch('subprocess.Popen', return_value=proc):
             with log.LogFile.open('pkgdir', 'package') as logfile:
                 logfile.check_call(['cmd', '--arg'], env=None)
                 output = ''.join(i[-2][0] for i in mopen().write.mock_calls)
-                self.assertEqual(output, '$ cmd --arg\nstdout\n')
+                self.assertEqual(output, '$ cmd --arg\nstdout\nend\n')
 
     def test_check_call_proc_error_no_output(self):
         msg = "Command 'cmd --arg' returned non-zero exit status 1"
@@ -189,15 +195,15 @@ class TestLogFile(TestCase):
                 self.assertEqual(output, '$ cmd --arg\n')
 
     def test_check_call_proc_error_output(self):
+        proc = self.mock_popen(1, stdout=['stdout\n', 'end\n'])
         msg = "Command 'cmd --arg' returned non-zero exit status 1"
         with mock.patch('builtins.open', mock.mock_open()) as mopen, \
-             mock.patch('subprocess.Popen',
-                        return_value=self.mock_popen(1, 'stdout\n')):
+             mock.patch('subprocess.Popen', return_value=proc):
             with log.LogFile.open('pkgdir', 'package') as logfile:
                 with self.assertRaisesRegex(SubprocessError, re.escape(msg)):
                     logfile.check_call(['cmd', '--arg'], env=None)
                 output = ''.join(i[-2][0] for i in mopen().write.mock_calls)
-                self.assertEqual(output, '$ cmd --arg\nstdout\n')
+                self.assertEqual(output, '$ cmd --arg\nstdout\nend\n')
 
     def test_check_call_os_error(self):
         msg = "Command 'cmd --arg' failed:\n  bad"
