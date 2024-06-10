@@ -1,5 +1,4 @@
 import os
-import subprocess
 from unittest import mock
 
 from . import BuilderTest, MockPackage, OptionsTest, through_json
@@ -22,20 +21,16 @@ class TestBfg9000Builder(BuilderTest):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('mopack.builders.ninja.pushd'), \
-             mock.patch('subprocess.run') as mcall:
+             mock.patch('mopack.log.LogFile.check_call') as mcall:
             pkg.builder.build(self.metadata, pkg)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', pkg.name + '.log'
             ), 'a')
             mcall.assert_any_call(
                 ['bfg9000', 'configure', builddir] + extra_args,
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, check=True, env={}
+                env={}
             )
-            mcall.assert_called_with(
-                ['ninja'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, check=True, env={}
-            )
+            mcall.assert_called_with(['ninja'], env={})
 
     def test_basic(self):
         pkg = self.make_package_and_builder('foo')
@@ -46,16 +41,12 @@ class TestBfg9000Builder(BuilderTest):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('mopack.builders.ninja.pushd'), \
-             mock.patch('subprocess.run') as mcall:
+             mock.patch('mopack.log.LogFile.check_call') as mcall:
             pkg.builder.deploy(self.metadata, pkg)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'deploy', 'foo.log'
             ), 'a')
-            mcall.assert_called_with(
-                ['ninja', 'install'], stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT, universal_newlines=True,
-                check=True, env={}
-            )
+            mcall.assert_called_with(['ninja', 'install'], env={})
 
     def test_extra_args(self):
         pkg = self.make_package_and_builder('foo', extra_args='--extra args')

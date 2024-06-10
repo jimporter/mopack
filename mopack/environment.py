@@ -55,11 +55,15 @@ def get_cmd(env, cmdvar, default):
     return split_native_str(env.get(cmdvar, default))
 
 
-def subprocess_run(args, *, env, **kwargs):
+def nest_env(env):
     if nested_invoke in os.environ:
         override_env = {nested_invoke: os.environ[nested_invoke]}
-        env = ChainMap(override_env, env)
-    return subprocess.run(args, env=env, **kwargs)
+        return ChainMap(override_env, env)
+    return env
+
+
+def subprocess_run(args, *, env, **kwargs):
+    return subprocess.run(args, env=nest_env(env), **kwargs)
 
 
 # Make a function to convert between command names for different languages in

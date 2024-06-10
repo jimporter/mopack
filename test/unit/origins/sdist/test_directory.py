@@ -293,9 +293,11 @@ class TestDirectory(SDistTestCase):
             'pkg_config_path': [self.pkgconfdir(None)],
         })
 
-        with mock.patch('subprocess.run') as mrun:
+        with mock.patch('subprocess.run') as mrun, \
+             mock.patch('subprocess.Popen') as mpopen:
             self.assertEqual(pkg.version(self.metadata), None)
             mrun.assert_not_called()
+            mpopen.assert_not_called()
 
     def test_submodules(self):
         submodules_required = {'names': '*', 'required': True}
@@ -348,28 +350,28 @@ class TestDirectory(SDistTestCase):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('mopack.builders.ninja.pushd'), \
-             mock.patch('subprocess.run') as mrun:
+             mock.patch('mopack.log.LogFile.check_call') as mcall:
             with assert_logging([('resolve', 'foo')]):
                 pkg.resolve(self.metadata)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')
             builddir = os.path.join(self.pkgdir, 'build', 'foo')
-            mrun.assert_any_call(
+            mcall.assert_any_call(
                 ['bfg9000', 'configure', builddir, '--prefix', '/usr/local'],
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, check=True, env={}
+                env={}
             )
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('mopack.builders.ninja.pushd'), \
-             mock.patch('subprocess.run'):
+             mock.patch('mopack.log.LogFile.check_call') as mcall:
             with assert_logging([('deploy', 'foo')]):
                 pkg.deploy(self.metadata)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'deploy', 'foo.log'
             ), 'a')
+            mcall.assert_any_call(['ninja', 'install'], env={})
 
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 deploy=False)

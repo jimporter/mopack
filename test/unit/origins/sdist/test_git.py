@@ -39,15 +39,12 @@ class TestGit(SDistTestCase):
 
         with mock_open_log(), \
              mock.patch('mopack.origins.sdist.pushd'), \
-             mock.patch('subprocess.run') as mrun:
+             mock.patch('mopack.log.LogFile.check_call') as mcall:
             with assert_logging([('fetch',
                                   'foo from {}'.format(pkg.repository))]):
                 pkg.fetch(self.metadata, self.config)
-            mrun.assert_has_calls([
-                mock.call(i, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                          universal_newlines=True, check=True, env={})
-                for i in git_cmds
-            ], any_order=True)
+            mcall.assert_has_calls([mock.call(i, env={}) for i in git_cmds],
+                                   any_order=True)
 
     def test_url(self):
         pkg = self.make_package('foo', repository=self.srcurl, build='bfg9000')
@@ -165,7 +162,7 @@ class TestGit(SDistTestCase):
 
         with mock_open_log(), \
              mock.patch('os.path.exists', mock_exists), \
-             mock.patch('subprocess.run'), \
+             mock.patch('mopack.log.LogFile.check_call'), \
              mock.patch('builtins.open', mock_open_after_first(
                  read_data='export:\n  build: bfg9000'
              )):
@@ -185,7 +182,7 @@ class TestGit(SDistTestCase):
 
         with mock_open_log(), \
              mock.patch('os.path.exists', mock_exists), \
-             mock.patch('subprocess.run'), \
+             mock.patch('mopack.log.LogFile.check_call'), \
              mock.patch('builtins.open', mock_open_after_first(
                  read_data='export:\n  build: bfg9000'
              )):
@@ -197,7 +194,8 @@ class TestGit(SDistTestCase):
                 'foo', repository=self.srcssh, build='bfg9000',
                 linkage={'type': 'system'}
             ))
-        with mock.patch('subprocess.run', side_effect=OSError()), \
+        with mock.patch('mopack.log.LogFile.check_call',
+                        side_effect=OSError()), \
              mock.patch('mopack.linkages.path_system.PathLinkage._filter_path',
                         lambda *args: []), \
              mock.patch('mopack.linkages.path_system.file_outdated',
@@ -216,7 +214,7 @@ class TestGit(SDistTestCase):
 
         with mock_open_log(), \
              mock.patch('os.path.exists', mock_exists), \
-             mock.patch('subprocess.run'), \
+             mock.patch('mopack.log.LogFile.check_call'), \
              mock.patch('builtins.open', mock_open_after_first(
                  read_data='export:\n  build: bfg9000'
              )):
@@ -338,14 +336,10 @@ class TestGit(SDistTestCase):
         with mock_open_log(), \
              mock.patch('os.path.exists', mock_exists), \
              mock.patch('mopack.origins.sdist.pushd'), \
-             mock.patch('subprocess.run') as mrun:
+             mock.patch('mopack.log.LogFile.check_call') as mcall:
             with assert_logging([]):
                 pkg.fetch(self.metadata, self.config)
-            mrun.assert_called_once_with(
-                ['git', 'pull'], stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT, universal_newlines=True, check=True,
-                env={}
-            )
+            mcall.assert_called_once_with(['git', 'pull'], env={})
         self.check_resolve(pkg)
 
     def test_already_fetched_tag(self):
@@ -387,28 +381,28 @@ class TestGit(SDistTestCase):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('mopack.builders.ninja.pushd'), \
-             mock.patch('subprocess.run') as mrun:
+             mock.patch('mopack.log.LogFile.check_call') as mcall:
             with assert_logging([('resolve', 'foo')]):
                 pkg.resolve(self.metadata)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')
             builddir = os.path.join(self.pkgdir, 'build', 'foo')
-            mrun.assert_any_call(
+            mcall.assert_any_call(
                 ['bfg9000', 'configure', builddir, '--prefix', '/usr/local'],
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, check=True, env={}
+                env={}
             )
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('mopack.builders.ninja.pushd'), \
-             mock.patch('subprocess.run'):
+             mock.patch('mopack.log.LogFile.check_call') as mcall:
             with assert_logging([('deploy', 'foo')]):
                 pkg.deploy(self.metadata)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'deploy', 'foo.log'
             ), 'a')
+            mcall.assert_any_call(['ninja', 'install'], env={})
 
         pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000',
                                 deploy=False)

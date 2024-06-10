@@ -24,7 +24,7 @@ class TestApt(OriginTest):
 
     def check_resolve_all(self, pkgs, remotes):
         with mock_open_log() as mopen, \
-             mock.patch('subprocess.run') as mrun:
+             mock.patch('mopack.log.LogFile.check_call') as mcall:
             with assert_logging([('resolve', '{} from apt'.format(i.name))
                                  for i in pkgs]):
                 AptPackage.resolve_all(self.metadata, pkgs)
@@ -35,20 +35,13 @@ class TestApt(OriginTest):
 
             for i in pkgs:
                 if i.repository:
-                    mrun.assert_any_call(
+                    mcall.assert_any_call(
                         ['sudo', 'add-apt-repository', '-y', i.repository],
-                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                        universal_newlines=True, check=True, env={}
+                        env={}
                     )
-            mrun.assert_any_call(
-                ['sudo', 'apt-get', 'update'], stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT, universal_newlines=True, check=True,
-                env={}
-            )
-            mrun.assert_any_call(
-                ['sudo', 'apt-get', 'install', '-y'] + remotes,
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, check=True, env={}
+            mcall.assert_any_call(['sudo', 'apt-get', 'update'], env={})
+            mcall.assert_any_call(
+                ['sudo', 'apt-get', 'install', '-y'] + remotes, env={}
             )
 
     def check_linkage(self, pkg, *, submodules=None, linkage=None):

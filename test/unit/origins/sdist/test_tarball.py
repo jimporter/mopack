@@ -127,18 +127,15 @@ class TestTarball(SDistTestCase):
              mock.patch('os.path.exists', return_value=False), \
              mock.patch('builtins.open', mock_open_after_first()) as mopen, \
              mock.patch('os.makedirs'), \
-             mock.patch('subprocess.run') as mrun:
+             mock.patch('mopack.log.LogFile.check_call') as mcall:
             with assert_logging([
                 ('fetch', 'foo from {}'.format(self.srcpath)),
                 ('patch', 'foo with {}'.format(patch)),
             ]):
                 pkg.fetch(self.metadata, self.config)
             mtar.assert_called_once_with(srcdir, None)
-            mrun.assert_called_once_with(
-                ['patch', '-p1'], stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT, stdin=mopen(),
-                universal_newlines=True, check=True, env={}
-            )
+            mcall.assert_called_once_with(['patch', '-p1'], stdin=mopen(),
+                                          env={})
         self.check_resolve(pkg)
 
     def test_build(self):
@@ -339,28 +336,28 @@ class TestTarball(SDistTestCase):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('mopack.builders.ninja.pushd'), \
-             mock.patch('subprocess.run') as mrun:
+             mock.patch('mopack.log.LogFile.check_call') as mcall:
             with assert_logging([('resolve', 'foo')]):
                 pkg.resolve(self.metadata)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')
             builddir = os.path.join(self.pkgdir, 'build', 'foo')
-            mrun.assert_any_call(
+            mcall.assert_any_call(
                 ['bfg9000', 'configure', builddir, '--prefix', '/usr/local'],
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, check=True, env={}
+                env={}
             )
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('mopack.builders.ninja.pushd'), \
-             mock.patch('subprocess.run'):
+             mock.patch('mopack.log.LogFile.check_call') as mcall:
             with assert_logging([('deploy', 'foo')]):
                 pkg.deploy(self.metadata)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'deploy', 'foo.log'
             ), 'a')
+            mcall.assert_any_call(['ninja', 'install'], env={})
 
         pkg = self.make_package('foo', url='http://example.com',
                                 build='bfg9000', deploy=False)

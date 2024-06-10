@@ -1,5 +1,4 @@
 import os
-import subprocess
 from unittest import mock
 
 from . import BuilderTest, MockPackage, through_json
@@ -25,16 +24,13 @@ class TestCustomBuilder(BuilderTest):
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.custom.pushd'), \
-             mock.patch('subprocess.run') as mcall:
+             mock.patch('mopack.log.LogFile.check_call') as mcall:
             pkg.builder.build(self.metadata, pkg)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', pkg.name + '.log'
             ), 'a')
-            for line in build_commands:
-                mcall.assert_any_call(
-                    line, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                    universal_newlines=True, check=True, env={}
-                )
+            mcall.assert_has_calls([mock.call(i, env={})
+                                    for i in build_commands])
 
     def test_basic(self):
         pkg = self.make_package_and_builder('foo', build_commands=[
@@ -90,16 +86,12 @@ class TestCustomBuilder(BuilderTest):
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.custom.pushd'), \
-             mock.patch('subprocess.run') as mcall:
+             mock.patch('mopack.log.LogFile.check_call') as mcall:
             pkg.builder.deploy(self.metadata, pkg)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'deploy', 'foo.log'
             ), 'a')
-            mcall.assert_called_with(
-                ['make', 'install'], stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT, universal_newlines=True,
-                check=True, env={}
-            )
+            mcall.assert_called_with(['make', 'install'], env={})
 
     def test_cd(self):
         pkg = self.make_package_and_builder('foo', build_commands=[

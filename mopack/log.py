@@ -10,7 +10,7 @@ from logging import (getLogger, info, debug,  # noqa: F401
                      CRITICAL, ERROR, WARNING, INFO, DEBUG)
 
 from .iterutils import listify
-from .environment import subprocess_run
+from .environment import nest_env
 
 _next_level = INFO + 1
 
@@ -149,26 +149,32 @@ class LogFile:
 
     def check_call(self, args, *, env, **kwargs):
         command = ' '.join(shlex.quote(i) for i in args)
+        if 'stdin' in kwargs:
+            stdin = kwargs['stdin']
+            command += ' < {}'.format(getattr(stdin, 'name', stdin))
         self._print_verbose('$ ' + command, flush=True)
+
+        proc = None
         try:
-            result = subprocess_run(
+            proc = subprocess.Popen(
                 args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, check=True, env=env, **kwargs
+                universal_newlines=True, env=nest_env(env), **kwargs
             )
-            self._print_verbose(result.stdout)
-        except subprocess.CalledProcessError as e:
-            print(e.stdout, file=self.file)
-            msg = "Command '{}' returned non-zero exit status {}".format(
-                command, e.returncode
-            )
-            if e.stdout:
-                msg += ':\n' + textwrap.indent(e.stdout.rstrip(), '  ')
-            raise subprocess.SubprocessError(msg)
+            with proc.stdout:
+                while proc.poll() is None:
+                    self._print_verbose(proc.stdout.readline(), end='')
         except Exception as e:
             print(str(e), file=self.file)
             raise type(e)("Command '{}' failed:\n{}".format(
                 command, textwrap.indent(str(e), '  ')
             ))
+
+        if proc and proc.returncode != 0:
+            raise subprocess.SubprocessError(
+                "Command '{}' returned non-zero exit status {}".format(
+                    command, proc.returncode
+                )
+            )
 
     @contextmanager
     def synthetic_command(self, args):

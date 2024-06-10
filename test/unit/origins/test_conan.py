@@ -38,18 +38,16 @@ class TestConan(OriginTest):
     def check_resolve_all(self, pkgs, conanfile, extra_args=[]):
         with mock_open_log(mock_open_write()) as mopen, \
              mock.patch('mopack.origins.conan.pushd'), \
-             mock.patch('subprocess.run') as mrun:
+             mock.patch('mopack.log.LogFile.check_call') as mcall:
             with assert_logging([('resolve', '{} from conan'.format(i.name))
                                  for i in pkgs]):
                 ConanPackage.resolve_all(self.metadata, pkgs)
 
             self.assertEqual(mopen.mock_file.getvalue(), conanfile)
             conandir = os.path.join(self.pkgdir, 'conan')
-            mrun.assert_called_with(
-                (['conan', 'install'] + extra_args +
-                 ['--', conandir]),
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, check=True, env={}
+            mcall.assert_called_with(
+                ['conan', 'install'] + extra_args + ['--', conandir],
+                env={}
             )
 
     def check_linkage(self, pkg, *, submodules=None, linkage=None):
