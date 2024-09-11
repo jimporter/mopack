@@ -36,6 +36,8 @@ class TestEvaluate(TestCase):
         self.assertEvaluate("'foo'", 'foo')
         self.assertEvaluate('"foo"', 'foo')
         self.assertEvaluate("'foo\\nbar'", 'foo\nbar')
+        self.assertEvaluate("'foo\\'bar'", "foo'bar")
+        self.assertEvaluate('"foo\\"bar"', 'foo"bar')
 
         self.assertEvaluate("'${{ foo }}'", '${{ foo }}')
         self.assertEqual(evaluate(self.symbols, "${{ '${{ foo }}' }}"),

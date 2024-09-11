@@ -155,7 +155,7 @@ integer_literal = pp.common.signed_integer.set_parse_action(
 )
 
 string_literal = (
-    pp.QuotedString('"') | pp.QuotedString("'")
+    pp.QuotedString('"', esc_char='\\') | pp.QuotedString("'", esc_char='\\')
 ).set_parse_action(lambda t: [Literal(t[0])])
 
 array_literal = (
