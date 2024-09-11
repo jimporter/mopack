@@ -213,9 +213,9 @@ def evaluate_token(symbols, tok):
 
 def parse(expression, if_context=False):
     if if_context:
-        return if_expr.parse_string(expression, parseAll=True)[0]
+        return if_expr.parse_string(expression, parse_all=True)[0]
     else:
-        ast = str_expr.parse_string(expression, parseAll=True)
+        ast = str_expr.parse_string(expression, parse_all=True)
         if len(ast) == 0:
             return expression
         elif len(ast) == 1:
