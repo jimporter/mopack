@@ -1,6 +1,7 @@
 import ntpath
 import os
 import posixpath
+import warnings
 from contextlib import contextmanager
 from unittest import mock, TestCase
 
@@ -21,6 +22,14 @@ class TypeTestCase(TestCase):
         with ctx as raised:
             yield raised
         self.assertEqual(raised.exception.field, field)
+
+    @contextmanager
+    def assertFieldWarning(self, field, regex=None):
+        with warnings.catch_warnings(record=True) as caught:
+            yield caught
+        self.assertEqual([i.message.field for i in caught], [field])
+        if regex:
+            self.assertRegex(str(caught[0].message), regex)
 
 
 class TestUnset(TestCase):
@@ -735,6 +744,14 @@ class TestWrapFieldError(TypeTestCase):
             with wrap_field_error('outer', 'kind'):
                 raise FieldError('msg', 'inner')
 
+    def test_field_error_nested(self):
+        with self.assertFieldError(('outer', 'middle', 'inner')):
+            with wrap_field_error(('outer', 'middle')):
+                raise FieldError('msg', 'inner')
+        with self.assertFieldError(('outer', 'middle', 'inner')):
+            with wrap_field_error(('outer', 'middle'), 'kind'):
+                raise FieldError('msg', 'inner')
+
     def test_matching_type_error(self):
         msg = "foo got an unexpected keyword argument 'inner'"
         with self.assertRaises(TypeError) as e:
@@ -743,6 +760,16 @@ class TestWrapFieldError(TypeTestCase):
         self.assertNotIsInstance(e.exception, FieldError)
         with self.assertFieldError(('outer', 'inner')):
             with wrap_field_error('outer', 'kind'):
+                raise TypeError(msg)
+
+    def test_matching_type_error_nested(self):
+        msg = "foo got an unexpected keyword argument 'inner'"
+        with self.assertRaises(TypeError) as e:
+            with wrap_field_error(('outer', 'middle')):
+                raise TypeError(msg)
+        self.assertNotIsInstance(e.exception, FieldError)
+        with self.assertFieldError(('outer', 'middle', 'inner')):
+            with wrap_field_error(('outer', 'middle'), 'kind'):
                 raise TypeError(msg)
 
     def test_non_matching_type_error(self):
@@ -764,6 +791,22 @@ class TestWrapFieldError(TypeTestCase):
             with wrap_field_error('outer', 'kind'):
                 raise ValueError('msg')
         self.assertNotIsInstance(e.exception, FieldError)
+
+    def test_field_warning(self):
+        with self.assertFieldWarning(('outer', 'inner')):
+            with wrap_field_error('outer'):
+                warnings.warn(FieldKeyWarning('warning', 'inner'))
+        with self.assertFieldWarning(('outer', 'inner')):
+            with wrap_field_error('outer', 'kind'):
+                warnings.warn(FieldKeyWarning('warning', 'inner'))
+
+    def test_field_warning_nested(self):
+        with self.assertFieldWarning(('outer', 'middle', 'inner')):
+            with wrap_field_error(('outer', 'middle')):
+                warnings.warn(FieldKeyWarning('warning', 'inner'))
+        with self.assertFieldWarning(('outer', 'middle', 'inner')):
+            with wrap_field_error(('outer', 'middle'), 'kind'):
+                warnings.warn(FieldKeyWarning('warning', 'inner'))
 
 
 class TestTryLoadConfig(TestCase):

@@ -46,12 +46,14 @@ _dependency_ex = re.compile(
 )
 
 _bad_dependency_ex = re.compile(r'[,[\]]')
+_field_context = []
 
 
 class FieldError(TypeError, ConfigurationError):
     def __init__(self, message, field, offset=0):
         super().__init__(message)
-        self.field = iterutils.listify(field, type=tuple)
+        self.field = (tuple(_field_context) +
+                      iterutils.listify(field, type=tuple))
         self.offset = offset
 
 
@@ -82,19 +84,22 @@ def kwarg_error_to_field_error(e, kind):
             msg = ('{} got an unexpected keyword argument {!r}'
                    .format(kind, m.group(1)))
             return FieldKeyError(msg, m.group(1))
-    return e
+    return None
 
 
 @contextmanager
 def wrap_field_error(field, kind=None):
+    field = iterutils.listify(field)
     try:
+        _field_context.extend(field)
         yield
     except TypeError as e:
-        e = kwarg_error_to_field_error(e, kind) if kind else e
-        if not isinstance(e, FieldError):
-            raise e
-        new_field = iterutils.listify(field, type=tuple) + e.field
-        raise type(e)(str(e), new_field, e.offset)
+        wrapped = kwarg_error_to_field_error(e, kind) if kind else None
+        if wrapped:
+            raise wrapped
+        raise
+    finally:
+        del _field_context[-len(field):]
 
 
 @contextmanager
@@ -161,7 +166,7 @@ def try_load_config(config, context, kind):
         if not isinstance(config, MarkedDict):
             raise
 
-        e = kwarg_error_to_field_error(e, kind)
+        e = kwarg_error_to_field_error(e, kind) or e
         raise to_yaml_error(e)
     finally:
         warnings.showwarning = old_showwarning
