@@ -737,28 +737,33 @@ class TestWrapFieldError(TypeTestCase):
 
     def test_matching_type_error(self):
         msg = "foo got an unexpected keyword argument 'inner'"
-        with self.assertRaises(TypeError):
+        with self.assertRaises(TypeError) as e:
             with wrap_field_error('outer'):
                 raise TypeError(msg)
+        self.assertNotIsInstance(e.exception, FieldError)
         with self.assertFieldError(('outer', 'inner')):
             with wrap_field_error('outer', 'kind'):
                 raise TypeError(msg)
 
     def test_non_matching_type_error(self):
-        with self.assertRaises(TypeError):
+        with self.assertRaises(TypeError) as e:
             with wrap_field_error('outer'):
                 raise TypeError('msg')
-        with self.assertRaises(TypeError):
+        self.assertNotIsInstance(e.exception, FieldError)
+        with self.assertRaises(TypeError) as e:
             with wrap_field_error('outer', 'kind'):
                 raise TypeError('msg')
+        self.assertNotIsInstance(e.exception, FieldError)
 
     def test_other_error(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as e:
             with wrap_field_error('outer'):
                 raise ValueError('msg')
-        with self.assertRaises(ValueError):
+        self.assertNotIsInstance(e.exception, FieldError)
+        with self.assertRaises(ValueError) as e:
             with wrap_field_error('outer', 'kind'):
                 raise ValueError('msg')
+        self.assertNotIsInstance(e.exception, FieldError)
 
 
 class TestTryLoadConfig(TestCase):
