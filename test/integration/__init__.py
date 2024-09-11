@@ -210,12 +210,13 @@ def cfg_cmake_builder(*, directory=Path('', 'srcdir'), extra_args=[],
     }
 
 
-def cfg_custom_builder(*, directory=Path('', 'srcdir'),
+def cfg_custom_builder(*, directory=Path('', 'srcdir'), outdir='build',
                        build_commands=[], deploy_commands=[]):
     return {
         'type': 'custom',
-        '_version': 3,
+        '_version': 4,
         'directory': directory.dehydrate(),
+        'outdir': outdir,
         'build_commands': build_commands,
         'deploy_commands': deploy_commands,
     }

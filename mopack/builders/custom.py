@@ -1,5 +1,6 @@
 import os
 import shutil
+import warnings
 
 from . import DirectoryBuilder
 from .. import types
@@ -19,7 +20,7 @@ _cmds_type = types.maybe(types.list_of(types.shell_args()), default=[])
                                       'deploy_commands': CommandsFD})
 class CustomBuilder(DirectoryBuilder):
     type = 'custom'
-    _version = 3
+    _version = 4
 
     @staticmethod
     def upgrade(config, version):
@@ -31,13 +32,32 @@ class CustomBuilder(DirectoryBuilder):
         if version < 3:  # pragma: no branch
             config['directory'] = Path('', 'srcdir').dehydrate()
 
+        # v4 adds `outdir`.
+        if version < 4:  # pragma: no branch
+            config['outdir'] = 'build'
+
         return config
 
-    def __init__(self, pkg, *, build_commands, deploy_commands=None, _symbols,
-                 **kwargs):
-        super().__init__(pkg, _symbols=_symbols, **kwargs)
+    def __init__(self, pkg, *, build_commands, deploy_commands=None,
+                 directory=None, outdir=types.Unset, _symbols, **kwargs):
+        # TODO: Remove this after v0.2 is released.
+        if outdir is types.Unset:
+            warnings.warn(types.FieldKeyWarning(
+                ('`outdir` unspecified, defaulting to `build`; ' +
+                 'this will default to `null` in a future release'),
+                None
+            ))
+            outdir = 'build'
 
+        if directory is None and _symbols.path_bases:
+            directory = '$' + _symbols.path_bases[-1]
+
+        T = types.TypeCheck(locals(), _symbols)
+        T.outdir(types.maybe(types.symbol_name))
         _symbols = _symbols.augment_path_bases(*self.path_bases())
+
+        super().__init__(pkg, directory=directory, _symbols=_symbols, **kwargs)
+
         T = types.TypeCheck(locals(), _symbols)
         T.build_commands(_cmds_type)
         T.deploy_commands(_cmds_type)
@@ -54,28 +74,36 @@ class CustomBuilder(DirectoryBuilder):
                 logfile.check_call(line, env=self._common_options.env)
 
     def path_bases(self):
-        return ('builddir',)
+        if self.outdir:
+            return (self.outdir + 'dir',)
+        return ()
 
     def path_values(self, metadata):
-        builddir = os.path.abspath(os.path.join(metadata.pkgdir, 'build',
-                                                self.name))
-        return {'builddir': builddir}
+        if self.outdir:
+            outdir = os.path.abspath(os.path.join(metadata.pkgdir, self.outdir,
+                                                  self.name))
+            return {self.outdir + 'dir': outdir}
+        return {}
 
     def clean(self, metadata, pkg):
-        path_values = pkg.path_values(metadata)
-        shutil.rmtree(path_values['builddir'], ignore_errors=True)
+        if self.outdir:
+            path_values = pkg.path_values(metadata)
+            shutil.rmtree(path_values['builddir'], ignore_errors=True)
 
     def build(self, metadata, pkg):
         path_values = pkg.path_values(metadata)
 
         with LogFile.open(metadata.pkgdir, self.name) as logfile:
-            with pushd(self.directory.string(**path_values)):
+            with pushd(self.directory.string(**path_values), makedirs=True,
+                       exist_ok=True):
                 self._execute(logfile, self.build_commands, path_values)
 
     def deploy(self, metadata, pkg):
         path_values = pkg.path_values(metadata)
 
+        directory = (path_values[self.outdir + 'dir'] if self.outdir else
+                     self.directory.string(**path_values))
         with LogFile.open(metadata.pkgdir, self.name,
                           kind='deploy') as logfile:
-            with pushd(path_values['builddir']):
+            with pushd(directory, makedirs=True, exist_ok=True):
                 self._execute(logfile, self.deploy_commands, path_values)

@@ -4,6 +4,7 @@ packages:
     path: hello-bfg.tar.gz
     build:
       type: custom
+      outdir: build  # TODO: Remove this after v0.2 is released.
       build_commands:
         - >-
           bfg9000 configure $builddir ${{

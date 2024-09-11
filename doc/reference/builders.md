@@ -124,6 +124,7 @@ packages:
     builder:
       type: custom
       directory: <path>
+      outdir: <symbol>
       build_commands: <list[shell_args]>
       deploy_commands: <list[shell_args]>
 ```
@@ -133,6 +134,13 @@ packages:
   directory specified by the package configuration, usually `$srcdir`. (If a
   previous builder for this package defines a new directory, that will be used
   by default instead.)
+
+`outdir` <span class="subtitle">*optional, default*: `"build"`</span>
+: The directory to use for files created by this builder. By default, this is
+  the `build/` directory, and will be available in the rest of the configuration
+  as the variable `$builddir`. If this is `null`, then there is no separate
+  output directory. (Note that in a future revision, the default value
+  will change to `null`.)
 
 `build_commands` <span class="subtitle">*required*</span>
 : A list of shell commands to execute when building the dependency. Each command

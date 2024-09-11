@@ -343,6 +343,13 @@ def string(field, value):
     return value
 
 
+def symbol_name(field, value):
+    value = string(field, value)
+    if not re.match('^[A-Za-z0-9_-]+$', value):
+        raise FieldValueError('expected a symbol name', field)
+    return value
+
+
 def placeholder_string(field, value):
     if not isinstance(value, (str, PlaceholderString)):
         raise FieldValueError('expected a string', field)
