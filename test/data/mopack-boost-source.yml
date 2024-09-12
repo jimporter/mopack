@@ -1,0 +1,10 @@
+packages:
+  boost:
+    origin: tarball
+    path: /home/jim/src/mopack/build/boost_1_85_0.tar.gz
+    build:
+      - type: custom
+        outdir: null  # TODO: Remove this after v0.2 is released.
+        build_commands: ["./bootstrap.sh --with-libraries=iostreams"]
+      - type: b2
+    linkage: path

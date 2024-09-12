@@ -17,6 +17,18 @@ packages:
 `type` <span class="subtitle">*required*</span>
 : The type of builder; see below for possible values.
 
+## b2
+
+```yaml
+packages:
+  my_pkg:
+    # ...
+    builder:
+      type: b2
+      directory: <path>
+      extra_args: <shell_args>
+```
+
 ## bfg9000
 
 ```yaml
