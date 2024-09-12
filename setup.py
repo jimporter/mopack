@@ -202,6 +202,7 @@ setup(
             'tarball=mopack.origins.sdist:TarballPackage',
         ],
         'mopack.builders': [
+            'b2=mopack.builders.b2:B2Builder',
             'bfg9000=mopack.builders.bfg9000:Bfg9000Builder',
             'cmake=mopack.builders.cmake:CMakeBuilder',
             'custom=mopack.builders.custom:CustomBuilder',

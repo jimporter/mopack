@@ -39,11 +39,12 @@ jobs:
              qt-version: '5.15.2'}
 
           # Extra settings for matrix builds
-          - {os: ubuntu-latest, extra-tests: [apt, mingw-cross]}
+          - {os: ubuntu-latest, extra-tests: [apt, mingw-cross, boost-source]}
           - {os: windows-latest, compiler: cc, skipped-tests: [boost, qt]}
           - {os: windows-latest, compiler: msvc, msvc-version: '14.4',
              win-sdk: '10.0.26100.0', boost-version: '1.80.0',
-             qt-version: '5.15.2'}
+             qt-version: '5.15.2', extra-tests: [boost-source]}
+          - {os: macos-14, extra-tests: [boost-source]}
         exclude:
           - os: ubuntu-latest
             compiler: msvc

@@ -5,7 +5,7 @@
 ### New features
 - `build` field for source distributions can now take a list of builders
 - Source distribution packages and builders now accept an `env` field
-- New builder `ninja`
+- New builders `b2` and `ninja`
 - Verbose output of build commands now prints iteratively
 - New expression variable `symbols`, a dictionary of all defined symbols
 
