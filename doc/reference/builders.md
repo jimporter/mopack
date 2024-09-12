@@ -24,6 +24,28 @@ packages:
   [globally](file-structure.md#options) or for this
   [package](package.md#source-distributions).
 
+## b2
+
+```yaml
+packages:
+  my_pkg:
+    # ...
+    builder:
+      type: b2
+      directory: <path>
+      extra_args: <shell_args>
+```
+
+`directory` <span class="subtitle">*optional, default*: *last directory*</span>
+: The directory where the `Jamroot` file is located. By default, this is the
+  last directory specified by the package configuration, usually `$srcdir`. (If
+  a previous builder for this package defines a new directory, that will be used
+  by default instead.)
+
+`extra_args` <span class="subtitle">*optional, default*: `null`</span>
+: A list of extra arguments to pass to `b2`. If a string is supplied, it will
+  first be split according to POSIX shell rules.
+
 ## bfg9000
 
 ```yaml

@@ -15,7 +15,7 @@ from mopack.types import dependency_string
 from mopack.path import Path
 
 
-# Also supported: 'apt', 'mingw-cross'
+# Also supported: 'apt', 'boost-source', 'mingw-cross'
 test_features = {'boost', 'qt'}
 for i in os.getenv('MOPACK_EXTRA_TESTS', '').split(' '):
     if i:
@@ -182,6 +182,16 @@ def cfg_ninja_builder(*, env={}, directory=Path('', 'srcdir'), extra_args=[]):
     return {
         'type': 'ninja',
         '_version': 2,
+        'env': env,
+        'directory': directory.dehydrate(),
+        'extra_args': extra_args,
+    }
+
+
+def cfg_b2_builder(*, env={}, directory=Path('', 'srcdir'), extra_args=[]):
+    return {
+        'type': 'b2',
+        '_version': 1,
         'env': env,
         'directory': directory.dehydrate(),
         'extra_args': extra_args,
