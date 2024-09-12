@@ -9,7 +9,7 @@ class TestSubmodules(IntegrationTest):
 
     def _check_resolve(self, config_file):
         config = os.path.join(test_data_dir, config_file)
-        self.assertPopen(['mopack', 'resolve', config])
+        self.assertPopen(mopack_cmd('resolve', config))
         self.assertNotExists('mopack/src/hello/hello-multi-bfg/build.bfg')
         self.assertExists('mopack/build/hello/')
         self.assertExists('mopack/logs/hello.log')
@@ -55,7 +55,7 @@ class TestSubmodulesPath(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-submodules-path.yml')
-        self.assertPopen(['mopack', 'resolve', config])
+        self.assertPopen(mopack_cmd('resolve', config))
         self.assertNotExists('mopack/src/hello/hello-multi-bfg/build.bfg')
         self.assertExists('mopack/build/hello/')
         self.assertExists('mopack/logs/hello.log')

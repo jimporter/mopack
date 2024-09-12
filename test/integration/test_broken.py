@@ -13,8 +13,9 @@ class TestBroken(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-broken.yml')
-        self.assertPopen(['mopack', 'resolve', config,
-                          '-dprefix=' + self.prefix], returncode=1)
+        self.assertPopen(mopack_cmd(
+            'resolve', config, '-dprefix=' + self.prefix
+        ), returncode=1)
         self.assertExists('mopack/src/hello/hello-bfg/build.bfg')
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
@@ -40,7 +41,7 @@ class TestBroken(IntegrationTest):
             ],
         })
 
-        self.assertPopen(['mopack', 'deploy'], returncode=1)
+        self.assertPopen(mopack_cmd('deploy'), returncode=1)
         include_prefix = '' if platform_name() == 'windows' else 'include/'
         lib_prefix = '' if platform_name() == 'windows' else 'lib/'
         with pushd(self.prefix):
@@ -54,8 +55,9 @@ class TestBrokenPatch(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-broken-patch.yml')
-        self.assertPopen(['mopack', 'resolve', config,
-                          '-dprefix=' + self.prefix], returncode=1)
+        self.assertPopen(mopack_cmd(
+            'resolve', config, '-dprefix=' + self.prefix
+        ), returncode=1)
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
         self.assertNotExists('mopack/src/hello')
@@ -82,7 +84,7 @@ class TestBrokenPatch(IntegrationTest):
             ],
         })
 
-        self.assertPopen(['mopack', 'deploy'], returncode=1)
+        self.assertPopen(mopack_cmd('deploy'), returncode=1)
         include_prefix = '' if platform_name() == 'windows' else 'include/'
         lib_prefix = '' if platform_name() == 'windows' else 'lib/'
         with pushd(self.prefix):

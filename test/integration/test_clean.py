@@ -8,9 +8,9 @@ class TestClean(IntegrationTest):
 
     def test_clean(self):
         config = os.path.join(test_data_dir, 'mopack-conan.yml')
-        self.assertPopen(['mopack', 'resolve', config])
+        self.assertPopen(mopack_cmd('resolve', config))
         self.assertExists('mopack/logs/conan.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPopen(['mopack', 'clean'])
+        self.assertPopen(mopack_cmd('clean'))
         self.assertNotExists('mopack/')

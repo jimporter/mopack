@@ -9,7 +9,7 @@ class TestCleanNeeded(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-nested-extra.yml')
-        self.assertPopen(['mopack', 'resolve', config])
+        self.assertPopen(mopack_cmd('resolve', config))
         self.assertExists('mopack/build/greeter/')
         self.assertExists('mopack/build/greeter/extra.txt')
         self.assertExists('mopack/logs/greeter.log')
@@ -43,7 +43,7 @@ class TestCleanNeeded(IntegrationTest):
 
         # Rebuild with a different config.
         config = os.path.join(test_data_dir, 'mopack-nested.yml')
-        self.assertPopen(['mopack', 'resolve', config])
+        self.assertPopen(mopack_cmd('resolve', config))
         self.assertExists('mopack/build/greeter/')
         self.assertExists('mopack/logs/greeter.log')
         self.assertExists('mopack/src/hello/hello-bfg/')

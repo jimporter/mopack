@@ -9,7 +9,7 @@ class TestInterpolation(IntegrationTest):
 
     def test_resolve_enabled(self):
         config = os.path.join(test_data_dir, 'mopack-interpolation.yml')
-        self.assertPopen(['mopack', 'resolve', config],
+        self.assertPopen(mopack_cmd('resolve', config),
                          extra_env={'MOPACK_TEST_EXTRA': '1'})
         self.assertNotExists('mopack/src/hello/hello-bfg/build.bfg')
         self.assertExists('mopack/build/hello/')
@@ -33,7 +33,7 @@ class TestInterpolation(IntegrationTest):
 
     def test_resolve_disabled(self):
         config = os.path.join(test_data_dir, 'mopack-interpolation.yml')
-        self.assertPopen(['mopack', 'resolve', config])
+        self.assertPopen(mopack_cmd('resolve', config))
         self.assertNotExists('mopack/src/hello/hello-bfg/build.bfg')
         self.assertExists('mopack/build/hello/')
         self.assertExists('mopack/logs/hello.log')

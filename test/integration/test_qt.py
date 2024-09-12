@@ -10,7 +10,7 @@ class TestQt(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-qt.yml')
-        self.assertPopen(['mopack', 'resolve', config])
+        self.assertPopen(mopack_cmd('resolve', config))
         self.assertExists('mopack/mopack.json')
 
         if platform_name() == 'windows':

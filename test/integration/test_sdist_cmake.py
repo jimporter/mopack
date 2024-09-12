@@ -13,8 +13,9 @@ class TestInnerCMake(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-inner-cmake.yml')
-        self.assertPopen(['mopack', 'resolve', config,
-                          '-dprefix=' + self.prefix])
+        self.assertPopen(mopack_cmd(
+            'resolve', config, '-dprefix=' + self.prefix
+        ))
         self.assertExists('mopack/build/greeter/')
         self.assertExists('mopack/logs/greeter.log')
         self.assertExists('mopack/build/hello/')
@@ -58,7 +59,7 @@ class TestInnerCMake(IntegrationTest):
             ],
         })
 
-        self.assertPopen(['mopack', 'deploy'])
+        self.assertPopen(mopack_cmd('deploy'))
         include_prefix = '' if platform_name() == 'windows' else 'include/'
         lib_prefix = '' if platform_name() == 'windows' else 'lib/'
         with pushd(self.prefix):
@@ -73,8 +74,9 @@ class TestOuterCMake(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-outer-cmake.yml')
-        self.assertPopen(['mopack', 'resolve', config,
-                          '-dprefix=' + self.prefix])
+        self.assertPopen(mopack_cmd(
+            'resolve', config, '-dprefix=' + self.prefix
+        ))
         self.assertExists('mopack/build/greeter/')
         self.assertExists('mopack/logs/greeter.log')
         self.assertExists('mopack/build/hello/')
@@ -122,7 +124,7 @@ class TestOuterCMake(IntegrationTest):
             ],
         })
 
-        self.assertPopen(['mopack', 'deploy'])
+        self.assertPopen(mopack_cmd('deploy'))
         include_prefix = '' if platform_name() == 'windows' else 'include/'
         lib_prefix = '' if platform_name() == 'windows' else 'lib/'
         with pushd(self.prefix):

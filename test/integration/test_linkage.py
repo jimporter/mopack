@@ -16,7 +16,7 @@ class TestLinkage(IntegrationTest):
                        'MOPACK_LIB_PATH': test_lib_dir}
 
         config = os.path.join(test_data_dir, 'mopack-tarball.yml')
-        self.assertPopen(['mopack', '--debug', 'resolve', config])
+        self.assertPopen(mopack_cmd('--debug', 'resolve', config))
 
         # Linkage for `hello`.
         expected_output_hello = {
@@ -72,7 +72,7 @@ class TestLinkage(IntegrationTest):
 
     def test_resolve_strict(self):
         config = os.path.join(test_data_dir, 'mopack-tarball.yml')
-        self.assertPopen(['mopack', 'resolve', '--strict', config])
+        self.assertPopen(mopack_cmd('resolve', '--strict', config))
 
         # Linkage for `hello`.
         expected_output_hello = {

@@ -12,7 +12,7 @@ class TestCustomBuilder(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-custom-builder.yml')
-        self.assertPopen(['mopack', 'resolve', config])
+        self.assertPopen(mopack_cmd('resolve', config))
         self.assertExists('mopack/src/hello/hello-bfg/build.bfg')
         self.assertExists('mopack/build/hello/')
         self.assertExists('mopack/logs/hello.log')
@@ -51,8 +51,9 @@ class TestCustomBuilderDeploy(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-custom-builder.yml')
-        self.assertPopen(['mopack', 'resolve', config,
-                          '-dprefix=' + self.prefix])
+        self.assertPopen(mopack_cmd(
+            'resolve', config, '-dprefix=' + self.prefix
+        ))
         self.assertExists('mopack/src/hello/hello-bfg/build.bfg')
         self.assertExists('mopack/build/hello/')
         self.assertExists('mopack/logs/hello.log')
@@ -88,7 +89,7 @@ class TestCustomBuilderDeploy(IntegrationTest):
             ],
         })
 
-        self.assertPopen(['mopack', '--debug', 'deploy'])
+        self.assertPopen(mopack_cmd('--debug', 'deploy'))
         include_prefix = '' if platform_name() == 'windows' else 'include/'
         lib_prefix = '' if platform_name() == 'windows' else 'lib/'
         with pushd(self.prefix):

@@ -9,7 +9,7 @@ class TestLocal(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'local')
-        self.assertPopen(['mopack', 'resolve', config])
+        self.assertPopen(mopack_cmd('resolve', config))
         self.assertExists('mopack/logs/conan.log')
         self.assertExists('mopack/mopack.json')
 
@@ -21,8 +21,9 @@ class TestLocal(IntegrationTest):
             os.path.join(config, 'mopack.yml') + '\n' +
             os.path.join(config, 'mopack-local.yml') + '\n'
         ))
-        output = json.loads(self.assertPopen(['mopack', 'list-files',
-                                              '--json']))
+        output = json.loads(self.assertPopen(
+            mopack_cmd('list-files', '--json')
+        ))
         self.assertEqual(output, [os.path.join(config, 'mopack.yml'),
                                   os.path.join(config, 'mopack-local.yml')])
 

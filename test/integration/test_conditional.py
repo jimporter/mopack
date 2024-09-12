@@ -13,7 +13,7 @@ class TestConditional(IntegrationTest):
         want_tarball = platform_name() == 'windows'
 
         config = os.path.join(test_data_dir, 'mopack-conditional.yml')
-        self.assertPopen(['mopack', 'resolve', config])
+        self.assertPopen(mopack_cmd('resolve', config))
         self.assertExistence('mopack/src/hello/hello-bfg/build.bfg',
                              want_tarball)
         self.assertExists('mopack/build/hello/')

@@ -10,11 +10,13 @@ from . import *
 
 class SDistTest(IntegrationTest):
     def check_list_files(self, files, implicit=[]):
-        output = json.loads(self.assertPopen(['mopack', 'list-files',
-                                              '--json']))
+        output = json.loads(self.assertPopen(
+            mopack_cmd('list-files', '--json')
+        ))
         self.assertEqual(output, files)
-        output = json.loads(self.assertPopen(['mopack', 'list-files', '-I',
-                                              '--json']))
+        output = json.loads(self.assertPopen(
+            mopack_cmd('list-files', '-I', '--json')
+        ))
         self.assertEqual(output, files + implicit)
 
 
@@ -23,7 +25,7 @@ class TestDirectory(SDistTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-directory-implicit.yml')
-        self.assertPopen(['mopack', 'resolve', config])
+        self.assertPopen(mopack_cmd('resolve', config))
         self.assertNotExists('mopack/src/hello/hello-bfg/build.bfg')
         self.assertExists('mopack/build/hello/')
         self.assertExists('mopack/logs/hello.log')
@@ -48,7 +50,7 @@ class TestDirectory(SDistTest):
 
     def test_resolve_verbose(self):
         config = os.path.join(test_data_dir, 'mopack-directory-implicit.yml')
-        output = self.assertPopen(['mopack', '--verbose', 'resolve', config])
+        output = self.assertPopen(mopack_cmd('--verbose', 'resolve', config))
         cfg_line = r'(?m)^    \$ bfg9000 configure .+\bhello\b.*$'
         self.assertRegex(output, cfg_line)
 
@@ -81,8 +83,9 @@ class TestTarball(SDistTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-tarball.yml')
-        self.assertPopen(['mopack', 'resolve', config,
-                          '-dprefix=' + self.prefix])
+        self.assertPopen(mopack_cmd(
+            'resolve', config, '-dprefix=' + self.prefix
+        ))
         self.assertExists('mopack/src/hello/hello-bfg/build.bfg')
         self.assertExists('mopack/build/hello/')
         self.assertExists('mopack/logs/hello.log')
@@ -108,7 +111,7 @@ class TestTarball(SDistTest):
             ],
         })
 
-        self.assertPopen(['mopack', 'deploy'])
+        self.assertPopen(mopack_cmd('deploy'))
         include_prefix = '' if platform_name() == 'windows' else 'include/'
         lib_prefix = '' if platform_name() == 'windows' else 'lib/'
         with pushd(self.prefix):
@@ -122,8 +125,9 @@ class TestTarballPatch(SDistTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-tarball-patch.yml')
-        self.assertPopen(['mopack', 'resolve', config,
-                          '-dprefix=' + self.prefix])
+        self.assertPopen(mopack_cmd(
+            'resolve', config, '-dprefix=' + self.prefix
+        ))
         self.assertExists('mopack/src/hello/hello-bfg/build.bfg')
         self.assertExists('mopack/build/hello/')
         self.assertExists('mopack/logs/hello.log')
@@ -150,7 +154,7 @@ class TestTarballPatch(SDistTest):
             ],
         })
 
-        self.assertPopen(['mopack', 'deploy'])
+        self.assertPopen(mopack_cmd('deploy'))
         include_prefix = '' if platform_name() == 'windows' else 'include/'
         lib_prefix = '' if platform_name() == 'windows' else 'lib/'
         with pushd(self.prefix):
@@ -165,8 +169,9 @@ class TestGit(SDistTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-git.yml')
-        self.assertPopen(['mopack', 'resolve', config,
-                          '-dprefix=' + self.prefix])
+        self.assertPopen(mopack_cmd(
+            'resolve', config, '-dprefix=' + self.prefix
+        ))
         self.assertExists('mopack/src/bencodehpp/build.bfg')
         self.assertExists('mopack/build/bencodehpp/')
         self.assertExists('mopack/logs/bencodehpp.log')
@@ -194,7 +199,7 @@ class TestGit(SDistTest):
             ],
         })
 
-        self.assertPopen(['mopack', 'deploy'])
+        self.assertPopen(mopack_cmd('deploy'))
         include_prefix = '' if platform_name() == 'windows' else 'include/'
         lib_prefix = '' if platform_name() == 'windows' else 'lib/'
         with pushd(self.prefix):

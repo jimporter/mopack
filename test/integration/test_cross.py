@@ -14,8 +14,9 @@ class TestCross(IntegrationTest):
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-nested.yml')
         toolchain = os.path.join(test_data_dir, 'mingw-windows-toolchain.bfg')
-        self.assertPopen(['mopack', 'resolve', config,
-                          '-Bbfg9000:toolchain=' + toolchain])
+        self.assertPopen(mopack_cmd(
+            'resolve', config, '-Bbfg9000:toolchain=' + toolchain
+        ))
         self.assertExists('mopack/build/greeter/')
         self.assertExists('mopack/build/greeter/greeter.dll')
         self.assertExists('mopack/build/greeter/libgreeter.dll.a')

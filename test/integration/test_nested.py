@@ -23,8 +23,9 @@ class TestNested(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-nested.yml')
-        self.assertPopen(['mopack', 'resolve', config,
-                          '-dprefix=' + self.prefix])
+        self.assertPopen(mopack_cmd(
+            'resolve', config, '-dprefix=' + self.prefix
+        ))
         self.assertExists('mopack/build/greeter/')
         self.assertExists('mopack/logs/greeter.log')
         self.assertExists('mopack/src/hello/hello-bfg/')
@@ -61,7 +62,7 @@ class TestNested(IntegrationTest):
             ],
         })
 
-        self.assertPopen(['mopack', 'deploy'])
+        self.assertPopen(mopack_cmd('deploy'))
         include_prefix = '' if platform_name() == 'windows' else 'include/'
         lib_prefix = '' if platform_name() == 'windows' else 'lib/'
         with pushd(self.prefix):
@@ -86,8 +87,9 @@ class TestNested(IntegrationTest):
 
     def test_resolve_extra(self):
         config = os.path.join(test_data_dir, 'mopack-nested-extra.yml')
-        self.assertPopen(['mopack', 'resolve', config,
-                          '-dprefix=' + self.prefix])
+        self.assertPopen(mopack_cmd(
+            'resolve', config, '-dprefix=' + self.prefix
+        ))
         self.assertExists('mopack/build/greeter/')
         self.assertExists('mopack/logs/greeter.log')
         self.assertNotExists('mopack/src/hello/hello-bfg/')
@@ -120,7 +122,7 @@ class TestNested(IntegrationTest):
             ],
         })
 
-        self.assertPopen(['mopack', 'deploy'])
+        self.assertPopen(mopack_cmd('deploy'))
         include_prefix = '' if platform_name() == 'windows' else 'include/'
         lib_prefix = '' if platform_name() == 'windows' else 'lib/'
         with pushd(self.prefix):

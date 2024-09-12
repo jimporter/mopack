@@ -8,7 +8,7 @@ class TestInvalid(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-invalid.yml')
-        output = self.assertPopen(['mopack', 'resolve', config], returncode=1)
+        output = self.assertPopen(mopack_cmd('resolve', config), returncode=1)
         self.assertRegex(output,
                          r'error: expected an inner path\n' +
                          r'  in ".+mopack-invalid.yml", line 5, column 13\n' +
@@ -21,7 +21,7 @@ class TestInvalidChild(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-invalid-child.yml')
-        output = self.assertPopen(['mopack', 'resolve', config], returncode=1)
+        output = self.assertPopen(mopack_cmd('resolve', config), returncode=1)
         self.assertRegex(output,
                          r'error: bfg9000 got an unexpected keyword ' +
                          r"argument 'unknown'\n" +
@@ -35,7 +35,7 @@ class TestInvalidParent(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-invalid-parent.yml')
-        output = self.assertPopen(['mopack', 'resolve', config], returncode=1)
+        output = self.assertPopen(mopack_cmd('resolve', config), returncode=1)
         self.assertRegex(output,
                          r"error: unknown linkage 'unknown'\n" +
                          r'  in ".+mopack-invalid-parent.yml", ' +
@@ -49,7 +49,7 @@ class TestInvalidConditional(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-invalid-conditional.yml')
-        output = self.assertPopen(['mopack', 'resolve', config], returncode=1)
+        output = self.assertPopen(mopack_cmd('resolve', config), returncode=1)
         self.assertRegex(output,
                          r"error: undefined symbol 'unknown'\n" +
                          r'  in ".+mopack-invalid-conditional.yml", ' +
@@ -63,4 +63,4 @@ class TestInvalidListFiles(IntegrationTest):
 
     def test_list_files(self):
         self.assertOutput(['mopack', 'list-files'], '')
-        self.assertPopen(['mopack', 'list-files', '--strict'], returncode=1)
+        self.assertPopen(mopack_cmd('list-files', '--strict'), returncode=1)

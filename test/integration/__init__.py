@@ -8,6 +8,7 @@ from unittest import mock
 
 from .. import *
 
+from mopack.environment import get_cmd
 from mopack.iterutils import iterate, listify
 from mopack.platforms import platform_name
 from mopack.types import dependency_string
@@ -35,6 +36,12 @@ try:
             linkage_env[k] = v
 except FileNotFoundError:
     pass
+
+_mopack_cmd = get_cmd(os.environ, 'MOPACK', 'mopack --verbose')
+
+
+def mopack_cmd(*args):
+    return _mopack_cmd + list(args)
 
 
 def stage_dir(name, chdir=True):
@@ -350,10 +357,10 @@ class IntegrationTest(SubprocessTestCase):
             'yaml': yaml.safe_load,
         }
 
-        output = self.assertPopen((
-            ['mopack', 'linkage', dependency_string(name, submodules)] +
-            (['--json'] if format == 'json' else []) +
-            extra_args
+        output = self.assertPopen(mopack_cmd(
+            'linkage', dependency_string(name, submodules),
+            *(['--json'] if format == 'json' else []),
+            *extra_args
         ), extra_env=extra_env, returncode=returncode)
         if returncode == 0:
             self.assertEqual(loader[format](output), linkage)
