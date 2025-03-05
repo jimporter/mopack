@@ -20,12 +20,14 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         compiler: [cc, msvc]
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.9', '3.10', '3.11']
         conan-version: ['1.*']
 
         include:
-          # Python 3.6 builds
-          - {os: ubuntu-20.04, compiler: cc, python-version: '3.6',
+          # Old Python builds
+          - {os: ubuntu-22.04, compiler: cc, python-version: '3.7',
+             conan-version: '1.*'}
+          - {os: ubuntu-24.04, compiler: cc, python-version: '3.8',
              conan-version: '1.*'}
 
           # Conan 2.x builds
