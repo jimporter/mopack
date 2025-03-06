@@ -6,7 +6,7 @@ from contextlib import contextmanager
 
 from . import expression as expr, iterutils
 from .exceptions import ConfigurationError
-from .path import Path
+from .path import Path, issemiabs
 from .placeholder import map_placeholder, PlaceholderString
 from .shell import ShellArguments, split_posix
 from .yaml_tools import (MarkedDict, MarkedYAMLOffsetError,
@@ -364,7 +364,7 @@ def boolean(field, value):
 
 def path_fragment(field, value):
     value = string(field, value)
-    if os.path.isabs(value) or os.path.splitdrive(value)[0]:
+    if issemiabs(value) or os.path.splitdrive(value)[0]:
         raise FieldValueError('expected a relative path', field)
 
     value = os.path.normpath(value)

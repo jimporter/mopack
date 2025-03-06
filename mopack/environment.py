@@ -4,6 +4,7 @@ import subprocess
 from collections import ChainMap
 
 from .iterutils import isiterable, listify
+from .path import issemiabs
 from .platforms import platform_name
 from .shell import split_native_str
 
@@ -32,7 +33,7 @@ def which(names, env=os.environ, resolve=False, kind='executable'):
 
     for name in names:
         name = split_native_str(name) if not isiterable(name) else name
-        if os.path.isabs(name[0]):
+        if issemiabs(name[0]):
             fullpaths = [name[0]]
         else:
             search = ['.'] if os.path.dirname(name[0]) else paths

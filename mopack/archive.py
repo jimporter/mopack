@@ -2,12 +2,14 @@ import os.path
 import tarfile
 import zipfile
 
+from .path import issemiabs
+
 __all__ = ['Archive', 'open', 'TarArchive', 'ZipArchive']
 
 
 def _check_safe_path(path):
     if ( os.path.splitdrive(path)[0] or
-         os.path.isabs(path) or
+         issemiabs(path) or
          os.path.normpath(path).split(os.path.sep)[0] == '..' ):
         raise ValueError('unsafe path in archive: {!r}'.format(path))
 
