@@ -2,6 +2,7 @@ import os
 import shutil
 import sys
 import warnings
+from os.path import abspath
 from textwrap import dedent
 from unittest import mock
 
@@ -15,12 +16,6 @@ from mopack.metadata import Metadata
 from mopack.path import Path
 from mopack.shell import ShellArguments
 from mopack.types import dependency_string, FieldValueError
-
-
-def abspath(p):
-    # Make sure that paths are a canonical case on case-insensitive filesystems
-    # so that they compare equal.
-    return os.path.normcase(os.path.abspath(p))
 
 
 def abspathobj(p):
