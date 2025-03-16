@@ -2,7 +2,7 @@ site_name: mopack
 docs_dir: doc
 repo_url: https://github.com/jimporter/mopack/
 edit_uri: ""
-copyright: Copyright &copy; 2020-2024 Jim Porter
+copyright: Copyright &copy; 2020-2025 Jim Porter
 
 theme:
   name: yeti-classic
