@@ -1,7 +1,5 @@
 import os
 import shutil
-import sys
-import warnings
 from os.path import abspath
 from textwrap import dedent
 from unittest import mock
@@ -75,11 +73,6 @@ class TestPath(LinkageTest):
         self.assertEqual(linkage.link_flags, ShellArguments(link_flags))
 
     def check_version(self, linkage, expected=None, *, pkg=None, header=None):
-        # XXX: Remove this after we drop support for Python 3.6.
-        if header and sys.version_info < (3, 7):
-            warnings.warn('mock_open() fails to iterate in Python 3.6')
-            return
-
         open_args = ({'new': mock.mock_open(read_data=header)} if header
                      else {'side_effect': AssertionError()})
         if pkg is None:
