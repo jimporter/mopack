@@ -35,7 +35,7 @@ class TestCustomBuilder(BuilderTest):
     def test_basic(self):
         pkg = self.make_package_and_builder('foo', build_commands=[
             'configure', 'make',
-        ])
+        ], outdir='build')
         self.assertEqual(pkg.builder.name, 'foo')
         self.assertEqual(pkg.builder.build_commands, [
             ShellArguments(['configure']),
@@ -47,7 +47,7 @@ class TestCustomBuilder(BuilderTest):
     def test_build_list(self):
         pkg = self.make_package_and_builder('foo', build_commands=[
             ['configure', '--foo'], ['make', '-j2']
-        ])
+        ], outdir='build')
         self.assertEqual(pkg.builder.name, 'foo')
         self.assertEqual(pkg.builder.build_commands, [
             ShellArguments(['configure', '--foo']),
@@ -60,7 +60,7 @@ class TestCustomBuilder(BuilderTest):
         pkg = self.make_package_and_builder('foo', build_commands=[
             'configure $srcdir/build',
             ['make', '-C', '$builddir'],
-        ])
+        ], outdir='build')
         self.assertEqual(pkg.builder.name, 'foo')
         self.assertEqual(pkg.builder.build_commands, [
             ShellArguments(['configure', (Path('', 'srcdir'), '/build')]),
@@ -73,8 +73,10 @@ class TestCustomBuilder(BuilderTest):
         ])
 
     def test_deploy(self):
-        pkg = self.make_package_and_builder('foo', build_commands=['make'],
-                                            deploy_commands=['make install'])
+        pkg = self.make_package_and_builder(
+            'foo', build_commands=['make'], deploy_commands=['make install'],
+            outdir='build'
+        )
         self.assertEqual(pkg.builder.name, 'foo')
         self.assertEqual(pkg.builder.build_commands, [
             ShellArguments(['make']),
@@ -98,7 +100,7 @@ class TestCustomBuilder(BuilderTest):
             'configure $srcdir/build',
             'cd $builddir',
             'make',
-        ])
+        ], outdir='build')
         self.assertEqual(pkg.builder.name, 'foo')
         self.assertEqual(pkg.builder.build_commands, [
             ShellArguments(['configure', (Path('', 'srcdir'), '/build')]),
@@ -117,7 +119,7 @@ class TestCustomBuilder(BuilderTest):
     def test_cd_invalid(self):
         pkg = self.make_package_and_builder('foo', build_commands=[
             'cd foo bar',
-        ])
+        ], outdir='build')
 
         with mock_open_log(), \
              mock.patch('mopack.builders.custom.pushd'), \
@@ -125,7 +127,8 @@ class TestCustomBuilder(BuilderTest):
             pkg.builder.build(self.metadata, pkg)
 
     def test_clean(self):
-        pkg = self.make_package_and_builder('foo', build_commands=['make'])
+        pkg = self.make_package_and_builder('foo', build_commands=['make'],
+                                            outdir='build')
         builddir = os.path.join(self.pkgdir, 'build', 'foo')
 
         with mock.patch('shutil.rmtree') as mrmtree:
@@ -135,14 +138,15 @@ class TestCustomBuilder(BuilderTest):
     def test_linkage(self):
         opts = self.make_options()
         pkg = DirectoryPackage('foo', path=self.srcdir, build={
-            'type': 'custom', 'build_commands': ['make'],
+            'type': 'custom', 'build_commands': ['make'], 'outdir': 'build',
         }, linkage='pkg_config', _options=opts, config_file=self.config_file)
         pkg.get_linkage(self.metadata, None)
 
     def test_rehydrate(self):
         opts = self.make_options()
         builder = CustomBuilder(MockPackage('foo', _options=opts),
-                                build_commands=['make'], _symbols=self.symbols)
+                                build_commands=['make'], outdir='build',
+                                _symbols=self.symbols)
         data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(data, name='foo',
                                                     _options=opts))
