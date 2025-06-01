@@ -25,8 +25,6 @@ jobs:
 
         include:
           # Old Python builds
-          - {os: ubuntu-22.04, compiler: cc, python-version: '3.7',
-             conan-version: '1.*'}
           - {os: ubuntu-24.04, compiler: cc, python-version: '3.8',
              conan-version: '1.*'}
 
