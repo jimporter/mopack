@@ -1,7 +1,6 @@
+import importlib_metadata as metadata
 import os
 import shutil
-
-from pkg_resources import load_entry_point
 
 from .. import types
 from ..base_options import BaseOptions, OptionsHolder
@@ -11,8 +10,8 @@ from ..path import Path
 
 def _get_builder_type(type, field='type'):
     try:
-        return load_entry_point('mopack', 'mopack.builders', type)
-    except ImportError:
+        return metadata.entry_points(group='mopack.builders')[type].load()
+    except KeyError:
         raise types.FieldValueError('unknown builder {!r}'.format(type), field)
 
 

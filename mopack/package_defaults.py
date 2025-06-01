@@ -1,19 +1,18 @@
-import os
+import importlib_resources as resources
 import re
 from copy import deepcopy
-from pkg_resources import resource_filename
 from yaml.error import MarkedYAMLError
 
 from . import expression as expr, iterutils, types
 from .objutils import memoize
-from .yaml_tools import load_file, SafeLineLoader
+from .yaml_tools import load, SafeLineLoader
 
 
 class DefaultConfig:
     _known_genera = {'origin', 'linkage'}
 
-    def __init__(self, filename):
-        with load_file(filename, Loader=SafeLineLoader) as cfg:
+    def __init__(self, stream_or_filename):
+        with load(stream_or_filename, Loader=SafeLineLoader) as cfg:
             # Store both a raw and parsed copy of the configuration data.
             # Parsing first helps catch syntax errors and should be faster in
             # some cases, but we still want the raw data for some cases, like
@@ -121,10 +120,12 @@ def _get_default_config(package_name):
     if re.search(r'\W', package_name):
         return None
 
-    path = resource_filename('mopack', 'defaults/{}.yml'.format(package_name))
-    if os.path.exists(path):
-        return DefaultConfig(path)
-    return None
+    filename = 'defaults/{}.yml'.format(package_name)
+    try:
+        with resources.open_text('mopack', filename) as f:
+            return DefaultConfig(f)
+    except FileNotFoundError:
+        return None
 
 
 def get_default(symbols, package_name, genus, species, field, default=None,

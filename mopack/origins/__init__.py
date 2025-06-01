@@ -1,6 +1,6 @@
+import importlib_metadata as metadata
 import os
 import warnings
-from pkg_resources import load_entry_point
 
 from .. import types
 from ..base_options import BaseOptions, OptionsHolder
@@ -13,8 +13,8 @@ from ..linkages import Linkage, make_linkage
 
 def _get_origin_type(origin, field='origin'):
     try:
-        return load_entry_point('mopack', 'mopack.origins', origin)
-    except ImportError:
+        return metadata.entry_points(group='mopack.origins')[origin].load()
+    except KeyError:
         raise FieldValueError('unknown origin {!r}'.format(origin), field)
 
 

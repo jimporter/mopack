@@ -7,7 +7,7 @@ from . import expression as expr
 from .iterutils import isiterable
 from .options import Options
 from .origins import try_make_package
-from .yaml_tools import (load_file, to_parse_error, MarkedDict,
+from .yaml_tools import (load, to_parse_error, MarkedDict,
                          MarkedYAMLOffsetError, SafeLineLoader)
 
 mopack_file = 'mopack.yml'
@@ -56,7 +56,7 @@ class BaseConfig:
 
     def _accumulate_config(self, filename):
         filename = os.path.abspath(filename)
-        with load_file(filename, Loader=SafeLineLoader) as next_config:
+        with load(filename, Loader=SafeLineLoader) as next_config:
             if next_config:
                 for k, v in next_config.items():
                     fn = '_process_{}'.format(k)

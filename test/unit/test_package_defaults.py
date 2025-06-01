@@ -128,13 +128,9 @@ class TestGetDefaultConfig(TestCase):
         _get_default_config._reset()
 
     def test_normal(self):
-        with mock.patch('os.path.exists', return_value=False) as mexists:
-            _get_default_config('foo')
-            mexists.assert_called_once()
+        self.assertIs(_get_default_config('foo'), None)
 
     def test_invalid_characters(self):
-        with mock.patch('os.path.exists', return_value=False) as mexists:
-            _get_default_config('foo/bar')
-            _get_default_config('.')
-            _get_default_config('../foo')
-            mexists.assert_not_called()
+        self.assertIs(_get_default_config('foo/bar'), None)
+        self.assertIs(_get_default_config('.'), None)
+        self.assertIs(_get_default_config('../foo'), None)

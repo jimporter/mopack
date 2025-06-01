@@ -37,7 +37,7 @@ from yaml.constructor import ConstructorError
 
 from .exceptions import ConfigurationError
 
-__all__ = ['load_file', 'make_parse_error', 'to_parse_error', 'MarkedDict',
+__all__ = ['load', 'make_parse_error', 'to_parse_error', 'MarkedDict',
            'MarkedJSONEncoder', 'MarkedList', 'MarkedYAMLOffsetError',
            'MarkedYAMLWarning', 'SafeLineLoader', 'YamlParseError']
 
@@ -172,8 +172,8 @@ def to_parse_error(filename):
 
 
 @contextmanager
-def load_file(filename, Loader=SafeLoader):
-    with open(filename, newline='') as f, \
+def load(stream_or_filename, Loader=SafeLoader):
+    with _maybe_open(stream_or_filename, newline='') as f, \
          to_parse_warning(f):
         try:
             yield yaml.load(f, Loader=Loader)

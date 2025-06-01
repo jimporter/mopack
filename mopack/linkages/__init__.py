@@ -1,4 +1,4 @@
-from pkg_resources import load_entry_point
+import importlib_metadata as metadata
 
 from ..base_options import OptionsHolder
 from ..freezedried import GenericFreezeDried
@@ -7,8 +7,8 @@ from ..types import FieldValueError, dependency_string, wrap_field_error
 
 def _get_linkage_type(type, field='type'):
     try:
-        return load_entry_point('mopack', 'mopack.linkages', type)
-    except ImportError:
+        return metadata.entry_points(group='mopack.linkages')[type].load()
+    except KeyError:
         raise FieldValueError('unknown linkage {!r}'.format(type), field)
 
 

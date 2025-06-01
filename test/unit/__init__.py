@@ -1,17 +1,13 @@
+import importlib_metadata as metadata
 import json
 import logging
 import os
-import pkg_resources
 import re
 from contextlib import contextmanager
 from io import StringIO
 from unittest import mock, TestCase
 
 from mopack.options import Options
-
-# Make sure the entry points are loaded so unit tests can reference them as
-# needed.
-pkg_resources.get_entry_map('mopack')
 
 
 @contextmanager
@@ -128,12 +124,12 @@ class OptionsTest(TestCase):
         with mock.patch.object(os, 'environ', return_value={}):
             options.common.finalize()
 
-        for i in pkg_resources.iter_entry_points('mopack.origins'):
+        for i in metadata.entry_points(group='mopack.origins'):
             opts_type = i.load().Options
             if opts_type:
                 options.origins[opts_type.origin] = opts_type()
 
-        for i in pkg_resources.iter_entry_points('mopack.builders'):
+        for i in metadata.entry_points(group='mopack.builders'):
             opts_type = i.load().Options
             if opts_type:
                 options.builders[opts_type.type] = opts_type()

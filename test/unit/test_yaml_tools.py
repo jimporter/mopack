@@ -246,20 +246,20 @@ class TestLoadFile(TestCase):
     def test_success(self):
         mopen = mock_open_data(self.yaml_data)
         with mock.patch('builtins.open', mopen):
-            with load_file('file.yml') as data:
+            with load('file.yml') as data:
                 self.assertEqual(data, {'house': {'cat': 1, 'dog': 2},
                                         'zoo': {'panda': 3, 'giraffe': 4}})
 
     def test_parse_error(self):
         with mock.patch('builtins.open', mock_open_data('&')), \
              self.assertRaises(YamlParseError):
-            with load_file('file.yml'):
+            with load('file.yml'):
                 pass
 
     def test_user_error(self):
         with mock.patch('builtins.open', mock_open_data(self.yaml_data)), \
              self.assertRaises(YamlParseError):
-            with load_file('file.yml', Loader=SafeLineLoader) as data:
+            with load('file.yml', Loader=SafeLineLoader) as data:
                 raise MarkedYAMLError('context', data.mark.start, 'problem',
                                       data.marks['zoo'].start)
 

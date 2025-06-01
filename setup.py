@@ -85,6 +85,8 @@ try:
             pass
 
         def run(self):
+            breakpoint()
+            exit(4)
             v = Version(version)
             alias = 'dev' if v.is_devrelease else 'latest'
             title = '{} ({})'.format(v.base_version, alias)
@@ -150,7 +152,9 @@ setup(
     packages=find_packages(exclude=['test', 'test.*']),
     package_data={'': ['defaults/*.yml']},
 
-    install_requires=['colorama', 'pyparsing >= 3.0', 'pyyaml', 'setuptools'],
+    install_requires=['colorama', 'importlib_metadata',
+                      'importlib_resources >= 6.4', 'pyparsing >= 3.0',
+                      'pyyaml'],
     extras_require={
         'dev': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6',
                 'flake8-quotes', 'mike >= 2.0.0',

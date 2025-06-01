@@ -11,7 +11,7 @@ from mopack.placeholder import placeholder
 from mopack.path import Path
 from mopack.shell import ShellArguments
 from mopack.types import *
-from mopack.yaml_tools import load_file, SafeLineLoader
+from mopack.yaml_tools import load, SafeLineLoader
 
 
 class TypeTestCase(TestCase):
@@ -812,7 +812,7 @@ class TestWrapFieldError(TypeTestCase):
 class TestTryLoadConfig(TestCase):
     def load_data(self, data, Loader=SafeLineLoader):
         with mock.patch('builtins.open', mock_open_data(data)):
-            with load_file('file.yml', Loader=Loader) as f:
+            with load('file.yml', Loader=Loader) as f:
                 return f
 
     def test_single_field(self):
