@@ -151,6 +151,7 @@ setup(
     packages=find_packages(exclude=['test', 'test.*']),
     package_data={'': ['defaults/*.yml']},
 
+    python_requires='>=3.8',
     install_requires=['colorama', 'importlib_metadata',
                       'importlib_resources >= 6.4', 'pyparsing >= 3.0',
                       'pyyaml'],
