@@ -1,6 +1,5 @@
 import copy
 import re
-import sys
 import warnings
 import yaml
 from io import StringIO
@@ -215,22 +214,18 @@ class TestToParseError(TestCase):
                 self.cfg['house'].value_marks['cat'].start
             ))
             mwarn.assert_called_once()
-            # Older versions of mock_calls don't support this.
-            if sys.version_info >= (3, 8):
-                warning = mwarn.mock_calls[0].args[0]
-                self.assertIsInstance(warning, UserWarning)
-                self.assertEqual(str(warning), self.msg)
+            warning = mwarn.mock_calls[0].args[0]
+            self.assertIsInstance(warning, UserWarning)
+            self.assertEqual(str(warning), self.msg)
 
     def test_unfilterd_warning(self):
         with mock.patch('warnings.showwarning') as mwarn, \
              to_parse_error(self.data):
             warnings.warn('hello there')
             mwarn.assert_called_once()
-            # Older versions of mock_calls don't support this.
-            if sys.version_info >= (3, 8):
-                warning = mwarn.mock_calls[0].args[0]
-                self.assertIsInstance(warning, UserWarning)
-                self.assertEqual(warning.args, ('hello there',))
+            warning = mwarn.mock_calls[0].args[0]
+            self.assertIsInstance(warning, UserWarning)
+            self.assertEqual(warning.args, ('hello there',))
 
 
 class TestLoadFile(TestCase):

@@ -120,12 +120,11 @@ class TestTarArchive(TestCase):
 
             # Make our mock iterate over the members list we gave it. This
             # check only works with newer versions of Python though.
-            if sys.version_info >= (3, 8):
-                list(mtar().extractall.mock_calls[-1].args[1])
-                self.assertEqual(
-                    [i.args[0] for i in mtar().getmember.mock_calls],
-                    ['dir', 'file.txt']
-                )
+            list(mtar().extractall.mock_calls[-1].args[1])
+            self.assertEqual(
+                [i.args[0] for i in mtar().getmember.mock_calls],
+                ['dir', 'file.txt']
+            )
 
 
 class TestZipArchive(TestCase):
