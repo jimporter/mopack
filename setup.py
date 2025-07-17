@@ -2,6 +2,7 @@ import json
 import os
 import re
 import subprocess
+from distutils import log
 from setuptools import setup, find_packages, Command
 
 from mopack.app_version import version
@@ -85,29 +86,54 @@ try:
             pass
 
         def run(self):
-            breakpoint()
-            exit(4)
-            v = Version(version)
+            v = Version(self.distribution.get_version())
             alias = 'dev' if v.is_devrelease else 'latest'
             title = '{} ({})'.format(v.base_version, alias)
             short_version = '{}.{}'.format(*v.release[:2])
 
             try:
-                info = json.loads(subprocess.run(
+                alias_info = json.loads(subprocess.run(
                     ['mike', 'list', '-j', alias], universal_newlines=True,
                     check=True, stdout=subprocess.PIPE
                 ).stdout)
+
+                # We have an existing version with this alias...
+                if Version(short_version) > Version(alias_info['version']):
+                    self.announce('updating {!r} alias (formerly {})'.format(
+                        alias, alias_info['version']
+                    ), log.INFO)
+                    # The current version is newer, so retitle the existing one
+                    # to remove the alias name.
+                    t = re.sub(r' \({}\)$'.format(re.escape(alias)), '',
+                               alias_info['title'])
+                    subprocess.run([
+                        'mike', 'retitle', alias_info['version'], t
+                    ], check=True)
+                elif Version(short_version) < Version(alias_info['version']):
+                    # The current version is older, so leave the alias with the
+                    # existing version.
+                    self.announce(
+                        'existing version for alias {!r} is newer ({})'.format(
+                            alias, alias_info['version']
+                        ), log.INFO
+                    )
+                    title = v.base_version
+                    alias = None
+                else:
+                    self.announce(
+                        'alias {!r} for {} is already current'.format(
+                            alias, alias_info['version']
+                        ), log.INFO
+                    )
             except subprocess.CalledProcessError:
-                info = None
+                self.announce('alias {!r} not found; adding'.format(alias),
+                              log.INFO)
 
-            if info and info['version'] != short_version:
-                t = re.sub(r' \({}\)$'.format(re.escape(alias)), '',
-                           info['title'])
-                subprocess.run(['mike', 'retitle', info['version'], t],
-                               check=True)
-
-            subprocess.run(['mike', 'deploy', '-ut', title, short_version,
-                            alias], check=True)
+            self.announce('deploying documentation to {}'.format(
+                short_version
+            ), log.INFO)
+            subprocess.run(['mike', 'deploy', '-ut', title, short_version] +
+                           ([alias] if alias else []), check=True)
 
     custom_cmds['doc_serve'] = DocServe
     custom_cmds['doc_deploy'] = DocDeploy
