@@ -35,7 +35,7 @@ jobs:
              conan-version: '2.*', skipped-tests: [boost, qt]}
           - {os: windows-latest, compiler: msvc, python-version: '3.13',
              conan-version: '2.*', msvc-version: '14.4',
-             win-sdk: '10.0.20348.0', boost-version: '1.80.0',
+             win-sdk: '10.0.19041.0', boost-version: '1.80.0',
              qt-version: '5.15.2'}
           - {os: macos-latest, compiler: cc, python-version: '3.13',
              conan-version: '2.*'}
@@ -44,7 +44,7 @@ jobs:
           - {os: ubuntu-latest, extra-tests: [apt, mingw-cross]}
           - {os: windows-latest, compiler: cc, skipped-tests: [boost, qt]}
           - {os: windows-latest, compiler: msvc, msvc-version: '14.4',
-             win-sdk: '10.0.20348.0', boost-version: '1.80.0',
+             win-sdk: '10.0.19041.0', boost-version: '1.80.0',
              qt-version: '5.15.2'}
         exclude:
           - os: ubuntu-latest
