@@ -21,24 +21,24 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         compiler: [cc, msvc]
         python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
-        conan-version: ['1.*']
+        conan-version: ['2.*']
 
         include:
           # Old Python builds
           - {os: ubuntu-24.04, compiler: cc, python-version: '3.8',
              conan-version: '1.*'}
 
-          # Conan 2.x builds
+          # Conan 1.x builds
           - {os: ubuntu-latest, compiler: cc, python-version: '3.13',
-             conan-version: '2.*', extra-tests: [apt, mingw-cross]}
+             conan-version: '1.*', extra-tests: [apt, mingw-cross]}
           - {os: windows-latest, compiler: cc, python-version: '3.13',
-             conan-version: '2.*', skipped-tests: [boost, qt]}
+             conan-version: '1.*', skipped-tests: [boost, qt]}
           - {os: windows-latest, compiler: msvc, python-version: '3.13',
-             conan-version: '2.*', msvc-version: '14.4',
+             conan-version: '1.*', msvc-version: '14.4',
              win-sdk: '10.0.19041.0', boost-version: '1.80.0',
              qt-version: '5.15.2'}
           - {os: macos-latest, compiler: cc, python-version: '3.13',
-             conan-version: '2.*'}
+             conan-version: '1.*'}
 
           # Extra settings for matrix builds
           - {os: ubuntu-latest, extra-tests: [apt, mingw-cross]}
