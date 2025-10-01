@@ -37,8 +37,6 @@ jobs:
              conan-version: '1.*', msvc-version: '14.4',
              win-sdk: '10.0.26100.0', boost-version: '1.80.0',
              qt-version: '5.15.2'}
-          - {os: macos-14, compiler: cc, python-version: '3.13',
-             conan-version: '1.*'}
 
           # Extra settings for matrix builds
           - {os: ubuntu-latest, extra-tests: [apt, mingw-cross]}
