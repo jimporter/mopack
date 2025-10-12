@@ -68,7 +68,7 @@ class MockBuilder:
     def path_bases(self):
         return ('builddir',)
 
-    def path_values(self, metadata):
+    def path_values(self, metadata, parent_values):
         return {'builddir': self._builddir}
 
 
@@ -108,11 +108,12 @@ class MockPackage:
         return symbols
 
     def path_values(self, metadata):
-        return {
-            'cfgdir': self.cfgdir,
-            **({'srcdir': self._srcdir} if self._srcdir else {}),
-            **(self.builder.path_values(metadata) if self.builder else {}),
-        }
+        values = {'cfgdir': self.cfgdir}
+        if self._srcdir:
+            values['srcdir'] = self._srcdir
+        if self.builder:
+            values.update(**self.builder.path_values(metadata, values))
+        return values
 
     def guessed_version(self, metadata):
         return self._version

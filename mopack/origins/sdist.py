@@ -115,7 +115,7 @@ class SDistPackage(Package):
 
         if with_builders:
             for i in self.builders:
-                result.update(**i.path_values(metadata))
+                result.update(**i.path_values(metadata, result))
         return result
 
     def _make_builders(self, builders, **kwargs):

@@ -47,7 +47,7 @@ class Builder(OptionsHolder):
     def path_bases(self):
         return ()
 
-    def path_values(self, metadata):
+    def path_values(self, metadata, parent_values):
         return {}
 
     def filter_linkage(self, linkage):
@@ -92,7 +92,7 @@ class ConfiguringBuilder(DirectoryBuilder):
     def path_bases(self):
         return ('builddir',)
 
-    def path_values(self, metadata):
+    def path_values(self, metadata, parent_values):
         builddir = os.path.abspath(os.path.join(metadata.pkgdir, 'build',
                                                 self.name))
         return {'builddir': builddir}
