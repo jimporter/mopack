@@ -7,6 +7,7 @@
 - Source distribution packages and builders now accept an `env` field
 - New builder `ninja`
 - Verbose output of build commands now prints iteratively
+- New expression variable `symbols`, a dictionary of all defined symbols
 
 ### Breaking changes
 - `usage`/`usages` are now `linkage`/`linkages`

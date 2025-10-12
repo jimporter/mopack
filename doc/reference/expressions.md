@@ -79,6 +79,11 @@ and associativity:
 mopack provides several variables that you can use within expressions in order
 to programmatically define how to resolve or use your dependencies.
 
+`symbols` <span class="subtitle">*availability*: everywhere</span>
+: A special dictionary variable whose key-value pairs are every defined
+  variable. You can use this to refer to variables which may not be defined in
+  certain contexts, such as `srcdir`.
+
 `cfgdir` <span class="subtitle">*availability*: everywhere</span>
 : The directory containing the current mopack configuration file.
 
