@@ -84,7 +84,7 @@ class SDistPackage(Package):
         srcdir = self._srcdir(metadata)
         values = {'srcdir': srcdir} if srcdir is not None else {}
         for i in self.builders:
-            values.update(**i.path_values(metadata))
+            values.update(**i.path_values(metadata, values))
         return values
 
     def _make_builders(self, builders, **kwargs):

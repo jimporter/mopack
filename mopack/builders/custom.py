@@ -78,7 +78,7 @@ class CustomBuilder(DirectoryBuilder):
             return (self.outdir + 'dir',)
         return ()
 
-    def path_values(self, metadata):
+    def path_values(self, metadata, parent_values):
         if self.outdir:
             outdir = os.path.abspath(os.path.join(metadata.pkgdir, self.outdir,
                                                   self.name))
