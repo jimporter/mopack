@@ -29,7 +29,7 @@ class PlaceholderString:
         def flatten_bits(value):
             for i in value:
                 if isinstance(i, PlaceholderString):
-                    yield from i.bits
+                    yield from i.__bits
                 elif isinstance(i, (str, PlaceholderValue)):
                     yield i
                 else:  # pragma: no cover
@@ -53,10 +53,10 @@ class PlaceholderString:
     def make(cls, *args, simplify=False):
         result = PlaceholderString(*args)
         if simplify:
-            if len(result.bits) == 0:
+            if len(result.__bits) == 0:
                 return ''
-            elif len(result.bits) == 1 and isinstance(result.bits[0], str):
-                return result.bits[0]
+            elif len(result.__bits) == 1 and isinstance(result.__bits[0], str):
+                return result.__bits[0]
         return result
 
     @property
@@ -65,12 +65,12 @@ class PlaceholderString:
 
     def unbox(self, simplify=False):
         if simplify:
-            if len(self.bits) == 0:
+            if len(self.__bits) == 0:
                 return ''
-            elif len(self.bits) == 1:
-                if isinstance(self.bits[0], PlaceholderValue):
-                    return self.bits[0].value
-                return self.bits[0]
+            elif len(self.__bits) == 1:
+                if isinstance(self.__bits[0], PlaceholderValue):
+                    return self.__bits[0].value
+                return self.__bits[0]
         return tuple(i.value if isinstance(i, PlaceholderValue) else i
                      for i in self.__bits)
 
@@ -79,12 +79,12 @@ class PlaceholderString:
             if isinstance(i, PlaceholderValue) and i.value == placeholder:
                 return value
             return i
-        return self.make(*[each(i) for i in self.bits], simplify=simplify)
+        return self.make(*[each(i) for i in self.__bits], simplify=simplify)
 
     def stash(self):
         stashed = ''
         placeholders = []
-        for i in self.bits:
+        for i in self.__bits:
             if isinstance(i, PlaceholderValue):
                 stashed += '\x11{}\x13'.format(len(placeholders))
                 placeholders.append(i)
@@ -125,7 +125,7 @@ class PlaceholderString:
                                   .format(type(self).__name__))
 
     def __repr__(self):
-        return '|{}|'.format(', '.join(repr(i) for i in self.bits))
+        return '|{}|'.format(', '.join(repr(i) for i in self.__bits))
 
 
 def placeholder(value):
