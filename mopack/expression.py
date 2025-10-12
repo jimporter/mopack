@@ -43,6 +43,8 @@ class Symbol(Token):
         self.symbol = symbol
 
     def __call__(self, symbols):
+        if self.symbol == 'symbols':
+            return symbols
         try:
             return symbols[self.symbol]
         except KeyError:

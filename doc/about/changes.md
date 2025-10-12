@@ -8,6 +8,7 @@ in progress
 - `build` field for source distributions can now take a list of builders
 - New builder `ninja`
 - Verbose output of build commands now prints iteratively
+- New expression variable `symbols`, a dictionary of all defined symbols
 
 ### Breaking changes
 - `usage`/`usages` are now `linkage`/`linkages`
