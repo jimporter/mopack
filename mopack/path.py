@@ -5,7 +5,7 @@ from contextlib import contextmanager
 
 from .freezedried import FreezeDried
 from .iterutils import ismapping
-from .placeholder import PlaceholderString
+from .placeholder import PlaceholderString, placeholder_type
 
 __all__ = ['exists', 'file_outdated', 'isdir', 'isfile', 'islink', 'issemiabs',
            'Path', 'pushd']
@@ -63,6 +63,7 @@ islink = _wrap_ospath(os.path.islink)
 issemiabs = _wrap_ospath(_issemiabs)
 
 
+@placeholder_type
 class Path(FreezeDried):
     def __init__(self, path, base=None):
         if not isinstance(path, str):

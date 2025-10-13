@@ -8,7 +8,7 @@ from shlex import shlex
 from .freezedried import auto_dehydrate
 from .iterutils import isiterable, ismapping
 from .path import Path
-from .placeholder import PlaceholderString
+from .placeholder import PlaceholderString, PlaceholderValue
 from .platforms import platform_name
 
 
@@ -186,9 +186,9 @@ class ShellArguments(MutableSequence):
         for i in self._args:
             if isinstance(i, Path):
                 result.append(_fn(i.string(**kwargs), i))
-            elif isiterable(i):
+            elif isinstance(i, PlaceholderString):
                 arg = ''
-                for j in i:
+                for j in i.unbox():
                     s = j.string(**kwargs) if isinstance(j, Path) else j
                     arg += _fn(s, j)
                 result.append(arg)
@@ -197,20 +197,19 @@ class ShellArguments(MutableSequence):
         return result
 
     def dehydrate(self):
-        def dehydrate_each(value):
-            if isiterable(value):
-                return [auto_dehydrate(i) for i in value]
-            return auto_dehydrate(value)
-
-        return [dehydrate_each(i) for i in self]
+        return [auto_dehydrate(i) for i in self]
 
     @classmethod
     def rehydrate(self, value, **kwargs):
         def rehydrate_each(value):
+            # XXX: It would be cleaner to avoid unboxing placeholders directly
+            # into the shell arguments so that we could always rehydrate the
+            # same way. We'd need a migration strategy for old configs though.
+            # For now, treat mappings as `PlaceholderValue`s.
             if ismapping(value):
-                return Path.rehydrate(value, **kwargs)
+                return PlaceholderValue.rehydrate(value, **kwargs).value
             elif isiterable(value):
-                return tuple(rehydrate_each(i) for i in value)
+                return PlaceholderString.rehydrate(value, **kwargs)
             return value
 
         return ShellArguments(rehydrate_each(i) for i in value)
@@ -240,7 +239,7 @@ def _wrap_placeholder(split_fn):
             stashed, placeholders = value.stash()
             args = split_fn(stashed, *args, **kwargs)
             return ShellArguments(
-                PlaceholderString.unstash(i, placeholders).unbox(simplify=True)
+                PlaceholderString.unstash(i, placeholders).simplify(unbox=True)
                 for i in args
             )
         return ShellArguments(split_fn(value, *args, **kwargs))

@@ -3,6 +3,7 @@ from unittest import TestCase
 
 from mopack.path import Path
 from mopack.pkg_config import write_pkg_config
+from mopack.placeholder import placeholder as ph
 from mopack.shell import ShellArguments
 
 
@@ -49,8 +50,8 @@ class TestWritePkgConfig(TestCase):
         out = StringIO()
         write_pkg_config(
             out, 'mypackage', desc='my package', version='1.0',
-            cflags=ShellArguments([('-I', Path('foo', 'srcdir'))]),
-            libs=ShellArguments([('-L', Path('', 'builddir')), '-lbar']),
+            cflags=ShellArguments(['-I' + ph(Path('foo', 'srcdir'))]),
+            libs=ShellArguments(['-L' + ph(Path('', 'builddir')), '-lbar']),
             variables={'srcdir': '/srcdir', 'builddir': '/builddir',
                        'extra': None}
         )

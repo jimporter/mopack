@@ -13,6 +13,7 @@ from ..iterutils import ismapping, listify, uniques
 from ..package_defaults import DefaultResolver
 from ..path import file_outdated, isfile, Path
 from ..pkg_config import generated_pkg_config_dir, write_pkg_config
+from ..placeholder import placeholder
 from ..shell import ShellArguments, split_paths
 from ..types import dependency_string, Unset
 
@@ -347,11 +348,11 @@ class PathLinkage(Linkage):
             )
 
             cflags = (
-                [('-I', i) for i in include_dirs] +
+                ['-I' + placeholder(i) for i in include_dirs] +
                 ShellArguments(chain_attr('compile_flags'))
             )
             libs = (
-                [('-L', i) for i in library_dirs] +
+                ['-L' + placeholder(i) for i in library_dirs] +
                 ShellArguments(chain_attr('link_flags')) +
                 chain.from_iterable(self._link_library(i) for i in libraries)
             )
