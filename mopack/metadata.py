@@ -15,7 +15,7 @@ class MetadataVersionError(RuntimeError):
 class Metadata:
     _PackagesFD = DictToListFreezeDryer(Package, lambda x: x.name)
     metadata_filename = 'mopack.json'
-    version = 3
+    version = 4
 
     def __init__(self, pkgdir, options=None, files=None, implicit_files=None):
         self.pkgdir = pkgdir
@@ -91,12 +91,15 @@ class Metadata:
         metadata.files = state['config_files']['explicit']
         metadata.implicit_files = state['config_files']['implicit']
 
-        metadata.options = Options.rehydrate(data['options'])
+        metadata.options = Options.rehydrate(
+            data['options'], _global_version=version
+        )
         if strict:
             metadata.options.common.strict = True
 
         metadata.packages = cls._PackagesFD.rehydrate(
-            data['packages'], _options=metadata.options
+            data['packages'], _options=metadata.options,
+            _global_version=version
         )
 
         return metadata

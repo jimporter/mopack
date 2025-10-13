@@ -4,7 +4,7 @@ from os.path import abspath
 from unittest import mock
 
 from . import OriginTest
-from .. import assert_logging
+from .. import assert_logging, rehydrate_kwargs
 from ... import call_pkg_config, test_stage_dir
 
 from mopack.path import Path
@@ -252,7 +252,9 @@ class TestSystemPackage(OriginTest):
         opts = self.make_options()
         pkg = SystemPackage('foo', _options=opts, config_file=self.config_file)
         data = pkg.dehydrate()
-        self.assertEqual(pkg, Package.rehydrate(data, _options=opts))
+        self.assertEqual(pkg, Package.rehydrate(
+            data, _options=opts, **rehydrate_kwargs
+        ))
 
     def test_upgrade(self):
         opts = self.make_options()
@@ -260,6 +262,6 @@ class TestSystemPackage(OriginTest):
                 'linkage': {'type': 'system', '_version': 0}}
         with mock.patch.object(SystemPackage, 'upgrade',
                                side_effect=SystemPackage.upgrade) as m:
-            pkg = Package.rehydrate(data, _options=opts)
+            pkg = Package.rehydrate(data, _options=opts, **rehydrate_kwargs)
             self.assertIsInstance(pkg, SystemPackage)
             m.assert_called_once()

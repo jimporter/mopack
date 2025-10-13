@@ -3,6 +3,7 @@ import subprocess
 from unittest import mock
 
 from . import MockPackage, through_json, LinkageTest
+from .. import rehydrate_kwargs
 
 from mopack.linkages import Linkage
 from mopack.linkages.pkg_config import PkgConfigLinkage
@@ -250,13 +251,15 @@ class TestPkgConfig(LinkageTest):
         linkage = PkgConfigLinkage(pkg, _symbols=symbols)
         data = through_json(linkage.dehydrate())
         self.assertEqual(linkage, Linkage.rehydrate(
-            data, name=pkg.name, _options=opts, _symbols=symbols
+            data, name=pkg.name, _options=opts, _symbols=symbols,
+            **rehydrate_kwargs
         ))
 
         linkage = PkgConfigLinkage(pkg, pcname='foopc', _symbols=symbols)
         data = through_json(linkage.dehydrate())
         self.assertEqual(linkage, Linkage.rehydrate(
-            data, name=pkg.name, _options=opts, _symbols=symbols
+            data, name=pkg.name, _options=opts, _symbols=symbols,
+            **rehydrate_kwargs
         ))
 
     def test_upgrade(self):
@@ -266,7 +269,7 @@ class TestPkgConfig(LinkageTest):
         with mock.patch.object(PkgConfigLinkage, 'upgrade',
                                side_effect=PkgConfigLinkage.upgrade) as m:
             pkg = Linkage.rehydrate(data, name='foo', _options=opts,
-                                    _symbols=symbols)
+                                    _symbols=symbols, **rehydrate_kwargs)
             self.assertIsInstance(pkg, PkgConfigLinkage)
             m.assert_called_once()
 

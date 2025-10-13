@@ -3,7 +3,7 @@ import subprocess
 from unittest import mock
 
 from . import *
-from ... import assert_logging
+from ... import assert_logging, rehydrate_kwargs
 from .... import *
 
 from mopack.builders.bfg9000 import Bfg9000Builder
@@ -543,12 +543,16 @@ class TestTarball(SDistTestCase):
         pkg = TarballPackage('foo', path=self.srcpath, build='bfg9000',
                              _options=opts, config_file=self.config_file)
         data = through_json(pkg.dehydrate())
-        self.assertEqual(pkg, Package.rehydrate(data, _options=opts))
+        self.assertEqual(pkg, Package.rehydrate(
+            data, _options=opts, **rehydrate_kwargs
+        ))
 
         pkg = TarballPackage('foo', url=self.srcurl, build='bfg9000',
                              _options=opts, config_file=self.config_file)
         data = through_json(pkg.dehydrate())
-        self.assertEqual(pkg, Package.rehydrate(data, _options=opts))
+        self.assertEqual(pkg, Package.rehydrate(
+            data, _options=opts, **rehydrate_kwargs
+        ))
 
         pkg = TarballPackage('foo', path=self.srcpath, _options=opts,
                              config_file=self.config_file)
@@ -566,7 +570,7 @@ class TestTarball(SDistTestCase):
         }
         with mock.patch.object(TarballPackage, 'upgrade',
                                side_effect=TarballPackage.upgrade) as m:
-            pkg = Package.rehydrate(data, _options=opts)
+            pkg = Package.rehydrate(data, _options=opts, **rehydrate_kwargs)
             self.assertIsInstance(pkg, TarballPackage)
             self.assertIsInstance(pkg.linkage, SystemLinkage)
             self.assertEqual([type(i) for i in pkg.builders], [NoneBuilder])

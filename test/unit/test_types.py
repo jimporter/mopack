@@ -13,6 +13,9 @@ from mopack.shell import ShellArguments
 from mopack.types import *
 from mopack.yaml_tools import load, SafeLineLoader
 
+srcdir = Path('', 'srcdir')
+srcdir_ph = placeholder(srcdir)
+
 
 class TypeTestCase(TestCase):
     @contextmanager
@@ -680,23 +683,17 @@ class TestShellArgs(TypeTestCase):
         self.assertShellArgs('foo\\ bar', ['foo bar'], escapes=True)
 
     def test_placeholder_string(self):
-        srcdir = Path('', 'srcdir')
-        srcdir_ph = placeholder(srcdir)
-
-        self.assertShellArgs(srcdir_ph, [srcdir])
-        self.assertShellArgs(srcdir_ph + ' foo', [srcdir, 'foo'])
+        self.assertShellArgs(srcdir_ph, [srcdir_ph])
+        self.assertShellArgs(srcdir_ph + ' foo', [srcdir_ph, 'foo'])
         self.assertShellArgs('foo ' + srcdir_ph + ' bar',
-                             ['foo', srcdir, 'bar'])
+                             ['foo', srcdir_ph, 'bar'])
         self.assertShellArgs(srcdir_ph + '/foo', [srcdir_ph + '/foo'])
         self.assertShellArgs('"' + srcdir_ph + '/ foo"', [srcdir_ph + '/ foo'])
 
     def test_placeholder_list(self):
-        srcdir = Path('', 'srcdir')
-        srcdir_ph = placeholder(srcdir)
-
-        self.assertShellArgs([srcdir_ph], [srcdir])
+        self.assertShellArgs([srcdir_ph], [srcdir_ph])
         self.assertShellArgs(['foo', srcdir_ph, 'bar'],
-                             ['foo', srcdir, 'bar'])
+                             ['foo', srcdir_ph, 'bar'])
         self.assertShellArgs([srcdir_ph + '/foo'], [srcdir_ph + '/foo'])
         self.assertShellArgs([srcdir_ph + '/ foo'], [srcdir_ph + '/ foo'])
 

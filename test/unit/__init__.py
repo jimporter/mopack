@@ -8,6 +8,9 @@ from io import StringIO
 from unittest import mock, TestCase
 
 from mopack.options import Options
+from mopack.metadata import Metadata
+
+rehydrate_kwargs = {'_global_version': Metadata.version}
 
 
 @contextmanager

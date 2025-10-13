@@ -5,6 +5,7 @@ from textwrap import dedent
 from unittest import mock
 
 from . import MockPackage, through_json, LinkageTest
+from .. import rehydrate_kwargs
 from ... import call_pkg_config, test_stage_dir
 
 from mopack.linkages import Linkage
@@ -806,14 +807,16 @@ class TestPath(LinkageTest):
         linkage = self.linkage_type(pkg, _symbols=symbols)
         data = linkage.dehydrate()
         self.assertEqual(linkage, Linkage.rehydrate(
-            data, name=pkg.name, _options=opts, _symbols=symbols
+            data, name=pkg.name, _options=opts, _symbols=symbols,
+            **rehydrate_kwargs
         ))
 
         linkage = self.linkage_type(pkg, compile_flags=['compile'],
                                     link_flags=['link'], _symbols=symbols)
         data = through_json(linkage.dehydrate())
         self.assertEqual(linkage, Linkage.rehydrate(
-            data, name=pkg.name, _options=opts, _symbols=symbols
+            data, name=pkg.name, _options=opts, _symbols=symbols,
+            **rehydrate_kwargs
         ))
 
         pkg = MockPackage('foo', srcdir=self.srcdir, builddir=self.builddir,
@@ -831,7 +834,8 @@ class TestPath(LinkageTest):
         }, _symbols=symbols)
         data = through_json(linkage.dehydrate())
         self.assertEqual(linkage, Linkage.rehydrate(
-            data, name=pkg.name, _options=opts, _symbols=symbols
+            data, name=pkg.name, _options=opts, _symbols=symbols,
+            **rehydrate_kwargs
         ))
 
     def test_upgrade(self):
@@ -842,7 +846,7 @@ class TestPath(LinkageTest):
         with mock.patch.object(self.linkage_type, 'upgrade',
                                side_effect=self.linkage_type.upgrade) as m:
             linkage = Linkage.rehydrate(data, name='foo', _options=opts,
-                                        _symbols=symbols)
+                                        _symbols=symbols, **rehydrate_kwargs)
             self.assertIsInstance(linkage, self.linkage_type)
             m.assert_called_once()
 

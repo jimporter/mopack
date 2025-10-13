@@ -2,7 +2,7 @@ import os
 from unittest import mock
 
 from . import BuilderTest, MockPackage, through_json
-from .. import mock_open_log
+from .. import mock_open_log, rehydrate_kwargs
 
 from mopack.builders import Builder
 from mopack.builders.custom import CustomBuilder
@@ -65,7 +65,7 @@ class TestCustomBuilder(BuilderTest):
         self.assertEqual(pkg.builder.name, 'foo')
         self.assertEqual(pkg.builder.build_commands, [
             ShellArguments(['configure', ph(Path('', 'srcdir')) + '/build']),
-            ShellArguments(['make', '-C', Path('', 'builddir')]),
+            ShellArguments(['make', '-C', ph(Path('', 'builddir'))]),
         ])
         self.assertEqual(pkg.builder.deploy_commands, [])
         self.check_build(pkg, build_commands=[
@@ -105,7 +105,7 @@ class TestCustomBuilder(BuilderTest):
         self.assertEqual(pkg.builder.name, 'foo')
         self.assertEqual(pkg.builder.build_commands, [
             ShellArguments(['configure', ph(Path('', 'srcdir')) + '/build']),
-            ShellArguments(['cd', Path('', 'builddir')]),
+            ShellArguments(['cd', ph(Path('', 'builddir'))]),
             ShellArguments(['make']),
         ])
 
@@ -149,8 +149,9 @@ class TestCustomBuilder(BuilderTest):
                                 build_commands=['make'], outdir='build',
                                 _symbols=self.symbols)
         data = through_json(builder.dehydrate())
-        self.assertEqual(builder, Builder.rehydrate(data, name='foo',
-                                                    _options=opts))
+        self.assertEqual(builder, Builder.rehydrate(
+            data, name='foo', _options=opts, **rehydrate_kwargs
+        ))
 
     def test_upgrade_from_v1(self):
         opts = self.make_options()
@@ -158,6 +159,7 @@ class TestCustomBuilder(BuilderTest):
                 'build_commands': [], 'deploy_commands': None}
         with mock.patch.object(CustomBuilder, 'upgrade',
                                side_effect=CustomBuilder.upgrade) as m:
-            builder = Builder.rehydrate(data, name='foo', _options=opts)
+            builder = Builder.rehydrate(data, name='foo', _options=opts,
+                                        **rehydrate_kwargs)
             self.assertIsInstance(builder, CustomBuilder)
             m.assert_called_once()
