@@ -156,8 +156,8 @@ def split_native_str(s, type=list):
 
 
 class ShellArguments(MutableSequence):
-    def __init__(self, args=[]):
-        self._args = list(args)
+    def __init__(self, args=None):
+        self._args = list(args or [])
 
     def __getitem__(self, i):
         return self._args[i]
