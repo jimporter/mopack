@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest import TestCase, mock
 
 from mopack.placeholder import *
 
@@ -72,6 +72,25 @@ class TestPlaceholder(TestCase):
         self.assertEqual('bar' + s, PlaceholderString('barfoo'))
         self.assertEqual(s + p, PlaceholderString('foo', p))
         self.assertEqual(p + s, PlaceholderString(p, 'foo'))
+
+    def test_simplify(self):
+        p = PlaceholderValue(1)
+
+        s = PlaceholderString()
+        self.assertEqual(s.simplify(), '')
+        self.assertEqual(s.simplify(unbox=True), '')
+
+        s = PlaceholderString('foo')
+        self.assertEqual(s.simplify(), 'foo')
+        self.assertEqual(s.simplify(unbox=True), 'foo')
+
+        s = PlaceholderString(p)
+        self.assertEqual(s.simplify(), s)
+        self.assertEqual(s.simplify(unbox=True), 1)
+
+        s = PlaceholderString('foo', p, 'bar')
+        self.assertEqual(s.simplify(), s)
+        self.assertEqual(s.simplify(unbox=True), s)
 
     def test_unbox(self):
         p = PlaceholderValue(1)
@@ -162,6 +181,41 @@ class TestPlaceholder(TestCase):
         self.assertEqual(placeholders, [p])
 
         self.assertEqual(PlaceholderString.unstash(stashed, placeholders), s)
+
+    def test_rehydrate(self):
+        class IntRehydrator:
+            @staticmethod
+            def rehydrate(config, **kwargs):
+                return int(config)
+
+        with mock.patch('mopack.placeholder._known_placeholders',
+                        [IntRehydrator]):
+            ph = placeholder
+
+            s = PlaceholderString()
+            data = s.dehydrate()
+            self.assertEqual(data, [])
+            self.assertEqual(PlaceholderString.rehydrate(data), s)
+
+            s = PlaceholderString('foo')
+            data = s.dehydrate()
+            self.assertEqual(data, ['foo'])
+            self.assertEqual(PlaceholderString.rehydrate(data), s)
+
+            s = PlaceholderString(ph(1))
+            data = s.dehydrate()
+            self.assertEqual(data, [1])
+            self.assertEqual(PlaceholderString.rehydrate(data), s)
+
+            s = PlaceholderString('foo=' + ph(1))
+            data = s.dehydrate()
+            self.assertEqual(data, ['foo=', 1])
+            self.assertEqual(PlaceholderString.rehydrate(data), s)
+
+            s = PlaceholderString('foo', 'bar=' + ph(1), 'baz')
+            data = s.dehydrate()
+            self.assertEqual(data, ['foobar=', 1, 'baz'])
+            self.assertEqual(PlaceholderString.rehydrate(data), s)
 
     def test_placeholder(self):
         self.assertEqual(placeholder(1),

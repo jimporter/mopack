@@ -9,6 +9,7 @@ from mopack.builders.custom import CustomBuilder
 from mopack.options import ExprSymbols
 from mopack.origins.sdist import DirectoryPackage
 from mopack.path import Path
+from mopack.placeholder import placeholder as ph
 from mopack.shell import ShellArguments
 
 
@@ -63,7 +64,7 @@ class TestCustomBuilder(BuilderTest):
         ], outdir='build')
         self.assertEqual(pkg.builder.name, 'foo')
         self.assertEqual(pkg.builder.build_commands, [
-            ShellArguments(['configure', (Path('', 'srcdir'), '/build')]),
+            ShellArguments(['configure', ph(Path('', 'srcdir')) + '/build']),
             ShellArguments(['make', '-C', Path('', 'builddir')]),
         ])
         self.assertEqual(pkg.builder.deploy_commands, [])
@@ -103,7 +104,7 @@ class TestCustomBuilder(BuilderTest):
         ], outdir='build')
         self.assertEqual(pkg.builder.name, 'foo')
         self.assertEqual(pkg.builder.build_commands, [
-            ShellArguments(['configure', (Path('', 'srcdir'), '/build')]),
+            ShellArguments(['configure', ph(Path('', 'srcdir')) + '/build']),
             ShellArguments(['cd', Path('', 'builddir')]),
             ShellArguments(['make']),
         ])

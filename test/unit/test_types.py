@@ -687,9 +687,8 @@ class TestShellArgs(TypeTestCase):
         self.assertShellArgs(srcdir_ph + ' foo', [srcdir, 'foo'])
         self.assertShellArgs('foo ' + srcdir_ph + ' bar',
                              ['foo', srcdir, 'bar'])
-        self.assertShellArgs(srcdir_ph + '/foo', [(srcdir, '/foo')])
-        self.assertShellArgs('"' + srcdir_ph + '/ foo"',
-                             [(srcdir, '/ foo')])
+        self.assertShellArgs(srcdir_ph + '/foo', [srcdir_ph + '/foo'])
+        self.assertShellArgs('"' + srcdir_ph + '/ foo"', [srcdir_ph + '/ foo'])
 
     def test_placeholder_list(self):
         srcdir = Path('', 'srcdir')
@@ -698,8 +697,8 @@ class TestShellArgs(TypeTestCase):
         self.assertShellArgs([srcdir_ph], [srcdir])
         self.assertShellArgs(['foo', srcdir_ph, 'bar'],
                              ['foo', srcdir, 'bar'])
-        self.assertShellArgs([srcdir_ph + '/foo'], [(srcdir, '/foo')])
-        self.assertShellArgs([srcdir_ph + '/ foo'], [(srcdir, '/ foo')])
+        self.assertShellArgs([srcdir_ph + '/foo'], [srcdir_ph + '/foo'])
+        self.assertShellArgs([srcdir_ph + '/ foo'], [srcdir_ph + '/ foo'])
 
     def test_invalid(self):
         with self.assertFieldError(('field',)):

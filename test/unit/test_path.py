@@ -2,7 +2,7 @@ import ntpath
 import os
 from unittest import mock, TestCase
 
-from mopack.placeholder import placeholder
+from mopack.placeholder import PlaceholderString, placeholder
 from mopack.path import *
 
 
@@ -188,3 +188,9 @@ class TestPath(TestCase):
 
         with self.assertRaises(TypeError):
             Path.rehydrate('foo')
+
+    def test_placeholder(self):
+        p = Path('foo', 'srcdir')
+        s = placeholder(p)
+        data = s.dehydrate()
+        self.assertEqual(s, PlaceholderString.rehydrate(data))
