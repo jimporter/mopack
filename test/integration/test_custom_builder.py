@@ -31,7 +31,7 @@ class TestCustomBuilder(IntegrationTest):
                     builders=[cfg_custom_builder(
                         build_commands=[
                             ['bfg9000', 'configure',
-                             {'base': 'builddir', 'path': ''}],
+                             [{'base': 'builddir', 'path': ''}]],
                             ['cd', [{'base': 'builddir', 'path': ''}, '/.']],
                             ['ninja'],
                         ],
@@ -74,7 +74,7 @@ class TestCustomBuilderDeploy(IntegrationTest):
                     builders=[cfg_custom_builder(
                         build_commands=[
                             ['bfg9000', 'configure',
-                             {'base': 'builddir', 'path': ''},
+                             [{'base': 'builddir', 'path': ''}],
                              ['--prefix=', {'base': 'absolute',
                                             'path': self.prefix}]],
                             ['cd', [{'base': 'builddir', 'path': ''}, '/.']],

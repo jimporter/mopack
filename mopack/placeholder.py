@@ -86,6 +86,8 @@ class PlaceholderString:
                 return value
             return PlaceholderValue.rehydrate(value, **kwargs)
 
+        if not iterutils.issequence(config):
+            raise TypeError('expected a list')
         return PlaceholderString(*[
             rehydrate_each(i, **kwargs) for i in config
         ])
@@ -169,6 +171,12 @@ class PlaceholderString:
 
 def placeholder(value):
     return PlaceholderString(PlaceholderValue(value))
+
+
+def rehydrate(value, **kwargs):
+    if isinstance(value, str):
+        return value
+    return PlaceholderString.rehydrate(value, **kwargs)
 
 
 def map_placeholder(value, fn):

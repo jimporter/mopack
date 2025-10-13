@@ -3,7 +3,7 @@ import subprocess
 from unittest import mock
 
 from . import OriginTest, through_json
-from .. import assert_logging, mock_open_log
+from .. import assert_logging, mock_open_log, rehydrate_kwargs
 
 from mopack.iterutils import iterate
 from mopack.origins import Package
@@ -269,7 +269,9 @@ class TestApt(OriginTest):
         pkg = AptPackage('foo', remote='libbar-dev', _options=opts,
                          config_file=self.config_file)
         data = through_json(pkg.dehydrate())
-        self.assertEqual(pkg, Package.rehydrate(data, _options=opts))
+        self.assertEqual(pkg, Package.rehydrate(
+            data, _options=opts, **rehydrate_kwargs
+        ))
 
     def test_upgrade(self):
         opts = self.make_options()
@@ -278,6 +280,6 @@ class TestApt(OriginTest):
                 'linkage': {'type': 'system', '_version': 0}}
         with mock.patch.object(AptPackage, 'upgrade',
                                side_effect=AptPackage.upgrade) as m:
-            pkg = Package.rehydrate(data, _options=opts)
+            pkg = Package.rehydrate(data, _options=opts, **rehydrate_kwargs)
             self.assertIsInstance(pkg, AptPackage)
             m.assert_called_once()

@@ -2,6 +2,7 @@ import os
 from unittest import mock
 
 from . import BuilderTest, MockPackage, through_json
+from .. import rehydrate_kwargs
 
 from mopack.builders import Builder
 from mopack.builders.none import NoneBuilder
@@ -49,14 +50,16 @@ class TestNoneBuilder(BuilderTest):
         builder = NoneBuilder(MockPackage('foo', _options=opts),
                               _symbols=self.symbols)
         data = through_json(builder.dehydrate())
-        self.assertEqual(builder, Builder.rehydrate(data, name='foo',
-                                                    _options=opts))
+        self.assertEqual(builder, Builder.rehydrate(
+            data, name='foo', _options=opts, **rehydrate_kwargs
+        ))
 
     def test_upgrade_from_v1(self):
         opts = self.make_options()
         data = {'type': 'none', '_version': 1, 'name': 'bar'}
         with mock.patch.object(NoneBuilder, 'upgrade',
                                side_effect=NoneBuilder.upgrade) as m:
-            builder = Builder.rehydrate(data, name='foo', _options=opts)
+            builder = Builder.rehydrate(data, name='foo', _options=opts,
+                                        **rehydrate_kwargs)
             self.assertIsInstance(builder, NoneBuilder)
             m.assert_called_once()

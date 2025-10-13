@@ -1,6 +1,8 @@
 import os
 from unittest import TestCase
 
+from . import rehydrate_kwargs
+
 from mopack.path import Path
 from mopack.placeholder import placeholder
 from mopack.shell import *
@@ -159,9 +161,9 @@ class TestSplitPosix(TestCase):
         self.assertSplitEqual('foo\\ bar', ['foo bar'], escapes=True)
 
     def test_placeholder(self):
-        self.assertEqual(split_posix(srcdir_ph), ShellArguments([srcdir]))
+        self.assertEqual(split_posix(srcdir_ph), ShellArguments([srcdir_ph]))
         self.assertEqual(split_posix('gcc ' + srcdir_ph),
-                         ShellArguments(['gcc', srcdir]))
+                         ShellArguments(['gcc', srcdir_ph]))
         self.assertEqual(split_posix('--srcdir=' + srcdir_ph),
                          ShellArguments(['--srcdir=' + srcdir_ph]))
         self.assertEqual(split_posix('"prefix ' + srcdir_ph + '"'),
@@ -204,9 +206,9 @@ class TestSplitWindows(TestCase):
         self.assertSplitEqual('foo bar baz', ('foo', 'bar', 'baz'), type=tuple)
 
     def test_placeholder(self):
-        self.assertEqual(split_windows(srcdir_ph), ShellArguments([srcdir]))
+        self.assertEqual(split_windows(srcdir_ph), ShellArguments([srcdir_ph]))
         self.assertEqual(split_windows('gcc ' + srcdir_ph),
-                         ShellArguments(['gcc', srcdir]))
+                         ShellArguments(['gcc', srcdir_ph]))
         self.assertEqual(split_windows('--srcdir=' + srcdir_ph),
                          ShellArguments(['--srcdir=' + srcdir_ph]))
         self.assertEqual(split_windows('"prefix ' + srcdir_ph + '"'),
@@ -263,7 +265,7 @@ class TestShellArguments(TestCase):
         self.assertEqual(s.fill(), ['foo', 'bar', 'baz'])
 
     def test_fill_path(self):
-        s = ShellArguments([srcdir])
+        s = ShellArguments([srcdir_ph])
         self.assertEqual(s.fill(srcdir='${srcdir}'), ['${srcdir}'])
         self.assertEqual(s.fill(srcdir=os.path.abspath('/path/to/srcdir')),
                          [os.path.abspath('/path/to/srcdir')])
@@ -278,25 +280,31 @@ class TestShellArguments(TestCase):
         s = ShellArguments()
         data = s.dehydrate()
         self.assertEqual(data, [])
-        self.assertEqual(ShellArguments.rehydrate(data), s)
+        self.assertEqual(ShellArguments.rehydrate(data, **rehydrate_kwargs), s)
 
         s = ShellArguments(['foo'])
         data = s.dehydrate()
         self.assertEqual(data, ['foo'])
-        self.assertEqual(ShellArguments.rehydrate(data), s)
+        self.assertEqual(ShellArguments.rehydrate(data, **rehydrate_kwargs), s)
 
-        s = ShellArguments([srcdir])
+        s = ShellArguments([srcdir_ph])
         data = s.dehydrate()
-        self.assertEqual(data, [srcdir.dehydrate()])
-        self.assertEqual(ShellArguments.rehydrate(data), s)
+        self.assertEqual(data, [[srcdir.dehydrate()]])
+        self.assertEqual(ShellArguments.rehydrate(data, **rehydrate_kwargs), s)
 
         s = ShellArguments(['--srcdir=' + srcdir_ph])
         data = s.dehydrate()
         self.assertEqual(data, [['--srcdir=', srcdir.dehydrate()]])
-        self.assertEqual(ShellArguments.rehydrate(data), s)
+        self.assertEqual(ShellArguments.rehydrate(data, **rehydrate_kwargs), s)
 
-        s = ShellArguments(['gcc', '--srcdir=' + srcdir_ph, srcdir])
+        s = ShellArguments(['gcc', '--srcdir=' + srcdir_ph, srcdir_ph])
         data = s.dehydrate()
-        self.assertEqual(data, ['gcc', ['--srcdir=', srcdir.dehydrate()],
-                                srcdir.dehydrate()])
-        self.assertEqual(ShellArguments.rehydrate(data), s)
+        self.assertEqual(data, [
+            'gcc', ['--srcdir=', srcdir.dehydrate()], [srcdir.dehydrate()]
+        ])
+        self.assertEqual(ShellArguments.rehydrate(data, **rehydrate_kwargs), s)
+
+    def test_upgrade_from_v3(self):
+        data = [srcdir.dehydrate()]
+        self.assertEqual(ShellArguments.rehydrate(data, _global_version=3),
+                         ShellArguments([srcdir_ph]))

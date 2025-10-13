@@ -5,7 +5,7 @@ from io import StringIO
 from unittest import mock
 
 from . import *
-from ... import assert_logging, mock_open_data
+from ... import assert_logging, mock_open_data, rehydrate_kwargs
 from .... import *
 
 from mopack.builders.bfg9000 import Bfg9000Builder
@@ -495,7 +495,9 @@ class TestDirectory(SDistTestCase):
                                _options=opts, config_file=self.config_file)
         data = through_json(pkg.dehydrate())
         self.assertNotIn('pending_linkage', data)
-        self.assertEqual(pkg, Package.rehydrate(data, _options=opts))
+        self.assertEqual(pkg, Package.rehydrate(
+            data, _options=opts, **rehydrate_kwargs
+        ))
 
         pkg = DirectoryPackage('foo', path=self.srcpath, _options=opts,
                                config_file=self.config_file)
@@ -512,7 +514,7 @@ class TestDirectory(SDistTestCase):
         }
         with mock.patch.object(DirectoryPackage, 'upgrade',
                                side_effect=DirectoryPackage.upgrade) as m:
-            pkg = Package.rehydrate(data, _options=opts)
+            pkg = Package.rehydrate(data, _options=opts, **rehydrate_kwargs)
             self.assertIsInstance(pkg, DirectoryPackage)
             self.assertIsInstance(pkg.linkage, SystemLinkage)
             self.assertEqual([type(i) for i in pkg.builders], [NoneBuilder])

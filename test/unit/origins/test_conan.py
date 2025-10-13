@@ -5,7 +5,7 @@ from textwrap import dedent
 from unittest import mock
 
 from . import OptionsTest, OriginTest, through_json
-from .. import assert_logging, mock_open_log
+from .. import assert_logging, mock_open_log, rehydrate_kwargs
 
 from mopack.iterutils import iterate
 from mopack.origins import Package, PackageOptions
@@ -399,7 +399,9 @@ class TestConan(OriginTest):
                            options={'shared': True}, _options=opts,
                            config_file=self.config_file)
         data = through_json(pkg.dehydrate())
-        self.assertEqual(pkg, Package.rehydrate(data, _options=opts))
+        self.assertEqual(pkg, Package.rehydrate(
+            data, _options=opts, **rehydrate_kwargs
+        ))
 
     def test_upgrade(self):
         opts = self.make_options()
@@ -408,7 +410,7 @@ class TestConan(OriginTest):
                 'linkage': {'type': 'system', '_version': 0}}
         with mock.patch.object(ConanPackage, 'upgrade',
                                side_effect=ConanPackage.upgrade) as m:
-            pkg = Package.rehydrate(data, _options=opts)
+            pkg = Package.rehydrate(data, _options=opts, **rehydrate_kwargs)
             self.assertIsInstance(pkg, ConanPackage)
             m.assert_called_once()
 
@@ -463,13 +465,15 @@ class TestConanOptions(OptionsTest):
         opts(build='foo', extra_args='--arg', config_file=self.config_file,
              _symbols=self.symbols)
         data = through_json(opts.dehydrate())
-        self.assertEqual(opts, PackageOptions.rehydrate(data))
+        self.assertEqual(opts, PackageOptions.rehydrate(
+            data, **rehydrate_kwargs
+        ))
 
     def test_upgrade(self):
         data = {'origin': 'conan', '_version': 0, 'build': [],
                 'extra_args': []}
         with mock.patch.object(ConanPackage.Options, 'upgrade',
                                side_effect=ConanPackage.Options.upgrade) as m:
-            pkg = PackageOptions.rehydrate(data)
+            pkg = PackageOptions.rehydrate(data, **rehydrate_kwargs)
             self.assertIsInstance(pkg, ConanPackage.Options)
             m.assert_called_once()

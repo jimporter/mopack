@@ -8,7 +8,7 @@ from shlex import shlex
 from .freezedried import auto_dehydrate
 from .iterutils import isiterable, ismapping
 from .path import Path
-from .placeholder import PlaceholderString, PlaceholderValue
+from .placeholder import PlaceholderString, rehydrate as rehydrate_placeholder
 from .platforms import platform_name
 
 
@@ -158,6 +158,9 @@ def split_native_str(s, type=list):
 class ShellArguments(MutableSequence):
     def __init__(self, args=None):
         self._args = list(args or [])
+        if any(not isinstance(i, (str, PlaceholderString))
+               for i in self._args):
+            raise TypeError('expected a string or placeholder string')
 
     def __getitem__(self, i):
         return self._args[i]
@@ -184,9 +187,7 @@ class ShellArguments(MutableSequence):
 
         result = []
         for i in self._args:
-            if isinstance(i, Path):
-                result.append(_fn(i.string(**kwargs), i))
-            elif isinstance(i, PlaceholderString):
+            if isinstance(i, PlaceholderString):
                 arg = ''
                 for j in i.unbox():
                     s = j.string(**kwargs) if isinstance(j, Path) else j
@@ -201,16 +202,15 @@ class ShellArguments(MutableSequence):
 
     @classmethod
     def rehydrate(self, value, **kwargs):
+        global_version = kwargs['_global_version']
+
         def rehydrate_each(value):
-            # XXX: It would be cleaner to avoid unboxing placeholders directly
-            # into the shell arguments so that we could always rehydrate the
-            # same way. We'd need a migration strategy for old configs though.
-            # For now, treat mappings as `PlaceholderValue`s.
-            if ismapping(value):
-                return PlaceholderValue.rehydrate(value, **kwargs).value
-            elif isiterable(value):
-                return PlaceholderString.rehydrate(value, **kwargs)
-            return value
+            if global_version < 4:
+                # v4 always stores placeholders as full `PlaceholderString`s.
+                if ismapping(value):
+                    value = [value]
+
+            return rehydrate_placeholder(value, **kwargs)
 
         return ShellArguments(rehydrate_each(i) for i in value)
 
@@ -239,7 +239,7 @@ def _wrap_placeholder(split_fn):
             stashed, placeholders = value.stash()
             args = split_fn(stashed, *args, **kwargs)
             return ShellArguments(
-                PlaceholderString.unstash(i, placeholders).simplify(unbox=True)
+                PlaceholderString.unstash(i, placeholders).simplify()
                 for i in args
             )
         return ShellArguments(split_fn(value, *args, **kwargs))

@@ -2,7 +2,7 @@ import os
 from unittest import mock
 
 from . import BuilderTest, MockPackage, OptionsTest, through_json
-from .. import mock_open_log
+from .. import mock_open_log, rehydrate_kwargs
 
 from mopack.builders import Builder, BuilderOptions
 from mopack.builders.bfg9000 import Bfg9000Builder
@@ -93,8 +93,9 @@ class TestBfg9000Builder(BuilderTest):
             _symbols=self.symbols
         )
         data = through_json(builder.dehydrate())
-        self.assertEqual(builder, Builder.rehydrate(data, name='foo',
-                                                    _options=opts))
+        self.assertEqual(builder, Builder.rehydrate(
+            data, name='foo', _options=opts, **rehydrate_kwargs
+        ))
 
     def test_upgrade_from_v1(self):
         opts = self.make_options()
@@ -102,7 +103,8 @@ class TestBfg9000Builder(BuilderTest):
                 'extra_args': []}
         with mock.patch.object(Bfg9000Builder, 'upgrade',
                                side_effect=Bfg9000Builder.upgrade) as m:
-            builder = Builder.rehydrate(data, name='foo', _options=opts)
+            builder = Builder.rehydrate(data, name='foo', _options=opts,
+                                        **rehydrate_kwargs)
             self.assertIsInstance(builder, Bfg9000Builder)
             m.assert_called_once()
 
@@ -146,17 +148,21 @@ class TestBfg9000Options(OptionsTest):
         opts_toolchain(toolchain='toolchain.bfg', config_file=self.config_file,
                        _symbols=self.symbols)
         data = through_json(opts_toolchain.dehydrate())
-        self.assertEqual(opts_toolchain, BuilderOptions.rehydrate(data))
+        self.assertEqual(opts_toolchain, BuilderOptions.rehydrate(
+            data, **rehydrate_kwargs
+        ))
 
         opts_none = Bfg9000Builder.Options()
         opts_none(toolchain=None, config_file=self.config_file,
                   _symbols=self.symbols)
         data = through_json(opts_none.dehydrate())
-        self.assertEqual(opts_none, BuilderOptions.rehydrate(data))
+        self.assertEqual(opts_none, BuilderOptions.rehydrate(
+            data, **rehydrate_kwargs
+        ))
 
         opts_default = Bfg9000Builder.Options()
         data = through_json(opts_default.dehydrate())
-        rehydrated = BuilderOptions.rehydrate(data)
+        rehydrated = BuilderOptions.rehydrate(data, **rehydrate_kwargs)
         self.assertEqual(opts_default, rehydrated)
         self.assertEqual(opts_none, rehydrated)
 
@@ -164,6 +170,6 @@ class TestBfg9000Options(OptionsTest):
         data = {'type': 'bfg9000', '_version': 0, 'toolchain': None}
         o = Bfg9000Builder.Options
         with mock.patch.object(o, 'upgrade', side_effect=o.upgrade) as m:
-            pkg = BuilderOptions.rehydrate(data)
+            pkg = BuilderOptions.rehydrate(data, **rehydrate_kwargs)
             self.assertIsInstance(pkg, o)
             m.assert_called_once()

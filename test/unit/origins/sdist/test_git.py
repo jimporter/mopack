@@ -3,7 +3,7 @@ import subprocess
 from unittest import mock
 
 from . import *
-from ... import assert_logging
+from ... import assert_logging, rehydrate_kwargs
 from .... import *
 
 from mopack.builders.bfg9000 import Bfg9000Builder
@@ -569,7 +569,9 @@ class TestGit(SDistTestCase):
         pkg = GitPackage('foo', repository=self.srcssh, build='bfg9000',
                          _options=opts, config_file=self.config_file)
         data = through_json(pkg.dehydrate())
-        self.assertEqual(pkg, Package.rehydrate(data, _options=opts))
+        self.assertEqual(pkg, Package.rehydrate(
+            data, _options=opts, **rehydrate_kwargs
+        ))
 
         pkg = GitPackage('foo', repository=self.srcssh, _options=opts,
                          config_file=self.config_file)
@@ -587,7 +589,7 @@ class TestGit(SDistTestCase):
         }
         with mock.patch.object(GitPackage, 'upgrade',
                                side_effect=GitPackage.upgrade) as m:
-            pkg = Package.rehydrate(data, _options=opts)
+            pkg = Package.rehydrate(data, _options=opts, **rehydrate_kwargs)
             self.assertIsInstance(pkg, GitPackage)
             self.assertIsInstance(pkg.linkage, SystemLinkage)
             self.assertEqual([type(i) for i in pkg.builders], [NoneBuilder])

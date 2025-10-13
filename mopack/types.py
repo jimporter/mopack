@@ -444,7 +444,7 @@ def shell_args(none_ok=False, escapes=False):
             if isinstance(value, str):
                 return value
             elif isinstance(value, PlaceholderString):
-                return value.simplify(unbox=True)
+                return value.simplify()
             raise TypeError('expected a string')
 
     def check(field, value):
