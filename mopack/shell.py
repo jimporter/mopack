@@ -233,20 +233,20 @@ class ShellArguments(MutableSequence):
         return '<ShellArguments({})>'.format(repr(self._args)[1:-1])
 
 
-def _wrap_placeholder(split_fn):
+def _wrap_split_placeholder(fn):
     def wrapped(value, *args, **kwargs):
         if isinstance(value, PlaceholderString):
             stashed, placeholders = value.stash()
-            args = split_fn(stashed, *args, **kwargs)
+            result = fn(stashed, *args, **kwargs)
             return ShellArguments(
                 PlaceholderString.unstash(i, placeholders).simplify()
-                for i in args
+                for i in result
             )
-        return ShellArguments(split_fn(value, *args, **kwargs))
+        return ShellArguments(fn(value, *args, **kwargs))
 
     return wrapped
 
 
-split_posix = _wrap_placeholder(split_posix_str)
-split_windows = _wrap_placeholder(split_windows_str)
-split_native = _wrap_placeholder(split_native_str)
+split_posix = _wrap_split_placeholder(split_posix_str)
+split_windows = _wrap_split_placeholder(split_windows_str)
+split_native = _wrap_split_placeholder(split_native_str)
