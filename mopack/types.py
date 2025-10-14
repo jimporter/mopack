@@ -441,10 +441,8 @@ def dependency_string(package, submodules):
 def shell_args(none_ok=False, escapes=False):
     def check_item(field, value):
         with ensure_field_error(field):
-            if isinstance(value, str):
+            if isinstance(value, (str, PlaceholderString)):
                 return value
-            elif isinstance(value, PlaceholderString):
-                return value.simplify()
             raise TypeError('expected a string')
 
     def check(field, value):
@@ -467,7 +465,7 @@ def shell_args(none_ok=False, escapes=False):
 def placeholder_fill(other, placeholder, fill_value):
     def check(field, value):
         value = map_placeholder(value, lambda value: value.replace(
-            placeholder, fill_value, simplify=True
+            placeholder, fill_value
         ))
         return other(field, value)
 

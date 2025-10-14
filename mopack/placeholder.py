@@ -13,6 +13,8 @@ def placeholder_type(cls):
 
 class PlaceholderValue:
     def __init__(self, value):
+        if isinstance(value, str):
+            raise TypeError('unexpected string for placeholder')
         self.value = value
 
     def __eq__(self, rhs):
@@ -41,8 +43,12 @@ class PlaceholderValue:
 
 
 class PlaceholderString:
-    def __init__(self, *args):
-        self.__bits = tuple(self.__canonicalize(args))
+    def __init__(self, *args, _canonicalized=False):
+        if not _canonicalized:
+            args = tuple(self.__canonicalize(args))
+            if not any(isinstance(i, PlaceholderValue) for i in args):
+                raise TypeError('expected a placeholder')
+        self.__bits = args
 
     @staticmethod
     def __canonicalize(value):
@@ -70,11 +76,15 @@ class PlaceholderString:
         yield last
 
     @classmethod
-    def make(cls, *args, simplify=False):
-        result = PlaceholderString(*args)
-        if simplify:
-            return result.simplify()
-        return result
+    def make(cls, *args):
+        bits = tuple(cls.__canonicalize(args))
+        if any(isinstance(i, PlaceholderValue) for i in bits):
+            return PlaceholderString(*bits, _canonicalized=True)
+        elif len(bits) == 0:
+            return ''
+        else:
+            assert len(bits) == 1
+            return bits[0]
 
     def dehydrate(self):
         return [auto_dehydrate(i) for i in self.__bits]
@@ -96,31 +106,16 @@ class PlaceholderString:
     def bits(self):
         return self.__bits
 
-    def simplify(self, *, unbox=False):
-        if len(self.__bits) == 0:
-            return ''
-        elif len(self.__bits) == 1:
-            if isinstance(self.__bits[0], PlaceholderValue):
-                if unbox:
-                    return self.__bits[0].value
-            else:
-                return self.__bits[0]
-        return self
-
-    def unbox(self, simplify=False):
-        if simplify:
-            simplified = self.simplify(unbox=True)
-            if simplified is not self:
-                return simplified
+    def unbox(self):
         return tuple(i.value if isinstance(i, PlaceholderValue) else i
                      for i in self.__bits)
 
-    def replace(self, placeholder, value, *, simplify=False):
+    def replace(self, placeholder, value):
         def each(i):
             if isinstance(i, PlaceholderValue) and i.value == placeholder:
                 return value
             return i
-        return self.make(*[each(i) for i in self.__bits], simplify=simplify)
+        return self.make(*[each(i) for i in self.__bits])
 
     def stash(self):
         stashed = ''
@@ -148,7 +143,7 @@ class PlaceholderString:
         if last < len(string):
             bits.append(string[last:])
 
-        return PlaceholderString(*bits)
+        return PlaceholderString.make(*bits)
 
     def __add__(self, rhs):
         return PlaceholderString(self, rhs)
@@ -170,7 +165,7 @@ class PlaceholderString:
 
 
 def placeholder(value):
-    return PlaceholderString(PlaceholderValue(value))
+    return PlaceholderString(PlaceholderValue(value), _canonicalized=True)
 
 
 def rehydrate(value, **kwargs):
