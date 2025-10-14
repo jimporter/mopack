@@ -238,10 +238,8 @@ def _wrap_split_placeholder(fn):
         if isinstance(value, PlaceholderString):
             stashed, placeholders = value.stash()
             result = fn(stashed, *args, **kwargs)
-            return ShellArguments(
-                PlaceholderString.unstash(i, placeholders).simplify()
-                for i in result
-            )
+            return ShellArguments(PlaceholderString.unstash(i, placeholders)
+                                  for i in result)
         return ShellArguments(fn(value, *args, **kwargs))
 
     return wrapped

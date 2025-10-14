@@ -5,16 +5,12 @@ from mopack.placeholder import *
 
 class TestPlaceholder(TestCase):
     def test_construct_empty(self):
-        s = PlaceholderString()
-        self.assertEqual(s.bits, ())
+        with self.assertRaises(TypeError):
+            PlaceholderString()
 
-    def test_construct_single_str(self):
-        s = PlaceholderString('foo')
-        self.assertEqual(s.bits, ('foo',))
-
-    def test_construct_coalesce_str(self):
-        s = PlaceholderString('foo', 'bar', 'baz')
-        self.assertEqual(s.bits, ('foobarbaz',))
+    def test_construct_str(self):
+        with self.assertRaises(TypeError):
+            PlaceholderString('foo')
 
     def test_construct_single_placeholder(self):
         p = PlaceholderValue(1)
@@ -28,10 +24,16 @@ class TestPlaceholder(TestCase):
         self.assertEqual(s.bits, (p1, p2))
 
     def test_construct_nested(self):
-        s1 = PlaceholderString('foo')
-        s2 = PlaceholderString('bar')
+        p = PlaceholderValue(1)
+        s1 = PlaceholderString(p, 'foo')
+        s2 = PlaceholderString('bar', p)
         s = PlaceholderString(s1, s2)
-        self.assertEqual(s.bits, ('foobar',))
+        self.assertEqual(s.bits, (p, 'foobar', p))
+
+    def test_construct_coalesce_str(self):
+        p = PlaceholderValue(1)
+        s = PlaceholderString(p, 'foo', 'bar', 'baz')
+        self.assertEqual(s.bits, (p, 'foobarbaz'))
 
     def test_construct_mixed(self):
         p1 = PlaceholderValue(1)
@@ -43,126 +45,52 @@ class TestPlaceholder(TestCase):
     def test_make(self):
         p = PlaceholderValue(1)
 
-        self.assertEqual(PlaceholderString.make(), PlaceholderString())
-        self.assertEqual(PlaceholderString.make(simplify=True), '')
-
-        self.assertEqual(PlaceholderString.make('foo'),
-                         PlaceholderString('foo'))
-        self.assertEqual(PlaceholderString.make('foo', simplify=True), 'foo')
-
+        self.assertEqual(PlaceholderString.make(), '')
+        self.assertEqual(PlaceholderString.make('foo'), 'foo')
         self.assertEqual(PlaceholderString.make(p), PlaceholderString(p))
-        self.assertEqual(PlaceholderString.make(p, simplify=True),
-                         PlaceholderString(p))
-
         self.assertEqual(PlaceholderString.make('foo', p),
-                         PlaceholderString('foo', p))
-        self.assertEqual(PlaceholderString.make('foo', p, simplify=True),
                          PlaceholderString('foo', p))
 
     def test_add(self):
-        p = PlaceholderValue(1)
-        s = PlaceholderString()
-        self.assertEqual(s + 'foo', PlaceholderString('foo'))
-        self.assertEqual('foo' + s, PlaceholderString('foo'))
-        self.assertEqual(s + p, PlaceholderString(p))
-        self.assertEqual(p + s, PlaceholderString(p))
+        p1 = PlaceholderValue(1)
+        p2 = PlaceholderValue(2)
 
-        s = PlaceholderString('foo')
-        self.assertEqual(s + 'bar', PlaceholderString('foobar'))
-        self.assertEqual('bar' + s, PlaceholderString('barfoo'))
-        self.assertEqual(s + p, PlaceholderString('foo', p))
-        self.assertEqual(p + s, PlaceholderString(p, 'foo'))
+        s = PlaceholderString(p1)
+        self.assertEqual(s + 'foo', PlaceholderString(p1, 'foo'))
+        self.assertEqual('foo' + s, PlaceholderString('foo', p1))
+        self.assertEqual(s + p2, PlaceholderString(p1, p2))
+        self.assertEqual(p2 + s, PlaceholderString(p2, p1))
 
-    def test_simplify(self):
-        p = PlaceholderValue(1)
-
-        s = PlaceholderString()
-        self.assertEqual(s.simplify(), '')
-        self.assertEqual(s.simplify(unbox=True), '')
-
-        s = PlaceholderString('foo')
-        self.assertEqual(s.simplify(), 'foo')
-        self.assertEqual(s.simplify(unbox=True), 'foo')
-
-        s = PlaceholderString(p)
-        self.assertEqual(s.simplify(), s)
-        self.assertEqual(s.simplify(unbox=True), 1)
-
-        s = PlaceholderString('foo', p, 'bar')
-        self.assertEqual(s.simplify(), s)
-        self.assertEqual(s.simplify(unbox=True), s)
+        s = PlaceholderString('foo', p1, 'bar')
+        self.assertEqual(s + 'baz', PlaceholderString('foo', p1, 'barbaz'))
+        self.assertEqual('baz' + s, PlaceholderString('bazfoo', p1, 'bar'))
+        self.assertEqual(s + p2, PlaceholderString('foo', p1, 'bar', p2))
+        self.assertEqual(p2 + s, PlaceholderString(p2, 'foo', p1, 'bar'))
 
     def test_unbox(self):
         p = PlaceholderValue(1)
 
-        s = PlaceholderString()
-        self.assertEqual(s.unbox(), ())
-        self.assertEqual(s.unbox(simplify=True), '')
-
-        s = PlaceholderString('foo')
-        self.assertEqual(s.unbox(), ('foo',))
-        self.assertEqual(s.unbox(simplify=True), 'foo')
-
         s = PlaceholderString(p)
         self.assertEqual(s.unbox(), (1,))
-        self.assertEqual(s.unbox(simplify=True), 1)
 
         s = PlaceholderString('foo', p, 'bar')
         self.assertEqual(s.unbox(), ('foo', 1, 'bar'))
-        self.assertEqual(s.unbox(simplify=True), ('foo', 1, 'bar'))
 
     def test_replace(self):
         p1 = PlaceholderValue(1)
         p2 = PlaceholderValue(2)
 
-        s = PlaceholderString()
-        self.assertEqual(s.replace(1, 'A'), s)
-        self.assertEqual(s.replace(1, 'A',  simplify=True), '')
-
-        s = PlaceholderString('foo')
-        self.assertEqual(s.replace(1, 'A'), s)
-        self.assertEqual(s.replace(1, 'A', simplify=True), 'foo')
-
         s = PlaceholderString(p1)
-        self.assertEqual(s.replace(1, 'A'), PlaceholderString('A'))
-        self.assertEqual(s.replace(1, 'A', simplify=True), 'A')
+        self.assertEqual(s.replace(1, 'A'), 'A')
 
         s = PlaceholderString(p2)
         self.assertEqual(s.replace(1, 'A'), s)
-        self.assertEqual(s.replace(1, 'A', simplify=True), s)
 
         s = PlaceholderString('foo', p1, 'bar')
-        self.assertEqual(s.replace(1, 'A'), PlaceholderString('fooAbar'))
-        self.assertEqual(s.replace(1, 'A', simplify=True), 'fooAbar')
+        self.assertEqual(s.replace(1, 'A'), 'fooAbar')
 
         s = PlaceholderString('foo', p1, 'bar', p2)
         self.assertEqual(s.replace(1, 'A'), PlaceholderString('fooAbar', p2))
-        self.assertEqual(s.replace(1, 'A', simplify=True),
-                         PlaceholderString('fooAbar', p2))
-
-    def test_stash_empty(self):
-        s = PlaceholderString()
-        stashed, placeholders = s.stash()
-        self.assertEqual(stashed, '')
-        self.assertEqual(placeholders, [])
-
-        self.assertEqual(PlaceholderString.unstash(stashed, placeholders), s)
-
-    def test_stash_str(self):
-        s = PlaceholderString('foo')
-        stashed, placeholders = s.stash()
-        self.assertEqual(stashed, 'foo')
-        self.assertEqual(placeholders, [])
-
-        self.assertEqual(PlaceholderString.unstash(stashed, placeholders), s)
-
-    def test_stash_str_escape(self):
-        s = PlaceholderString('foo\x11bar')
-        stashed, placeholders = s.stash()
-        self.assertEqual(stashed, 'foo\x11\x13bar')
-        self.assertEqual(placeholders, [])
-
-        self.assertEqual(PlaceholderString.unstash(stashed, placeholders), s)
 
     def test_stash_placeholder(self):
         p = PlaceholderValue(1)
@@ -192,16 +120,6 @@ class TestPlaceholder(TestCase):
                         [IntRehydrator]):
             ph = placeholder
 
-            s = PlaceholderString()
-            data = s.dehydrate()
-            self.assertEqual(data, [])
-            self.assertEqual(PlaceholderString.rehydrate(data), s)
-
-            s = PlaceholderString('foo')
-            data = s.dehydrate()
-            self.assertEqual(data, ['foo'])
-            self.assertEqual(PlaceholderString.rehydrate(data), s)
-
             s = PlaceholderString(ph(1))
             data = s.dehydrate()
             self.assertEqual(data, [1])
@@ -221,11 +139,14 @@ class TestPlaceholder(TestCase):
         self.assertEqual(placeholder(1),
                          PlaceholderString(PlaceholderValue(1)))
 
+        with self.assertRaises(TypeError):
+            placeholder('foo')
+
 
 class TestMapPlaceholder(TestCase):
     @staticmethod
     def fn(value):
-        return value.replace(1, 'A', simplify=True)
+        return value.replace(1, 'A')
 
     def test_simple(self):
         self.assertEqual(map_placeholder(None, self.fn), None)
@@ -235,11 +156,12 @@ class TestMapPlaceholder(TestCase):
 
     def test_placeholder(self):
         p = PlaceholderValue(1)
-        PS = PlaceholderString
 
-        self.assertEqual(map_placeholder(PS(), self.fn), '')
-        self.assertEqual(map_placeholder(PS('foo'), self.fn), 'foo')
-        self.assertEqual(map_placeholder(PS('foo', p), self.fn), 'fooA')
+        s = PlaceholderString(p)
+        self.assertEqual(map_placeholder(s, self.fn), 'A')
+
+        s = PlaceholderString('foo', p)
+        self.assertEqual(map_placeholder(s, self.fn), 'fooA')
 
     def test_list(self):
         s = PlaceholderString('foo', PlaceholderValue(1), 'bar')

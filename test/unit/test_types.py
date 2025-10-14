@@ -427,12 +427,12 @@ class TestString(TypeTestCase):
         with self.assertFieldError(('field',)):
             string('field', None)
         with self.assertFieldError(('field',)):
-            string('field', placeholder('foo'))
+            string('field', placeholder(1))
 
 
 class TestPlaceholderString(TypeTestCase):
     def test_valid(self):
-        s = placeholder('foo')
+        s = placeholder(1)
         self.assertEqual(placeholder_string('field', 'foo'), 'foo')
         self.assertEqual(placeholder_string('field', s), s)
 
