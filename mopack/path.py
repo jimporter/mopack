@@ -7,7 +7,8 @@ from .freezedried import FreezeDried
 from .iterutils import ismapping
 from .placeholder import PlaceholderString
 
-__all__ = ['file_outdated', 'Path', 'pushd']
+__all__ = ['exists', 'file_outdated', 'isdir', 'isfile', 'islink', 'issemiabs',
+           'Path', 'pushd']
 
 
 @contextmanager
