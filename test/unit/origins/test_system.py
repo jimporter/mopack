@@ -30,7 +30,7 @@ class TestSystemPackage(OriginTest):
     def check_get_linkage(self, pkg, submodules, expected=None, *,
                           find_pkg_config=False):
         def mock_isfile(p, variables={}):
-            p = os.path.normcase(p.string(**variables))
+            p = os.path.normcase(p.string(variables))
             return p.startswith(os.path.normcase(abspath('/mock')) + os.sep)
 
         if expected is None:

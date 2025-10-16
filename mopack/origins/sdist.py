@@ -202,10 +202,10 @@ class DirectoryPackage(SDistPackage):
         T.path(types.any_path('cfgdir'))
 
     def _srcdir(self, metadata):
-        return self.path.string(cfgdir=self.config_dir)
+        return self.path.string({'cfgdir': self.config_dir})
 
     def fetch(self, metadata, parent_config):
-        path = self.path.string(cfgdir=self.config_dir)
+        path = self.path.string({'cfgdir': self.config_dir})
         log.pkg_fetch(self.name, 'from {}'.format(path))
         return self._find_mopack(parent_config, path)
 
@@ -269,11 +269,12 @@ class TarballPackage(SDistPackage):
         if os.path.exists(base_srcdir):
             log.pkg_fetch(self.name, 'already fetched')
         else:
-            where = self.url or self.path.string(cfgdir=self.config_dir)
+            path_bases = {'cfgdir': self.config_dir}
+            where = self.url or self.path.string(path_bases)
             log.pkg_fetch(self.name, 'from {}'.format(where))
 
             with (self._urlopen(self.url) if self.url else
-                  open(self.path.string(cfgdir=self.config_dir), 'rb')) as f:
+                  open(self.path.string(path_bases), 'rb')) as f:
                 with archive.open(f) as arc:
                     names = arc.getnames()
                     self.guessed_srcdir = (names[0].split('/', 1)[0] if names
@@ -289,7 +290,7 @@ class TarballPackage(SDistPackage):
             if self.patch:
                 env = self._common_options.env
                 patch_cmd = get_cmd(env, 'PATCH', 'patch')
-                patch = self.patch.string(cfgdir=self.config_dir)
+                patch = self.patch.string(path_bases)
                 log.pkg_patch(self.name, 'with {}'.format(patch))
                 with LogFile.open(metadata.pkgdir, self.name) as logfile, \
                      open(patch) as f, \

@@ -94,7 +94,7 @@ class CustomBuilder(DirectoryBuilder):
         path_values = pkg.path_values(metadata)
 
         with LogFile.open(metadata.pkgdir, self.name) as logfile:
-            with pushd(self.directory.string(**path_values), makedirs=True,
+            with pushd(self.directory.string(path_values), makedirs=True,
                        exist_ok=True):
                 self._execute(logfile, self.build_commands, path_values)
 
@@ -102,7 +102,7 @@ class CustomBuilder(DirectoryBuilder):
         path_values = pkg.path_values(metadata)
 
         directory = (path_values[self.outdir + 'dir'] if self.outdir else
-                     self.directory.string(**path_values))
+                     self.directory.string(path_values))
         with LogFile.open(metadata.pkgdir, self.name,
                           kind='deploy') as logfile:
             with pushd(directory, makedirs=True, exist_ok=True):
