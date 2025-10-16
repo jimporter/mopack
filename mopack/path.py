@@ -39,9 +39,9 @@ def file_outdated(path, compare_path, default=True):
 
 def _wrap_ospath(fn):
     @functools.wraps(fn)
-    def wrapper(path, variables={}):
+    def wrapper(path, bases={}):
         if isinstance(path, Path):
-            path = path.string(**variables)
+            path = path.string(bases)
         return fn(path)
 
     return wrapper
@@ -136,10 +136,10 @@ class Path(FreezeDried):
             return NotImplemented
         return self.base == rhs.base and self.path == rhs.path
 
-    def string(self, **kwargs):
+    def string(self, bases={}):
         if self.is_abs():
             return os.path.abspath(self.path)
-        base = kwargs[self.base]
+        base = bases[self.base]
         path = os.path.join(base, self.path) if self.path else base
         return path
 

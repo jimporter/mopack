@@ -173,9 +173,9 @@ class TestPath(TestCase):
 
     def test_string(self):
         p = Path('foo', 'srcdir')
-        self.assertEqual(p.string(srcdir=('${srcdir}')),
+        self.assertEqual(p.string({'srcdir': '${srcdir}'}),
                          os.path.join('${srcdir}', 'foo'))
-        self.assertEqual(p.string(srcdir=os.path.abspath('/srcdir')),
+        self.assertEqual(p.string({'srcdir': os.path.abspath('/srcdir')}),
                          os.path.abspath(os.path.join('/srcdir', 'foo')))
 
         p = Path('/foo')

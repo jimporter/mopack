@@ -269,7 +269,7 @@ class PathLinkage(Linkage):
             for path in include_dirs:
                 header = path.append(version['file'])
                 try:
-                    with open(header.string(**path_vars)) as f:
+                    with open(header.string(path_vars)) as f:
                         for line in f:
                             for ex in version['regex']:
                                 found, line = self._match_line(ex, line)

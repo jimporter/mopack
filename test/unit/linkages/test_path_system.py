@@ -37,7 +37,7 @@ def boost_getdir(name, default, options):
 
 
 def mock_isfile(p, variables={}):
-    p = os.path.normcase(p.string(**variables))
+    p = os.path.normcase(p.string(variables))
     return p.startswith(os.path.normcase(abspath('/mock')) + os.sep)
 
 

@@ -36,7 +36,7 @@ class NinjaBuilder(DirectoryBuilder):
         env = self._common_options.env
         ninja = get_cmd(env, 'NINJA', 'ninja')
         with LogFile.open(metadata.pkgdir, self.name) as logfile:
-            with pushd(self.directory.string(**path_values)):
+            with pushd(self.directory.string(path_values)):
                 logfile.check_call(ninja, env=env)
 
     def deploy(self, metadata, pkg):
@@ -46,5 +46,5 @@ class NinjaBuilder(DirectoryBuilder):
         ninja = get_cmd(env, 'NINJA', 'ninja')
         with LogFile.open(metadata.pkgdir, self.name,
                           kind='deploy') as logfile:
-            with pushd(self.directory.string(**path_values)):
+            with pushd(self.directory.string(path_values)):
                 logfile.check_call(ninja + ['install'], env=env)

@@ -77,7 +77,7 @@ class Bfg9000Builder(ConfiguringBuilder):
         env = self._common_options.env
         bfg9000 = get_cmd(env, 'BFG9000', 'bfg9000')
         with LogFile.open(metadata.pkgdir, self.name) as logfile:
-            with pushd(self.directory.string(**path_values)):
+            with pushd(self.directory.string(path_values)):
                 logfile.check_call(
                     bfg9000 + ['configure', path_values['builddir']] +
                     self._toolchain_args(self._this_options.toolchain) +

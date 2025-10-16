@@ -75,7 +75,7 @@ class CMakeBuilder(ConfiguringBuilder):
         with LogFile.open(metadata.pkgdir, self.name) as logfile:
             with pushd(path_values['builddir'], makedirs=True, exist_ok=True):
                 logfile.check_call(
-                    cmake + [self.directory.string(**path_values),
+                    cmake + [self.directory.string(path_values),
                              '-G', 'Ninja'] +
                     self._toolchain_args(self._this_options.toolchain) +
                     self._install_args(self._common_options.deploy_dirs) +

@@ -190,7 +190,7 @@ class ShellArguments(MutableSequence):
             if isinstance(i, PlaceholderString):
                 arg = ''
                 for j in i.unbox():
-                    s = j.string(**kwargs) if isinstance(j, Path) else j
+                    s = j.string(kwargs) if isinstance(j, Path) else j
                     arg += _fn(s, j)
                 result.append(arg)
             else:
