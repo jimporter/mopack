@@ -801,7 +801,7 @@ class TestPath(LinkageTest):
 
     def test_rehydrate(self):
         opts = self.make_options()
-        symbols = opts.expr_symbols.augment_path_bases('builddir')
+        symbols = opts.expr_symbols.augment(path_bases=['builddir'])
         pkg = MockPackage('foo', _options=opts)
         linkage = self.linkage_type(pkg, _symbols=symbols)
         data = linkage.dehydrate()
@@ -836,7 +836,7 @@ class TestPath(LinkageTest):
 
     def test_upgrade(self):
         opts = self.make_options()
-        symbols = opts.expr_symbols.augment_path_bases('builddir')
+        symbols = opts.expr_symbols.augment(path_bases=['builddir'])
         data = {'type': self.type, '_version': 0, 'include_path': [],
                 'library_path': [], 'compile_flags': [], 'link_flags': []}
         with mock.patch.object(self.linkage_type, 'upgrade',

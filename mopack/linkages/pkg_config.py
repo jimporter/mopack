@@ -28,7 +28,7 @@ class _SubmoduleMapping(FreezeDried):
             return types.placeholder_fill(other, submod.placeholder,
                                           submodule_name)
 
-        symbols = symbols.augment_symbols(**submod.expr_symbols)
+        symbols = symbols.augment(symbols=submod.expr_symbols)
 
         result = type(self).__new__(type(self))
         T = types.TypeCheck(self.__dict__, symbols, dest=result)

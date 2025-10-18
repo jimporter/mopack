@@ -14,7 +14,7 @@ from mopack.types import Unset
 
 class TestBfg9000Builder(BuilderTest):
     builder_type = Bfg9000Builder
-    symbols = ExprSymbols(variable='foo').augment_path_bases('srcdir')
+    symbols = ExprSymbols(variable='foo').augment(path_bases=['srcdir'])
 
     def check_build(self, pkg, extra_args=[]):
         builddir = os.path.join(self.pkgdir, 'build', pkg.name)

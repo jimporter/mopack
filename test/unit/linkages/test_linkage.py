@@ -8,7 +8,7 @@ from mopack.path import Path
 
 
 class TestMakeLinkage(LinkageTest):
-    symbols = ExprSymbols(variable='foo').augment_path_bases('builddir')
+    symbols = ExprSymbols(variable='foo').augment(path_bases=['builddir'])
 
     def setUp(self):
         self.pkg = MockPackage(

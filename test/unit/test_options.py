@@ -19,21 +19,21 @@ class TestExprSymbols(TestCase):
     def test_augment_symbols(self):
         symbols = ExprSymbols(foo='bar')
 
-        symbols = symbols.augment_symbols(baz='quux')
+        symbols = symbols.augment(symbols={'baz': 'quux'})
         self.assertEqual(symbols, {'foo': 'bar', 'baz': 'quux'})
         self.assertEqual(symbols.path_bases, ())
 
     def test_augment_path_bases(self):
         symbols = ExprSymbols(foo='bar')
 
-        symbols = symbols.augment_path_bases('cfgdir')
+        symbols = symbols.augment(path_bases=['cfgdir'])
         self.assertEqual(symbols, {
             'foo': 'bar',
             'cfgdir': placeholder(Path('', 'cfgdir')),
         })
         self.assertEqual(symbols.path_bases, ('cfgdir',))
 
-        symbols = symbols.augment_path_bases('srcdir')
+        symbols = symbols.augment(path_bases=['srcdir'])
         self.assertEqual(symbols, {
             'foo': 'bar',
             'cfgdir': placeholder(Path('', 'cfgdir')),
@@ -44,15 +44,15 @@ class TestExprSymbols(TestCase):
     def test_augment_duplicate(self):
         symbols = ExprSymbols(foo='bar')
         with self.assertRaises(DuplicateSymbolError):
-            symbols.augment_symbols(foo='baz')
+            symbols.augment(symbols={'foo': 'baz'})
         with self.assertRaises(DuplicateSymbolError):
-            symbols.augment_path_bases('foo')
+            symbols.augment(path_bases=['foo'])
 
     def test_best_path_base(self):
         symbols = ExprSymbols()
         self.assertEqual(symbols.best_path_base('srcdir'), None)
 
-        symbols = symbols.augment_path_bases('srcdir', 'builddir')
+        symbols = symbols.augment(path_bases=['srcdir', 'builddir'])
         self.assertEqual(symbols.best_path_base('srcdir'), 'srcdir')
         self.assertEqual(symbols.best_path_base('builddir'), 'builddir')
         self.assertEqual(symbols.best_path_base('otherdir'), 'srcdir')

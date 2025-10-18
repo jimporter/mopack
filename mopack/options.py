@@ -28,12 +28,6 @@ class ExprSymbols(dict):
             if i in self:
                 raise DuplicateSymbolError(i)
 
-    def augment_symbols(self, **symbols):
-        self._ensure_unique_symbols(symbols.keys())
-        result = self.copy()
-        result.update(symbols)
-        return result
-
     @property
     def path_bases(self):
         return self.__path_bases
@@ -46,11 +40,16 @@ class ExprSymbols(dict):
         else:
             return None
 
-    def augment_path_bases(self, *path_bases):
+    def augment(self, *, symbols={}, path_bases=[]):
+        self._ensure_unique_symbols(symbols.keys())
         self._ensure_unique_symbols(path_bases)
         result = self.copy()
+
+        result.update(symbols)
+
         result.update({i: placeholder(Path('', i)) for i in path_bases})
-        result.__path_bases += path_bases
+        result.__path_bases += tuple(path_bases)
+
         return result
 
     def copy(self):

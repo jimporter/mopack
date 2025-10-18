@@ -61,12 +61,12 @@ class SDistPackage(Package):
 
     @property
     def _builder_expr_symbols(self):
-        return self._options.expr_symbols.augment_path_bases('srcdir')
+        return self._options.expr_symbols.augment(path_bases=['srcdir'])
 
     @property
     def _linkage_expr_symbols(self):
         path_bases = flatten(i.path_bases() for i in self.builders)
-        return self._builder_expr_symbols.augment_path_bases(*path_bases)
+        return self._builder_expr_symbols.augment(path_bases=path_bases)
 
     @property
     def needs_dependencies(self):
@@ -97,7 +97,7 @@ class SDistPackage(Package):
                 result = make_builder(self, builder, _symbols=symbols,
                                       field=field, **kwargs)
                 bases = result.path_bases()
-                symbols = symbols.augment_path_bases(*bases)
+                symbols = symbols.augment(path_bases=bases)
                 path_owners.update({i: result for i in bases})
                 return result
             except DuplicateSymbolError as e:

@@ -52,7 +52,7 @@ class CMakeBuilder(ConfiguringBuilder):
         super().__init__(pkg, _symbols=_symbols, _child_builder=NinjaBuilder,
                          **kwargs)
 
-        _symbols = _symbols.augment_path_bases(*self.path_bases())
+        _symbols = _symbols.augment(path_bases=self.path_bases())
         T = types.TypeCheck(locals(), _symbols)
         T.extra_args(types.shell_args(none_ok=True))
 

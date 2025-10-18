@@ -82,7 +82,7 @@ class MockPackage:
     @property
     def _builder_expr_symbols(self):
         if self._srcdir:
-            return self._options.expr_symbols.augment_path_bases('srcdir')
+            return self._options.expr_symbols.augment(path_bases=['srcdir'])
         raise AttributeError()
 
     @property
@@ -93,7 +93,7 @@ class MockPackage:
             symbols = self._options.expr_symbols
 
         if self.builder:
-            symbols = symbols.augment_path_bases(*self.builder.path_bases())
+            symbols = symbols.augment(path_bases=self.builder.path_bases())
         return symbols
 
     def path_values(self, metadata):

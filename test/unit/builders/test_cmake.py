@@ -14,7 +14,7 @@ from mopack.types import Unset
 
 class TestCMakeBuilder(BuilderTest):
     builder_type = CMakeBuilder
-    symbols = ExprSymbols(variable='foo').augment_path_bases('srcdir')
+    symbols = ExprSymbols(variable='foo').augment(path_bases=['srcdir'])
 
     def check_build(self, pkg, extra_args=[]):
         with mock_open_log() as mopen, \

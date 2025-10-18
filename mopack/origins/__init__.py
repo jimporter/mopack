@@ -70,7 +70,7 @@ class Package(OptionsHolder):
 
     @property
     def _expr_symbols(self):
-        return self._options.expr_symbols.augment_path_bases('cfgdir')
+        return self._options.expr_symbols.augment(path_bases=['cfgdir'])
 
     @property
     def _linkage_expr_symbols(self):

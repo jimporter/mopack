@@ -54,7 +54,7 @@ class CustomBuilder(DirectoryBuilder):
 
         T = types.TypeCheck(locals(), _symbols)
         T.outdir(types.maybe(types.symbol_name))
-        _symbols = _symbols.augment_path_bases(*self.path_bases())
+        _symbols = _symbols.augment(path_bases=self.path_bases())
 
         super().__init__(pkg, directory=directory, _symbols=_symbols, **kwargs)
 

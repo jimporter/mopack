@@ -70,7 +70,7 @@ class ConfiguringBuilder(DirectoryBuilder):
     def __init__(self, pkg, *, build=True, _symbols, _child_builder, **kwargs):
         super().__init__(pkg, _symbols=_symbols, **kwargs)
         if build:
-            _symbols = _symbols.augment_path_bases(*self.path_bases())
+            _symbols = _symbols.augment(path_bases=self.path_bases())
             self.child_builder = _child_builder(pkg, _symbols=_symbols)
         else:
             self.child_builder = None

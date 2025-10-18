@@ -21,7 +21,7 @@ class NinjaBuilder(DirectoryBuilder):
 
     def __init__(self, pkg, *, directory=None, extra_args=None, _symbols,
                  **kwargs):
-        _symbols = _symbols.augment_path_bases(*self.path_bases())
+        _symbols = _symbols.augment(path_bases=self.path_bases())
         super().__init__(pkg, _symbols=_symbols, **kwargs)
 
         if directory is None and _symbols.path_bases:

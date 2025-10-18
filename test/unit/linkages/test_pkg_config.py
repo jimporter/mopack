@@ -244,7 +244,7 @@ class TestPkgConfig(LinkageTest):
 
     def test_rehydrate(self):
         opts = self.make_options()
-        symbols = opts.expr_symbols.augment_path_bases('builddir')
+        symbols = opts.expr_symbols.augment(path_bases=['builddir'])
         pkg = MockPackage('foo', srcdir=self.srcdir, builddir=self.builddir,
                           _options=opts)
         linkage = PkgConfigLinkage(pkg, _symbols=symbols)
@@ -261,7 +261,7 @@ class TestPkgConfig(LinkageTest):
 
     def test_upgrade(self):
         opts = self.make_options()
-        symbols = opts.expr_symbols.augment_path_bases('builddir')
+        symbols = opts.expr_symbols.augment(path_bases=['builddir'])
         data = {'type': 'pkg_config', '_version': 0, 'pcname': 'foo'}
         with mock.patch.object(PkgConfigLinkage, 'upgrade',
                                side_effect=PkgConfigLinkage.upgrade) as m:

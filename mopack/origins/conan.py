@@ -58,7 +58,7 @@ class ConanPackage(BinaryPackage):
 
     @property
     def _linkage_expr_symbols(self):
-        return self._options.expr_symbols.augment_path_bases('builddir')
+        return self._options.expr_symbols.augment(path_bases=['builddir'])
 
     def path_bases(self, *, builder=None):
         return ('builddir',) if builder else ()
