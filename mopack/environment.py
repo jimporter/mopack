@@ -6,18 +6,12 @@ from collections import ChainMap
 from .iterutils import isiterable, listify
 from .path import issemiabs
 from .platforms import platform_name
-from .shell import split_native_str
+from .shell import split_native_str, split_paths
 
 # This environment variable is set to the top builddir when `mopack resolve` is
 # executed so that nested invocations of `mopack` consistently point to the
 # same mopack directory.
 nested_invoke = 'MOPACK_NESTED_INVOCATION'
-
-
-def split_paths(s, sep=os.pathsep):
-    if not s:
-        return []
-    return s.split(sep)
 
 
 def which(names, env=os.environ, resolve=False, kind='executable'):
