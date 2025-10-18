@@ -82,7 +82,7 @@ class Bfg9000Builder(ConfiguringBuilder):
                     bfg9000 + ['configure', path_values['builddir']] +
                     self._toolchain_args(self._this_options.toolchain) +
                     self._install_args(self._common_options.deploy_dirs) +
-                    self.extra_args.fill(**path_values),
+                    self.extra_args.args(path_values),
                     env=env
                 )
         super().build(metadata, pkg)

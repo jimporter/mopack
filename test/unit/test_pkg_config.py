@@ -1,18 +1,16 @@
 import os
 import re
 from io import StringIO
+from textwrap import dedent
 from unittest import TestCase
 
 from mopack.path import Path
 from mopack.pkg_config import write_pkg_config
 from mopack.placeholder import placeholder as ph
-from mopack.platforms import platform_name
 from mopack.shell import ShellArguments
 
 
 class TestWritePkgConfig(TestCase):
-    quote = '"' if platform_name() == 'windows' else "'"
-
     def _get_pkg_config(self, *args, **kwargs):
         out = StringIO()
         write_pkg_config(out, *args, **kwargs)
@@ -21,12 +19,12 @@ class TestWritePkgConfig(TestCase):
 
     def test_default(self):
         cfg = self._get_pkg_config('mypackage')
-        self.assertEqual(
-            cfg,
-            'Name: mypackage\n' +
-            'Description: mopack-generated package\n' +
-            'Version: \n'
-        )
+        expected = dedent("""\
+          Name: mypackage
+          Description: mopack-generated package
+          Version: 
+        """)  # noqa: W291
+        self.assertEqual(cfg, expected)
 
     def test_arguments(self):
         cfg = self._get_pkg_config(
@@ -35,27 +33,27 @@ class TestWritePkgConfig(TestCase):
             cflags=ShellArguments(['-Ifoo', '-Ibar']),
             libs=ShellArguments(['-lfoo', '-lbar'])
         )
-        self.assertEqual(
-            cfg,
-            'Name: mypackage\n' +
-            'Description: my package\n' +
-            'Version: 1.0\n' +
-            'Requires: req1 req2\n' +
-            'Cflags: -Ifoo -Ibar\n' +
-            'Libs: -lfoo -lbar\n'
-        )
+        expected = dedent("""\
+          Name: mypackage
+          Description: my package
+          Version: 1.0
+          Requires: req1 req2
+          Cflags: -Ifoo -Ibar
+          Libs: -lfoo -lbar
+        """)
+        self.assertEqual(cfg, expected)
 
     def test_empty_arguments(self):
         cfg = self._get_pkg_config(
             'mypackage', desc=None, version=None, requires=[],
             cflags=ShellArguments(), libs=ShellArguments()
         )
-        self.assertEqual(
-            cfg,
-            'Name: mypackage\n' +
-            'Description: \n' +
-            'Version: \n'
-        )
+        expected = dedent("""\
+          Name: mypackage
+          Description: 
+          Version: 
+        """)  # noqa: W291
+        self.assertEqual(cfg, expected)
 
     def test_spaces(self):
         cfg = self._get_pkg_config(
@@ -64,15 +62,15 @@ class TestWritePkgConfig(TestCase):
             cflags=ShellArguments(['-Ifoo bar', '-Ibaz quux']),
             libs=ShellArguments(['-lfoo bar', '-lbaz quux'])
         )
-        self.assertEqual(
-            cfg,
-            ('Name: mypackage\n' +
-             'Description: my package\n' +
-             'Version: 1.0\n' +
-             'Requires: req1 req2\n' +
-             'Cflags: {q}-Ifoo bar{q} {q}-Ibaz quux{q}\n' +
-             'Libs: {q}-lfoo bar{q} {q}-lbaz quux{q}\n').format(q=self.quote)
-        )
+        expected = dedent("""\
+          Name: mypackage
+          Description: my package
+          Version: 1.0
+          Requires: req1 req2
+          Cflags: '-Ifoo bar' '-Ibaz quux'
+          Libs: '-lfoo bar' '-lbaz quux'
+        """)
+        self.assertEqual(cfg, expected)
 
     def test_variables(self):
         cfg = self._get_pkg_config(
@@ -82,18 +80,17 @@ class TestWritePkgConfig(TestCase):
             variables={'srcdir': '/srcdir', 'builddir': '/builddir',
                        'extra': None}
         )
-        self.assertEqual(
-            cfg,
-            ('srcdir=/srcdir\n' +
-             'builddir=/builddir\n\n' +
-             'Name: mypackage\n' +
-             'Description: my package\n' +
-             'Version: 1.0\n' +
-             'Cflags: -I{q}${{srcdir}}{sep}foo{q}\n' +
-             'Libs: -L{q}${{builddir}}{q} -lbar\n').format(
-                 q=self.quote, sep=os.sep
-             )
-        )
+        expected = dedent("""\
+          srcdir=/srcdir
+          builddir=/builddir
+
+          Name: mypackage
+          Description: my package
+          Version: 1.0
+          Cflags: '-I${{srcdir}}{sep}foo'
+          Libs: '-L${{builddir}}' -lbar
+        """).format(sep=os.sep)
+        self.assertEqual(cfg, expected)
 
     def test_invalid(self):
         out = StringIO()

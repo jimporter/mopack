@@ -5,12 +5,17 @@ from enum import Enum
 from itertools import chain
 from shlex import shlex
 
+from . import placeholder
 from .freezedried import auto_dehydrate
 from .iterutils import isiterable, ismapping
-from .path import Path
-from .placeholder import PlaceholderString, rehydrate as rehydrate_placeholder
+from .placeholder import PlaceholderString
 from .platforms import platform_name
 
+__all__ = [
+    'join_paths', 'quote_posix', 'quote_native', 'quote_str', 'quote_windows',
+    'ShellArguments', 'split_native', 'split_native_str', 'split_paths',
+    'split_posix', 'split_posix_str', 'split_windows', 'split_windows_str',
+]
 
 _Token = Enum('Token', ['char', 'quote', 'space'])
 _State = Enum('State', ['between', 'char', 'word', 'quoted'])
@@ -19,6 +24,35 @@ _bad_posix_chars = re.compile(r'[^\w@%+=:,./-]')
 # XXX: We need a way to escape cmd.exe-specific characters.
 _bad_windows_chars = re.compile(r'(\s|["&<>|]|\\$)')
 _windows_replace = re.compile(r'(\\*)("|$)')
+
+
+class quote_str:
+    def __init__(self, string):
+        if not isinstance(string, str):
+            raise TypeError('expected a string')
+        self.string = string
+
+    def __repr__(self):
+        return 'q{!r}'.format(self.string)
+
+    def __add__(self, rhs):
+        if isinstance(rhs, quote_str):
+            return quote_str(self.string + rhs.string)
+        elif isinstance(rhs, str):
+            return quote_str(self.string + rhs)
+        return NotImplemented
+
+    def __radd__(self, lhs):
+        if isinstance(lhs, quote_str):
+            return quote_str(lhs.string + self.string)
+        elif isinstance(lhs, str):
+            return quote_str(lhs + self.string)
+        return NotImplemented
+
+    def __eq__(self, rhs):
+        if type(self) is not type(rhs):
+            return NotImplemented
+        return self.string == rhs.string
 
 
 def split_paths(s, sep=os.pathsep):
@@ -32,7 +66,10 @@ def join_paths(paths, sep=os.pathsep):
 
 
 def quote_posix(s, force=False):
-    if not isinstance(s, str):
+    if isinstance(s, quote_str):
+        force = True
+        s = s.string
+    elif not isinstance(s, str):
         raise TypeError(type(s))
 
     if s == '':
@@ -58,7 +95,10 @@ def quote_posix(s, force=False):
 
 
 def quote_windows(s, force=False, escape_percent=False):
-    if not isinstance(s, str):
+    if isinstance(s, quote_str):
+        force = True
+        s = s.string
+    elif not isinstance(s, str):
         raise TypeError(type(s))
 
     if s == '':
@@ -177,25 +217,11 @@ class ShellArguments(MutableSequence):
     def insert(self, i, value):
         return self._args.insert(i, value)
 
-    @staticmethod
-    def _fill_identity(s, orig):
-        return s
+    def args(self, symbols={}):
+        return [placeholder.to_string(i, symbols) for i in self._args]
 
-    def fill(self, _fn=None, **kwargs):
-        if _fn is None:
-            _fn = self._fill_identity
-
-        result = []
-        for i in self._args:
-            if isinstance(i, PlaceholderString):
-                arg = ''
-                for j in i.unbox():
-                    s = j.string(kwargs) if isinstance(j, Path) else j
-                    arg += _fn(s, j)
-                result.append(arg)
-            else:
-                result.append(_fn(i, i))
-        return result
+    def string(self, symbols={}, quote=quote_native):
+        return ' '.join(quote(i) for i in self.args(symbols))
 
     def dehydrate(self):
         return [auto_dehydrate(i) for i in self]
@@ -210,7 +236,7 @@ class ShellArguments(MutableSequence):
                 if ismapping(value):
                     value = [value]
 
-            return rehydrate_placeholder(value, **kwargs)
+            return placeholder.rehydrate(value, **kwargs)
 
         return ShellArguments(rehydrate_each(i) for i in value)
 

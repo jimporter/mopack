@@ -139,9 +139,15 @@ class Path(FreezeDried):
     def string(self, bases={}):
         if self.is_abs():
             return os.path.abspath(self.path)
+
         base = bases[self.base]
-        path = os.path.join(base, self.path) if self.path else base
-        return path
+        if not self.path:
+            return base
+        elif isinstance(base, str):
+            return os.path.join(base, self.path)
+        else:
+            # Useful when `base` is something other than a `str`.
+            return base + os.sep + self.path
 
     def __str__(self):
         raise NotImplementedError('{} cannot be converted to str'

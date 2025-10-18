@@ -64,7 +64,7 @@ class CustomBuilder(DirectoryBuilder):
 
     def _execute(self, logfile, commands, path_values):
         for line in commands:
-            line = line.fill(**path_values)
+            line = line.args(path_values)
             if line[0] == 'cd':
                 with logfile.synthetic_command(line):
                     if len(line) != 2:

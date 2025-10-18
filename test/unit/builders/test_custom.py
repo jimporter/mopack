@@ -20,8 +20,9 @@ class TestCustomBuilder(BuilderTest):
     def check_build(self, pkg, build_commands=None):
         if build_commands is None:
             builddir = os.path.join(self.pkgdir, 'build', pkg.name)
-            build_commands = [i.fill(srcdir=self.srcdir, builddir=builddir)
-                              for i in pkg.builder.build_commands]
+            build_commands = [i.args({
+                'srcdir': self.srcdir, 'builddir': builddir
+            }) for i in pkg.builder.build_commands]
 
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.custom.pushd'), \

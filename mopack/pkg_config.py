@@ -1,8 +1,7 @@
 import os
 
 from .iterutils import issequence
-from .path import Path
-from .shell import quote_native, ShellArguments
+from .shell import quote_posix, quote_str, ShellArguments
 
 
 def _write_variable(out, name, value):
@@ -19,10 +18,7 @@ def _write_field(out, name, value, var_symbols={}, required=False):
     if value is None:
         value = ''
     elif isinstance(value, ShellArguments):
-        value = ' '.join(value.fill(
-            lambda s, orig: quote_native(s, force=isinstance(orig, Path)),
-            **var_symbols
-        ))
+        value = value.string(var_symbols, quote_posix)
     elif issequence(value):
         value = ' '.join(value)
     elif not isinstance(value, str):
@@ -49,8 +45,8 @@ def write_pkg_config(out, name, *, desc='mopack-generated package',
         wrote_var |= _write_variable(out, k, v)
     if wrote_var:
         out.write('\n')
-    var_symbols = {k: '${{{}}}'.format(k) for k, v in variables.items()
-                   if v is not None}
+    var_symbols = {k: quote_str('${{{}}}'.format(k))
+                   for k, v in variables.items() if v is not None}
 
     _write_field(out, 'Name', name, var_symbols, required=True)
     _write_field(out, 'Description', desc, var_symbols, required=True)

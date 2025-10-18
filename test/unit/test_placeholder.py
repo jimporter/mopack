@@ -76,6 +76,24 @@ class TestPlaceholder(TestCase):
         s = PlaceholderString('foo', p, 'bar')
         self.assertEqual(s.unbox(), ('foo', 1, 'bar'))
 
+    def test_string(self):
+        class Value:
+            def __init__(self, value):
+                self.value = value
+
+            def string(self, symbols):
+                return self.value + symbols.get('suffix', '')
+
+        p = PlaceholderValue(Value('foo'))
+
+        s = PlaceholderString(p)
+        self.assertEqual(s.string(), 'foo')
+        self.assertEqual(s.string({'suffix': 'bar'}), 'foobar')
+
+        s = PlaceholderString('[', p, ']')
+        self.assertEqual(s.string(), '[foo]')
+        self.assertEqual(s.string({'suffix': 'bar'}), '[foobar]')
+
     def test_replace(self):
         p1 = PlaceholderValue(1)
         p2 = PlaceholderValue(2)

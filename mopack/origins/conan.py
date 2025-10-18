@@ -147,7 +147,7 @@ class ConanPackage(BinaryPackage):
             logfile.check_call(
                 conan + ['install'] +
                 cls._build_opts(uniques(options.build + build)) +
-                options.extra_args.fill() + ['--', conandir],
+                options.extra_args.args() + ['--', conandir],
                 env=env
             )
 

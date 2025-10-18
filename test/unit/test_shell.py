@@ -79,6 +79,9 @@ class TestQuotePosix(TestCase):
         self.assertQuote('>', "'>'")
         self.assertQuote('|', "'|'")
 
+    def test_quote_str(self):
+        self.assertQuote(quote_str('foo'), "'foo'")
+
     def test_invalid(self):
         with self.assertRaises(TypeError):
             quote_posix(1)
@@ -128,6 +131,9 @@ class TestQuoteWindows(TestCase):
         self.assertQuote('&&', '"&&"')
         self.assertQuote('>', '">"')
         self.assertQuote('|', '"|"')
+
+    def test_quote_str(self):
+        self.assertQuote(quote_str('foo'), '"foo"')
 
     def test_invalid(self):
         with self.assertRaises(TypeError):
@@ -253,28 +259,50 @@ class TestShellArguments(TestCase):
         s.insert(0, 'goat')
         self.assertEqual(list(s), ['goat', 'foo', 'bar', 'baz'])
 
-    def test_fill_empty(self):
+    def test_string_args_empty(self):
         s = ShellArguments()
-        self.assertEqual(s.fill(), [])
+        self.assertEqual(s.args(), [])
+        self.assertEqual(s.string(), '')
 
-    def test_fill_string(self):
+    def test_string_args_string(self):
         s = ShellArguments(['foo'])
-        self.assertEqual(s.fill(), ['foo'])
+        self.assertEqual(s.args(), ['foo'])
+        self.assertEqual(s.string(), 'foo')
 
         s = ShellArguments(['foo', 'bar', 'baz'])
-        self.assertEqual(s.fill(), ['foo', 'bar', 'baz'])
+        self.assertEqual(s.args(), ['foo', 'bar', 'baz'])
+        self.assertEqual(s.string(), 'foo bar baz')
 
-    def test_fill_path(self):
+        s = ShellArguments(['foo bar'])
+        self.assertEqual(s.args(), ['foo bar'])
+        self.assertEqual(s.string(quote=quote_posix), "'foo bar'")
+        self.assertEqual(s.string(quote=quote_windows), '"foo bar"')
+
+    def test_string_args_path(self):
         s = ShellArguments([srcdir_ph])
-        self.assertEqual(s.fill(srcdir='${srcdir}'), ['${srcdir}'])
-        self.assertEqual(s.fill(srcdir=os.path.abspath('/path/to/srcdir')),
-                         [os.path.abspath('/path/to/srcdir')])
 
-    def test_fill_path_str(self):
+        symbols = {'srcdir': '/path/to/srcdir'}
+        self.assertEqual(s.args(symbols), ['/path/to/srcdir'])
+        self.assertEqual(s.string(symbols), '/path/to/srcdir')
+
+        symbols = {'srcdir': quote_str('${srcdir}')}
+        self.assertEqual(s.args(symbols), [quote_str('${srcdir}')])
+        self.assertEqual(s.string(symbols, quote_posix), "'${srcdir}'")
+        self.assertEqual(s.string(symbols, quote_windows), '"${srcdir}"')
+
+    def test_string_args_path_str(self):
         s = ShellArguments(['--srcdir=' + srcdir_ph])
-        self.assertEqual(s.fill(srcdir='${srcdir}'), ['--srcdir=${srcdir}'])
-        self.assertEqual(s.fill(srcdir=os.path.abspath('/path/to/srcdir')),
-                         ['--srcdir=' + os.path.abspath('/path/to/srcdir')])
+
+        symbols = {'srcdir': '/path/to/srcdir'}
+        self.assertEqual(s.args(symbols), ['--srcdir=/path/to/srcdir'])
+        self.assertEqual(s.string(symbols), '--srcdir=/path/to/srcdir')
+
+        symbols = {'srcdir': quote_str('${srcdir}')}
+        self.assertEqual(s.args(symbols), [quote_str('--srcdir=${srcdir}')])
+        self.assertEqual(s.string(symbols, quote_posix),
+                         "'--srcdir=${srcdir}'")
+        self.assertEqual(s.string(symbols, quote_windows),
+                         '"--srcdir=${srcdir}"')
 
     def test_rehydrate(self):
         s = ShellArguments()

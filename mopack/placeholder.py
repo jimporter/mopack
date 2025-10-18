@@ -110,6 +110,15 @@ class PlaceholderString:
         return tuple(i.value if isinstance(i, PlaceholderValue) else i
                      for i in self.__bits)
 
+    def string(self, symbols={}):
+        result = ''
+        for i in self.__bits:
+            if isinstance(i, PlaceholderValue):
+                result += i.value.string(symbols)
+            else:
+                result += i
+        return result
+
     def replace(self, placeholder, value):
         def each(i):
             if isinstance(i, PlaceholderValue) and i.value == placeholder:
@@ -166,6 +175,15 @@ class PlaceholderString:
 
 def placeholder(value):
     return PlaceholderString(PlaceholderValue(value), _canonicalized=True)
+
+
+def to_string(value, symbols={}):
+    if isinstance(value, str):
+        return value
+    elif isinstance(value, PlaceholderString):
+        return value.string(symbols)
+    else:  # pragma: no cover
+        raise TypeError(type(value))
 
 
 def rehydrate(value, **kwargs):
