@@ -6,9 +6,9 @@ from .. import types
 from ..base_options import BaseOptions, OptionsHolder
 from ..freezedried import GenericFreezeDried
 from ..iterutils import ismapping, listify
+from ..linkages import Linkage, make_linkage
 from ..package_defaults import DefaultResolver
 from ..types import FieldKeyError, FieldValueError, try_load_config
-from ..linkages import Linkage, make_linkage
 
 
 def _get_origin_type(origin, field='origin'):

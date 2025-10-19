@@ -12,11 +12,11 @@ from ..environment import get_cmd
 from ..freezedried import GenericFreezeDried, ListFreezeDryer
 from ..glob import filter_glob
 from ..iterutils import flatten, isiterable
+from ..linkages import make_linkage
 from ..log import LogFile
 from ..options import DuplicateSymbolError
 from ..package_defaults import DefaultResolver
 from ..path import Path, pushd
-from ..linkages import make_linkage
 from ..types import FieldValueError
 from ..yaml_tools import to_parse_error
 
