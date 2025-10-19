@@ -16,7 +16,7 @@ _known_install_types = ('prefix', 'exec-prefix', 'bindir', 'libdir',
 @GenericFreezeDried.fields(rehydrate={'extra_args': ShellArguments})
 class Bfg9000Builder(ConfiguringBuilder):
     type = 'bfg9000'
-    _version = 3
+    _version = 4
 
     class Options(BuilderOptions):
         type = 'bfg9000'
@@ -46,6 +46,10 @@ class Bfg9000Builder(ConfiguringBuilder):
         if version < 3:  # pragma: no branch
             config['directory'] = Path('', 'srcdir').dehydrate()
 
+        # v4 adds the `env` field.
+        if version < 4:  # pragma: no branch
+            config['env'] = {}
+
         return config
 
     def __init__(self, pkg, *, extra_args=None, _symbols, **kwargs):
@@ -74,7 +78,7 @@ class Bfg9000Builder(ConfiguringBuilder):
     def build(self, metadata, pkg):
         path_values = pkg.path_values(metadata)
 
-        env = self._common_options.env
+        env = self._full_env.value(path_values)
         bfg9000 = get_cmd(env, 'BFG9000', 'bfg9000')
         with LogFile.open(metadata.pkgdir, self.name) as logfile:
             with pushd(self.directory.string(path_values)):

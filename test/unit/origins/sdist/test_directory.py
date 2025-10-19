@@ -39,6 +39,7 @@ class TestDirectory(SDistTestCase):
     def test_resolve(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000')
         builder = self.make_builder(Bfg9000Builder, pkg)
+        self.assertEqual(pkg.env, {})
         self.assertEqual(pkg.path, Path(self.srcpath))
         self.assertEqual(pkg.builders, [builder])
         self.assertEqual(pkg.needs_dependencies, True)
@@ -49,11 +50,28 @@ class TestDirectory(SDistTestCase):
         self.check_resolve(pkg)
         self.check_linkage(pkg)
 
+    def test_env(self):
+        opts = {'env': {'BASE': 'base'}}
+        pkg = self.make_package('foo', env={'VAR': 'value'}, path=self.srcpath,
+                                build='bfg9000', common_options=opts)
+        builder = self.make_builder(Bfg9000Builder, pkg)
+        self.assertEqual(pkg.env, {'VAR': 'value'})
+        self.assertEqual(pkg.path, Path(self.srcpath))
+        self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.needs_dependencies, True)
+        self.assertEqual(pkg.should_deploy, True)
+
+        with assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]):
+            pkg.fetch(self.metadata, self.config)
+        self.check_resolve(pkg, env={'BASE': 'base', 'VAR': 'value'})
+        self.check_linkage(pkg)
+
     def test_build(self):
         build = {'type': 'bfg9000', 'extra_args': '--extra'}
         pkg = self.make_package('foo', path=self.srcpath, build=build,
                                 linkage='pkg_config')
         builder = self.make_builder(Bfg9000Builder, pkg, extra_args='--extra')
+        self.assertEqual(pkg.env, {})
         self.assertEqual(pkg.path, Path(self.srcpath))
         self.assertEqual(pkg.builders, [builder])
         self.assertEqual(pkg.needs_dependencies, True)

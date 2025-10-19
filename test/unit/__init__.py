@@ -73,19 +73,27 @@ class MockBuilder:
 
 
 class MockPackage:
-    def __init__(self, name='foo', *, version=None, srcdir=None, builddir=None,
-                 submodules=None, _options=None):
+    cfgdir = '/path/to/cfgdir'
+
+    def __init__(self, name='foo', *, version=None, env=None, srcdir=None,
+                 builddir=None, submodules=None, _options=None):
         self.name = name
+        self.env = env or {}
         self.submodules = submodules
         self.builder = MockBuilder(builddir) if builddir else None
         self._version = version
         self._srcdir = srcdir
+
+        if _options is None:
+            _options = Options()
+            _options.common.finalize()
         self._options = _options
+        self._expr_symbols = self._options.expr_symbols.augment(env=env)
 
     @property
     def _builder_expr_symbols(self):
         if self._srcdir:
-            return self._options.expr_symbols.augment(path_bases=['srcdir'])
+            return self._expr_symbols.augment(path_bases=['srcdir'])
         raise AttributeError()
 
     @property
@@ -93,7 +101,7 @@ class MockPackage:
         if self._srcdir:
             symbols = self._builder_expr_symbols
         else:
-            symbols = self._options.expr_symbols
+            symbols = self._expr_symbols
 
         if self.builder:
             symbols = symbols.augment(path_bases=self.builder.path_bases())
@@ -101,6 +109,7 @@ class MockPackage:
 
     def path_values(self, metadata):
         return {
+            'cfgdir': self.cfgdir,
             **({'srcdir': self._srcdir} if self._srcdir else {}),
             **(self.builder.path_values(metadata) if self.builder else {}),
         }

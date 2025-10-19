@@ -47,6 +47,7 @@ class TestTarball(SDistTestCase):
     def test_url(self):
         pkg = self.make_package('foo', url=self.srcurl, build='bfg9000')
         builder = self.make_builder(Bfg9000Builder, pkg)
+        self.assertEqual(pkg.env, {})
         self.assertEqual(pkg.url, self.srcurl)
         self.assertEqual(pkg.path, None)
         self.assertEqual(pkg.patch, None)
@@ -61,6 +62,7 @@ class TestTarball(SDistTestCase):
     def test_path(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000')
         builder = self.make_builder(Bfg9000Builder, pkg)
+        self.assertEqual(pkg.env, {})
         self.assertEqual(pkg.url, None)
         self.assertEqual(pkg.path, Path(self.srcpath))
         self.assertEqual(pkg.patch, None)
@@ -76,6 +78,7 @@ class TestTarball(SDistTestCase):
         srcpath = os.path.join(test_data_dir, 'hello-bfg.zip')
         pkg = self.make_package('foo', build='bfg9000', path=srcpath)
         builder = self.make_builder(Bfg9000Builder, pkg)
+        self.assertEqual(pkg.env, {})
         self.assertEqual(pkg.url, None)
         self.assertEqual(pkg.path, Path(srcpath))
         self.assertEqual(pkg.builders, [builder])
@@ -91,6 +94,23 @@ class TestTarball(SDistTestCase):
                 pkg.fetch(self.metadata, self.config)
             mtar.assert_called_once_with(srcdir, None)
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
+
+    def test_env(self):
+        opts = {'env': {'BASE': 'base'}}
+        pkg = self.make_package('foo', env={'VAR': 'value'}, path=self.srcpath,
+                                build='bfg9000', common_options=opts)
+        builder = self.make_builder(Bfg9000Builder, pkg)
+        self.assertEqual(pkg.env, {'VAR': 'value'})
+        self.assertEqual(pkg.url, None)
+        self.assertEqual(pkg.path, Path(self.srcpath))
+        self.assertEqual(pkg.patch, None)
+        self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.needs_dependencies, True)
+        self.assertEqual(pkg.should_deploy, True)
+
+        self.check_fetch(pkg)
+        self.check_resolve(pkg, env={'BASE': 'base', 'VAR': 'value'})
         self.check_linkage(pkg)
 
     def test_invalid_url_path(self):

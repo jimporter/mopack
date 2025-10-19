@@ -2,13 +2,10 @@ from . import BuilderTest, MockPackage
 
 from mopack.builders import make_builder
 from mopack.builders.bfg9000 import Bfg9000Builder
-from mopack.options import ExprSymbols
 from mopack.types import FieldError
 
 
 class TestMakeBuilder(BuilderTest):
-    symbols = ExprSymbols(variable='foo').augment(path_bases=['srcdir'])
-
     def setUp(self):
         self.pkg = MockPackage('foo', _options=self.make_options())
 

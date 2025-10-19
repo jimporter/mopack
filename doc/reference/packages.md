@@ -45,10 +45,17 @@ packages:
 packages:
   my_pkg:
     origin: directory
+    env: <env_vars>
     path: <path>
     build: <build>
     linkage: <linkage>
 ```
+
+`env` <span class="subtitle">*optional, default*: `{}`</span>
+: A dictionary of environment variables to use when running any commands for
+  this builder. This partially overrides any environment variables set
+  [globally](file-structure.md#options) or for this
+  [package](package.md#source-distributions).
 
 `path` <span class="subtitle">*required*</span>
 : The path to the source directory of the dependency.
@@ -60,9 +67,9 @@ packages:
   [`export`](file-structure.md#exports) section.
 
 `linkage` <span class="subtitle">*optional, default*: *from builder*</span>
-: The [linkage](linkage.md) to use when using this package. Some builders require
-  this to be set, but others provide a default linkage specification; the
-  dependency can also define the linkage in its
+: The [linkage](linkage.md) to use when using this package. Some builders
+  require this to be set, but others provide a default linkage specification;
+  the dependency can also define the linkage in its
   [`export`](file-structure.md#exports) section.
 
 ### git
@@ -71,6 +78,7 @@ packages:
 packages:
   my_pkg:
     origin: git
+    env: <env_vars>
     repository: <url | path>
     tag: <tag_name>  # or...
     branch: <branch_name>  # or...
@@ -79,6 +87,12 @@ packages:
     build: <build>
     linkage: <linkage>
 ```
+
+`env` <span class="subtitle">*optional, default*: `{}`</span>
+: A dictionary of environment variables to use when running any commands for
+  this builder. This partially overrides any environment variables set
+  [globally](file-structure.md#options) or for this
+  [package](package.md#source-distributions).
 
 `repository` <span class="subtitle">*required*</span>
 : The URL or path to the repository.
@@ -109,6 +123,7 @@ packages:
 packages:
   my_pkg:
     origin: tarball
+    env: <env_vars>
     path: <path>  # or...
     url: <url>
     files: <list[glob]>
@@ -117,6 +132,12 @@ packages:
     build: <build>
     linkage: <linkage>
 ```
+
+`env` <span class="subtitle">*optional, default*: `{}`</span>
+: A dictionary of environment variables to use when running any commands for
+  this builder. This partially overrides any environment variables set
+  [globally](file-structure.md#options) or for this
+  [package](package.md#source-distributions).
 
 `path` <span class="subtitle">*required*</span>
 `url`

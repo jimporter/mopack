@@ -9,7 +9,7 @@ from .. import archive, log, types
 from ..builders import Builder, make_builder
 from ..config import ChildConfig
 from ..environment import get_cmd
-from ..freezedried import GenericFreezeDried, ListFreezeDryer
+from ..freezedried import GenericFreezeDried, DictFreezeDryer, ListFreezeDryer
 from ..glob import filter_glob
 from ..iterutils import flatten, isiterable
 from ..linkages import make_linkage
@@ -17,15 +17,18 @@ from ..log import LogFile
 from ..options import DuplicateSymbolError
 from ..package_defaults import DefaultResolver
 from ..path import Path, pushd
+from ..placeholder import PlaceholderFreezeDryer
 from ..types import FieldValueError
 from ..yaml_tools import to_parse_error
 
 
-@GenericFreezeDried.fields(rehydrate={'builders': ListFreezeDryer(Builder)},
-                           skip_compare={'pending_linkage'})
+@GenericFreezeDried.fields(rehydrate={
+    'env': DictFreezeDryer(value_type=PlaceholderFreezeDryer),
+    'builders': ListFreezeDryer(Builder)
+}, skip_compare={'pending_linkage'})
 class SDistPackage(Package):
     # TODO: Remove `usage` after v0.2 is released.
-    def __init__(self, name, *, build=None, linkage=None,
+    def __init__(self, name, *, env=None, build=None, linkage=None,
                  usage=types.Unset, submodules=types.Unset,
                  inherit_defaults=True, _options, **kwargs):
         if linkage is None and usage is not types.Unset:
@@ -36,8 +39,14 @@ class SDistPackage(Package):
 
         super().__init__(name, inherit_defaults=inherit_defaults,
                          _options=_options, **kwargs)
-        symbols = self._expr_symbols
-        T = types.TypeCheck(locals(), symbols)
+
+        T = types.TypeCheck(locals(), self._expr_symbols)
+        T.env(types.maybe(types.dict_of(
+            types.string, types.placeholder_string
+        ), default={}))
+
+        self._expr_symbols = self._expr_symbols.augment(env=self.env)
+        T = types.TypeCheck(locals(), self._expr_symbols)
 
         if build is None:
             if submodules is not types.Unset:
@@ -46,8 +55,8 @@ class SDistPackage(Package):
             self.linkage = None
             self.pending_linkage = linkage
         else:
-            pkg_default = DefaultResolver(self, symbols, inherit_defaults,
-                                          name)
+            pkg_default = DefaultResolver(self, self._expr_symbols,
+                                          inherit_defaults, name)
             T.submodules(pkg_default(submodules_type))
             self.builders = self._make_builders(build)
             self.linkage = self._make_linkage(linkage)
@@ -59,9 +68,26 @@ class SDistPackage(Package):
             )
         return super().dehydrate()
 
+    @GenericFreezeDried.rehydrator
+    def rehydrate(cls, config, rehydrate_parent, **kwargs):
+        # We need to rehydrate the builders after the basics of the package are
+        # rehydrated, but *before* rehydrating linkage.
+        builders_cfg = config.pop('builders')
+
+        def after(pkg):
+            pkg._expr_symbols = pkg._expr_symbols.augment(env=pkg.env)
+            pkg.builders = [Builder.rehydrate(
+                i, name=config['name'], _symbols=pkg._builder_expr_symbols,
+                **kwargs
+            ) for i in builders_cfg]
+            return pkg
+
+        return rehydrate_parent(SDistPackage, config, _after_rehydrate=after,
+                                **kwargs)
+
     @property
     def _builder_expr_symbols(self):
-        return self._options.expr_symbols.augment(path_bases=['srcdir'])
+        return self._expr_symbols.augment(path_bases=['srcdir'])
 
     @property
     def _linkage_expr_symbols(self):
@@ -80,12 +106,17 @@ class SDistPackage(Package):
             )
         return [i.type for i in self.builders]
 
-    def path_values(self, metadata):
+    def path_values(self, metadata, *, with_builders=True):
+        result = super().path_values(metadata)
+
         srcdir = self._srcdir(metadata)
-        values = {'srcdir': srcdir} if srcdir is not None else {}
-        for i in self.builders:
-            values.update(**i.path_values(metadata))
-        return values
+        if srcdir:
+            result['srcdir'] = srcdir
+
+        if with_builders:
+            for i in self.builders:
+                result.update(**i.path_values(metadata))
+        return result
 
     def _make_builders(self, builders, **kwargs):
         path_owners = {}
@@ -186,13 +217,18 @@ class SDistPackage(Package):
 @GenericFreezeDried.fields(rehydrate={'path': Path})
 class DirectoryPackage(SDistPackage):
     origin = 'directory'
-    _version = 2
+    _version = 3
 
     @staticmethod
     def upgrade(config, version):
-        # v2 adds support for multiple builders
+        # v2 adds support for multiple builders.
         if version < 2:  # pragma: no branch
             config['builders'] = [config.pop('builder')]
+
+        # v3 adds the `env` field.
+        if version < 3:  # pragma: no branch
+            config['env'] = {}
+
         return config
 
     def __init__(self, name, *, path, **kwargs):
@@ -214,13 +250,18 @@ class DirectoryPackage(SDistPackage):
                            skip_compare={'guessed_srcdir'})
 class TarballPackage(SDistPackage):
     origin = 'tarball'
-    _version = 2
+    _version = 3
 
     @staticmethod
     def upgrade(config, version):
-        # v2 adds support for multiple builders
+        # v2 adds support for multiple builders.
         if version < 2:  # pragma: no branch
             config['builders'] = [config.pop('builder')]
+
+        # v3 adds the `env` field.
+        if version < 3:  # pragma: no branch
+            config['env'] = {}
+
         return config
 
     def __init__(self, name, *, path=None, url=None, files=None, srcdir=None,
@@ -288,7 +329,9 @@ class TarballPackage(SDistPackage):
                         arc.extractall(base_srcdir)
 
             if self.patch:
-                env = self._common_options.env
+                env = self._expr_symbols['env'].value(
+                    self.path_values(metadata, with_builders=False)
+                )
                 patch_cmd = get_cmd(env, 'PATCH', 'patch')
                 patch = self.patch.string(path_bases)
                 log.pkg_patch(self.name, 'with {}'.format(patch))
@@ -302,13 +345,18 @@ class TarballPackage(SDistPackage):
 
 class GitPackage(SDistPackage):
     origin = 'git'
-    _version = 2
+    _version = 3
 
     @staticmethod
     def upgrade(config, version):
         # v2 adds support for multiple builders
         if version < 2:  # pragma: no branch
             config['builders'] = [config.pop('builder')]
+
+        # v3 adds the `env` field.
+        if version < 3:  # pragma: no branch
+            config['env'] = {}
+
         return config
 
     def __init__(self, name, *, repository, tag=None, branch=None, commit=None,
@@ -355,10 +403,11 @@ class GitPackage(SDistPackage):
         return True
 
     def fetch(self, metadata, parent_config):
+        path_values = self.path_values(metadata, with_builders=False)
         base_srcdir = self._base_srcdir(metadata)
-        env = self._common_options.env
-        git = get_cmd(env, 'GIT', 'git')
 
+        env = self._expr_symbols['env'].value(path_values)
+        git = get_cmd(env, 'GIT', 'git')
         with LogFile.open(metadata.pkgdir, self.name) as logfile:
             if os.path.exists(base_srcdir):
                 if self.rev[0] == 'branch':

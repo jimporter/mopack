@@ -16,7 +16,7 @@ _known_install_types = ('prefix', 'bindir', 'libdir', 'includedir')
 @GenericFreezeDried.fields(rehydrate={'extra_args': ShellArguments})
 class CMakeBuilder(ConfiguringBuilder):
     type = 'cmake'
-    _version = 3
+    _version = 4
 
     class Options(BuilderOptions):
         type = 'cmake'
@@ -46,6 +46,10 @@ class CMakeBuilder(ConfiguringBuilder):
         if version < 3:  # pragma: no branch
             config['directory'] = Path('', 'srcdir').dehydrate()
 
+        # v4 adds the `env` field.
+        if version < 4:  # pragma: no branch
+            config['env'] = {}
+
         return config
 
     def __init__(self, pkg, *, extra_args=None, _symbols, **kwargs):
@@ -70,7 +74,7 @@ class CMakeBuilder(ConfiguringBuilder):
     def build(self, metadata, pkg):
         path_values = pkg.path_values(metadata)
 
-        env = self._common_options.env
+        env = self._full_env.value(path_values)
         cmake = get_cmd(env, 'CMAKE', 'cmake')
         with LogFile.open(metadata.pkgdir, self.name) as logfile:
             with pushd(path_values['builddir'], makedirs=True, exist_ok=True):

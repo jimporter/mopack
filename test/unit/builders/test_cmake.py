@@ -14,9 +14,8 @@ from mopack.types import Unset
 
 class TestCMakeBuilder(BuilderTest):
     builder_type = CMakeBuilder
-    symbols = ExprSymbols(variable='foo').augment(path_bases=['srcdir'])
 
-    def check_build(self, pkg, extra_args=[]):
+    def check_build(self, pkg, extra_args=[], env={}):
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.cmake.pushd'), \
              mock.patch('mopack.builders.ninja.pushd'), \
@@ -25,54 +24,76 @@ class TestCMakeBuilder(BuilderTest):
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', pkg.name + '.log'
             ), 'a')
-            mcall.assert_any_call(
-                ['cmake', self.srcdir, '-G', 'Ninja'] + extra_args,
-                env={}
-            )
-            mcall.assert_called_with(['ninja'], env={})
+            mcall.assert_has_calls([
+                mock.call(['cmake', self.srcdir, '-G', 'Ninja'] + extra_args,
+                          env=env),
+                mock.call(['ninja'], env=env)
+            ])
 
-    def test_basic(self):
-        pkg = self.make_package_and_builder('foo')
-        self.assertEqual(pkg.builder.name, 'foo')
-        self.assertEqual(pkg.builder.extra_args, ShellArguments())
-        self.check_build(pkg)
-
+    def check_deploy(self, pkg, env={}):
         with mock_open_log() as mopen, \
-             mock.patch('mopack.builders.cmake.pushd'), \
+             mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('mopack.builders.ninja.pushd'), \
              mock.patch('mopack.log.LogFile.check_call') as mcall:
             pkg.builder.deploy(self.metadata, pkg)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'deploy', 'foo.log'
             ), 'a')
-            mcall.assert_called_with(['ninja', 'install'], env={})
+            mcall.assert_called_with(['ninja', 'install'], env=env)
+
+    def test_basic(self):
+        pkg = self.make_package_and_builder('foo')
+        self.assertEqual(pkg.builder.name, 'foo')
+        self.assertEqual(pkg.builder.env, {})
+        self.assertEqual(pkg.builder.extra_args, ShellArguments())
+        self.check_build(pkg)
+        self.check_deploy(pkg)
+
+    def test_env(self):
+        pkg = self.make_package_and_builder(
+            'foo', env={'VAR': 'value'}, pkg_args={'env': {'PKG': 'package'}},
+            common_options={'env': {'GLOBAL': 'global'}}
+        )
+        self.assertEqual(pkg.builder.name, 'foo')
+        self.assertEqual(pkg.builder.env, {'VAR': 'value'})
+        self.assertEqual(pkg.builder.extra_args, ShellArguments())
+
+        env = {'GLOBAL': 'global', 'PKG': 'package', 'VAR': 'value'}
+        self.check_build(pkg, env=env)
+        self.check_deploy(pkg, env=env)
 
     def test_extra_args(self):
         pkg = self.make_package_and_builder('foo', extra_args='--extra args')
         self.assertEqual(pkg.builder.name, 'foo')
+        self.assertEqual(pkg.builder.env, {})
         self.assertEqual(pkg.builder.extra_args,
                          ShellArguments(['--extra', 'args']))
         self.check_build(pkg, extra_args=['--extra', 'args'])
+        self.check_deploy(pkg)
 
     def test_toolchain(self):
         pkg = self.make_package_and_builder('foo', this_options={
             'toolchain': 'toolchain.cmake',
         })
         self.assertEqual(pkg.builder.name, 'foo')
+        self.assertEqual(pkg.builder.env, {})
         self.assertEqual(pkg.builder.extra_args, ShellArguments())
         self.check_build(pkg, extra_args=[
             '-DCMAKE_TOOLCHAIN_FILE=' +
             os.path.join(self.config_dir, 'toolchain.cmake')
         ])
+        self.check_deploy(pkg)
 
     def test_deploy_dirs(self):
         deploy_dirs = {'prefix': '/usr/local', 'goofy': '/foo/bar'}
         pkg = self.make_package_and_builder('foo', deploy_dirs=deploy_dirs)
         self.assertEqual(pkg.builder.name, 'foo')
+        self.assertEqual(pkg.builder.env, {})
         self.assertEqual(pkg.builder.extra_args, ShellArguments())
         self.check_build(pkg, extra_args=[
             '-DCMAKE_INSTALL_PREFIX:PATH=' + os.path.abspath('/usr/local')
         ])
+        self.check_deploy(pkg)
 
     def test_clean(self):
         pkg = self.make_package_and_builder('foo')
@@ -97,7 +118,8 @@ class TestCMakeBuilder(BuilderTest):
         )
         data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(
-            data, name='foo', _options=opts, **rehydrate_kwargs
+            data, name='foo', _options=opts, _symbols=opts.expr_symbols,
+            **rehydrate_kwargs
         ))
 
     def test_upgrade_from_v1(self):
@@ -106,8 +128,10 @@ class TestCMakeBuilder(BuilderTest):
                 'extra_args': []}
         with mock.patch.object(CMakeBuilder, 'upgrade',
                                side_effect=CMakeBuilder.upgrade) as m:
-            builder = Builder.rehydrate(data, name='foo', _options=opts,
-                                        **rehydrate_kwargs)
+            builder = Builder.rehydrate(
+                data, name='foo', _options=opts, _symbols=opts.expr_symbols,
+                **rehydrate_kwargs
+            )
             self.assertIsInstance(builder, CMakeBuilder)
             m.assert_called_once()
 

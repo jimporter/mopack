@@ -81,7 +81,9 @@ class ConanPackage(BinaryPackage):
         return self.remote.split('/')[0]
 
     def path_values(self, metadata):
-        return {'builddir': self._installdir(metadata)}
+        result = super().path_values(metadata)
+        result['builddir'] = self._installdir(metadata)
+        return result
 
     def version(self, metadata):
         # Inspect the local conan cache to get the package's version.

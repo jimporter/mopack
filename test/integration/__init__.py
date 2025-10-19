@@ -103,10 +103,11 @@ def _cfg_package(origin, api_version, name, config_file, parent=None,
     }
 
 
-def cfg_directory_pkg(name, config_file, *, path, builders=[], linkage,
+def cfg_directory_pkg(name, config_file, *, path, env={}, builders=[], linkage,
                       **kwargs):
-    result = _cfg_package('directory', 2, name, config_file, **kwargs)
+    result = _cfg_package('directory', 3, name, config_file, **kwargs)
     result.update({
+        'env': env,
         'path': path,
         'builders': builders,
         'linkage': linkage,
@@ -114,11 +115,12 @@ def cfg_directory_pkg(name, config_file, *, path, builders=[], linkage,
     return result
 
 
-def cfg_tarball_pkg(name, config_file, *, path=None, url=None, files=[],
-                    srcdir=None, guessed_srcdir=None, patch=None, builders=[],
-                    linkage, **kwargs):
-    result = _cfg_package('tarball', 2, name, config_file, **kwargs)
+def cfg_tarball_pkg(name, config_file, *, env={}, path=None, url=None,
+                    files=[], srcdir=None, guessed_srcdir=None, patch=None,
+                    builders=[], linkage, **kwargs):
+    result = _cfg_package('tarball', 3, name, config_file, **kwargs)
     result.update({
+        'env': env,
         'path': path,
         'url': url,
         'files': files,
@@ -131,10 +133,11 @@ def cfg_tarball_pkg(name, config_file, *, path=None, url=None, files=[],
     return result
 
 
-def cfg_git_pkg(name, config_file, *, repository, rev, srcdir='.', builders=[],
-                linkage, **kwargs):
-    result = _cfg_package('git', 2, name, config_file, **kwargs)
+def cfg_git_pkg(name, config_file, *, env={}, repository, rev, srcdir='.',
+                builders=[], linkage, **kwargs):
+    result = _cfg_package('git', 3, name, config_file, **kwargs)
     result.update({
+        'env': env,
         'repository': repository,
         'rev': rev,
         'srcdir': srcdir,
@@ -175,46 +178,50 @@ def cfg_system_pkg(name, config_file, *, linkage, **kwargs):
     return result
 
 
-def cfg_ninja_builder(*, directory=Path('', 'srcdir'), extra_args=[]):
+def cfg_ninja_builder(*, env={}, directory=Path('', 'srcdir'), extra_args=[]):
     return {
         'type': 'ninja',
-        '_version': 1,
+        '_version': 2,
+        'env': env,
         'directory': directory.dehydrate(),
         'extra_args': extra_args,
     }
 
 
-def cfg_bfg9000_builder(*, directory=Path('', 'srcdir'), extra_args=[],
+def cfg_bfg9000_builder(*, env={}, directory=Path('', 'srcdir'), extra_args=[],
                         child_builder=cfg_ninja_builder(
                             directory=Path('', 'builddir')
                         )):
     return {
         'type': 'bfg9000',
-        '_version': 3,
+        '_version': 4,
+        'env': env,
         'directory': directory.dehydrate(),
         'extra_args': extra_args,
         'child_builder': child_builder,
     }
 
 
-def cfg_cmake_builder(*, directory=Path('', 'srcdir'), extra_args=[],
+def cfg_cmake_builder(*, env={}, directory=Path('', 'srcdir'), extra_args=[],
                       child_builder=cfg_ninja_builder(
                           directory=Path('', 'builddir')
                       )):
     return {
         'type': 'cmake',
-        '_version': 3,
+        '_version': 4,
+        'env': env,
         'directory': directory.dehydrate(),
         'extra_args': extra_args,
         'child_builder': child_builder,
     }
 
 
-def cfg_custom_builder(*, directory=Path('', 'srcdir'), outdir='build',
+def cfg_custom_builder(*, env={}, directory=Path('', 'srcdir'), outdir='build',
                        build_commands=[], deploy_commands=[]):
     return {
         'type': 'custom',
-        '_version': 4,
+        '_version': 5,
+        'env': env,
         'directory': directory.dehydrate(),
         'outdir': outdir,
         'build_commands': build_commands,

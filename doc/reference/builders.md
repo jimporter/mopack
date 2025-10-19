@@ -12,10 +12,17 @@ packages:
     # or...
     build:
       type: <builder_type>
+      env: <env_vars>
 ```
 
 `type` <span class="subtitle">*required*</span>
 : The type of builder; see below for possible values.
+
+`env` <span class="subtitle">*optional, default*: `{}`</span>
+: A dictionary of environment variables to use when running any commands for
+  this builder. This partially overrides any environment variables set
+  [globally](file-structure.md#options) or for this
+  [package](package.md#source-distributions).
 
 ## bfg9000
 
@@ -36,6 +43,7 @@ packages:
     # ...
     builder:
       type: bfg9000
+      env: <env_vars>
       directory: <path>
       build: <boolean>
       extra_args: <shell_args>

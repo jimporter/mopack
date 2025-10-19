@@ -3,11 +3,15 @@ import os
 from .. import OptionsTest, MockPackage, through_json  # noqa: F401
 
 from mopack.metadata import Metadata
+from mopack.options import ExprSymbols
 
 
 class BuilderTest(OptionsTest):
     srcdir = os.path.abspath('/path/to/src')
     pkgdir = os.path.abspath('/path/to/builddir/mopack')
+    symbols = ExprSymbols(variable='foo').augment(
+        path_bases=['srcdir'], env={'BASE': 'base'}
+    )
 
     def setUp(self):
         super().setUp()
@@ -38,11 +42,12 @@ class BuilderTest(OptionsTest):
 
     def make_package_and_builder(self, name, builder_type=None, *,
                                  common_options=None, this_options=None,
-                                 deploy_dirs=None, **kwargs):
+                                 deploy_dirs=None, pkg_args={}, **kwargs):
         builder_type = builder_type or self.builder_type
         pkg = self.make_package(
             name, builder_type, common_options=common_options,
-            this_options=this_options, deploy_dirs=deploy_dirs
+            this_options=this_options, deploy_dirs=deploy_dirs,
+            **pkg_args
         )
         pkg.builder = builder_type(pkg, _symbols=pkg._builder_expr_symbols,
                                    **kwargs)

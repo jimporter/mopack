@@ -6,7 +6,6 @@ from .. import mock_open_log, rehydrate_kwargs
 
 from mopack.builders import Builder
 from mopack.builders.custom import CustomBuilder
-from mopack.options import ExprSymbols
 from mopack.origins.sdist import DirectoryPackage
 from mopack.path import Path
 from mopack.placeholder import placeholder as ph
@@ -15,9 +14,8 @@ from mopack.shell import ShellArguments
 
 class TestCustomBuilder(BuilderTest):
     builder_type = CustomBuilder
-    symbols = ExprSymbols(variable='foo').augment(path_bases=['srcdir'])
 
-    def check_build(self, pkg, build_commands=None):
+    def check_build(self, pkg, build_commands=None, env={}):
         if build_commands is None:
             builddir = os.path.join(self.pkgdir, 'build', pkg.name)
             build_commands = [i.args({
@@ -31,7 +29,7 @@ class TestCustomBuilder(BuilderTest):
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', pkg.name + '.log'
             ), 'a')
-            mcall.assert_has_calls([mock.call(i, env={})
+            mcall.assert_has_calls([mock.call(i, env=env)
                                     for i in build_commands])
 
     def test_basic(self):
@@ -39,6 +37,7 @@ class TestCustomBuilder(BuilderTest):
             'configure', 'make',
         ], outdir='build')
         self.assertEqual(pkg.builder.name, 'foo')
+        self.assertEqual(pkg.builder.env, {})
         self.assertEqual(pkg.builder.build_commands, [
             ShellArguments(['configure']),
             ShellArguments(['make']),
@@ -46,11 +45,29 @@ class TestCustomBuilder(BuilderTest):
         self.assertEqual(pkg.builder.deploy_commands, [])
         self.check_build(pkg)
 
+    def test_env(self):
+        pkg = self.make_package_and_builder(
+            'foo', env={'VAR': 'value'}, build_commands=['configure', 'make'],
+            outdir='build', pkg_args={'env': {'PKG': 'package'}},
+            common_options={'env': {'GLOBAL': 'global'}}
+        )
+        self.assertEqual(pkg.builder.name, 'foo')
+        self.assertEqual(pkg.builder.env, {'VAR': 'value'})
+        self.assertEqual(pkg.builder.build_commands, [
+            ShellArguments(['configure']),
+            ShellArguments(['make']),
+        ])
+        self.assertEqual(pkg.builder.deploy_commands, [])
+        self.check_build(pkg, env={
+            'GLOBAL': 'global', 'PKG': 'package', 'VAR': 'value'
+        })
+
     def test_build_list(self):
         pkg = self.make_package_and_builder('foo', build_commands=[
             ['configure', '--foo'], ['make', '-j2']
         ], outdir='build')
         self.assertEqual(pkg.builder.name, 'foo')
+        self.assertEqual(pkg.builder.env, {})
         self.assertEqual(pkg.builder.build_commands, [
             ShellArguments(['configure', '--foo']),
             ShellArguments(['make', '-j2']),
@@ -64,6 +81,7 @@ class TestCustomBuilder(BuilderTest):
             ['make', '-C', '$builddir'],
         ], outdir='build')
         self.assertEqual(pkg.builder.name, 'foo')
+        self.assertEqual(pkg.builder.env, {})
         self.assertEqual(pkg.builder.build_commands, [
             ShellArguments(['configure', ph(Path('', 'srcdir')) + '/build']),
             ShellArguments(['make', '-C', ph(Path('', 'builddir'))]),
@@ -80,6 +98,7 @@ class TestCustomBuilder(BuilderTest):
             outdir='build'
         )
         self.assertEqual(pkg.builder.name, 'foo')
+        self.assertEqual(pkg.builder.env, {})
         self.assertEqual(pkg.builder.build_commands, [
             ShellArguments(['make']),
         ])
@@ -151,7 +170,8 @@ class TestCustomBuilder(BuilderTest):
                                 _symbols=self.symbols)
         data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(
-            data, name='foo', _options=opts, **rehydrate_kwargs
+            data, name='foo', _options=opts, _symbols=opts.expr_symbols,
+            **rehydrate_kwargs
         ))
 
     def test_upgrade_from_v1(self):
@@ -160,7 +180,9 @@ class TestCustomBuilder(BuilderTest):
                 'build_commands': [], 'deploy_commands': None}
         with mock.patch.object(CustomBuilder, 'upgrade',
                                side_effect=CustomBuilder.upgrade) as m:
-            builder = Builder.rehydrate(data, name='foo', _options=opts,
-                                        **rehydrate_kwargs)
+            builder = Builder.rehydrate(
+                data, name='foo', _options=opts, _symbols=opts.expr_symbols,
+                **rehydrate_kwargs
+            )
             self.assertIsInstance(builder, CustomBuilder)
             m.assert_called_once()

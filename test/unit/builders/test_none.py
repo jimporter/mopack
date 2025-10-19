@@ -6,13 +6,11 @@ from .. import rehydrate_kwargs
 
 from mopack.builders import Builder
 from mopack.builders.none import NoneBuilder
-from mopack.options import ExprSymbols
 from mopack.origins.sdist import DirectoryPackage
 
 
 class TestNoneBuilder(BuilderTest):
     builder_type = NoneBuilder
-    symbols = ExprSymbols(variable='foo')
 
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         return os.path.join(self.srcdir, pkgconfig)
@@ -51,7 +49,8 @@ class TestNoneBuilder(BuilderTest):
                               _symbols=self.symbols)
         data = through_json(builder.dehydrate())
         self.assertEqual(builder, Builder.rehydrate(
-            data, name='foo', _options=opts, **rehydrate_kwargs
+            data, name='foo', _options=opts, _symbols=opts.expr_symbols,
+            **rehydrate_kwargs
         ))
 
     def test_upgrade_from_v1(self):
@@ -59,7 +58,9 @@ class TestNoneBuilder(BuilderTest):
         data = {'type': 'none', '_version': 1, 'name': 'bar'}
         with mock.patch.object(NoneBuilder, 'upgrade',
                                side_effect=NoneBuilder.upgrade) as m:
-            builder = Builder.rehydrate(data, name='foo', _options=opts,
-                                        **rehydrate_kwargs)
+            builder = Builder.rehydrate(
+                data, name='foo', _options=opts, _symbols=opts.expr_symbols,
+                **rehydrate_kwargs
+            )
             self.assertIsInstance(builder, NoneBuilder)
             m.assert_called_once()

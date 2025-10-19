@@ -20,7 +20,7 @@ _cmds_type = types.maybe(types.list_of(types.shell_args()), default=[])
                                       'deploy_commands': CommandsFD})
 class CustomBuilder(DirectoryBuilder):
     type = 'custom'
-    _version = 4
+    _version = 5
 
     @staticmethod
     def upgrade(config, version):
@@ -35,6 +35,10 @@ class CustomBuilder(DirectoryBuilder):
         # v4 adds `outdir`.
         if version < 4:  # pragma: no branch
             config['outdir'] = 'build'
+
+        # v5 adds the `env` field.
+        if version < 5:  # pragma: no branch
+            config['env'] = {}
 
         return config
 
@@ -63,6 +67,7 @@ class CustomBuilder(DirectoryBuilder):
         T.deploy_commands(_cmds_type)
 
     def _execute(self, logfile, commands, path_values):
+        env = self._full_env.value(path_values)
         for line in commands:
             line = line.args(path_values)
             if line[0] == 'cd':
@@ -71,7 +76,7 @@ class CustomBuilder(DirectoryBuilder):
                         raise RuntimeError('invalid command format')
                     os.chdir(line[1])
             else:
-                logfile.check_call(line, env=self._common_options.env)
+                logfile.check_call(line, env=env)
 
     def path_bases(self):
         if self.outdir:

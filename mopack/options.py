@@ -4,6 +4,7 @@ from copy import deepcopy
 from . import types
 from .base_options import BaseOptions
 from .builders import BuilderOptions, make_builder_options
+from .environment import Environment
 from .freezedried import DictToListFreezeDryer, FreezeDried
 from .objutils import memoize_method
 from .path import Path
@@ -40,7 +41,7 @@ class ExprSymbols(dict):
         else:
             return None
 
-    def augment(self, *, symbols={}, path_bases=[]):
+    def augment(self, *, symbols={}, path_bases=[], env=None):
         self._ensure_unique_symbols(symbols.keys())
         self._ensure_unique_symbols(path_bases)
         result = self.copy()
@@ -49,6 +50,10 @@ class ExprSymbols(dict):
 
         result.update({i: placeholder(Path('', i)) for i in path_bases})
         result.__path_bases += tuple(path_bases)
+        if env:
+            if 'env' not in result:
+                result['env'] = Environment()
+            result['env'] = result['env'].new_child(env)
 
         return result
 
@@ -116,7 +121,7 @@ class CommonOptions(FreezeDried, BaseOptions):
         return ExprSymbols(
             host_platform=platform_name(),
             target_platform=self.target_platform,
-            env=self.env,
+            env=Environment(self.env),
             deploy_dirs=deploy_vars,
         )
 

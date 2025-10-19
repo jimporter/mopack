@@ -4,8 +4,9 @@ import shutil
 
 from .. import types
 from ..base_options import BaseOptions, OptionsHolder
-from ..freezedried import GenericFreezeDried
+from ..freezedried import GenericFreezeDried, DictFreezeDryer
 from ..path import Path
+from ..placeholder import PlaceholderFreezeDryer
 
 
 def _get_builder_type(type, field='type'):
@@ -15,7 +16,9 @@ def _get_builder_type(type, field='type'):
         raise types.FieldValueError('unknown builder {!r}'.format(type), field)
 
 
-@GenericFreezeDried.fields(skip={'name'})
+@GenericFreezeDried.fields(rehydrate={
+    'env': DictFreezeDryer(value_type=PlaceholderFreezeDryer)
+}, skip={'name'})
 class Builder(OptionsHolder):
     _options_type = 'builders'
     _type_field = 'type'
@@ -23,14 +26,22 @@ class Builder(OptionsHolder):
 
     Options = None
 
-    def __init__(self, pkg):
+    def __init__(self, pkg, *, env=None, _symbols):
         super().__init__(pkg._options)
         self.name = pkg.name
 
+        T = types.TypeCheck(locals(), _symbols)
+        T.env(types.maybe(types.dict_of(
+            types.string, types.placeholder_string
+        ), default={}))
+        self._full_env = _symbols['env'].new_child(self.env)
+
     @GenericFreezeDried.rehydrator
-    def rehydrate(cls, config, rehydrate_parent, *, name, **kwargs):
-        result = rehydrate_parent(Builder, config, name=name, **kwargs)
+    def rehydrate(cls, config, rehydrate_parent, *, name, _symbols, **kwargs):
+        result = rehydrate_parent(Builder, config, name=name,
+                                  _symbols=_symbols, **kwargs)
         result.name = name
+        result._full_env = _symbols['env'].new_child(result.env)
         return result
 
     def path_bases(self):
@@ -58,7 +69,7 @@ class Builder(OptionsHolder):
 @GenericFreezeDried.fields(rehydrate={'directory': Path})
 class DirectoryBuilder(Builder):
     def __init__(self, pkg, *, directory=None, _symbols, **kwargs):
-        super().__init__(pkg, **kwargs)
+        super().__init__(pkg, _symbols=_symbols, **kwargs)
         if directory is None and _symbols.path_bases:
             directory = '$' + _symbols.path_bases[-1]
         T = types.TypeCheck(locals(), _symbols)
@@ -67,11 +78,14 @@ class DirectoryBuilder(Builder):
 
 @GenericFreezeDried.fields(rehydrate={'child_builder': Builder})
 class ConfiguringBuilder(DirectoryBuilder):
-    def __init__(self, pkg, *, build=True, _symbols, _child_builder, **kwargs):
-        super().__init__(pkg, _symbols=_symbols, **kwargs)
+    def __init__(self, pkg, *, env=None, build=True, _symbols, _child_builder,
+                 **kwargs):
+        super().__init__(pkg, env=env, _symbols=_symbols, **kwargs)
         if build:
             _symbols = _symbols.augment(path_bases=self.path_bases())
-            self.child_builder = _child_builder(pkg, _symbols=_symbols)
+            self.child_builder = _child_builder(
+                pkg, env=env, _symbols=_symbols
+            )
         else:
             self.child_builder = None
 

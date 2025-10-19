@@ -5,6 +5,7 @@ from collections import ChainMap
 
 from .iterutils import isiterable, listify
 from .path import issemiabs
+from .placeholder import map_placeholder, to_string
 from .platforms import platform_name
 from .shell import split_native_str, split_paths
 
@@ -12,6 +13,11 @@ from .shell import split_native_str, split_paths
 # executed so that nested invocations of `mopack` consistently point to the
 # same mopack directory.
 nested_invoke = 'MOPACK_NESTED_INVOCATION'
+
+
+class Environment(ChainMap):
+    def value(self, symbols):
+        return map_placeholder(self, lambda i: to_string(i, symbols))
 
 
 def which(names, env=os.environ, resolve=False, kind='executable'):

@@ -5,6 +5,7 @@ from unittest import mock, TestCase
 from . import through_json
 
 from mopack.options import *
+from mopack.environment import Environment
 from mopack.path import Path
 from mopack.placeholder import placeholder
 from mopack.platforms import platform_name
@@ -40,6 +41,21 @@ class TestExprSymbols(TestCase):
             'srcdir': placeholder(Path('', 'srcdir')),
         })
         self.assertEqual(symbols.path_bases, ('cfgdir', 'srcdir'))
+
+    def test_augment_env(self):
+        symbols = ExprSymbols(env=Environment({'FOO': 'foo'}))
+
+        symbols = symbols.augment(env={'BAR': 'bar'})
+        self.assertEqual(symbols, {'env': {
+            'FOO': 'foo',
+            'BAR': 'bar',
+        }})
+
+        symbols = symbols.augment(env={'FOO': 'oof'})
+        self.assertEqual(symbols, {'env': {
+            'FOO': 'oof',
+            'BAR': 'bar',
+        }})
 
     def test_augment_duplicate(self):
         symbols = ExprSymbols(foo='bar')

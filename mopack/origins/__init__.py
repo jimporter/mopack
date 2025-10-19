@@ -54,23 +54,33 @@ class Package(OptionsHolder):
         self.resolved = False
         self.parent = parent.name if parent else None
 
+        self._expr_symbols = self._options.expr_symbols
+        if self.config_file:
+            self._expr_symbols = self._expr_symbols.augment(
+                path_bases=['cfgdir']
+            )
+
         T = types.TypeCheck(locals(), self._expr_symbols)
         T.deploy(types.boolean, dest_field='should_deploy')
 
     @GenericFreezeDried.rehydrator
-    def rehydrate(cls, config, rehydrate_parent, **kwargs):
-        kwargs['name'] = config['name']
+    def rehydrate(cls, config, rehydrate_parent, *, _after_rehydrate=None,
+                  **kwargs):
         linkage_cfg = config.pop('linkage')
 
         pkg = rehydrate_parent(Package, config, **kwargs)
+        pkg._expr_symbols = pkg._options.expr_symbols.augment(
+            path_bases=['cfgdir']
+        )
+
+        if _after_rehydrate:
+            pkg = _after_rehydrate(pkg)
+
         pkg.linkage = Linkage.rehydrate(
-            linkage_cfg, _symbols=pkg._linkage_expr_symbols, **kwargs
+            linkage_cfg, name=config['name'],
+            _symbols=pkg._linkage_expr_symbols, **kwargs
         )
         return pkg
-
-    @property
-    def _expr_symbols(self):
-        return self._options.expr_symbols.augment(path_bases=['cfgdir'])
 
     @property
     def _linkage_expr_symbols(self):
@@ -115,7 +125,10 @@ class Package(OptionsHolder):
         return []
 
     def path_values(self, metadata):
-        return {}
+        try:
+            return {'cfgdir': self.config_dir}
+        except TypeError:
+            return {}
 
     def clean_pre(self, metadata, new_package, quiet=False):
         return False

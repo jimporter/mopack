@@ -4,6 +4,7 @@
 
 ### New features
 - `build` field for source distributions can now take a list of builders
+- Source distribution packages and builders now accept an `env` field
 - New builder `ninja`
 - Verbose output of build commands now prints iteratively
 
