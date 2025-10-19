@@ -46,7 +46,7 @@ class TestGit(SDistTestCase):
             mcall.assert_has_calls([mock.call(i, env={}) for i in git_cmds],
                                    any_order=True)
 
-    def test_url(self):
+    def test_http(self):
         pkg = self.make_package('foo', repository=self.srcurl, build='bfg9000')
         builder = self.make_builder(Bfg9000Builder, pkg)
         self.assertEqual(pkg.repository, self.srcurl)
@@ -58,8 +58,9 @@ class TestGit(SDistTestCase):
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
 
-    def test_path(self):
+    def test_ssh(self):
         pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000')
         builder = self.make_builder(Bfg9000Builder, pkg)
         self.assertEqual(pkg.repository, self.srcssh)
@@ -71,6 +72,7 @@ class TestGit(SDistTestCase):
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
 
     def test_tag(self):
         pkg = self.make_package('foo', repository=self.srcssh, tag='v1.0',
@@ -85,6 +87,7 @@ class TestGit(SDistTestCase):
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
 
     def test_branch(self):
         pkg = self.make_package('foo', repository=self.srcssh,
@@ -99,6 +102,7 @@ class TestGit(SDistTestCase):
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
 
     def test_commit(self):
         pkg = self.make_package('foo', repository=self.srcssh,
@@ -113,6 +117,7 @@ class TestGit(SDistTestCase):
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
 
     def test_invalid_tag_branch_commit(self):
         with self.assertRaises(TypeError):
@@ -130,7 +135,7 @@ class TestGit(SDistTestCase):
                               branch='mybranch', commit='abcdefg',
                               build='bfg9000')
 
-    def test_srdir(self):
+    def test_srcdir(self):
         pkg = self.make_package('foo', repository=self.srcssh, srcdir='dir',
                                 build='bfg9000')
         builder = self.make_builder(Bfg9000Builder, pkg)
@@ -141,6 +146,7 @@ class TestGit(SDistTestCase):
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
 
     def test_build(self):
         build = {'type': 'bfg9000', 'extra_args': '--extra'}
@@ -153,7 +159,8 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.builders, [builder])
 
         self.check_fetch(pkg)
-        self.check_resolve(pkg)
+        self.check_resolve(pkg, extra_args=['--extra'])
+        self.check_linkage(pkg)
 
     def test_infer_build(self):
         # Basic inference
@@ -174,6 +181,7 @@ class TestGit(SDistTestCase):
                 'foo', repository=self.srcssh, build='bfg9000'
             ))
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
 
         # Infer but override linkage and version
         pkg = self.make_package('foo', repository=self.srcssh,
@@ -202,15 +210,17 @@ class TestGit(SDistTestCase):
                         return_value=True), \
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):
-            self.check_resolve(pkg, linkage={
-                'name': 'foo', 'type': 'system', 'generated': True,
-                'auto_link': False, 'pcnames': ['foo'],
-                'pkg_config_path': [self.pkgconfdir(None)],
-            })
+            self.check_resolve(pkg)
+        self.check_linkage(pkg, linkage={
+            'name': 'foo', 'type': 'system', 'generated': True,
+            'auto_link': False, 'pcnames': ['foo'],
+            'pkg_config_path': [self.pkgconfdir(None)],
+        })
 
     def test_infer_build_override(self):
         pkg = self.make_package('foo', repository=self.srcssh, build='cmake',
                                 linkage='pkg_config')
+        srcdir = os.path.join(self.pkgdir, 'src', 'foo')
 
         with mock_open_log(), \
              mock.patch('os.path.exists', mock_exists), \
@@ -226,8 +236,20 @@ class TestGit(SDistTestCase):
                 'foo', repository=self.srcssh, build='cmake',
                 linkage='pkg_config'
             ))
-        with mock.patch('mopack.builders.cmake.pushd'):
-            self.check_resolve(pkg)
+        with mock_open_log() as mopen, \
+             mock.patch('mopack.builders.cmake.pushd'), \
+             mock.patch('mopack.builders.ninja.pushd'), \
+             mock.patch('mopack.log.LogFile.check_call') as mcall:
+            with assert_logging([('resolve', pkg.name)]):
+                pkg.resolve(self.metadata)
+            mopen.assert_called_with(os.path.join(
+                self.pkgdir, 'logs', 'foo.log'
+            ), 'a')
+            mcall.assert_has_calls([
+                mock.call(['cmake', srcdir, '-G', 'Ninja'], env={}),
+                mock.call(['ninja'], env={}),
+            ])
+        self.check_linkage(pkg)
 
     def test_linkage(self):
         pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000',
@@ -240,6 +262,7 @@ class TestGit(SDistTestCase):
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
 
         with mock.patch('subprocess.run') as mrun:
             pkg.version(self.metadata)
@@ -258,7 +281,8 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.builders, [builder])
 
         self.check_fetch(pkg)
-        self.check_resolve(pkg, linkage={
+        self.check_resolve(pkg)
+        self.check_linkage(pkg, linkage={
             'name': 'foo', 'type': 'pkg_config', 'pcnames': ['foo'],
             'pkg_config_path': [self.pkgconfdir('foo', 'pkgconf')],
         })
@@ -272,7 +296,8 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.builders, [builder])
 
         self.check_fetch(pkg)
-        self.check_resolve(pkg, linkage={
+        self.check_resolve(pkg)
+        self.check_linkage(pkg, linkage={
             'name': 'foo', 'type': 'path', 'generated': True,
             'auto_link': False, 'pcnames': ['foo'],
             'pkg_config_path': [self.pkgconfdir(None)],
@@ -289,7 +314,8 @@ class TestGit(SDistTestCase):
         pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000',
                                 submodules=submodules_required)
         self.check_fetch(pkg)
-        self.check_resolve(pkg, submodules=['sub'])
+        self.check_resolve(pkg)
+        self.check_linkage(pkg, submodules=['sub'])
 
         pkg = self.make_package(
             'foo', repository=self.srcssh, build='bfg9000',
@@ -297,7 +323,8 @@ class TestGit(SDistTestCase):
             submodules=submodules_required
         )
         self.check_fetch(pkg)
-        self.check_resolve(pkg, submodules=['sub'], linkage={
+        self.check_resolve(pkg)
+        self.check_linkage(pkg, submodules=['sub'], linkage={
             'name': 'foo[sub]', 'type': 'pkg_config',
             'pcnames': ['bar', 'foo_sub'],
             'pkg_config_path': [self.pkgconfdir('foo')],
@@ -306,7 +333,8 @@ class TestGit(SDistTestCase):
         pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000',
                                 submodules=submodules_optional)
         self.check_fetch(pkg)
-        self.check_resolve(pkg, submodules=['sub'])
+        self.check_resolve(pkg)
+        self.check_linkage(pkg, submodules=['sub'])
 
         pkg = self.make_package(
             'foo', repository=self.srcssh, build='bfg9000',
@@ -314,7 +342,8 @@ class TestGit(SDistTestCase):
             submodules=submodules_optional
         )
         self.check_fetch(pkg)
-        self.check_resolve(pkg, submodules=['sub'], linkage={
+        self.check_resolve(pkg)
+        self.check_linkage(pkg, submodules=['sub'], linkage={
             'name': 'foo[sub]', 'type': 'pkg_config',
             'pcnames': ['bar', 'foo_sub'],
             'pkg_config_path': [self.pkgconfdir('foo')],
@@ -341,6 +370,7 @@ class TestGit(SDistTestCase):
                 pkg.fetch(self.metadata, self.config)
             mcall.assert_called_once_with(['git', 'pull'], env={})
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
 
     def test_already_fetched_tag(self):
         def mock_exists(p):
@@ -356,6 +386,7 @@ class TestGit(SDistTestCase):
                 pkg.fetch(self.metadata, self.config)
             mrun.assert_not_called()
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
 
     def test_already_fetched_commit(self):
         def mock_exists(p):
@@ -371,6 +402,7 @@ class TestGit(SDistTestCase):
                 pkg.fetch(self.metadata, self.config)
             mrun.assert_not_called()
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
 
     def test_deploy(self):
         deploy_dirs = {'prefix': '/usr/local'}

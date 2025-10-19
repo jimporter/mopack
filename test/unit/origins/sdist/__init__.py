@@ -19,7 +19,7 @@ class SDistTestCase(OriginTest):
         else:
             return os.path.join(self.pkgdir, 'build', name, pkgconfig)
 
-    def check_resolve(self, pkg, *, submodules=None, linkage=None):
+    def check_linkage(self, pkg, *, submodules=None, linkage=None):
         if linkage is None:
             pcnames = ([] if pkg.submodules and pkg.submodules['required'] else
                        ['foo'])
@@ -28,20 +28,27 @@ class SDistTestCase(OriginTest):
                        'type': 'pkg_config', 'pcnames': pcnames,
                        'pkg_config_path': [self.pkgconfdir('foo')]}
 
+        with mock.patch('mopack.linkages.path_system.file_outdated',
+                        return_value=False):
+            self.assertEqual(pkg.get_linkage(self.metadata, submodules),
+                             linkage)
+
+    def check_resolve(self, pkg, *, extra_args=[], env={}):
+        builddir = os.path.join(self.pkgdir, 'build', pkg.name)
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.bfg9000.pushd'), \
              mock.patch('mopack.builders.ninja.pushd'), \
-             mock.patch('mopack.log.LogFile.check_call'):
+             mock.patch('mopack.log.LogFile.check_call') as mcall:
             with assert_logging([('resolve', pkg.name)]):
                 pkg.resolve(self.metadata)
             mopen.assert_called_with(os.path.join(
                 self.pkgdir, 'logs', 'foo.log'
             ), 'a')
-
-        with mock.patch('mopack.linkages.path_system.file_outdated',
-                        return_value=False):
-            self.assertEqual(pkg.get_linkage(self.metadata, submodules),
-                             linkage)
+            mcall.assert_has_calls([
+                mock.call(['bfg9000', 'configure', builddir] + extra_args,
+                          env=env),
+                mock.call(['ninja'], env=env),
+            ])
 
     def make_builder(self, builder_type, pkg, **kwargs):
         return builder_type(pkg, _symbols=pkg._builder_expr_symbols, **kwargs)

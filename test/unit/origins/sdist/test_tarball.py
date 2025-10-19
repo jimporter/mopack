@@ -56,6 +56,7 @@ class TestTarball(SDistTestCase):
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
 
     def test_path(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000')
@@ -69,6 +70,7 @@ class TestTarball(SDistTestCase):
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
 
     def test_zip_path(self):
         srcpath = os.path.join(test_data_dir, 'hello-bfg.zip')
@@ -89,6 +91,7 @@ class TestTarball(SDistTestCase):
                 pkg.fetch(self.metadata, self.config)
             mtar.assert_called_once_with(srcdir, None)
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
 
     def test_invalid_url_path(self):
         with self.assertRaises(TypeError):
@@ -112,6 +115,7 @@ class TestTarball(SDistTestCase):
                 pkg.fetch(self.metadata, self.config)
             mtar.assert_called_once_with(srcdir, mock.ANY)
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
 
     def test_patch(self):
         patch = os.path.join(test_data_dir, 'hello-bfg.patch')
@@ -137,6 +141,7 @@ class TestTarball(SDistTestCase):
             mcall.assert_called_once_with(['patch', '-p1'], stdin=mopen(),
                                           env={})
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
 
     def test_build(self):
         build = {'type': 'bfg9000', 'extra_args': '--extra'}
@@ -147,7 +152,8 @@ class TestTarball(SDistTestCase):
         self.assertEqual(pkg.builders, [builder])
 
         self.check_fetch(pkg)
-        self.check_resolve(pkg)
+        self.check_resolve(pkg, extra_args=['--extra'])
+        self.check_linkage(pkg)
 
     def test_infer_build(self):
         # Basic inference
@@ -167,6 +173,7 @@ class TestTarball(SDistTestCase):
                 'foo', path=self.srcpath, build='bfg9000'
             ))
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
 
         # Infer but override linkage and version
         pkg = self.make_package('foo', path=self.srcpath,
@@ -193,15 +200,17 @@ class TestTarball(SDistTestCase):
                         return_value=True), \
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):
-            self.check_resolve(pkg, linkage={
-                'name': 'foo', 'type': 'system', 'generated': True,
-                'auto_link': False, 'pcnames': ['foo'],
-                'pkg_config_path': [self.pkgconfdir(None)],
-            })
+            self.check_resolve(pkg)
+        self.check_linkage(pkg, linkage={
+            'name': 'foo', 'type': 'system', 'generated': True,
+            'auto_link': False, 'pcnames': ['foo'],
+            'pkg_config_path': [self.pkgconfdir(None)],
+        })
 
     def test_infer_build_override(self):
         pkg = self.make_package('foo', path=self.srcpath, build='cmake',
                                 linkage='pkg_config')
+        srcdir = os.path.join(self.pkgdir, 'src', 'foo', 'hello-bfg')
 
         with mock.patch('os.path.exists', mock_exists), \
              mock.patch('tarfile.TarFile.extractall'), \
@@ -215,8 +224,20 @@ class TestTarball(SDistTestCase):
             self.assertEqual(pkg, self.make_package(
                 'foo', path=self.srcpath, build='cmake', linkage='pkg_config'
             ))
-        with mock.patch('mopack.builders.cmake.pushd'):
-            self.check_resolve(pkg)
+        with mock_open_log() as mopen, \
+             mock.patch('mopack.builders.cmake.pushd'), \
+             mock.patch('mopack.builders.ninja.pushd'), \
+             mock.patch('mopack.log.LogFile.check_call') as mcall:
+            with assert_logging([('resolve', pkg.name)]):
+                pkg.resolve(self.metadata)
+            mopen.assert_called_with(os.path.join(
+                self.pkgdir, 'logs', 'foo.log'
+            ), 'a')
+            mcall.assert_has_calls([
+                mock.call(['cmake', srcdir, '-G', 'Ninja'], env={}),
+                mock.call(['ninja'], env={}),
+            ])
+        self.check_linkage(pkg)
 
     def test_linkage(self):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
@@ -227,6 +248,7 @@ class TestTarball(SDistTestCase):
 
         self.check_fetch(pkg)
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
 
         with mock.patch('subprocess.run') as mrun:
             pkg.version(self.metadata)
@@ -243,7 +265,8 @@ class TestTarball(SDistTestCase):
         self.assertEqual(pkg.builders, [builder])
 
         self.check_fetch(pkg)
-        self.check_resolve(pkg, linkage={
+        self.check_resolve(pkg)
+        self.check_linkage(pkg, linkage={
             'name': 'foo', 'type': 'pkg_config', 'pcnames': ['foo'],
             'pkg_config_path': [self.pkgconfdir('foo', 'pkgconf')],
         })
@@ -255,7 +278,8 @@ class TestTarball(SDistTestCase):
         self.assertEqual(pkg.builders, [builder])
 
         self.check_fetch(pkg)
-        self.check_resolve(pkg, linkage={
+        self.check_resolve(pkg)
+        self.check_linkage(pkg, linkage={
             'name': 'foo', 'type': 'path', 'generated': True,
             'auto_link': False, 'pcnames': ['foo'],
             'pkg_config_path': [self.pkgconfdir(None)],
@@ -272,7 +296,8 @@ class TestTarball(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 submodules=submodules_required)
         self.check_fetch(pkg)
-        self.check_resolve(pkg, submodules=['sub'])
+        self.check_resolve(pkg)
+        self.check_linkage(pkg, submodules=['sub'])
 
         pkg = self.make_package(
             'foo', path=self.srcpath, build='bfg9000',
@@ -280,7 +305,8 @@ class TestTarball(SDistTestCase):
             submodules=submodules_required
         )
         self.check_fetch(pkg)
-        self.check_resolve(pkg, submodules=['sub'], linkage={
+        self.check_resolve(pkg)
+        self.check_linkage(pkg, submodules=['sub'], linkage={
             'name': 'foo[sub]', 'type': 'pkg_config',
             'pcnames': ['bar', 'foo_sub'],
             'pkg_config_path': [self.pkgconfdir('foo')],
@@ -289,7 +315,8 @@ class TestTarball(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 submodules=submodules_optional)
         self.check_fetch(pkg)
-        self.check_resolve(pkg, submodules=['sub'])
+        self.check_resolve(pkg)
+        self.check_linkage(pkg, submodules=['sub'])
 
         pkg = self.make_package(
             'foo', path=self.srcpath, build='bfg9000',
@@ -297,7 +324,8 @@ class TestTarball(SDistTestCase):
             submodules=submodules_optional
         )
         self.check_fetch(pkg)
-        self.check_resolve(pkg, submodules=['sub'], linkage={
+        self.check_resolve(pkg)
+        self.check_linkage(pkg, submodules=['sub'], linkage={
             'name': 'foo[sub]', 'type': 'pkg_config',
             'pcnames': ['bar', 'foo_sub'],
             'pkg_config_path': [self.pkgconfdir('foo')],
@@ -324,7 +352,8 @@ class TestTarball(SDistTestCase):
             with assert_logging([('fetch', 'foo already fetched')]):
                 pkg.fetch(self.metadata, self.config)
             mtar.assert_not_called()
-        self.check_resolve(pkg)
+        self.check_resolve(pkg, extra_args=['--extra'])
+        self.check_linkage(pkg)
 
     def test_deploy(self):
         deploy_dirs = {'prefix': '/usr/local'}

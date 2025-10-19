@@ -342,7 +342,8 @@ class GitPackage(SDistPackage):
         return os.path.join(metadata.pkgdir, 'src', self.name)
 
     def _srcdir(self, metadata):
-        return os.path.join(self._base_srcdir(metadata), self.srcdir)
+        return os.path.normpath(os.path.join(self._base_srcdir(metadata),
+                                             self.srcdir))
 
     def clean_pre(self, metadata, new_package, quiet=False):
         if self.equal(new_package, skip_fields={'builder'}):

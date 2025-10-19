@@ -47,6 +47,7 @@ class TestDirectory(SDistTestCase):
         with assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]):
             pkg.fetch(self.metadata, self.config)
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
 
     def test_build(self):
         build = {'type': 'bfg9000', 'extra_args': '--extra'}
@@ -55,11 +56,13 @@ class TestDirectory(SDistTestCase):
         builder = self.make_builder(Bfg9000Builder, pkg, extra_args='--extra')
         self.assertEqual(pkg.path, Path(self.srcpath))
         self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
         with assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]):
             pkg.fetch(self.metadata, self.config)
-        self.check_resolve(pkg)
+        self.check_resolve(pkg, extra_args=['--extra'])
+        self.check_linkage(pkg)
 
     def test_build_duplicate_base(self):
         msg = "'builddir' already defined by 'bfg9000' builder"
@@ -89,6 +92,7 @@ class TestDirectory(SDistTestCase):
                 'foo', path=self.srcpath, build='bfg9000'
             ))
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
 
         # Infer but override linkage
         pkg = self.make_package('foo', path=self.srcpath,
@@ -113,11 +117,12 @@ class TestDirectory(SDistTestCase):
              mock.patch('mopack.linkages.path_system.file_outdated',
                         return_value=True), \
              mock.patch('builtins.open'):
-            self.check_resolve(pkg, linkage={
-                'name': 'foo', 'type': 'system', 'generated': True,
-                'auto_link': False, 'pcnames': ['foo'],
-                'pkg_config_path': [self.pkgconfdir(None)],
-            })
+            self.check_resolve(pkg)
+        self.check_linkage(pkg, linkage={
+            'name': 'foo', 'type': 'system', 'generated': True,
+            'auto_link': False, 'pcnames': ['foo'],
+            'pkg_config_path': [self.pkgconfdir(None)],
+        })
 
     def test_infer_build_override(self):
         pkg = self.make_package('foo', path=self.srcpath, build='cmake',
@@ -135,8 +140,21 @@ class TestDirectory(SDistTestCase):
             self.assertEqual(pkg, self.make_package(
                 'foo', path=self.srcpath, build='cmake', linkage='pkg_config'
             ))
-        with mock.patch('mopack.builders.cmake.pushd'):
-            self.check_resolve(pkg)
+
+        with mock_open_log() as mopen, \
+             mock.patch('mopack.builders.cmake.pushd'), \
+             mock.patch('mopack.builders.ninja.pushd'), \
+             mock.patch('mopack.log.LogFile.check_call') as mcall:
+            with assert_logging([('resolve', pkg.name)]):
+                pkg.resolve(self.metadata)
+            mopen.assert_called_with(os.path.join(
+                self.pkgdir, 'logs', 'foo.log'
+            ), 'a')
+            mcall.assert_has_calls([
+                mock.call(['cmake', self.srcpath, '-G', 'Ninja'], env={}),
+                mock.call(['ninja'], env={}),
+            ])
+        self.check_linkage(pkg)
 
     def test_infer_submodules(self):
         data = 'export:\n  submodules: [french, english]\n  build: bfg9000'
@@ -156,7 +174,8 @@ class TestDirectory(SDistTestCase):
             self.assertEqual(config.export.submodules,
                              ['french', 'english'])
             self.assertEqual(pkg.builders, [builder])
-        self.check_resolve(pkg, submodules=['french'])
+        self.check_resolve(pkg)
+        self.check_linkage(pkg, submodules=['french'])
 
         pkg = self.make_package('foo', path=srcpath, submodules=['sub'])
         self.assertEqual(pkg.builders, None)
@@ -170,7 +189,8 @@ class TestDirectory(SDistTestCase):
             self.assertEqual(config.export.submodules,
                              ['french', 'english'])
             self.assertEqual(pkg.builders, [builder])
-        self.check_resolve(pkg, submodules=['sub'])
+        self.check_resolve(pkg)
+        self.check_linkage(pkg, submodules=['sub'])
 
     def test_infer_build_invalid(self):
         pkg = self.make_package('foo', path=self.srcpath)
@@ -257,6 +277,7 @@ class TestDirectory(SDistTestCase):
         with assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]):
             pkg.fetch(self.metadata, self.config)
         self.check_resolve(pkg)
+        self.check_linkage(pkg)
 
         with mock.patch('subprocess.run') as mrun:
             pkg.version(self.metadata)
@@ -274,7 +295,8 @@ class TestDirectory(SDistTestCase):
 
         with assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]):
             pkg.fetch(self.metadata, self.config)
-        self.check_resolve(pkg, linkage={
+        self.check_resolve(pkg)
+        self.check_linkage(pkg, linkage={
             'name': 'foo', 'type': 'pkg_config', 'pcnames': ['foo'],
             'pkg_config_path': [self.pkgconfdir('foo', 'pkgconf')],
         })
@@ -287,7 +309,8 @@ class TestDirectory(SDistTestCase):
 
         with assert_logging([('fetch', 'foo from {}'.format(self.srcpath))]):
             pkg.fetch(self.metadata, self.config)
-        self.check_resolve(pkg, linkage={
+        self.check_resolve(pkg)
+        self.check_linkage(pkg, linkage={
             'name': 'foo', 'type': 'path', 'generated': True,
             'auto_link': False, 'pcnames': ['foo'],
             'pkg_config_path': [self.pkgconfdir(None)],
@@ -305,14 +328,16 @@ class TestDirectory(SDistTestCase):
 
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 submodules=submodules_required)
-        self.check_resolve(pkg, submodules=['sub'])
+        self.check_resolve(pkg)
+        self.check_linkage(pkg, submodules=['sub'])
 
         pkg = self.make_package(
             'foo', path=self.srcpath, build='bfg9000',
             linkage={'type': 'pkg_config', 'pcname': 'bar'},
             submodules=submodules_required
         )
-        self.check_resolve(pkg, submodules=['sub'], linkage={
+        self.check_resolve(pkg)
+        self.check_linkage(pkg, submodules=['sub'], linkage={
             'name': 'foo[sub]', 'type': 'pkg_config',
             'pcnames': ['bar', 'foo_sub'],
             'pkg_config_path': [self.pkgconfdir('foo')],
@@ -320,14 +345,16 @@ class TestDirectory(SDistTestCase):
 
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 submodules=submodules_optional)
-        self.check_resolve(pkg, submodules=['sub'])
+        self.check_resolve(pkg)
+        self.check_linkage(pkg, submodules=['sub'])
 
         pkg = self.make_package(
             'foo', path=self.srcpath, build='bfg9000',
             linkage={'type': 'pkg_config', 'pcname': 'bar'},
             submodules=submodules_optional
         )
-        self.check_resolve(pkg, submodules=['sub'], linkage={
+        self.check_resolve(pkg)
+        self.check_linkage(pkg, submodules=['sub'], linkage={
             'name': 'foo[sub]', 'type': 'pkg_config',
             'pcnames': ['bar', 'foo_sub'],
             'pkg_config_path': [self.pkgconfdir('foo')],
