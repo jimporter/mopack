@@ -177,6 +177,21 @@ def placeholder(value):
     return PlaceholderString(PlaceholderValue(value), _canonicalized=True)
 
 
+class PlaceholderFreezeDryer:
+    @staticmethod
+    def dehydrate(value):
+        if isinstance(value, str):
+            return value
+        elif isinstance(value, PlaceholderString):
+            return value.dehydrate()
+
+    @staticmethod
+    def rehydrate(value, **kwargs):
+        if isinstance(value, str):
+            return value
+        return PlaceholderString.rehydrate(value, **kwargs)
+
+
 def to_string(value, symbols={}):
     if isinstance(value, str):
         return value
@@ -184,12 +199,6 @@ def to_string(value, symbols={}):
         return value.string(symbols)
     else:  # pragma: no cover
         raise TypeError(type(value))
-
-
-def rehydrate(value, **kwargs):
-    if isinstance(value, str):
-        return value
-    return PlaceholderString.rehydrate(value, **kwargs)
 
 
 def map_placeholder(value, fn):

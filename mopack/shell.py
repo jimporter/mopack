@@ -8,7 +8,7 @@ from shlex import shlex
 from . import placeholder
 from .freezedried import auto_dehydrate
 from .iterutils import isiterable, ismapping
-from .placeholder import PlaceholderString
+from .placeholder import PlaceholderString, PlaceholderFreezeDryer
 from .platforms import platform_name
 
 __all__ = [
@@ -236,7 +236,7 @@ class ShellArguments(MutableSequence):
                 if ismapping(value):
                     value = [value]
 
-            return placeholder.rehydrate(value, **kwargs)
+            return PlaceholderFreezeDryer.rehydrate(value, **kwargs)
 
         return ShellArguments(rehydrate_each(i) for i in value)
 
