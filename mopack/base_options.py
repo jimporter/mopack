@@ -9,7 +9,6 @@ class BaseOptions:
             return self(**config, **kwargs)
 
 
-@GenericFreezeDried.fields(skip={'_options'}, skip_compare={'_options'})
 class OptionsHolder(GenericFreezeDried):
     def __init__(self, options):
         self._options = options

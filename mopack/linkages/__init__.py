@@ -12,7 +12,7 @@ def _get_linkage_type(type, field='type'):
         raise FieldValueError('unknown linkage {!r}'.format(type), field)
 
 
-@GenericFreezeDried.fields(skip={'name', '_expr_symbols'})
+@GenericFreezeDried.fields(skip={'name'})
 class Linkage(OptionsHolder):
     _default_genus = 'linkage'
     _type_field = 'type'

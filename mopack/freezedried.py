@@ -23,22 +23,27 @@ def auto_dehydrate(value, freezedryer=None):
 class FreezeDried:
     _rehydrate_fields = {}
     _skip_fields = set()
+    _include_fields = set()
     _skip_compare_fields = set()
 
     def _skipped_field(self, field, compare=False, extra_skips=set()):
-        # Never save memoization caches!
-        if field.startswith('_memoize_cache_'):
+        # Don't save private members by default.
+        if field.startswith('_') and field not in self._include_fields:
             return True
 
         skips = self._skip_compare_fields if compare else self._skip_fields
         return field in skips or field in extra_skips
 
     @staticmethod
-    def fields(*, rehydrate=None, skip=None, skip_compare=None):
+    def fields(*, rehydrate=None, include=None, skip=None, skip_compare=None):
         def wrapper(cls):
             if rehydrate:
                 cls._rehydrate_fields = merge_dicts(*chain(
                     each_attr(cls.__bases__, '_rehydrate_fields'), [rehydrate]
+                ))
+            if include:
+                cls._include_fields = set().union(*chain(
+                    each_attr(cls.__bases__, '_include_fields'), [include]
                 ))
             if skip:
                 cls._skip_fields = set().union(*chain(
