@@ -148,6 +148,11 @@ class TestCommonOptions(TestCase):
             opts.finalize()
         self.assertEqual(opts.env, {'FOO': 'foo', 'BAR': 'bar', 'ENV': 'env'})
 
+    def test_variables(self):
+        opts = CommonOptions()
+        opts(env={'FOO': '$host_platform'})
+        self.assertEqual(opts.env, {'FOO': platform_name()})
+
     def test_expr_symbols(self):
         opts = CommonOptions()
         opts.finalize()
@@ -158,6 +163,14 @@ class TestCommonOptions(TestCase):
             'env': os.environ,
             'deploy_dirs': {},
         })
+
+    def test_finalize(self):
+        opts = CommonOptions()
+        with self.assertRaises(RuntimeError):
+            opts.expr_symbols
+        opts.finalize()
+        with self.assertRaises(RuntimeError):
+            opts(env={'FOO': 'foo'})
 
     def test_rehydrate(self):
         opts = CommonOptions()

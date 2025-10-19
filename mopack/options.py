@@ -81,6 +81,13 @@ class CommonOptions(FreezeDried, BaseOptions):
         self.target_platform = types.Unset
         self.env = {}
         self.deploy_dirs = deploy_dirs or {}
+        self._finalized = False
+
+    @classmethod
+    def rehydrate(cls, config, **kwargs):
+        result = super(CommonOptions, cls).rehydrate(config, **kwargs)
+        result._finalized = True
+        return result
 
     @staticmethod
     def _fill_env(env, new_env):
@@ -91,7 +98,10 @@ class CommonOptions(FreezeDried, BaseOptions):
         return env
 
     def __call__(self, *, strict=None, target_platform=types.Unset, env=None):
-        T = types.TypeCheck(locals())
+        if self._finalized:
+            raise RuntimeError('options are already finalized')
+
+        T = types.TypeCheck(locals(), self._make_expr_symbols())
         if self.strict is types.Unset and strict is not None:
             T.strict(types.boolean)
         if self.target_platform is types.Unset:
@@ -99,16 +109,7 @@ class CommonOptions(FreezeDried, BaseOptions):
         T.env(types.maybe(types.dict_of(types.string, types.string)),
               reducer=self._fill_env)
 
-    def finalize(self):
-        if self.strict is types.Unset:
-            self.strict = False
-        if not self.target_platform:
-            self.target_platform = platform_name()
-        self._fill_env(self.env, os.environ)
-
-    @property
-    @memoize_method
-    def expr_symbols(self):
+    def _make_expr_symbols(self):
         deploy_vars = {k: placeholder(Path(v)) for k, v in
                        self.deploy_dirs.items()}
 
@@ -118,6 +119,21 @@ class CommonOptions(FreezeDried, BaseOptions):
             env=self.env,
             deploy_dirs=deploy_vars,
         )
+
+    def finalize(self):
+        if self.strict is types.Unset:
+            self.strict = False
+        if not self.target_platform:
+            self.target_platform = platform_name()
+        self._fill_env(self.env, os.environ)
+        self._finalized = True
+
+    @property
+    @memoize_method
+    def expr_symbols(self):
+        if not self._finalized:
+            raise RuntimeError('options not finalized')
+        return self._make_expr_symbols()
 
     def __eq__(self, rhs):
         return (self.target_platform == rhs.target_platform and
