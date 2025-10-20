@@ -56,7 +56,7 @@ packages:
   by default instead.)
 
 `build` <span class="subtitle">*optional, default*: `true`</span>
-: If true, automatically call [`ninja`][#ninja] to build the dependency after
+: If true, automatically call [`ninja`](#ninja) to build the dependency after
   running `bfg9000 configure`.
 
 `extra_args` <span class="subtitle">*optional, default*: `null`</span>
@@ -94,7 +94,7 @@ packages:
   used by default instead.)
 
 `build` <span class="subtitle">*optional, default*: `true`</span>
-: If true, automatically call [`ninja`][#ninja] to build the dependency after
+: If true, automatically call [`ninja`](#ninja) to build the dependency after
   running `cmake`.
 
 `extra_args` <span class="subtitle">*optional, default*: `null`</span>
