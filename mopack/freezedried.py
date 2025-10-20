@@ -20,6 +20,19 @@ def auto_dehydrate(value, freezedryer=None):
     return freezedryer.dehydrate(value)
 
 
+def _maybe_upgrade_config(cls, config):
+    if hasattr(cls, '_version') and '_version' in config:
+        version = config.pop('_version')
+        if version < cls._version:
+            return cls.upgrade(config, version)
+        elif version > cls._version:
+            raise TypeError(
+                'saved version of {!r} exceeds expected version'
+                .format(cls.__name__)
+            )
+    return config
+
+
 class FreezeDried:
     _rehydrate_fields = {}
     _skip_fields = set()
@@ -73,16 +86,7 @@ class FreezeDried:
     def rehydrate(cls, config, **kwargs):
         assert cls != FreezeDried
 
-        if '_version' in config:
-            version = config.pop('_version')
-            if version < cls._version:
-                config = cls.upgrade(config, version)
-            elif version > cls._version:
-                raise TypeError(
-                    'saved version of {!r} exceeds expected version'
-                    .format(cls.__name__)
-                )
-
+        config = _maybe_upgrade_config(cls, config)
         result = cls.__new__(cls)
 
         for k, v in config.items():
@@ -112,6 +116,9 @@ def _generic_rehydrator(fn):
             return deduced_type.rehydrate(
                 config, _found=True, **kwargs
             )
+
+        # Next, make sure we've upgraded the config before rehydrating.
+        config = _maybe_upgrade_config(cls, config)
 
         # Now, call the wrapped function, and provide it a helper function to
         # call the parent's `rehydrate` method correctly.
