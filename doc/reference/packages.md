@@ -54,8 +54,7 @@ packages:
 `env` <span class="subtitle">*optional, default*: `{}`</span>
 : A dictionary of environment variables to use when running any commands for
   this builder. This partially overrides any environment variables set
-  [globally](file-structure.md#options) or for this
-  [package](package.md#source-distributions).
+  [globally](file-structure.md#options).
 
 `path` <span class="subtitle">*required*</span>
 : The path to the source directory of the dependency.
@@ -91,8 +90,7 @@ packages:
 `env` <span class="subtitle">*optional, default*: `{}`</span>
 : A dictionary of environment variables to use when running any commands for
   this builder. This partially overrides any environment variables set
-  [globally](file-structure.md#options) or for this
-  [package](package.md#source-distributions).
+  [globally](file-structure.md#options).
 
 `repository` <span class="subtitle">*required*</span>
 : The URL or path to the repository.
@@ -136,8 +134,7 @@ packages:
 `env` <span class="subtitle">*optional, default*: `{}`</span>
 : A dictionary of environment variables to use when running any commands for
   this builder. This partially overrides any environment variables set
-  [globally](file-structure.md#options) or for this
-  [package](package.md#source-distributions).
+  [globally](file-structure.md#options).
 
 `path` <span class="subtitle">*required*</span>
 `url`
