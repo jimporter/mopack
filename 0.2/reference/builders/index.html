@@ -160,10 +160,16 @@ a different build system.</p>
     # or...
     build:
       type: &lt;builder_type&gt;
+      env: &lt;env_vars&gt;
 </code></pre>
 <dl>
 <dt><code>type</code> <span class="subtitle"><em>required</em></span></dt>
 <dd>The type of builder; see below for possible values.</dd>
+<dt><code>env</code> <span class="subtitle"><em>optional, default</em>: <code>{}</code></span></dt>
+<dd>A dictionary of environment variables to use when running any commands for
+  this builder. This partially overrides any environment variables set
+  <a href="../file-structure/#options">globally</a> or for this
+  <a href="package.md#source-distributions">package</a>.</dd>
 </dl>
 <h2 id="bfg9000">bfg9000<a class="headerlink" href="#bfg9000" title="Permanent link">§</a></h2>
 <pre><code class="language-yaml">options:
@@ -181,6 +187,7 @@ a different build system.</p>
     # ...
     builder:
       type: bfg9000
+      env: &lt;env_vars&gt;
       directory: &lt;path&gt;
       build: &lt;boolean&gt;
       extra_args: &lt;shell_args&gt;

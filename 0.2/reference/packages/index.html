@@ -183,11 +183,16 @@ all the necessary details to actually use it in the parent project.</p>
 <pre><code class="language-yaml">packages:
   my_pkg:
     origin: directory
+    env: &lt;env_vars&gt;
     path: &lt;path&gt;
     build: &lt;build&gt;
     linkage: &lt;linkage&gt;
 </code></pre>
 <dl>
+<dt><code>env</code> <span class="subtitle"><em>optional, default</em>: <code>{}</code></span></dt>
+<dd>A dictionary of environment variables to use when running any commands for
+  this builder. This partially overrides any environment variables set
+  <a href="../file-structure/#options">globally</a>.</dd>
 <dt><code>path</code> <span class="subtitle"><em>required</em></span></dt>
 <dd>The path to the source directory of the dependency.</dd>
 <dt><code>build</code> <span class="subtitle"><em>required</em></span></dt>
@@ -196,15 +201,16 @@ all the necessary details to actually use it in the parent project.</p>
   required, it can be unset if the dependency defines the builder in its
   <a href="../file-structure/#exports"><code>export</code></a> section.</dd>
 <dt><code>linkage</code> <span class="subtitle"><em>optional, default</em>: <em>from builder</em></span></dt>
-<dd>The <a href="../linkage/">linkage</a> to use when using this package. Some builders require
-  this to be set, but others provide a default linkage specification; the
-  dependency can also define the linkage in its
+<dd>The <a href="../linkage/">linkage</a> to use when using this package. Some builders
+  require this to be set, but others provide a default linkage specification;
+  the dependency can also define the linkage in its
   <a href="../file-structure/#exports"><code>export</code></a> section.</dd>
 </dl>
 <h3 id="git">git<a class="headerlink" href="#git" title="Permanent link">§</a></h3>
 <pre><code class="language-yaml">packages:
   my_pkg:
     origin: git
+    env: &lt;env_vars&gt;
     repository: &lt;url | path&gt;
     tag: &lt;tag_name&gt;  # or...
     branch: &lt;branch_name&gt;  # or...
@@ -214,6 +220,10 @@ all the necessary details to actually use it in the parent project.</p>
     linkage: &lt;linkage&gt;
 </code></pre>
 <dl>
+<dt><code>env</code> <span class="subtitle"><em>optional, default</em>: <code>{}</code></span></dt>
+<dd>A dictionary of environment variables to use when running any commands for
+  this builder. This partially overrides any environment variables set
+  <a href="../file-structure/#options">globally</a>.</dd>
 <dt><code>repository</code> <span class="subtitle"><em>required</em></span></dt>
 <dd>The URL or path to the repository.</dd>
 <dt><code>tag</code> <span class="subtitle"><em>optional</em></span></dt>
@@ -237,6 +247,7 @@ all the necessary details to actually use it in the parent project.</p>
 <pre><code class="language-yaml">packages:
   my_pkg:
     origin: tarball
+    env: &lt;env_vars&gt;
     path: &lt;path&gt;  # or...
     url: &lt;url&gt;
     files: &lt;list[glob]&gt;
@@ -246,6 +257,10 @@ all the necessary details to actually use it in the parent project.</p>
     linkage: &lt;linkage&gt;
 </code></pre>
 <dl>
+<dt><code>env</code> <span class="subtitle"><em>optional, default</em>: <code>{}</code></span></dt>
+<dd>A dictionary of environment variables to use when running any commands for
+  this builder. This partially overrides any environment variables set
+  <a href="../file-structure/#options">globally</a>.</dd>
 <dt><code>path</code> <span class="subtitle"><em>required</em></span></dt>
 <dt><code>url</code></dt>
 <dd>The path or URL to the archive. Exactly one of these must be specified.</dd>
