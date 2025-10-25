@@ -140,6 +140,7 @@
                 <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
         <li class="main active"><a href="#builders">Builders</a></li>
+            <li><a href="#b2">b2</a></li>
             <li><a href="#bfg9000">bfg9000</a></li>
             <li><a href="#cmake">cmake</a></li>
             <li><a href="#ninja">ninja</a></li>
@@ -170,6 +171,25 @@ a different build system.</p>
   this builder. This partially overrides any environment variables set
   <a href="../file-structure/#options">globally</a> or for this
   <a href="package.md#source-distributions">package</a>.</dd>
+</dl>
+<h2 id="b2">b2<a class="headerlink" href="#b2" title="Permanent link">§</a></h2>
+<pre><code class="language-yaml">packages:
+  my_pkg:
+    # ...
+    builder:
+      type: b2
+      directory: &lt;path&gt;
+      extra_args: &lt;shell_args&gt;
+</code></pre>
+<dl>
+<dt><code>directory</code> <span class="subtitle"><em>optional, default</em>: <em>last directory</em></span></dt>
+<dd>The directory where the <code>Jamroot</code> file is located. By default, this is the
+  last directory specified by the package configuration, usually <code>$srcdir</code>. (If
+  a previous builder for this package defines a new directory, that will be used
+  by default instead.)</dd>
+<dt><code>extra_args</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>A list of extra arguments to pass to <code>b2</code>. If a string is supplied, it will
+  first be split according to POSIX shell rules.</dd>
 </dl>
 <h2 id="bfg9000">bfg9000<a class="headerlink" href="#bfg9000" title="Permanent link">§</a></h2>
 <pre><code class="language-yaml">options:

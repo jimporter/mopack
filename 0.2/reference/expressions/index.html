@@ -310,6 +310,10 @@ and associativity:</p>
 <p>mopack provides several variables that you can use within expressions in order
 to programmatically define how to resolve or use your dependencies.</p>
 <dl>
+<dt><code>symbols</code> <span class="subtitle"><em>availability</em>: everywhere</span></dt>
+<dd>A special dictionary variable whose key-value pairs are every defined
+  variable. You can use this to refer to variables which may not be defined in
+  certain contexts, such as <code>srcdir</code>.</dd>
 <dt><code>cfgdir</code> <span class="subtitle"><em>availability</em>: everywhere</span></dt>
 <dd>The directory containing the current mopack configuration file.</dd>
 <dt><code>srcdir</code> <span class="subtitle"><em>availability</em>: <a href="../packages/#source-distributions">source distributions</a></span></dt>
