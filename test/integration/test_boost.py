@@ -114,10 +114,12 @@ class TestBoostSource(IntegrationTest):
                             build_commands=[[
                                 'bootstrap.bat' if platform_name() == 'windows'
                                 else './bootstrap.sh',
-                                '--with-libraries=iostreams',
                             ]],
                         ),
-                        cfg_b2_builder(env={'B2': './b2'}),
+                        cfg_b2_builder(
+                            env={'B2': './b2'},
+                            extra_args=['--with-iostreams'],
+                        ),
                     ],
                     linkage=cfg_path_linkage(
                         auto_link=platform_name() == 'windows',

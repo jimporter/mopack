@@ -22,7 +22,7 @@ packages:
 : A dictionary of environment variables to use when running any commands for
   this builder. This partially overrides any environment variables set
   [globally](file-structure.md#options) or for this
-  [package](package.md#source-distributions).
+  [package](packages.md#source-distributions).
 
 ## b2
 

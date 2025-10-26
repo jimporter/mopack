@@ -8,9 +8,9 @@ packages:
         build_commands:
           - >-
             ${{ host_platform == "windows" ?
-                "bootstrap.bat" : "./bootstrap.sh"
-            }} --with-libraries=iostreams
+                "bootstrap.bat" : "./bootstrap.sh" }}
       - type: b2
         env:
           B2: ./b2
+        extra_args: ['--with-iostreams']
     linkage: path
