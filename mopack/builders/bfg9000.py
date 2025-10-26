@@ -10,7 +10,7 @@ from ..path import Path, pushd
 from ..shell import ShellArguments
 
 _known_install_types = ('prefix', 'exec-prefix', 'bindir', 'libdir',
-                        'includedir')
+                        'includedir', 'datadir', 'mandir')
 
 
 @GenericFreezeDried.fields(rehydrate={'extra_args': ShellArguments})
