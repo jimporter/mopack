@@ -189,6 +189,14 @@ class SDistPackage(Package):
         del self.pending_linkage
         return config
 
+    def _needs_clean(self, new_package):
+        # We need to clean this package if there are any differences. Unset
+        # optional fields aren't real differences though: they get filled in by
+        # the package itself.
+        return not self.equal(new_package, optional_fields={
+            'builders', 'linkage', 'submodules'
+        })
+
     def clean_post(self, metadata, new_package, quiet=False):
         if self == new_package:
             return False
@@ -291,7 +299,7 @@ class TarballPackage(SDistPackage):
             return BytesIO(f.read())
 
     def clean_pre(self, metadata, new_package, quiet=False):
-        if self.equal(new_package, skip_fields={'builder'}):
+        if not self._needs_clean(new_package):
             # Since both package objects have the same configuration, pass the
             # guessed srcdir on to the new package instance. That way, we don't
             # have to re-extract the tarball to get the guessed srcdir.
@@ -392,7 +400,7 @@ class GitPackage(SDistPackage):
                                              self.srcdir))
 
     def clean_pre(self, metadata, new_package, quiet=False):
-        if self.equal(new_package, skip_fields={'builder'}):
+        if not self._needs_clean(new_package):
             return False
 
         if not quiet:

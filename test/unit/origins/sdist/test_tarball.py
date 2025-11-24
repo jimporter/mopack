@@ -419,11 +419,10 @@ class TestTarball(SDistTestCase):
     def test_clean_pre(self):
         otherpath = os.path.join(test_data_dir, 'other_project.tar.gz')
 
-        oldpkg = self.make_package('foo', path=self.srcpath,
-                                   srcdir='bfg_project', build='bfg9000')
-        newpkg1 = self.make_package('foo', path=otherpath, build='bfg9000')
-        newpkg2 = self.make_package(AptPackage, 'foo')
-
+        oldpkg = self.make_package('foo', path=self.srcpath, build='bfg9000')
+        newpkg = self.make_package('foo', path=otherpath, build='bfg9000')
+        inferredpkg = self.make_package('foo', path=self.srcpath)
+        aptpkg = self.make_package(AptPackage, 'foo')
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
 
         # Tarball -> Tarball (same)
@@ -436,14 +435,22 @@ class TestTarball(SDistTestCase):
         # Tarball -> Tarball (different)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('shutil.rmtree') as mrmtree:
-            self.assertEqual(oldpkg.clean_pre(self.metadata, newpkg1), True)
+            self.assertEqual(oldpkg.clean_pre(self.metadata, newpkg), True)
             mlog.assert_called_once()
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
+
+        # Tarball -> Tarball (inferred build)
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
+             mock.patch('shutil.rmtree') as mrmtree:
+            self.assertEqual(oldpkg.clean_pre(self.metadata, inferredpkg),
+                             False)
+            mlog.assert_not_called()
+            mrmtree.assert_not_called()
 
         # Tarball -> Apt
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('shutil.rmtree') as mrmtree:
-            self.assertEqual(oldpkg.clean_pre(self.metadata, newpkg2), True)
+            self.assertEqual(oldpkg.clean_pre(self.metadata, aptpkg), True)
             mlog.assert_called_once()
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 

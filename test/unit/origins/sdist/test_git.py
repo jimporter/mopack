@@ -474,9 +474,9 @@ class TestGit(SDistTestCase):
 
         oldpkg = self.make_package('foo', repository=self.srcssh,
                                    build='bfg9000')
-        newpkg1 = self.make_package('foo', repository=otherssh,
-                                    build='bfg9000')
-        newpkg2 = self.make_package(AptPackage, 'foo')
+        newpkg = self.make_package('foo', repository=otherssh, build='bfg9000')
+        inferredpkg = self.make_package('foo', repository=self.srcssh)
+        aptpkg = self.make_package(AptPackage, 'foo')
 
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
 
@@ -490,14 +490,22 @@ class TestGit(SDistTestCase):
         # Git -> Git (different)
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('shutil.rmtree') as mrmtree:
-            self.assertEqual(oldpkg.clean_pre(self.metadata, newpkg1), True)
+            self.assertEqual(oldpkg.clean_pre(self.metadata, newpkg), True)
             mlog.assert_called_once()
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
+
+        # Git -> Git (inferred build)
+        with mock.patch('mopack.log.pkg_clean') as mlog, \
+             mock.patch('shutil.rmtree') as mrmtree:
+            self.assertEqual(oldpkg.clean_pre(self.metadata, inferredpkg),
+                             False)
+            mlog.assert_not_called()
+            mrmtree.assert_not_called()
 
         # Git -> Apt
         with mock.patch('mopack.log.pkg_clean') as mlog, \
              mock.patch('shutil.rmtree') as mrmtree:
-            self.assertEqual(oldpkg.clean_pre(self.metadata, newpkg2), True)
+            self.assertEqual(oldpkg.clean_pre(self.metadata, aptpkg), True)
             mlog.assert_called_once()
             mrmtree.assert_called_once_with(srcdir, ignore_errors=True)
 

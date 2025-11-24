@@ -427,13 +427,26 @@ class TestDirectory(SDistTestCase):
             mopen.assert_not_called()
 
     def test_clean_pre(self):
-        oldpkg = self.make_package('foo', path=self.srcpath, build='bfg9000')
-        newpkg = self.make_package(AptPackage, 'foo')
+        otherpath = os.path.join(test_data_dir, 'goodbye-bfg')
 
-        # System -> Apt
+        oldpkg = self.make_package('foo', path=self.srcpath, build='bfg9000')
+        newpkg = self.make_package('foo', path=otherpath, build='bfg9000')
+        inferredpkg = self.make_package('foo', path=self.srcpath)
+        aptpkg = self.make_package(AptPackage, 'foo')
+
+        # Directory -> Directory (same)
+        self.assertEqual(oldpkg.clean_pre(self.metadata, oldpkg), False)
+
+        # Directory -> Directory (different)
         self.assertEqual(oldpkg.clean_pre(self.metadata, newpkg), False)
 
-        # Apt -> nothing
+        # Directory -> Directory (inferred build)
+        self.assertEqual(oldpkg.clean_pre(self.metadata, inferredpkg), False)
+
+        # Directory -> Apt
+        self.assertEqual(oldpkg.clean_pre(self.metadata, aptpkg), False)
+
+        # Directory -> nothing
         self.assertEqual(oldpkg.clean_pre(self.metadata, None), False)
 
     def test_clean_post(self):

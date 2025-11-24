@@ -39,13 +39,13 @@ class FreezeDried:
     _include_fields = set()
     _skip_compare_fields = set()
 
-    def _skipped_field(self, field, compare=False, extra_skips=set()):
+    def _skipped_field(self, field, compare=False):
         # Don't save private members by default.
         if field.startswith('_') and field not in self._include_fields:
             return True
 
         skips = self._skip_compare_fields if compare else self._skip_fields
-        return field in skips or field in extra_skips
+        return field in skips
 
     @staticmethod
     def fields(*, rehydrate=None, include=None, skip=None, skip_compare=None):
@@ -96,12 +96,23 @@ class FreezeDried:
 
         return result
 
-    def equal(self, rhs, skip_fields=[]):
-        def fields(obj):
-            return {k: v for k, v in vars(obj).items() if
-                    not self._skipped_field(k, True, skip_fields)}
+    def equal(self, rhs, optional_fields=set()):
+        if type(self) is not type(rhs):
+            return False
 
-        return type(self) is type(rhs) and fields(self) == fields(rhs)
+        self_vars, rhs_vars = vars(self), vars(rhs)
+        for key in set(self_vars) | set(rhs_vars):
+            if self._skipped_field(key, True):
+                continue
+            elif key in self_vars and key in rhs_vars:
+                if self_vars[key] != rhs_vars[key]:
+                    return False
+            elif key in optional_fields:
+                continue
+            else:
+                return False
+
+        return True
 
     def __eq__(self, rhs):
         return self.equal(rhs)
