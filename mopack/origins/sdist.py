@@ -51,8 +51,6 @@ class SDistPackage(Package):
         if build is None:
             if submodules is not types.Unset:
                 T.submodules(submodules_type)
-            self.builders = None
-            self.linkage = None
             self.pending_linkage = linkage
         else:
             pkg_default = DefaultResolver(self, self._expr_symbols,
@@ -100,7 +98,7 @@ class SDistPackage(Package):
 
     @property
     def builder_types(self):
-        if self.builders is None:
+        if not hasattr(self, 'builders'):
             raise types.ConfigurationError(
                 'cannot get builder types until builders are finalized'
             )
@@ -154,7 +152,7 @@ class SDistPackage(Package):
         config = ChildConfig([srcdir], parent_config=parent_config,
                              parent_package=self)
 
-        if self.builders:
+        if hasattr(self, 'builders'):
             return config
 
         if not config or not config.export:

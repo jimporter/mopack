@@ -190,7 +190,7 @@ class TestGit(SDistTestCase):
     def test_infer_build(self):
         # Basic inference
         pkg = self.make_package('foo', repository=self.srcssh)
-        self.assertEqual(pkg.builders, None)
+        self.assertFalse(hasattr(pkg, 'builders'))
 
         with mock_open_log(), \
              mock.patch('os.path.exists', mock_exists), \
@@ -211,7 +211,7 @@ class TestGit(SDistTestCase):
         # Infer but override linkage and version
         pkg = self.make_package('foo', repository=self.srcssh,
                                 linkage={'type': 'system'})
-        self.assertEqual(pkg.builders, None)
+        self.assertFalse(hasattr(pkg, 'builders'))
 
         with mock_open_log(), \
              mock.patch('os.path.exists', mock_exists), \

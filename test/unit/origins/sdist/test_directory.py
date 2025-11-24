@@ -97,7 +97,7 @@ class TestDirectory(SDistTestCase):
 
         # Basic inference
         pkg = self.make_package('foo', path=self.srcpath)
-        self.assertEqual(pkg.builders, None)
+        self.assertFalse(hasattr(pkg, 'builders'))
 
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
@@ -115,7 +115,7 @@ class TestDirectory(SDistTestCase):
         # Infer but override linkage
         pkg = self.make_package('foo', path=self.srcpath,
                                 linkage={'type': 'system'})
-        self.assertEqual(pkg.builders, None)
+        self.assertFalse(hasattr(pkg, 'builders'))
 
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \
@@ -180,7 +180,7 @@ class TestDirectory(SDistTestCase):
 
         srcpath = os.path.join(test_data_dir, 'hello-multi-bfg')
         pkg = self.make_package('foo', path=srcpath)
-        self.assertEqual(pkg.builders, None)
+        self.assertFalse(hasattr(pkg, 'builders'))
 
         builder = self.make_builder(Bfg9000Builder, pkg)
         with mock.patch('os.path.isdir', mock_isdir), \
@@ -196,7 +196,7 @@ class TestDirectory(SDistTestCase):
         self.check_linkage(pkg, submodules=['french'])
 
         pkg = self.make_package('foo', path=srcpath, submodules=['sub'])
-        self.assertEqual(pkg.builders, None)
+        self.assertFalse(hasattr(pkg, 'builders'))
 
         with mock.patch('os.path.isdir', mock_isdir), \
              mock.patch('os.path.exists', mock_exists), \

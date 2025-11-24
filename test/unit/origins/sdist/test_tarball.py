@@ -178,7 +178,7 @@ class TestTarball(SDistTestCase):
     def test_infer_build(self):
         # Basic inference
         pkg = self.make_package('foo', path=self.srcpath)
-        self.assertEqual(pkg.builders, None)
+        self.assertFalse(hasattr(pkg, 'builders'))
 
         with mock.patch('os.path.exists', mock_exists), \
              mock.patch('tarfile.TarFile.extractall'), \
@@ -198,7 +198,7 @@ class TestTarball(SDistTestCase):
         # Infer but override linkage and version
         pkg = self.make_package('foo', path=self.srcpath,
                                 linkage={'type': 'system'})
-        self.assertEqual(pkg.builders, None)
+        self.assertFalse(hasattr(pkg, 'builders'))
 
         with mock.patch('os.path.exists', mock_exists), \
              mock.patch('tarfile.TarFile.extractall'), \
