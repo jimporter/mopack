@@ -165,16 +165,8 @@ jobs:
         with:
           files: ./coverage.xml
   build-cygwin:
-    name: >
-      build (windows-latest[cygwin], 3.8${{
-        matrix.conan-version != '1.*' &&
-        format(', conan-{0}', matrix.conan-version) || ''
-      }})
+    name: build (windows-latest[cygwin], 3.8)
     runs-on: windows-latest
-    strategy:
-      matrix:
-        conan-version: ['1.*', '2.*']
-      fail-fast: false
     env:
       CYGROOT: C:\cygwin
       CYGCACHE: C:\cygwin\var\cache\setup
@@ -198,20 +190,10 @@ jobs:
           echo "MOPACK_LIB_PATH=/usr/lib" >> .mopack_test_env
           robocopy . ${env:CYGROOT}\home\runneradmin\mopack /E
           if(${LastExitCode} -le 7) { ${LastExitCode} = 0 }
-      - name: Install Conan 1.x
-        if: startsWith(matrix.conan-version, '1.')
-        # FIXME: Don't install conan from Git once they release v1.61.
+      - name: Install Conan
         run: >
           C:\cygwin\bin\bash -lc
-          "pip3.8 install git+https://github.com/conan-io/conan.git@develop &&
-          conan profile new default --detect &&
-          conan profile update settings.os.subsystem=cygwin default &&
-          echo tools.cmake.cmaketoolchain:generator=Ninja >> ~/.conan/global.conf"
-      - name: Install Conan 2.x
-        if: startsWith(matrix.conan-version, '2.')
-        run: >
-          C:\cygwin\bin\bash -lc
-          "pip3.8 install 'conan==${{ matrix.conan-version }}' &&
+          "pip3.8 install conan &&
           conan profile detect &&
           sed -i 's/CYGWIN_NT.*/Windows/' ~/.conan2/profiles/default &&
           echo tools.microsoft.bash:subsystem=cygwin >> ~/.conan2/global.conf &&
