@@ -30,7 +30,7 @@ class SDistPackage(Package):
     # TODO: Remove `usage` after v0.2 is released.
     def __init__(self, name, *, env=None, build=None, linkage=None,
                  usage=types.Unset, submodules=types.Unset,
-                 inherit_defaults=True, _options, **kwargs):
+                 inherit_defaults=False, _options, **kwargs):
         if linkage is None and usage is not types.Unset:
             warnings.warn(types.FieldKeyWarning(
                 '`usage` is deprecated; use `linkage` instead', 'usage'

@@ -10,6 +10,8 @@
 - New expression variable `symbols`, a dictionary of all defined symbols
 
 ### Breaking changes
+- Source distribution configurations no longer inherit defaults automatically;
+  set `inherit_defaults` to `true` if you want this
 - `usage`/`usages` are now `linkage`/`linkages`
 - `custom` builders that use the `build/` output directory should set
   `outdir: build`
