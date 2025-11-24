@@ -159,6 +159,8 @@
 </ul>
 <h3 id="breaking-changes">Breaking changes<a class="headerlink" href="#breaking-changes" title="Permanent link">§</a></h3>
 <ul>
+<li>Source distribution configurations no longer inherit defaults automatically;
+  set <code>inherit_defaults</code> to <code>true</code> if you want this</li>
 <li><code>usage</code>/<code>usages</code> are now <code>linkage</code>/<code>linkages</code></li>
 <li><code>custom</code> builders that use the <code>build/</code> output directory should set
   <code>outdir: build</code></li>
