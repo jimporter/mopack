@@ -31,7 +31,7 @@ class _SubmoduleMapping(FreezeDried):
         symbols = symbols.augment(symbols=submod.expr_symbols)
 
         result = type(self).__new__(type(self))
-        T = types.TypeCheck(self.__dict__, symbols, dest=result)
+        T = types.TypeCheck(vars(self), symbols, dest=result)
         T.pcname(P(types.maybe(types.string)))
         return result
 

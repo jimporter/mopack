@@ -99,7 +99,7 @@ class _PathSubmoduleMapping(FreezeDried):
         symbols = symbols.augment(symbols=submod.expr_symbols)
 
         result = type(self).__new__(type(self))
-        T = types.TypeCheck(self.__dict__, symbols, dest=result)
+        T = types.TypeCheck(vars(self), symbols, dest=result)
         for field, check in self._fields(symbols).items():
             T(field, P(check))
         return result
