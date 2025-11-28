@@ -242,7 +242,10 @@ pkg_config_path: &lt;list[path]&gt;
   generally be a single representative header file to detect that the dependency
   could actually be found.</dd>
 <dt><code>libraries</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
-<dd>A list of libary files to link to when using this dependency.</dd>
+<dd>A list of library files to link to when using this dependency. Each element
+  can be a string, or an object of the form: <code>{type: &lt;type&gt;, name: &lt;string&gt;}</code>,
+  where <code>&lt;type&gt;</code> is either <code>library</code> for ordinary libraries, or <code>framework</code> for
+  macOS frameworks.</dd>
 <dt><code>compile_flags</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dd>A list of extra flags to pass to the compiler when compiling with this
   dependency.</dd>
