@@ -8,7 +8,8 @@ from ..freezedried import GenericFreezeDried
 from ..iterutils import ismapping, listify
 from ..linkages import Linkage, make_linkage
 from ..package_defaults import DefaultResolver
-from ..types import FieldKeyError, FieldValueError, try_load_config
+from ..types import (FieldKeyError, FieldValueError, try_load_config,
+                     wrap_field_error)
 
 
 def _get_origin_type(origin, field='origin'):
@@ -190,8 +191,6 @@ class PackageOptions(GenericFreezeDried, BaseOptions):
 
 
 def make_package(name, config, **kwargs):
-    if config is None:
-        raise TypeError('linkage not specified')
     # config_file should always be specified in kwargs.
     if 'config_file' in config:
         raise FieldKeyError('config_file is reserved', 'config_file')
@@ -207,10 +206,11 @@ def make_package(name, config, **kwargs):
 
 def try_make_package(name, config, **kwargs):
     context = 'while constructing package {!r}'.format(name)
-    origin = config['origin']
-
-    with try_load_config(config, context, origin):
-        return make_package(name, config, **kwargs)
+    with try_load_config(config, context):
+        if 'origin' not in config:
+            raise FieldKeyError("missing required field 'origin'", None)
+        with wrap_field_error(None, config['origin']):
+            return make_package(name, config, **kwargs)
 
 
 def make_package_options(origin):

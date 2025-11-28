@@ -84,7 +84,7 @@ def kwarg_error_to_field_error(e, kind):
             msg = ('{} got an unexpected keyword argument {!r}'
                    .format(kind, m.group(1)))
             return FieldKeyError(msg, m.group(1))
-    return None
+    return e
 
 
 @contextmanager
@@ -94,9 +94,8 @@ def wrap_field_error(field, kind=None):
         _field_context.extend(field)
         yield
     except TypeError as e:
-        wrapped = kwarg_error_to_field_error(e, kind) if kind else None
-        if wrapped:
-            raise wrapped
+        if kind:
+            raise kwarg_error_to_field_error(e, kind)
         raise
     finally:
         del _field_context[-len(field):]
@@ -136,19 +135,20 @@ Unset = _UnsetType()
 
 
 @contextmanager
-def try_load_config(config, context, kind):
+def try_load_config(config, context, kind=None):
     def to_yaml_error(e, error_type=MarkedYAMLOffsetError):
         msg = str(e)
         mark = config.mark
         offset = 0
         if isinstance(e, FieldError):
-            x = config
-            for f in e.field[:-1]:
-                x = x[f]
-            marks = (x.value_marks if isinstance(e, FieldValueError)
-                     else x.marks)
-            mark = marks[e.field[-1]]
             offset = e.offset
+            x = config
+            if e.field:
+                for f in e.field[:-1]:
+                    x = x[f]
+                marks = (x.value_marks if isinstance(e, FieldValueError)
+                         else x.marks)
+                mark = marks[e.field[-1]]
         return error_type(context, config.mark, msg, mark, offset=offset)
 
     try:
@@ -166,7 +166,7 @@ def try_load_config(config, context, kind):
         if not isinstance(config, MarkedDict):
             raise
 
-        e = kwarg_error_to_field_error(e, kind) or e
+        e = kwarg_error_to_field_error(e, kind)
         raise to_yaml_error(e)
     finally:
         warnings.showwarning = old_showwarning
