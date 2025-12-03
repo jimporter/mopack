@@ -35,9 +35,8 @@ def assert_logging(expected):
                            return_value=True), \
          mock.patch.object(logging.Logger, 'handle') as m:
         yield
-        # `i[-2]` gets the positional arguments. This is just for compatibility
-        # with Python 3.7 and older. (In 3.8+, we'd use `i.args`).
-        logs = [(i[-2][0].levelname, strip_ansi(i[-2][0].getMessage()))
+
+        logs = [(i.args[0].levelname, strip_ansi(i.args[0].getMessage()))
                 for i in m.mock_calls]
         if logs != expected:
             raise AssertionError('Expected logs:\n{}\nReceived:\n{}'.format(
