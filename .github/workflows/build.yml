@@ -20,20 +20,22 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-14]
         compiler: [cc, msvc]
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
         conan-version: ['2.*']
 
         include:
           # Old Python builds
           - {os: ubuntu-24.04, compiler: cc, python-version: '3.8',
-             conan-version: '1.*'}
+             conan-version: '2.*'}
+          - {os: ubuntu-24.04, compiler: cc, python-version: '3.9',
+             conan-version: '2.*'}
 
           # Conan 1.x builds
-          - {os: ubuntu-latest, compiler: cc, python-version: '3.13',
+          - {os: ubuntu-latest, compiler: cc, python-version: '3.14',
              conan-version: '1.*', extra-tests: [apt, mingw-cross]}
-          - {os: windows-latest, compiler: cc, python-version: '3.13',
+          - {os: windows-latest, compiler: cc, python-version: '3.14',
              conan-version: '1.*', skipped-tests: [boost, qt]}
-          - {os: windows-latest, compiler: msvc, python-version: '3.13',
+          - {os: windows-latest, compiler: msvc, python-version: '3.14',
              conan-version: '1.*', msvc-version: '14.4',
              win-sdk: '10.0.26100.0', boost-version: '1.80.0',
              qt-version: '5.15.2'}
@@ -222,10 +224,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.13
+      - name: Set up Python 3.14
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: '3.14'
       - name: Install dependencies
         run: |
           pip install '.[test]'
