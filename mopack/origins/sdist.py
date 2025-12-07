@@ -211,7 +211,7 @@ class SDistPackage(Package):
         log.pkg_resolve(self.name)
         for i in self.builders:
             i.build(metadata, self)
-        self.resolved = True
+        super().resolve(metadata)
 
     def deploy(self, metadata):
         if self.should_deploy:

@@ -35,10 +35,7 @@ class SystemPackage(BinaryPackage):
 
     def resolve(self, metadata):
         log.pkg_resolve(self.name, 'from {}'.format(self.origin))
-        self.resolved = True
-
-    def deploy(self, metadata):
-        pass
+        super().resolve(metadata)
 
 
 def fallback_system_package(name, options):

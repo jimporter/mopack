@@ -5,6 +5,7 @@ from . import log
 from .config import PlaceholderPackage
 from .exceptions import ConfigurationError
 from .metadata import Metadata
+from .origins import BatchPackage
 
 mopack_dirname = 'mopack'
 
@@ -100,7 +101,7 @@ def resolve(config, pkgdir):
 
     packages, batch_packages = [], {}
     for pkg in metadata.packages.values():
-        if hasattr(pkg, 'resolve_all'):
+        if isinstance(pkg, BatchPackage):
             batch_packages.setdefault(type(pkg), []).append(pkg)
         else:
             packages.append(pkg)

@@ -3,7 +3,7 @@ import subprocess
 import warnings
 from itertools import chain
 
-from . import BinaryPackage, PackageOptions
+from . import BatchPackage, BinaryPackage, PackageOptions
 from .. import log, types
 from ..environment import get_cmd
 from ..freezedried import GenericFreezeDried
@@ -12,7 +12,7 @@ from ..path import pushd
 from ..shell import ShellArguments
 
 
-class ConanPackage(BinaryPackage):
+class ConanPackage(BinaryPackage, BatchPackage):
     origin = 'conan'
     _version = 1
 
@@ -153,10 +153,9 @@ class ConanPackage(BinaryPackage):
                 env=env
             )
 
-        for i in packages:
-            i.resolved = True
+        super(ConanPackage, cls).resolve_all(metadata, packages)
 
-    @staticmethod
-    def deploy_all(metadata, packages):
+    @classmethod
+    def deploy_all(cls, metadata, packages):
         if any(i.should_deploy for i in packages):
             warnings.warn('deploying not yet supported for conan packages')

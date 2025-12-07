@@ -1,13 +1,13 @@
 import subprocess
 from itertools import chain
 
-from . import BinaryPackage
+from . import BatchPackage, BinaryPackage
 from .. import log, types
 from ..environment import get_cmd, subprocess_run
 from ..iterutils import uniques
 
 
-class AptPackage(BinaryPackage):
+class AptPackage(BinaryPackage, BatchPackage):
     origin = 'apt'
     _version = 1
 
@@ -58,9 +58,4 @@ class AptPackage(BinaryPackage):
             logfile.check_call(apt + ['update'], env=env)
             logfile.check_call(apt + ['install', '-y'] + remotes, env=env)
 
-        for i in packages:
-            i.resolved = True
-
-    @staticmethod
-    def deploy_all(metadata, packages):
-        pass
+        super().resolve_all(metadata, packages)

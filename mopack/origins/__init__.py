@@ -144,6 +144,12 @@ class Package(OptionsHolder):
     def fetch(self, metadata, parent_config):
         pass  # pragma: no cover
 
+    def resolve(self, metadata):
+        self.resolved = True
+
+    def deploy(self, metadata):
+        pass
+
     def get_linkage(self, metadata, submodules):
         return self.linkage.get_linkage(
             metadata, self, self._check_submodules(submodules)
@@ -151,6 +157,23 @@ class Package(OptionsHolder):
 
     def __repr__(self):
         return '<{}({!r})>'.format(type(self).__name__, self.name)
+
+
+class BatchPackage(Package):
+    def resolve(self, metadata):
+        raise NotImplementedError()
+
+    def deploy(self, metadata):
+        raise NotImplementedError()
+
+    @classmethod
+    def resolve_all(cls, metadata, packages):
+        for i in packages:
+            i.resolved = True
+
+    @staticmethod
+    def deploy_all(metadata, packages):
+        pass
 
 
 class BinaryPackage(Package):
