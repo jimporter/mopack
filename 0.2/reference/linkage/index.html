@@ -160,10 +160,11 @@ point to an existing one), which can then be used when compiling or linking
     linkage:
       type: &lt;linkage_type&gt;
       inherit_defaults: &lt;boolean&gt;
-      submodule_map: &lt;submodule_map&gt;  # or...
-      submodule_map:
-        my_submodule: &lt;submodule_map&gt;
-        '*': &lt;submodule_map&gt;
+      submodule_linkage: &lt;submodule_linkage&gt;  # or...
+      submodule_linkage:
+        - if: &lt;condition&gt;
+          &lt;submodule_linkage&gt;
+        # ...
 </code></pre>
 <dl>
 <dt><code>type</code> <span class="subtitle"><em>required</em></span></dt>
@@ -172,10 +173,11 @@ point to an existing one), which can then be used when compiling or linking
 <dd>If true, inherit any unspecified values for this linkage from the defaults for
   the package. Defaults to false; however, any packages requested via <code>mopack
   linkage</code> but not defined will use the defaults.</dd>
-<dt><code>submodule_map</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
-<dd>A mapping from submodule names to submodule-specific configuration; a key of
-  <code>'*'</code> refers to all submodules. See below for possible values for each linkage
-  type.</dd>
+<dt><code>submodule_linkage</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>One or more configurations for submodule-specific linkage. Each element in the
+  list may have an <code>if</code> field holding a boolean expression; mopack will use the
+  first submodule linkage where the expression is true. See below for possible
+  values for each linkage type.</dd>
 </dl>
 <h3 id="linkage-results">Linkage results<a class="headerlink" href="#linkage-results" title="Permanent link">§</a></h3>
 <p>When calling <code>mopack linkage &lt;dependency&gt;</code>, mopack will provide information
@@ -257,9 +259,8 @@ pkg_config_path: &lt;list[path]&gt;
     # ...
     linkage:
       # ...
-      submodule_map:
-        my_submodule:
-          pcname: &lt;string&gt;  # system only
+      submodule_linkage:
+        - pcname: &lt;string&gt;  # system only
           dependencies: &lt;list[dependency]&gt;
           include_path: &lt;list[path]&gt;
           library_path: &lt;list[path]&gt;
@@ -320,9 +321,8 @@ auto_link: &lt;boolean&gt;
     # ...
     linkage:
       # ...
-      submodule_map:
-        my_submodule:
-          pcname: &lt;string&gt;
+      submodule_linkage:
+        - pcname: &lt;string&gt;
 </code></pre>
 <dl>
 <dt><code>pcname</code> <span class="subtitle"><em>optional, default</em>: <code>{my_pkg}_{my_submodule}</code></span></dt>

@@ -350,10 +350,11 @@ all the necessary details to actually use it in the parent project.</p>
     libraries: &lt;list[library]&gt;
     compile_flags: &lt;shell_args&gt;
     link_flags: &lt;shell_args&gt;
-    submodule_map: &lt;submodule_map&gt;  # or...
-    submodule_map:
-      my_submodule: &lt;submodule_map&gt;
-      '*': &lt;submodule_map&gt;
+    submodule_linkage: &lt;submodule_linkage&gt;  # or...
+    submodule_linkage:
+      - if: &lt;condition&gt;
+        &lt;submodule_linkage&gt;
+      # ...
 </code></pre>
 <dl>
 <dt><code>auto_link</code> <span class="subtitle"><em>optional, default</em>: <code>false</code></span></dt>
