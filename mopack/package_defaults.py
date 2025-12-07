@@ -16,7 +16,7 @@ class DefaultConfig:
             # Store both a raw and parsed copy of the configuration data.
             # Parsing first helps catch syntax errors and should be faster in
             # some cases, but we still want the raw data for some cases, like
-            # `submodule_map`.
+            # `submodule_linkage`.
             self._raw_data = cfg
 
             cfg = deepcopy(cfg)

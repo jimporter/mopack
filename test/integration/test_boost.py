@@ -58,7 +58,7 @@ class TestBoost(IntegrationTest):
                         include_path=mock.ANY,
                         library_path=mock.ANY,
                         headers=['boost/version.hpp'],
-                        submodule_map=mock.ANY,
+                        submodule_linkage=mock.ANY,
                     )
                 ),
             ],
@@ -135,7 +135,7 @@ class TestBoostSource(IntegrationTest):
                         include_path=mock.ANY,
                         library_path=mock.ANY,
                         headers=['boost/version.hpp'],
-                        submodule_map=mock.ANY,
+                        submodule_linkage=mock.ANY,
                     )
                 ),
             ],

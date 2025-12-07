@@ -12,6 +12,13 @@ from .shell import ShellArguments, split_posix
 from .yaml_tools import (MarkedDict, MarkedYAMLOffsetError,
                          MarkedYAMLOffsetWarning)
 
+_python_keywords = (
+    'and', 'as', 'assert', 'async', 'await', 'break', 'case', 'class',
+    'continue', 'def', 'del', 'elif', 'else', 'except', 'False', 'finally',
+    'for', 'from', 'global', 'if', 'import', 'in', 'is', 'lambda', 'match',
+    'None', 'nonlocal', 'not', 'or', 'pass', 'raise', 'return', 'True', 'try',
+    'while', 'with', 'yield'
+)
 
 _unexpected_kwarg_ex = re.compile(
     r"got an unexpected keyword argument '(\w+)'$"
@@ -470,3 +477,13 @@ def placeholder_fill(other, placeholder, fill_value):
         return other(field, value)
 
     return check
+
+
+def mangle_keywords(args):
+    # Prefix Python keyword in a kwargs dict with '_' so they're easier to use.
+    def mangle_keyword(arg):
+        if arg in _python_keywords:
+            return '_' + arg
+        return arg
+
+    return {mangle_keyword(k): v for k, v in args.items()}

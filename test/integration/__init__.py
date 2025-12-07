@@ -239,35 +239,40 @@ def cfg_custom_builder(*, env={}, directory=Path('', 'srcdir'), outdir='build',
     }
 
 
-def _cfg_pkg_config_submodule_map(*, pcname=None):
+def _cfg_pkg_config_submodule_linkage(*, _if=True, pcname=None):
     return {
+        '_if': _if,
         'pcname': pcname,
     }
 
 
 def cfg_pkg_config_linkage(*, pcname, pkg_config_path=None,
-                           submodule_map=None):
+                           submodule_linkage=None):
     if pkg_config_path is None:
         pkg_config_path = [{'base': 'builddir', 'path': 'pkgconfig'}]
     result = {
         'type': 'pkg_config',
-        '_version': 1,
+        '_version': 2,
         'pcname': pcname,
         'pkg_config_path': pkg_config_path,
     }
-    if submodule_map:
-        if isinstance(submodule_map, dict):
-            result['submodule_map'] = {k: _cfg_pkg_config_submodule_map(**v)
-                                       for k, v in submodule_map.items()}
+    if submodule_linkage:
+        if isinstance(submodule_linkage, list):
+            result['submodule_linkage'] = [
+                _cfg_pkg_config_submodule_linkage(**i)
+                for i in submodule_linkage
+            ]
         else:
-            result['submodule_map'] = submodule_map
+            result['submodule_linkage'] = submodule_linkage
     return result
 
 
-def _cfg_path_submodule_map(*, dependencies=None, include_path=None,
-                            library_path=None, headers=None, libraries=None,
-                            compile_flags=None, link_flags=None):
+def _cfg_path_submodule_linkage(*, _if=True, dependencies=None,
+                                include_path=None, library_path=None,
+                                headers=None, libraries=None,
+                                compile_flags=None, link_flags=None):
     return {
+        '_if': _if,
         'dependencies': dependencies,
         'include_path': include_path,
         'library_path': library_path,
@@ -281,10 +286,10 @@ def _cfg_path_submodule_map(*, dependencies=None, include_path=None,
 def cfg_path_linkage(*, auto_link=False, explicit_version=None,
                      dependencies=[], include_path=[], library_path=[],
                      headers=[], libraries=[], compile_flags=[], link_flags=[],
-                     submodule_map=None):
+                     submodule_linkage=None):
     result = {
         'type': 'path',
-        '_version': 1,
+        '_version': 2,
         'auto_link': auto_link,
         'dependencies': dependencies,
         'explicit_version': explicit_version,
@@ -295,12 +300,12 @@ def cfg_path_linkage(*, auto_link=False, explicit_version=None,
         'compile_flags': compile_flags,
         'link_flags': link_flags,
     }
-    if submodule_map:
-        if isinstance(submodule_map, dict):
-            result['submodule_map'] = {k: _cfg_path_submodule_map(**v)
-                                       for k, v in submodule_map.items()}
+    if submodule_linkage:
+        if isinstance(submodule_linkage, list):
+            result['submodule_linkage'] = [_cfg_path_submodule_linkage(**i)
+                                           for i in submodule_linkage]
         else:
-            result['submodule_map'] = submodule_map
+            result['submodule_linkage'] = submodule_linkage
     return result
 
 

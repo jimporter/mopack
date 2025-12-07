@@ -5,16 +5,18 @@ from . import Linkage
 from . import submodules as submod
 from .. import types
 from ..environment import get_pkg_config, subprocess_run
-from ..freezedried import (DictFreezeDryer, FreezeDried, GenericFreezeDried,
-                           ListFreezeDryer)
+from ..freezedried import FreezeDried, GenericFreezeDried, ListFreezeDryer
 from ..iterutils import listify
 from ..package_defaults import DefaultResolver
 from ..path import Path
 from ..shell import join_paths
+from ..types import Unset
 
 
-class _SubmoduleMapping(FreezeDried):
-    def __init__(self, symbols, *, pcname=None):
+@GenericFreezeDried.fields(include={'_if'})
+class _SubmoduleLinkage(FreezeDried):
+    def __init__(self, symbols, *, _if=True, pcname=None):
+        self._if = _if
         # Since we need to delay evaluating symbols until we know what the
         # selected submodule is, just store these values unevaluated. We'll
         # evaluate them later during `mopack linkage` via the fill() function.
@@ -22,6 +24,9 @@ class _SubmoduleMapping(FreezeDried):
 
         # Just check that we can fill submodule values correctly.
         self.fill(symbols, 'SUBMODULE')
+
+    def evaluate_if(self, symbols, submodule_name):
+        return submod.evaluate_if(symbols, self._if, submodule_name)
 
     def fill(self, symbols, submodule_name):
         def P(other):
@@ -36,37 +41,47 @@ class _SubmoduleMapping(FreezeDried):
         return result
 
 
-def _submodule_map(symbols):
+def _submodule_linkage(symbols):
     def check_item(field, value):
         with types.wrap_field_error(field):
-            return _SubmoduleMapping(symbols, **value)
+            return _SubmoduleLinkage(symbols, **types.mangle_keywords(value))
 
     def check(field, value):
         try:
-            value = {'*': {'pcname': types.placeholder_string(field, value)}}
+            value = {'pcname': types.placeholder_string(field, value)}
         except types.FieldError:
             pass
 
-        return types.dict_of(types.string, check_item)(field, value)
+        return types.list_of(check_item, listify=True)(field, value)
 
     return check
 
 
 @GenericFreezeDried.fields(rehydrate={
     'pkg_config_path': ListFreezeDryer(Path),
-    'submodule_map': DictFreezeDryer(value_type=_SubmoduleMapping),
+    'submodule_linkage': ListFreezeDryer(_SubmoduleLinkage),
 })
 class PkgConfigLinkage(Linkage):
     type = 'pkg_config'
-    _version = 1
+    _version = 2
 
     @staticmethod
     def upgrade(config, version):
+        # v2 replaces `submodule_map` with `submodule_linkage`.
+        if version < 2:  # pragma: no branch
+            config['submodule_linkage'] = submod.migrate_saved_submodule_map(
+                config.pop('submodule_map', None)
+            )
+
         return config
 
-    def __init__(self, pkg, *, pcname=types.Unset, pkg_config_path='pkgconfig',
-                 submodule_map=types.Unset, inherit_defaults=False, **kwargs):
+    # TODO: Remove `submodule_map` after v0.2 is released.
+    def __init__(self, pkg, *, pcname=Unset, pkg_config_path='pkgconfig',
+                 submodule_linkage=Unset, submodule_map=Unset,
+                 inherit_defaults=False, **kwargs):
         super().__init__(pkg, inherit_defaults=inherit_defaults, **kwargs)
+        if submodule_linkage is Unset and submodule_map is not Unset:
+            submodule_linkage = submod.migrate_submodule_map(submodule_map)
 
         symbols = self._expr_symbols
         pkg_default = DefaultResolver(self, symbols, inherit_defaults,
@@ -86,8 +101,8 @@ class PkgConfigLinkage(Linkage):
                                         listify=True))
 
         if pkg.submodules:
-            T.submodule_map(pkg_default(
-                types.maybe(_submodule_map(symbols)),
+            T.submodule_linkage(pkg_default(
+                types.maybe(_submodule_linkage(symbols)),
                 default=pkg.name + '_$submodule',
                 extra_symbols=submod.expr_symbols,
                 evaluate=False
@@ -105,25 +120,25 @@ class PkgConfigLinkage(Linkage):
             stdout=subprocess.PIPE, universal_newlines=True, env=env
         ).stdout.strip()
 
-    def _get_submodule_mapping(self, symbols, submodule):
-        try:
-            mapping = self.submodule_map[submodule]
-        except KeyError:
-            mapping = self.submodule_map['*']
-        return mapping.fill(symbols, submodule)
+    def _get_submodule_linkage(self, symbols, submodule):
+        for i in self.submodule_linkage:
+            if i.evaluate_if(symbols, submodule):
+                return i.fill(symbols, submodule)
+        raise ValueError('unable to get submodule linkage for {}'
+                         .format(submodule))
 
     def get_linkage(self, metadata, pkg, submodules):
         path_values = pkg.path_values(metadata)
         pkgconfpath = [i.string(path_values) for i in self.pkg_config_path]
 
-        if submodules and self.submodule_map:
-            mappings = [self._get_submodule_mapping(self._expr_symbols, i)
+        if submodules and self.submodule_linkage:
+            sublinks = [self._get_submodule_linkage(self._expr_symbols, i)
                         for i in submodules]
         else:
-            mappings = []
+            sublinks = []
 
         pcnames = listify(self.pcname)
-        for i in mappings:
+        for i in sublinks:
             if i.pcname:
                 pcnames.append(i.pcname)
 

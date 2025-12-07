@@ -40,7 +40,7 @@ class TestQt(IntegrationTest):
                         include_path=mock.ANY,
                         library_path=mock.ANY,
                         headers=[],
-                        submodule_map=mock.ANY,
+                        submodule_linkage=mock.ANY,
                     )
                 ),
             ],

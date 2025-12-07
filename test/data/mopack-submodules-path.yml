@@ -8,7 +8,6 @@ packages:
       type: path
       include_path: include
       library_path: .
-      submodule_map:
-        '*':
-          headers: hello_$submodule.hpp
-          libraries: hello_$submodule
+      submodule_linkage:
+        headers: hello_$submodule.hpp
+        libraries: hello_$submodule

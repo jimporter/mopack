@@ -35,9 +35,7 @@ class TestSubmodules(IntegrationTest):
                     builders=[cfg_bfg9000_builder()],
                     linkage=cfg_pkg_config_linkage(
                         pcname=None,
-                        submodule_map={
-                            '*': {'pcname': 'hello_$submodule'},
-                        }
+                        submodule_linkage=[{'pcname': 'hello_$submodule'}]
                     )
                 ),
             ],
@@ -87,10 +85,10 @@ class TestSubmodulesPath(IntegrationTest):
                     linkage=cfg_path_linkage(
                         include_path=[{'base': 'srcdir', 'path': 'include'}],
                         library_path=[{'base': 'builddir', 'path': ''}],
-                        submodule_map={'*': {
+                        submodule_linkage=[{
                             'headers': 'hello_$submodule.hpp',
                             'libraries': 'hello_$submodule',
-                        }}
+                        }]
                     )
                 ),
             ],

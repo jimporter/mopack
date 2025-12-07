@@ -244,10 +244,11 @@ packages:
     libraries: <list[library]>
     compile_flags: <shell_args>
     link_flags: <shell_args>
-    submodule_map: <submodule_map>  # or...
-    submodule_map:
-      my_submodule: <submodule_map>
-      '*': <submodule_map>
+    submodule_linkage: <submodule_linkage>  # or...
+    submodule_linkage:
+      - if: <condition>
+        <submodule_linkage>
+      # ...
 ```
 
 `auto_link` <span class="subtitle">*optional, default*: `false`</span>

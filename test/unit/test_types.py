@@ -830,3 +830,11 @@ class TestTryLoadConfig(TestCase):
                                     '  in ".*", line 2, column 8$'):
             with try_load_config(cfg, 'context', 'kind'):
                 dict_shape({'bar': boolean}, 'a bar dict')('foo', cfg['foo'])
+
+
+class TestMangleKeywords(TestCase):
+    def test_keywords(self):
+        self.assertEqual(mangle_keywords({'if': 'if'}), {'_if': 'if'})
+
+    def test_normal(self):
+        self.assertEqual(mangle_keywords({'hi': 'hi'}), {'hi': 'hi'})

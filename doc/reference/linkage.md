@@ -14,10 +14,11 @@ packages:
     linkage:
       type: <linkage_type>
       inherit_defaults: <boolean>
-      submodule_map: <submodule_map>  # or...
-      submodule_map:
-        my_submodule: <submodule_map>
-        '*': <submodule_map>
+      submodule_linkage: <submodule_linkage>  # or...
+      submodule_linkage:
+        - if: <condition>
+          <submodule_linkage>
+        # ...
 ```
 
 `type` <span class="subtitle">*required*</span>
@@ -28,10 +29,11 @@ packages:
   the package. Defaults to false; however, any packages requested via `mopack
   linkage` but not defined will use the defaults.
 
-`submodule_map` <span class="subtitle">*optional, default*: `null`</span>
-: A mapping from submodule names to submodule-specific configuration; a key of
-  `'*'` refers to all submodules. See below for possible values for each linkage
-  type.
+`submodule_linkage` <span class="subtitle">*optional, default*: `null`</span>
+: One or more configurations for submodule-specific linkage. Each element in the
+  list may have an `if` field holding a boolean expression; mopack will use the
+  first submodule linkage where the expression is true. See below for possible
+  values for each linkage type.
 
 ### Linkage results
 
@@ -131,9 +133,8 @@ packages:
     # ...
     linkage:
       # ...
-      submodule_map:
-        my_submodule:
-          pcname: <string>  # system only
+      submodule_linkage:
+        - pcname: <string>  # system only
           dependencies: <list[dependency]>
           include_path: <list[path]>
           library_path: <list[path]>
@@ -203,9 +204,8 @@ packages:
     # ...
     linkage:
       # ...
-      submodule_map:
-        my_submodule:
-          pcname: <string>
+      submodule_linkage:
+        - pcname: <string>
 ```
 
 `pcname` <span class="subtitle">*optional, default*: `{my_pkg}_{my_submodule}`</span>

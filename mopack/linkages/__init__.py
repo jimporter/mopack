@@ -41,7 +41,7 @@ class Linkage(OptionsHolder):
         raise NotImplementedError('Linkage.get_linkage not implemented')
 
     def __repr__(self):
-        return '<{}, {}>'.format(type(self).__name__, self.__dict__)
+        return '<{}({!r})>'.format(type(self).__name__, self.name)
 
 
 def make_linkage(pkg, config, *, field='linkage', **kwargs):

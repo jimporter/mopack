@@ -17,6 +17,7 @@ in progress
 - `usage`/`usages` are now `linkage`/`linkages`
 - `custom` builders that use the `build/` output directory should set
   `outdir: build`
+- Linkages now use `submodule_linkage` instead of `submodule_map`
 
 ---
 

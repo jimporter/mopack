@@ -493,20 +493,20 @@ class TestPath(LinkageTest):
             'libs': ['-L' + abspath('/mock/lib'), '-lbar', '-lfoo_sub'],
         })
 
-    def test_submodule_map(self):
+    def test_submodule_linkage(self):
         submodules_required = {'names': '*', 'required': True}
 
         pkg = MockPackage('foo', submodules=submodules_required,
                           _options=self.make_options())
-        linkage = self.make_linkage(pkg, submodule_map='$submodule')
+        linkage = self.make_linkage(pkg, submodule_linkage='$submodule')
         self.check_linkage(linkage, libraries=[])
         self.check_get_linkage(linkage, 'foo', ['sub'], pkg=pkg)
         self.check_pkg_config('foo', ['sub'], {
             'libs': ['-L' + abspath('/mock/lib'), '-lsub'],
         })
 
-        linkage = self.make_linkage(pkg, submodule_map={
-            '*': {'libraries': '$submodule'},
+        linkage = self.make_linkage(pkg, submodule_linkage={
+            'libraries': '$submodule'
         })
         self.check_linkage(linkage, libraries=[])
         self.check_get_linkage(linkage, 'foo', ['sub'], pkg=pkg)
@@ -514,14 +514,16 @@ class TestPath(LinkageTest):
             'libs': ['-L' + abspath('/mock/lib'), '-lsub'],
         })
 
-        linkage = self.make_linkage(pkg, submodule_map={'sub': {
-            'include_path': '/mock/sub/incdir',
-            'library_path': '/mock/sub/libdir',
-            'headers': 'sub.hpp',
-            'libraries': 'sublib',
-            'compile_flags': '-Dsub',
-            'link_flags': '-Wl,-sub',
-        }, '*': {'libraries': '$submodule'}})
+        linkage = self.make_linkage(pkg, submodule_linkage=[
+            {'if': 'submodule == "sub"',
+             'include_path': '/mock/sub/incdir',
+             'library_path': '/mock/sub/libdir',
+             'headers': 'sub.hpp',
+             'libraries': 'sublib',
+             'compile_flags': '-Dsub',
+             'link_flags': '-Wl,-sub'},
+            {'libraries': '$submodule'}
+        ])
         self.check_linkage(linkage, libraries=[])
         self.check_get_linkage(linkage, 'foo', ['sub'], pkg=pkg)
         self.check_pkg_config('foo', ['sub'], {
@@ -537,24 +539,21 @@ class TestPath(LinkageTest):
         pkg = MockPackage(srcdir=self.srcdir, builddir=self.builddir,
                           submodules=submodules_required,
                           _options=self.make_options())
-        linkage = self.make_linkage(pkg, submodule_map={
-            'sub': {
-                'include_path': '$srcdir/$submodule',
-                'library_path': '$builddir/$submodule',
-                'headers': '$submodule/file.hpp',
-                'libraries': '$submodule',
-                'compile_flags': '-D$submodule',
-                'link_flags': '-Wl,-$submodule',
-            },
-            '*': {
-                'include_path': '$srcdir/star/$submodule',
-                'library_path': '$builddir/star/$submodule',
-                'headers': 'star/$submodule/file.hpp',
-                'libraries': 'star$submodule',
-                'compile_flags': '-Dstar$submodule',
-                'link_flags': '-Wl,-star$submodule',
-            },
-        })
+        linkage = self.make_linkage(pkg, submodule_linkage=[
+            {'if': 'submodule == "sub"',
+             'include_path': '$srcdir/$submodule',
+             'library_path': '$builddir/$submodule',
+             'headers': '$submodule/file.hpp',
+             'libraries': '$submodule',
+             'compile_flags': '-D$submodule',
+             'link_flags': '-Wl,-$submodule'},
+            {'include_path': '$srcdir/star/$submodule',
+             'library_path': '$builddir/star/$submodule',
+             'headers': 'star/$submodule/file.hpp',
+             'libraries': 'star$submodule',
+             'compile_flags': '-Dstar$submodule',
+             'link_flags': '-Wl,-star$submodule'},
+        ])
         self.check_linkage(linkage, libraries=[])
         self.check_get_linkage(linkage, 'foo', ['sub'], pkg=pkg)
         self.check_pkg_config('foo', ['sub'], {
@@ -569,15 +568,12 @@ class TestPath(LinkageTest):
                      '-Wl,-starsub2', '-lstarsub2'],
         })
 
-        linkage = self.make_linkage(pkg, submodule_map={
-            'sub': {
-                'dependencies': 'foo[sub2]',
-                'compile_flags': '-D$submodule',
-            },
-            '*': {
-                'compile_flags': '-Dstar$submodule',
-            },
-        })
+        linkage = self.make_linkage(pkg, submodule_linkage=[
+            {'if': 'submodule == "sub"',
+             'dependencies': 'foo[sub2]',
+             'compile_flags': '-D$submodule'},
+            {'compile_flags': '-Dstar$submodule'},
+        ])
         self.check_linkage(linkage, libraries=[])
 
         def mock_pkg_get_linkage(self, metadata, submodules):
@@ -822,16 +818,14 @@ class TestPath(LinkageTest):
         pkg = MockPackage('foo', srcdir=self.srcdir, builddir=self.builddir,
                           submodules={'names': '*', 'required': False},
                           _options=opts)
-        linkage = self.linkage_type(pkg, submodule_map={
-            'foosub': {
-                'include_path': 'include',
-                'library_path': 'lib',
-            },
-            'barsub': {
-                'compile_flags': 'compile',
-                'link_flags': 'link',
-            },
-        }, _symbols=symbols)
+        linkage = self.linkage_type(pkg, submodule_linkage=[
+            {'if': 'submodule == "foosub"',
+             'include_path': 'include',
+             'library_path': 'lib'},
+            {'if': 'submodule == "barsub"',
+             'compile_flags': 'compile',
+             'link_flags': 'link'},
+        ], _symbols=symbols)
         data = through_json(linkage.dehydrate())
         self.assertEqual(linkage, Linkage.rehydrate(
             data, name=pkg.name, _options=opts, _symbols=symbols,
@@ -841,13 +835,24 @@ class TestPath(LinkageTest):
     def test_upgrade(self):
         opts = self.make_options()
         symbols = opts.expr_symbols.augment(path_bases=['builddir'])
-        data = {'type': self.type, '_version': 0, 'include_path': [],
-                'library_path': [], 'compile_flags': [], 'link_flags': []}
+        data = {
+            'type': self.type, '_version': 1, 'include_path': [],
+            'library_path': [], 'compile_flags': [], 'link_flags': [],
+            'submodule_map': {
+                'sub': {'libraries': ['sub']},
+                '*': {'libraries': ['star$submodule']},
+            }
+        }
         with mock.patch.object(self.linkage_type, 'upgrade',
                                side_effect=self.linkage_type.upgrade) as m:
             linkage = Linkage.rehydrate(data, name='foo', _options=opts,
                                         _symbols=symbols, **rehydrate_kwargs)
             self.assertIsInstance(linkage, self.linkage_type)
+            self.assertEqual([i._if for i in linkage.submodule_linkage],
+                             ["submodule == 'sub'", True])
+            self.assertEqual([i.libraries for i in linkage.submodule_linkage],
+                             [['sub'], ['star$submodule']])
+
             m.assert_called_once()
 
     def test_invalid_linkage(self):
@@ -906,13 +911,13 @@ class TestSystem(TestPath):
             'pkg_config_path': [],
         }, find_pkg_config=True)
 
-    def test_system_submodule_map(self):
+    def test_system_submodule_linkage(self):
         submodules_required = {'names': '*', 'required': True}
 
         pkg = MockPackage('foo', submodules=submodules_required,
                           _options=self.make_options())
-        linkage = self.make_linkage(pkg, submodule_map={
-            '*': {'pcname': '$submodule'},
+        linkage = self.make_linkage(pkg, submodule_linkage={
+            'pcname': '$submodule'
         })
         self.check_linkage(linkage, libraries=[])
         self.check_get_linkage(linkage, 'foo', ['sub'], {
@@ -921,10 +926,11 @@ class TestSystem(TestPath):
         }, find_pkg_config=True, pkg=pkg)
         self.check_get_linkage(linkage, 'foo', ['sub'], pkg=pkg)
 
-        linkage = self.make_linkage(pkg, submodule_map={
-            'sub': {'pcname': 'subpc'},
-            '*': {'pcname': '$submodule'},
-        })
+        linkage = self.make_linkage(pkg, submodule_linkage=[
+            {'if': 'submodule == "sub"',
+             'pcname': 'subpc'},
+            {'pcname': '$submodule'},
+        ])
         self.check_linkage(linkage, libraries=[])
         self.check_get_linkage(linkage, 'foo', ['sub'], {
             'name': 'foo[sub]', 'type': 'system', 'pcnames': ['subpc'],

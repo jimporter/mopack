@@ -3,6 +3,7 @@ origin:
     submodules:
       names: '*'
       required: false
+
 linkage:
   path: &path_system_linkage
     - &path_linkage
@@ -18,30 +19,27 @@ linkage:
         ${{ symbols['srcdir'] ||
             env['BOOST_INCLUDEDIR'] ||
             (env['BOOST_ROOT'] ? env['BOOST_ROOT'] + '/include' : null) }}
-      library_path: >-
+      library_path: &library_path >-
         ${{ symbols['stagedir'] ? symbols['stagedir'] + '/lib' :
             env['BOOST_LIBRARYDIR'] ||
             (env['BOOST_ROOT'] ? env['BOOST_ROOT'] + '/lib' : null) }}
       headers: [boost/version.hpp]
       libraries: null
-      submodule_map: null
+      submodule_linkage: null
     - <<: *path_linkage
       if: true
       auto_link: false
-      submodule_map:
-        '*':
-          &submodule_map
+      submodule_linkage:
+        - if: submodule == 'thread'
+          dependencies: ['pthread']
           # Include library_path again here since the base boost package
           # doesn't have any libraries (unless the user overrides it), so
           # the base library_path usually won't be used.
-          library_path: >-
-            ${{ symbols['stagedir'] ? symbols['stagedir'] + '/lib' :
-                env['BOOST_LIBRARYDIR'] ||
-                (env['BOOST_ROOT'] ? env['BOOST_ROOT'] + '/lib' : null) }}
+          library_path: *library_path
           libraries: boost_$submodule
-        thread:
-          <<: *submodule_map
-          dependencies: ['pthread']
+        - library_path: *library_path
+          libraries: boost_$submodule
+
   system: *path_system_linkage
   pkg_config:
-    submodule_map: null
+    submodule_linkage: null
