@@ -16,6 +16,8 @@
 - `custom` builders that use the `build/` output directory should set
   `outdir: build`
 - Linkages now use `submodule_linkage` instead of `submodule_map`
+- `submodules` field is now a dictionary of submodule names; to set the
+  `required` field, use `submodule_required` instead
 
 ---
 

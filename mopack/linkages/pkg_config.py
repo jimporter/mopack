@@ -88,7 +88,7 @@ class PkgConfigLinkage(Linkage):
         pkg_default = DefaultResolver(self, symbols, inherit_defaults,
                                       pkg.name)
         buildbase = symbols.best_path_base('builddir')
-        if pkg.submodules and pkg.submodules['required']:
+        if pkg.submodule_required:
             # If submodules are required, default to an empty .pc file, since
             # we should usually have .pc files for the submodules that handle
             # everything for us.

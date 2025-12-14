@@ -34,6 +34,7 @@ class TestMakePackage(OriginTest):
         self.assertIsInstance(pkg, DirectoryPackage)
         self.assertEqual(pkg.name, 'foo')
         self.assertEqual(pkg.submodules, None)
+        self.assertEqual(pkg.submodule_required, None)
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         self.assertEqual(pkg.path, Path('/path'))
@@ -56,6 +57,7 @@ class TestMakePackage(OriginTest):
         self.assertIsInstance(pkg, DirectoryPackage)
         self.assertEqual(pkg.name, 'foo')
         self.assertEqual(pkg.submodules, None)
+        self.assertEqual(pkg.submodule_required, None)
         self.assertEqual(pkg.should_deploy, False)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         self.assertEqual(pkg.path, Path('/path'))
@@ -76,7 +78,8 @@ class TestMakePackage(OriginTest):
         }, _options=self.make_options(), config_file='/path/to/mopack.yml')
         self.assertIsInstance(pkg, SystemPackage)
         self.assertEqual(pkg.name, 'foo')
-        self.assertEqual(pkg.submodules, {'names': '*', 'required': True})
+        self.assertEqual(pkg.submodules, '*')
+        self.assertEqual(pkg.submodule_required, True)
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         with mock.patch('subprocess.run', side_effect=OSError()), \
@@ -95,11 +98,12 @@ class TestMakePackage(OriginTest):
             pkg.get_linkage(self.metadata, None)
 
         pkg = make_package('foo', {
-            'origin': 'system', 'submodules': ['sub'],
+            'origin': 'system', 'submodules': {'sub': None},
         }, _options=self.make_options(), config_file='/path/to/mopack.yml')
         self.assertIsInstance(pkg, SystemPackage)
         self.assertEqual(pkg.name, 'foo')
-        self.assertEqual(pkg.submodules, {'names': ['sub'], 'required': True})
+        self.assertEqual(pkg.submodules, {'sub': {}})
+        self.assertEqual(pkg.submodule_required, True)
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         with mock.patch('subprocess.run', side_effect=OSError()), \
@@ -121,11 +125,13 @@ class TestMakePackage(OriginTest):
 
         pkg = make_package('foo', {
             'origin': 'system',
-            'submodules': {'names': ['sub'], 'required': False},
+            'submodules': {'sub': None},
+            'submodule_required': False,
         }, _options=self.make_options(), config_file='/path/to/mopack.yml')
         self.assertIsInstance(pkg, SystemPackage)
         self.assertEqual(pkg.name, 'foo')
-        self.assertEqual(pkg.submodules, {'names': ['sub'], 'required': False})
+        self.assertEqual(pkg.submodules, {'sub': {}})
+        self.assertEqual(pkg.submodule_required, False)
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         with mock.patch('subprocess.run', side_effect=OSError()), \
@@ -161,7 +167,8 @@ class TestMakePackage(OriginTest):
         }, _options=self.make_options(), config_file='/path/to/mopack.yml')
         self.assertIsInstance(pkg, SystemPackage)
         self.assertEqual(pkg.name, 'boost')
-        self.assertEqual(pkg.submodules, {'names': '*', 'required': False})
+        self.assertEqual(pkg.submodules, '*')
+        self.assertEqual(pkg.submodule_required, False)
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
 

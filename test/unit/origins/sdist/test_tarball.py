@@ -330,11 +330,8 @@ class TestTarball(SDistTestCase):
             mrun.assert_not_called()
 
     def test_submodules(self):
-        submodules_required = {'names': '*', 'required': True}
-        submodules_optional = {'names': '*', 'required': False}
-
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
-                                submodules=submodules_required)
+                                submodules='*', submodule_required=True)
         self.check_fetch(pkg)
         self.check_resolve(pkg)
         self.check_linkage(pkg, submodules=['sub'])
@@ -342,7 +339,7 @@ class TestTarball(SDistTestCase):
         pkg = self.make_package(
             'foo', path=self.srcpath, build='bfg9000',
             linkage={'type': 'pkg_config', 'pcname': 'bar'},
-            submodules=submodules_required
+            submodules='*', submodule_required=True
         )
         self.check_fetch(pkg)
         self.check_resolve(pkg)
@@ -353,7 +350,7 @@ class TestTarball(SDistTestCase):
         })
 
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
-                                submodules=submodules_optional)
+                                submodules='*', submodule_required=False)
         self.check_fetch(pkg)
         self.check_resolve(pkg)
         self.check_linkage(pkg, submodules=['sub'])
@@ -361,7 +358,7 @@ class TestTarball(SDistTestCase):
         pkg = self.make_package(
             'foo', path=self.srcpath, build='bfg9000',
             linkage={'type': 'pkg_config', 'pcname': 'bar'},
-            submodules=submodules_optional
+            submodules='*', submodule_required=False
         )
         self.check_fetch(pkg)
         self.check_resolve(pkg)
@@ -372,9 +369,15 @@ class TestTarball(SDistTestCase):
         })
 
     def test_invalid_submodule(self):
+        with self.assertRaises(TypeError):
+            self.make_package('foo', submodules={'sub': None},
+                              submodule_required=None)
+        with self.assertRaises(TypeError):
+            self.make_package('foo', submodule_required=True)
+
         pkg = self.make_package(
             'foo', path=self.srcpath, build='bfg9000',
-            submodules={'names': ['sub'], 'required': True}, fetch=True
+            submodules={'sub': None}, submodule_required=True, fetch=True
         )
         with self.assertRaises(ValueError):
             pkg.get_linkage(self.metadata, ['invalid'])
@@ -644,9 +647,10 @@ class TestTarball(SDistTestCase):
     def test_upgrade(self):
         opts = self.make_options()
         data = {
-            'origin': 'tarball', '_version': 0, 'name': 'foo',
+            'origin': 'tarball', '_version': 1, 'name': 'foo',
             'path': {'base': 'cfgdir', 'path': 'foo.tar.gz'}, 'url': None,
             'files': [], 'srcdir': '.', 'patch': None,
+            'submodules': {'names': ['sub'], 'required': False},
             'builder': {'type': 'none', '_version': 1, 'name': 'foo'},
             'linkage': {'type': 'system', '_version': 3},
         }
@@ -656,6 +660,8 @@ class TestTarball(SDistTestCase):
             self.assertIsInstance(pkg, TarballPackage)
             self.assertIsInstance(pkg.linkage, SystemLinkage)
             self.assertEqual([type(i) for i in pkg.builders], [NoneBuilder])
+            self.assertEqual(pkg.submodules, {'sub': {}})
+            self.assertEqual(pkg.submodule_required, False)
             m.assert_called_once()
 
     def test_builder_types(self):

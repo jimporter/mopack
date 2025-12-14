@@ -9,7 +9,7 @@ from ..iterutils import ismapping, listify
 from ..linkages import Linkage, make_linkage
 from ..package_defaults import DefaultResolver
 from ..types import (FieldKeyError, FieldValueError, try_load_config,
-                     wrap_field_error)
+                     wrap_field_error, Unset)
 
 
 def _get_origin_type(origin, field='origin'):
@@ -19,21 +19,34 @@ def _get_origin_type(origin, field='origin'):
         raise FieldValueError('unknown origin {!r}'.format(origin), field)
 
 
-_submodule_dict = types.dict_shape({
-    'names': types.one_of(types.list_of(types.string), types.constant('*'),
-                          desc='a list of submodules'),
-    'required': types.boolean,
-}, desc='a list of submodules')
-
-
 def submodules_type(*, raw=False):
-    def wrap(field, value):
-        if not ismapping(value):
-            value = {'names': value, 'required': True}
-        return _submodule_dict(field, value)
-
     maybe = types.maybe_raw if raw else types.maybe
-    return maybe(wrap)
+    return maybe(types.one_of(
+        types.dict_of(types.string, types.maybe(
+            types.dict_shape({}, desc='a submodule definition'),
+            default={}
+        )),
+        types.constant('*'),
+        desc='a dictionary of submodules'
+    ))
+
+
+def submodule_required_type(submodules, *, raw=False):
+    if submodules is Unset:
+        default = None
+        t = types.one_of(types.boolean, types.constant(None),
+                         desc='a boolean or None')
+    elif submodules:
+        default = True
+        t = types.boolean
+    else:  # not submodules
+        default = None
+        t = types.constant(None)
+
+    if raw:
+        return types.maybe_raw(t, empty=(Unset,))
+    else:
+        return types.maybe(t, default=default, empty=(Unset,))
 
 
 @GenericFreezeDried.fields(rehydrate={'linkage': Linkage},
@@ -101,15 +114,15 @@ class Package(OptionsHolder):
         return self.linkage.version(metadata, self)
 
     def _check_submodules(self, wanted_submodules):
+        wanted_submodules = listify(wanted_submodules)
         if self.submodules:
-            if self.submodules['required'] and not wanted_submodules:
+            if self.submodule_required and not wanted_submodules:
                 raise ValueError('package {!r} requires submodules'
                                  .format(self.name))
 
-            wanted_submodules = listify(wanted_submodules)
-            if self.submodules['names'] != '*':
+            if self.submodules != '*':
                 for i in wanted_submodules:
-                    if i not in self.submodules['names']:
+                    if i not in self.submodules:
                         raise ValueError(
                             'unrecognized submodule {!r} for package {!r}'
                             .format(i, self.name)
@@ -177,15 +190,26 @@ class BatchPackage(Package):
 
 class BinaryPackage(Package):
     # TODO: Remove `usage` after v0.2 is released.
-    def __init__(self, name, *, submodules=types.Unset, linkage=types.Unset,
-                 usage=types.Unset, inherit_defaults=False, _options,
+    def __init__(self, name, *, submodules=Unset, submodule_required=Unset,
+                 linkage=Unset, usage=Unset, inherit_defaults=False, _options,
                  _linkage_field='linkage', **kwargs):
-        if linkage is types.Unset and usage is not types.Unset:
+        # TODO: Remove this after v0.2 is released.
+        if ( ismapping(submodules) and
+             set(submodules.keys()) == {'names', 'required'} ):
+            warnings.warn(types.FieldKeyWarning(
+                ('`submodules` now takes a dictionary of submodules; use ' +
+                 '`submodule_required` to set whether submodules are ' +
+                 'required instead'), 'submodules'
+            ))
+            require_submodule = submodules.get('required', True)
+            submodules = {i: {} for i in submodules['names']}
+
+        if linkage is Unset and usage is not Unset:
             warnings.warn(types.FieldKeyWarning(
                 '`usage` is deprecated; use `linkage` instead', 'usage'
             ))
             linkage = usage
-        if linkage is types.Unset:
+        if linkage is Unset:
             raise TypeError('missing `linkage`')
 
         super().__init__(name, inherit_defaults=inherit_defaults,
@@ -195,6 +219,9 @@ class BinaryPackage(Package):
         pkg_default = DefaultResolver(self, symbols, inherit_defaults, name)
         T = types.TypeCheck(locals(), symbols)
         T.submodules(pkg_default(submodules_type()))
+        T.submodule_required(pkg_default(
+            submodule_required_type(self.submodules), default=Unset
+        ))
 
         self.linkage = make_linkage(self, linkage, field=_linkage_field,
                                     _symbols=self._linkage_expr_symbols)

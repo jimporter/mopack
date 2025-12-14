@@ -1,8 +1,7 @@
 origin:
   '*':
-    submodules:
-      names: '*'
-      required: false
+    submodules: '*'
+    submodule_required: false
 
 linkage:
   path: &path_system_linkage

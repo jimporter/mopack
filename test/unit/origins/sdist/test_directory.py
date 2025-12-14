@@ -2,6 +2,7 @@ import os
 import subprocess
 import yaml
 from io import StringIO
+from textwrap import dedent
 from unittest import mock
 
 from . import *
@@ -186,7 +187,13 @@ class TestDirectory(SDistTestCase):
         self.check_linkage(pkg)
 
     def test_infer_submodules(self):
-        data = 'export:\n  submodules: [french, english]\n  build: bfg9000'
+        data = dedent("""\
+          export:
+            submodules:
+              french:
+              english:
+            build: bfg9000
+        """)
         mock_open = mock_open_data(data)
         srcpath = os.path.join(test_data_dir, 'hello-multi-bfg')
 
@@ -201,7 +208,7 @@ class TestDirectory(SDistTestCase):
                 config = pkg.fetch(self.metadata, self.config)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(config.export.submodules,
-                             ['french', 'english'])
+                             {'french': None, 'english': None})
             self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg)
         self.check_linkage(pkg, submodules=['french'])
@@ -218,13 +225,13 @@ class TestDirectory(SDistTestCase):
                 config = pkg.fetch(self.metadata, self.config)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(config.export.submodules,
-                             ['french', 'english'])
+                             {'french': None, 'english': None})
             self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg)
         self.check_linkage(pkg, submodules=['french'])
 
         # Infer builder and override submodules.
-        pkg = self.make_package('foo', path=srcpath, submodules=['sub'],
+        pkg = self.make_package('foo', path=srcpath, submodules={'sub': None},
                                 fetch=False)
         self.assertIs(pkg.pending_builders, Unset)
         builder = self.make_builder(Bfg9000Builder, pkg)
@@ -235,7 +242,7 @@ class TestDirectory(SDistTestCase):
                 config = pkg.fetch(self.metadata, self.config)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(config.export.submodules,
-                             ['french', 'english'])
+                             {'french': None, 'english': None})
             self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg)
         self.check_linkage(pkg, submodules=['sub'])
@@ -374,18 +381,16 @@ class TestDirectory(SDistTestCase):
             mpopen.assert_not_called()
 
     def test_submodules(self):
-        submodules_required = {'names': '*', 'required': True}
-        submodules_optional = {'names': '*', 'required': False}
-
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
-                                submodules=submodules_required, fetch=True)
+                                submodules='*', submodule_required=True,
+                                fetch=True)
         self.check_resolve(pkg)
         self.check_linkage(pkg, submodules=['sub'])
 
         pkg = self.make_package(
             'foo', path=self.srcpath, build='bfg9000',
             linkage={'type': 'pkg_config', 'pcname': 'bar'},
-            submodules=submodules_required, fetch=True
+            submodules='*', submodule_required=True, fetch=True
         )
         self.check_resolve(pkg)
         self.check_linkage(pkg, submodules=['sub'], linkage={
@@ -395,14 +400,15 @@ class TestDirectory(SDistTestCase):
         })
 
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
-                                submodules=submodules_optional, fetch=True)
+                                submodules='*', submodule_required=False,
+                                fetch=True)
         self.check_resolve(pkg)
         self.check_linkage(pkg, submodules=['sub'])
 
         pkg = self.make_package(
             'foo', path=self.srcpath, build='bfg9000',
             linkage={'type': 'pkg_config', 'pcname': 'bar'},
-            submodules=submodules_optional, fetch=True
+            submodules='*', submodule_required=False, fetch=True
         )
         self.check_resolve(pkg)
         self.check_linkage(pkg, submodules=['sub'], linkage={
@@ -412,9 +418,15 @@ class TestDirectory(SDistTestCase):
         })
 
     def test_invalid_submodule(self):
+        with self.assertRaises(TypeError):
+            self.make_package('foo', submodules={'sub': None},
+                              submodule_required=None)
+        with self.assertRaises(TypeError):
+            self.make_package('foo', submodule_required=True)
+
         pkg = self.make_package(
             'foo', path=self.srcpath, build='bfg9000',
-            submodules={'names': ['sub'], 'required': True}, fetch=True
+            submodules={'sub': None}, submodule_required=True, fetch=True
         )
         with self.assertRaises(ValueError):
             pkg.get_linkage(self.metadata, ['invalid'])
@@ -604,8 +616,9 @@ class TestDirectory(SDistTestCase):
     def test_upgrade(self):
         opts = self.make_options()
         data = {
-            'origin': 'directory', '_version': 0, 'name': 'foo',
+            'origin': 'directory', '_version': 1, 'name': 'foo',
             'path': {'base': 'cfgdir', 'path': '.'},
+            'submodules': {'names': ['sub'], 'required': False},
             'builder': {'type': 'none', '_version': 1, 'name': 'foo'},
             'linkage': {'type': 'system', '_version': 3},
         }
@@ -615,6 +628,8 @@ class TestDirectory(SDistTestCase):
             self.assertIsInstance(pkg, DirectoryPackage)
             self.assertIsInstance(pkg.linkage, SystemLinkage)
             self.assertEqual([type(i) for i in pkg.builders], [NoneBuilder])
+            self.assertEqual(pkg.submodules, {'sub': {}})
+            self.assertEqual(pkg.submodule_required, False)
             m.assert_called_once()
 
     def test_builder_types(self):

@@ -42,7 +42,8 @@ class TestBoost(IntegrationTest):
             'packages': [
                 cfg_system_pkg(
                     'boost', config,
-                    submodules={'names': '*', 'required': False},
+                    submodules='*',
+                    submodule_required=False,
                     linkage=cfg_system_linkage(
                         pcname='boost',
                         auto_link=platform_name() == 'windows',
@@ -107,7 +108,8 @@ class TestBoostSource(IntegrationTest):
                     url=('https://archives.boost.io/release/1.89.0/source/' +
                          'boost_1_89_0.tar.bz2'),
                     guessed_srcdir='boost_1_89_0',
-                    submodules={'names': '*', 'required': False},
+                    submodules='*',
+                    submodule_required=False,
                     builders=[
                         cfg_custom_builder(
                             outdir=None,

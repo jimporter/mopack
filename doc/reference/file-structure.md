@@ -14,19 +14,19 @@ distribution](packages.md#source-distributions).
 ```yaml
 export:
   submodules: <submodules>
+  submodule_required: <boolean>
   build: <build>
   linkage: <linkage>
 ```
 
 `submodules` <span class="subtitle">*optional, default*: `null`</span>
-: A list of available submodules, or `*` to indicate that any submodule name
-  should be accepted. If this is specified, using this package via `mopack
-  linkage` *must* specify a submodule. To declare that submodules are optional
-  for linkage, you can specify a dictionary:
+: A dictionary of available submodule names, or `*` to indicate that any
+  submodule name should be accepted.
 
-        submodules:
-          names: <submodules>
-          required: false
+`submodule_required` <span class="subtitle">*optional, default*: `true` or `null`</span>
+: If this is true (the default when `submodules` is non-`null`), using this
+  package via `mopack linkage` *must* specify a submodule. When the package has
+  no submodules, this must be `null`.
 
 `build` <span class="subtitle">*optional, default:* `null`</span>
 : The [builder](builders.md) to use when resolving this package. If unspecified,

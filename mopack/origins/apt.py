@@ -10,10 +10,19 @@ from ..objutils import Unset
 
 class AptPackage(BinaryPackage, BatchPackage):
     origin = 'apt'
-    _version = 1
+    _version = 2
 
     @staticmethod
     def upgrade(config, version):
+        # v2 moves `submodules.required` to `submodule_required` and stores
+        # `submodules` as a dict of submodule names.
+        if version < 2:
+            if config['submodules']:
+                config['submodule_required'] = config['submodules']['required']
+                config['submodules'] = {
+                    i: {} for i in config['submodules']['names']
+                }
+
         return config
 
     # TODO: Remove `usage` after v0.2 is released.

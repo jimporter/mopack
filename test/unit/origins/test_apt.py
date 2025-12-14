@@ -47,7 +47,7 @@ class TestApt(OriginTest):
     def check_linkage(self, pkg, *, submodules=None, linkage=None):
         if linkage is None:
             depname = str(Dependency(pkg.name, submodules))
-            libs = ([] if pkg.submodules and pkg.submodules['required']
+            libs = ([] if pkg.submodules and pkg.submodule_required
                     else [pkg.name])
             libs.extend('{}_{}'.format(pkg.name, i)
                         for i in iterate(submodules))
@@ -172,16 +172,13 @@ class TestApt(OriginTest):
             self.check_linkage(pkg)
 
     def test_submodules(self):
-        submodules_required = {'names': '*', 'required': True}
-        submodules_optional = {'names': '*', 'required': False}
-
-        pkg = self.make_package('foo', submodules=submodules_required)
+        pkg = self.make_package('foo', submodules='*', submodule_required=True)
         self.check_resolve_all([pkg], ['libfoo-dev'])
         self.check_linkage(pkg, submodules=['sub'])
 
         pkg = self.make_package(
             'foo', linkage={'type': 'system', 'libraries': 'bar'},
-            submodules=submodules_required
+            submodules='*', submodule_required=True
         )
         self.check_resolve_all([pkg], ['libfoo-dev'])
         self.check_linkage(pkg, submodules=['sub'], linkage={
@@ -190,13 +187,14 @@ class TestApt(OriginTest):
             'pkg_config_path': [self.pkgconfdir],
         })
 
-        pkg = self.make_package('foo', submodules=submodules_optional)
+        pkg = self.make_package('foo', submodules='*',
+                                submodule_required=False)
         self.check_resolve_all([pkg], ['libfoo-dev'])
         self.check_linkage(pkg, submodules=['sub'])
 
         pkg = self.make_package(
             'foo', linkage={'type': 'system', 'libraries': 'bar'},
-            submodules=submodules_optional
+            submodules='*', submodule_required=False
         )
         self.check_resolve_all([pkg], ['libfoo-dev'])
         self.check_linkage(pkg, submodules=['sub'], linkage={
@@ -206,9 +204,14 @@ class TestApt(OriginTest):
         })
 
     def test_invalid_submodule(self):
-        pkg = self.make_package('foo', submodules={
-            'names': ['sub'], 'required': True
-        })
+        with self.assertRaises(TypeError):
+            self.make_package('foo', submodules={'sub': None},
+                              submodule_required=None)
+        with self.assertRaises(TypeError):
+            self.make_package('foo', submodule_required=True)
+
+        pkg = self.make_package('foo', submodules={'sub': None},
+                                submodule_required=True)
         with self.assertRaises(ValueError):
             pkg.get_linkage(self.metadata, ['invalid'])
 
@@ -275,11 +278,14 @@ class TestApt(OriginTest):
 
     def test_upgrade(self):
         opts = self.make_options()
-        data = {'origin': 'apt', '_version': 0, 'name': 'foo',
+        data = {'origin': 'apt', '_version': 1, 'name': 'foo',
                 'remote': 'libfoo-dev', 'repository': None,
+                'submodules': {'names': ['sub'], 'required': False},
                 'linkage': {'type': 'system', '_version': 3}}
         with mock.patch.object(AptPackage, 'upgrade',
                                side_effect=AptPackage.upgrade) as m:
             pkg = Package.rehydrate(data, _options=opts, **rehydrate_kwargs)
             self.assertIsInstance(pkg, AptPackage)
+            self.assertEqual(pkg.submodules, {'sub': {}})
+            self.assertEqual(pkg.submodule_required, False)
             m.assert_called_once()

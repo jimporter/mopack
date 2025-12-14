@@ -185,7 +185,7 @@ class PathLinkage(Linkage):
 
         T.headers(pkg_default(_list_of_headers))
 
-        if self.auto_link or pkg.submodules and pkg.submodules['required']:
+        if self.auto_link or pkg.submodule_required:
             # If auto-linking or if submodules are required, default to an
             # empty list of libraries, since we likely don't have a "base"
             # library that always needs linking to.
@@ -399,7 +399,7 @@ class PathLinkage(Linkage):
             auto_link = False
             version = None
 
-            if pkg.submodules['required']:
+            if pkg.submodule_required:
                 # Don't make a base .pc file; just include the data from the
                 # base in each submodule's .pc file.
                 sublinks = [self]
@@ -476,7 +476,7 @@ class SystemLinkage(PathLinkage):
 
     def get_linkage(self, metadata, pkg, submodules):
         if submodules and self.submodule_linkage:
-            pcnames = [] if pkg.submodules['required'] else [self.pcname]
+            pcnames = [] if pkg.submodule_required else [self.pcname]
             for i in submodules:
                 sublink = self._get_submodule_linkage(self._expr_symbols, i)
                 if sublink.pcname:

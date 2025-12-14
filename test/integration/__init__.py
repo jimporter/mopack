@@ -91,7 +91,8 @@ def cfg_options(**kwargs):
 
 
 def _cfg_package(origin, api_version, name, config_file, parent=None,
-                 resolved=True, submodules=None, should_deploy=True):
+                 resolved=True, submodules=None, submodule_required=None,
+                 should_deploy=True):
     return {
         'origin': origin,
         '_version': api_version,
@@ -100,13 +101,14 @@ def _cfg_package(origin, api_version, name, config_file, parent=None,
         'parent': parent,
         'resolved': resolved,
         'submodules': submodules,
+        'submodule_required': submodule_required,
         'should_deploy': should_deploy,
     }
 
 
 def cfg_directory_pkg(name, config_file, *, path, env={}, builders=[], linkage,
                       **kwargs):
-    result = _cfg_package('directory', 3, name, config_file, **kwargs)
+    result = _cfg_package('directory', 4, name, config_file, **kwargs)
     result.update({
         'env': env,
         'path': path,
@@ -119,7 +121,7 @@ def cfg_directory_pkg(name, config_file, *, path, env={}, builders=[], linkage,
 def cfg_tarball_pkg(name, config_file, *, env={}, path=None, url=None,
                     files=[], srcdir=None, guessed_srcdir=None, patch=None,
                     builders=[], linkage, **kwargs):
-    result = _cfg_package('tarball', 3, name, config_file, **kwargs)
+    result = _cfg_package('tarball', 4, name, config_file, **kwargs)
     result.update({
         'env': env,
         'path': path,
@@ -136,7 +138,7 @@ def cfg_tarball_pkg(name, config_file, *, env={}, path=None, url=None,
 
 def cfg_git_pkg(name, config_file, *, env={}, repository, rev, srcdir='.',
                 builders=[], linkage, **kwargs):
-    result = _cfg_package('git', 3, name, config_file, **kwargs)
+    result = _cfg_package('git', 4, name, config_file, **kwargs)
     result.update({
         'env': env,
         'repository': repository,
@@ -150,7 +152,7 @@ def cfg_git_pkg(name, config_file, *, env={}, repository, rev, srcdir='.',
 
 def cfg_apt_pkg(name, config_file, *, remote, repository=None, linkage,
                 **kwargs):
-    result = _cfg_package('apt', 1, name, config_file, **kwargs)
+    result = _cfg_package('apt', 2, name, config_file, **kwargs)
     result.update({
         'remote': remote,
         'repository': repository,
@@ -161,7 +163,7 @@ def cfg_apt_pkg(name, config_file, *, remote, repository=None, linkage,
 
 def cfg_conan_pkg(name, config_file, *, remote, build=False, options={},
                   linkage, **kwargs):
-    result = _cfg_package('conan', 1, name, config_file, **kwargs)
+    result = _cfg_package('conan', 2, name, config_file, **kwargs)
     result.update({
         'remote': remote,
         'build': build,
@@ -172,7 +174,7 @@ def cfg_conan_pkg(name, config_file, *, remote, build=False, options={},
 
 
 def cfg_system_pkg(name, config_file, *, linkage, **kwargs):
-    result = _cfg_package('system', 1, name, config_file, **kwargs)
+    result = _cfg_package('system', 2, name, config_file, **kwargs)
     result.update({
         'linkage': linkage,
     })

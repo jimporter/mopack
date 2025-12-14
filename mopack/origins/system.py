@@ -6,10 +6,19 @@ from ..iterutils import slice_dict
 
 class SystemPackage(BinaryPackage):
     origin = 'system'
-    _version = 1
+    _version = 2
 
     @staticmethod
     def upgrade(config, version):
+        # v2 moves `submodules.required` to `submodule_required` and stores
+        # `submodules` as a dict of submodule names.
+        if version < 2:
+            if config['submodules']:
+                config['submodule_required'] = config['submodules']['required']
+                config['submodules'] = {
+                    i: {} for i in config['submodules']['names']
+                }
+
         return config
 
     def __init__(self, name, *, linkage=Unset, inherit_defaults=False,

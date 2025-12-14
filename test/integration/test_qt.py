@@ -32,7 +32,8 @@ class TestQt(IntegrationTest):
             'packages': [
                 cfg_system_pkg(
                     'Qt5', config,
-                    submodules={'names': '*', 'required': True},
+                    submodules='*',
+                    submodule_required=True,
                     linkage=cfg_system_linkage(
                         pcname='Qt5',
                         auto_link=False,
