@@ -185,7 +185,11 @@ class TypeCheck:
         else:
             symbols = {**self.__symbols, **extra_symbols}
 
-        value = self.__context[field]
+        if iterutils.ismapping(self.__context):
+            value = self.__context[field]
+        else:
+            value = getattr(self.__context, field)
+
         if evaluate:
             value = self.__evaluate(field, value, symbols)
         value = check(field, value)

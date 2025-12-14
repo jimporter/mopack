@@ -19,6 +19,12 @@ class SDistTestCase(OriginTest):
         else:
             return os.path.join(self.pkgdir, 'build', name, pkgconfig)
 
+    def make_package(self, *args, fetch=False, **kwargs):
+        pkg = super().make_package(*args, **kwargs)
+        if fetch:
+            self.package_fetch(pkg)
+        return pkg
+
     def check_linkage(self, pkg, *, submodules=None, linkage=None):
         if linkage is None:
             pcnames = ([] if pkg.submodules and pkg.submodules['required'] else

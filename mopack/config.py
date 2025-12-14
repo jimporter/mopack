@@ -5,6 +5,7 @@ from yaml.error import MarkedYAMLError
 
 from . import expression as expr
 from .iterutils import isiterable
+from .objutils import Unset
 from .options import Options
 from .origins import try_make_package
 from .yaml_tools import (load, to_parse_error, MarkedDict,
@@ -232,15 +233,15 @@ class ChildConfig(BaseConfig):
 
         @property
         def submodules(self):
-            return self.data.get('submodules')
+            return self.data.get('submodules', Unset)
 
         @property
         def build(self):
-            return self.data.get('build')
+            return self.data.get('build', Unset)
 
         @property
         def linkage(self):
-            return self.data.get('linkage')
+            return self.data.get('linkage', Unset)
 
     def __init__(self, filenames, parent_config, parent_package):
         super().__init__()

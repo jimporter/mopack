@@ -4,6 +4,8 @@ from itertools import chain
 from typing import TypeVar
 
 from .iterutils import each_attr, merge_dicts
+from .objutils import Unset
+
 
 _type_database = {}
 _primitives = typing.Union[str, int, float, bool, type(None)]
@@ -133,12 +135,13 @@ class FreezeDried:
         for key in set(self_vars) | set(rhs_vars):
             if self._skipped_field(key, True):
                 continue
-            elif key in self_vars and key in rhs_vars:
-                if self_vars[key] != rhs_vars[key]:
-                    return False
-            elif key in optional_fields:
+
+            self_val = self_vars.get(key, Unset)
+            rhs_val = rhs_vars.get(key, Unset)
+            if ( key in optional_fields and
+                 (self_val is Unset or rhs_val is Unset) ):
                 continue
-            else:
+            elif self_val != rhs_val:
                 return False
 
         return True

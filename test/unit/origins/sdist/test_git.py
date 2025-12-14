@@ -13,7 +13,7 @@ from mopack.linkages.path_system import SystemLinkage
 from mopack.origins import Package
 from mopack.origins.apt import AptPackage
 from mopack.origins.sdist import GitPackage
-from mopack.types import ConfigurationError
+from mopack.types import ConfigurationError, Unset
 
 
 def mock_exists(p):
@@ -28,6 +28,13 @@ class TestGit(SDistTestCase):
     def setUp(self):
         super().setUp()
         self.config = Config([])
+
+    def package_fetch(self, pkg):
+        with mock.patch('mopack.log.pkg_fetch'), \
+             mock_open_log(), \
+             mock.patch('mopack.origins.sdist.pushd'), \
+             mock.patch('mopack.log.LogFile.check_call'):
+            pkg.fetch(self.metadata, self.config)
 
     def check_fetch(self, pkg, env={}):
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
@@ -53,11 +60,12 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcurl)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.pending_builders, 'bfg9000')
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
         self.check_fetch(pkg)
+        self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg)
         self.check_linkage(pkg)
 
@@ -68,11 +76,12 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.pending_builders, 'bfg9000')
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
         self.check_fetch(pkg)
+        self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg)
         self.check_linkage(pkg)
 
@@ -84,11 +93,12 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['tag', 'v1.0'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.pending_builders, 'bfg9000')
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
         self.check_fetch(pkg)
+        self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg)
         self.check_linkage(pkg)
 
@@ -100,11 +110,12 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'mybranch'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.pending_builders, 'bfg9000')
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
         self.check_fetch(pkg)
+        self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg)
         self.check_linkage(pkg)
 
@@ -116,11 +127,12 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['commit', 'abcdefg'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.pending_builders, 'bfg9000')
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
         self.check_fetch(pkg)
+        self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg)
         self.check_linkage(pkg)
 
@@ -150,11 +162,12 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.pending_builders, 'bfg9000')
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
         self.check_fetch(pkg, env={'BASE': 'base', 'VAR': 'value'})
+        self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg, env={'BASE': 'base', 'VAR': 'value'})
         self.check_linkage(pkg)
 
@@ -166,9 +179,10 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, 'dir')
-        self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.pending_builders, 'bfg9000')
 
         self.check_fetch(pkg)
+        self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg)
         self.check_linkage(pkg)
 
@@ -181,16 +195,17 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.pending_builders, build)
 
         self.check_fetch(pkg)
+        self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg, extra_args=['--extra'])
         self.check_linkage(pkg)
 
     def test_infer_build(self):
         # Basic inference
         pkg = self.make_package('foo', repository=self.srcssh)
-        self.assertFalse(hasattr(pkg, 'builders'))
+        self.assertIs(pkg.pending_builders, Unset)
 
         with mock_open_log(), \
              mock.patch('os.path.exists', mock_exists), \
@@ -203,7 +218,7 @@ class TestGit(SDistTestCase):
                 config = pkg.fetch(self.metadata, self.config)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
-                'foo', repository=self.srcssh, build='bfg9000'
+                'foo', repository=self.srcssh, build='bfg9000', fetch=True
             ))
         self.check_resolve(pkg)
         self.check_linkage(pkg)
@@ -211,7 +226,7 @@ class TestGit(SDistTestCase):
         # Infer but override linkage and version
         pkg = self.make_package('foo', repository=self.srcssh,
                                 linkage={'type': 'system'})
-        self.assertFalse(hasattr(pkg, 'builders'))
+        self.assertIs(pkg.pending_builders, Unset)
 
         with mock_open_log(), \
              mock.patch('os.path.exists', mock_exists), \
@@ -225,7 +240,7 @@ class TestGit(SDistTestCase):
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
                 'foo', repository=self.srcssh, build='bfg9000',
-                linkage={'type': 'system'}
+                linkage={'type': 'system'}, fetch=True
             ))
         with mock.patch('mopack.log.LogFile.check_call',
                         side_effect=OSError()), \
@@ -259,7 +274,7 @@ class TestGit(SDistTestCase):
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
                 'foo', repository=self.srcssh, build='cmake',
-                linkage='pkg_config'
+                linkage='pkg_config', fetch=True
             ))
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.cmake.pushd'), \
@@ -283,9 +298,10 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.pending_builders, 'bfg9000')
 
         self.check_fetch(pkg)
+        self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg)
         self.check_linkage(pkg)
 
@@ -303,9 +319,10 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.pending_builders, 'bfg9000')
 
         self.check_fetch(pkg)
+        self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg)
         self.check_linkage(pkg, linkage={
             'name': 'foo', 'type': 'pkg_config', 'pcnames': ['foo'],
@@ -318,9 +335,10 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.repository, self.srcssh)
         self.assertEqual(pkg.rev, ['branch', 'master'])
         self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.pending_builders, 'bfg9000')
 
         self.check_fetch(pkg)
+        self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg)
         self.check_linkage(pkg, linkage={
             'name': 'foo', 'type': 'path', 'generated': True,
@@ -377,7 +395,7 @@ class TestGit(SDistTestCase):
     def test_invalid_submodule(self):
         pkg = self.make_package(
             'foo', repository=self.srcssh, build='bfg9000',
-            submodules={'names': ['sub'], 'required': True}
+            submodules={'names': ['sub'], 'required': True}, fetch=True
         )
         with self.assertRaises(ValueError):
             pkg.get_linkage(self.metadata, ['invalid'])
@@ -432,7 +450,7 @@ class TestGit(SDistTestCase):
     def test_deploy(self):
         deploy_dirs = {'prefix': '/usr/local'}
         pkg = self.make_package('foo', repository=self.srcssh, build='bfg9000',
-                                deploy_dirs=deploy_dirs)
+                                deploy_dirs=deploy_dirs, fetch=True)
         self.assertEqual(pkg.should_deploy, True)
 
         with mock_open_log() as mopen, \
@@ -527,9 +545,9 @@ class TestGit(SDistTestCase):
         otherssh = 'git@github.com:user/other.git'
 
         oldpkg = self.make_package('foo', repository=self.srcssh,
-                                   build='bfg9000')
+                                   build='bfg9000', fetch=True)
         newpkg1 = self.make_package('foo', repository=otherssh,
-                                    build='bfg9000')
+                                    build='bfg9000', fetch=True)
         newpkg2 = self.make_package(AptPackage, 'foo')
 
         # Git -> Git (same)
@@ -564,9 +582,9 @@ class TestGit(SDistTestCase):
         otherssh = 'git@github.com:user/other.git'
 
         oldpkg = self.make_package('foo', repository=self.srcssh,
-                                   build='bfg9000')
+                                   build='bfg9000', fetch=True)
         newpkg1 = self.make_package('foo', repository=otherssh,
-                                    build='bfg9000')
+                                    build='bfg9000', fetch=True)
         newpkg2 = self.make_package(AptPackage, 'foo')
 
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
@@ -633,6 +651,7 @@ class TestGit(SDistTestCase):
         opts = self.make_options()
         pkg = GitPackage('foo', repository=self.srcssh, build='bfg9000',
                          _options=opts, config_file=self.config_file)
+        self.package_fetch(pkg)
         data = through_json(pkg.dehydrate())
         self.assertEqual(pkg, Package.rehydrate(
             data, _options=opts, **rehydrate_kwargs
@@ -664,6 +683,7 @@ class TestGit(SDistTestCase):
         pkg = GitPackage('foo', repository=self.srcssh, build='bfg9000',
                          _options=self.make_options(),
                          config_file=self.config_file)
+        self.package_fetch(pkg)
         self.assertEqual(pkg.builder_types, ['bfg9000'])
 
         pkg = GitPackage('foo', repository=self.srcssh,

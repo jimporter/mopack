@@ -14,7 +14,7 @@ from mopack.origins import Package
 from mopack.origins.apt import AptPackage
 from mopack.origins.sdist import TarballPackage
 from mopack.path import Path
-from mopack.types import ConfigurationError
+from mopack.types import ConfigurationError, Unset
 
 
 def mock_exists(p):
@@ -29,14 +29,25 @@ class TestTarball(SDistTestCase):
     def setUp(self):
         super().setUp()
         self.config = Config([])
+        self.realopen = open
 
-    def mock_urlopen(self, url):
-        return open(self.srcpath, 'rb')
+    def mock_open(self, url, mode='rb'):
+        return self.realopen(self.srcpath, mode)
+
+    def package_fetch(self, pkg):
+        with mock.patch('mopack.log.pkg_fetch'), \
+             mock.patch('builtins.open', self.mock_open), \
+             mock.patch('mopack.origins.sdist.urlopen', self.mock_open), \
+             mock.patch('tarfile.TarFile.extractall'), \
+             mock.patch('os.path.isdir', return_value=True), \
+             mock.patch('os.path.exists', return_value=False):
+            pkg.fetch(self.metadata, self.config)
 
     def check_fetch(self, pkg):
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
         where = pkg.url or pkg.path.string()
-        with mock.patch('mopack.origins.sdist.urlopen', self.mock_urlopen), \
+        with mock.patch('builtins.open', self.mock_open), \
+             mock.patch('mopack.origins.sdist.urlopen', self.mock_open), \
              mock.patch('tarfile.TarFile.extractall') as mtar, \
              mock.patch('os.path.isdir', return_value=True), \
              mock.patch('os.path.exists', return_value=False):
@@ -51,11 +62,12 @@ class TestTarball(SDistTestCase):
         self.assertEqual(pkg.url, self.srcurl)
         self.assertEqual(pkg.path, None)
         self.assertEqual(pkg.patch, None)
-        self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.pending_builders, 'bfg9000')
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
         self.check_fetch(pkg)
+        self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg)
         self.check_linkage(pkg)
 
@@ -66,11 +78,12 @@ class TestTarball(SDistTestCase):
         self.assertEqual(pkg.url, None)
         self.assertEqual(pkg.path, Path(self.srcpath))
         self.assertEqual(pkg.patch, None)
-        self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.pending_builders, 'bfg9000')
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
         self.check_fetch(pkg)
+        self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg)
         self.check_linkage(pkg)
 
@@ -81,17 +94,18 @@ class TestTarball(SDistTestCase):
         self.assertEqual(pkg.env, {})
         self.assertEqual(pkg.url, None)
         self.assertEqual(pkg.path, Path(srcpath))
-        self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.pending_builders, 'bfg9000')
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
-        with mock.patch('mopack.origins.sdist.urlopen', self.mock_urlopen), \
+        with mock.patch('mopack.origins.sdist.urlopen', self.mock_open), \
              mock.patch('zipfile.ZipFile.extractall') as mtar, \
              mock.patch('os.path.isdir', return_value=True), \
              mock.patch('os.path.exists', return_value=False):
             with assert_logging([('fetch', 'foo from {}'.format(srcpath))]):
                 pkg.fetch(self.metadata, self.config)
+            self.assertEqual(pkg.builders, [builder])
             mtar.assert_called_once_with(srcdir, None)
         self.check_resolve(pkg)
         self.check_linkage(pkg)
@@ -105,11 +119,12 @@ class TestTarball(SDistTestCase):
         self.assertEqual(pkg.url, None)
         self.assertEqual(pkg.path, Path(self.srcpath))
         self.assertEqual(pkg.patch, None)
-        self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.pending_builders, 'bfg9000')
         self.assertEqual(pkg.needs_dependencies, True)
         self.assertEqual(pkg.should_deploy, True)
 
         self.check_fetch(pkg)
+        self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg, env={'BASE': 'base', 'VAR': 'value'})
         self.check_linkage(pkg)
 
@@ -126,7 +141,7 @@ class TestTarball(SDistTestCase):
         self.assertEqual(pkg.files, ['/hello-bfg/include/'])
 
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
-        with mock.patch('mopack.origins.sdist.urlopen', self.mock_urlopen), \
+        with mock.patch('mopack.origins.sdist.urlopen', self.mock_open), \
              mock.patch('tarfile.TarFile.extractall') as mtar, \
              mock.patch('os.path.isdir', return_value=True), \
              mock.patch('os.path.exists', return_value=False):
@@ -144,7 +159,7 @@ class TestTarball(SDistTestCase):
         self.assertEqual(pkg.patch, Path(patch))
 
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
-        with mock.patch('mopack.origins.sdist.urlopen', self.mock_urlopen), \
+        with mock.patch('mopack.origins.sdist.urlopen', self.mock_open), \
              mock.patch('mopack.origins.sdist.pushd'), \
              mock.patch('tarfile.TarFile.extractall') as mtar, \
              mock.patch('os.path.isdir', return_value=True), \
@@ -169,16 +184,17 @@ class TestTarball(SDistTestCase):
                                 linkage='pkg_config')
         builder = self.make_builder(Bfg9000Builder, pkg, extra_args='--extra')
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.pending_builders, build)
 
         self.check_fetch(pkg)
+        self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg, extra_args=['--extra'])
         self.check_linkage(pkg)
 
     def test_infer_build(self):
         # Basic inference
         pkg = self.make_package('foo', path=self.srcpath)
-        self.assertFalse(hasattr(pkg, 'builders'))
+        self.assertIs(pkg.pending_builders, Unset)
 
         with mock.patch('os.path.exists', mock_exists), \
              mock.patch('tarfile.TarFile.extractall'), \
@@ -190,7 +206,7 @@ class TestTarball(SDistTestCase):
                 config = pkg.fetch(self.metadata, self.config)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
-                'foo', path=self.srcpath, build='bfg9000'
+                'foo', path=self.srcpath, build='bfg9000', fetch=True
             ))
         self.check_resolve(pkg)
         self.check_linkage(pkg)
@@ -198,7 +214,7 @@ class TestTarball(SDistTestCase):
         # Infer but override linkage and version
         pkg = self.make_package('foo', path=self.srcpath,
                                 linkage={'type': 'system'})
-        self.assertFalse(hasattr(pkg, 'builders'))
+        self.assertIs(pkg.pending_builders, Unset)
 
         with mock.patch('os.path.exists', mock_exists), \
              mock.patch('tarfile.TarFile.extractall'), \
@@ -211,7 +227,7 @@ class TestTarball(SDistTestCase):
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
                 'foo', path=self.srcpath, build='bfg9000',
-                linkage={'type': 'system'}
+                linkage={'type': 'system'}, fetch=True
             ))
         with mock.patch('subprocess.run', side_effect=OSError()), \
              mock.patch('mopack.linkages.path_system.PathLinkage._filter_path',
@@ -242,7 +258,8 @@ class TestTarball(SDistTestCase):
                 config = pkg.fetch(self.metadata, self.config)
             self.assertEqual(config.export.build, 'bfg9000')
             self.assertEqual(pkg, self.make_package(
-                'foo', path=self.srcpath, build='cmake', linkage='pkg_config'
+                'foo', path=self.srcpath, build='cmake', linkage='pkg_config',
+                fetch=True
             ))
         with mock_open_log() as mopen, \
              mock.patch('mopack.builders.cmake.pushd'), \
@@ -264,9 +281,10 @@ class TestTarball(SDistTestCase):
                                 linkage='pkg_config')
         builder = self.make_builder(Bfg9000Builder, pkg)
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.pending_builders, 'bfg9000')
 
         self.check_fetch(pkg)
+        self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg)
         self.check_linkage(pkg)
 
@@ -282,9 +300,10 @@ class TestTarball(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 linkage=linkage)
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.pending_builders, 'bfg9000')
 
         self.check_fetch(pkg)
+        self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg)
         self.check_linkage(pkg, linkage={
             'name': 'foo', 'type': 'pkg_config', 'pcnames': ['foo'],
@@ -295,9 +314,10 @@ class TestTarball(SDistTestCase):
         pkg = self.make_package('foo', path=self.srcpath, build='bfg9000',
                                 linkage=linkage)
         self.assertEqual(pkg.path, Path(self.srcpath))
-        self.assertEqual(pkg.builders, [builder])
+        self.assertEqual(pkg.pending_builders, 'bfg9000')
 
         self.check_fetch(pkg)
+        self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg)
         self.check_linkage(pkg, linkage={
             'name': 'foo', 'type': 'path', 'generated': True,
@@ -354,7 +374,7 @@ class TestTarball(SDistTestCase):
     def test_invalid_submodule(self):
         pkg = self.make_package(
             'foo', path=self.srcpath, build='bfg9000',
-            submodules={'names': ['sub'], 'required': True}
+            submodules={'names': ['sub'], 'required': True}, fetch=True
         )
         with self.assertRaises(ValueError):
             pkg.get_linkage(self.metadata, ['invalid'])
@@ -472,8 +492,10 @@ class TestTarball(SDistTestCase):
         otherpath = os.path.join(test_data_dir, 'other_project.tar.gz')
 
         oldpkg = self.make_package('foo', path=self.srcpath,
-                                   srcdir='bfg_project', build='bfg9000')
-        newpkg1 = self.make_package('foo', path=otherpath, build='bfg9000')
+                                   srcdir='bfg_project', build='bfg9000',
+                                   fetch=True)
+        newpkg1 = self.make_package('foo', path=otherpath, build='bfg9000',
+                                    fetch=True)
         newpkg2 = self.make_package(AptPackage, 'foo')
 
         # Tarball -> Tarball (same)
@@ -516,8 +538,10 @@ class TestTarball(SDistTestCase):
         otherpath = os.path.join(test_data_dir, 'other_project.tar.gz')
 
         oldpkg = self.make_package('foo', path=self.srcpath,
-                                   srcdir='bfg_project', build='bfg9000')
-        newpkg1 = self.make_package('foo', path=otherpath, build='bfg9000')
+                                   srcdir='bfg_project', build='bfg9000',
+                                   fetch=True)
+        newpkg1 = self.make_package('foo', path=otherpath, build='bfg9000',
+                                    fetch=True)
         newpkg2 = self.make_package(AptPackage, 'foo')
 
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
@@ -598,6 +622,7 @@ class TestTarball(SDistTestCase):
         opts = self.make_options()
         pkg = TarballPackage('foo', path=self.srcpath, build='bfg9000',
                              _options=opts, config_file=self.config_file)
+        self.package_fetch(pkg)
         data = through_json(pkg.dehydrate())
         self.assertEqual(pkg, Package.rehydrate(
             data, _options=opts, **rehydrate_kwargs
@@ -605,6 +630,7 @@ class TestTarball(SDistTestCase):
 
         pkg = TarballPackage('foo', url=self.srcurl, build='bfg9000',
                              _options=opts, config_file=self.config_file)
+        self.package_fetch(pkg)
         data = through_json(pkg.dehydrate())
         self.assertEqual(pkg, Package.rehydrate(
             data, _options=opts, **rehydrate_kwargs
@@ -636,6 +662,7 @@ class TestTarball(SDistTestCase):
         pkg = TarballPackage('foo', path=self.srcpath, build='bfg9000',
                              _options=self.make_options(),
                              config_file=self.config_file)
+        self.package_fetch(pkg)
         self.assertEqual(pkg.builder_types, ['bfg9000'])
 
         pkg = TarballPackage('foo', path=self.srcpath,

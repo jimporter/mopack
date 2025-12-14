@@ -1,9 +1,11 @@
 import os
 import shutil
 import warnings
+from contextlib import contextmanager
 from io import BytesIO
 from typing import Dict, List
 from urllib.request import urlopen
+from subprocess import SubprocessError
 
 from . import Package, submodules_type
 from .. import archive, log, types
@@ -12,9 +14,10 @@ from ..config import ChildConfig
 from ..environment import get_cmd
 from ..freezedried import GenericFreezeDried
 from ..glob import filter_glob
-from ..iterutils import flatten, isiterable
+from ..iterutils import flatten, isiterable, listify
 from ..linkages import make_linkage
 from ..log import LogFile
+from ..objutils import Unset
 from ..options import DuplicateSymbolError
 from ..package_defaults import DefaultResolver
 from ..path import Path, pushd
@@ -26,13 +29,13 @@ from ..yaml_tools import to_parse_error
 @GenericFreezeDried.fields(rehydrate={
     'env': Dict[str, MaybePlaceholderString],
     'builders': List[Builder]
-}, skip_compare={'pending_linkage'})
+}, skip_compare={'pkg_default', 'pending_builders', 'pending_linkage'})
 class SDistPackage(Package):
     # TODO: Remove `usage` after v0.2 is released.
-    def __init__(self, name, *, env=None, build=None, linkage=None,
-                 usage=types.Unset, submodules=types.Unset,
-                 inherit_defaults=False, _options, **kwargs):
-        if linkage is None and usage is not types.Unset:
+    def __init__(self, name, *, env=None, submodules=Unset, build=Unset,
+                 linkage=Unset, usage=Unset, inherit_defaults=False, _options,
+                 **kwargs):
+        if linkage is Unset and usage is not Unset:
             warnings.warn(types.FieldKeyWarning(
                 '`usage` is deprecated; use `linkage` instead', 'usage'
             ))
@@ -41,6 +44,9 @@ class SDistPackage(Package):
         super().__init__(name, inherit_defaults=inherit_defaults,
                          _options=_options, **kwargs)
 
+        self.pkg_default = DefaultResolver(self, self._expr_symbols,
+                                           inherit_defaults, name)
+
         T = types.TypeCheck(locals(), self._expr_symbols)
         T.env(types.maybe(types.dict_of(
             types.string, types.placeholder_string
@@ -48,22 +54,21 @@ class SDistPackage(Package):
 
         self._expr_symbols = self._expr_symbols.augment(env=self.env)
         T = types.TypeCheck(locals(), self._expr_symbols)
+        T.submodules(submodules_type(raw=True))
 
-        if build is None:
-            if submodules is not types.Unset:
-                T.submodules(submodules_type)
-            self.pending_linkage = linkage
-        else:
-            pkg_default = DefaultResolver(self, self._expr_symbols,
-                                          inherit_defaults, name)
-            T.submodules(pkg_default(submodules_type))
-            self.builders = self._make_builders(build)
-            self.linkage = self._make_linkage(linkage)
+        self.pending_builders = build
+        self.pending_linkage = linkage
+
+    @property
+    def _finalized(self):
+        return (not hasattr(self, 'pkg_default') and
+                not hasattr(self, 'pending_builders') and
+                not hasattr(self, 'pending_linkage'))
 
     def dehydrate(self):
-        if hasattr(self, 'pending_linkage'):
+        if not self._finalized:
             raise types.ConfigurationError(
-                'cannot dehydrate until `pending_linkage` is finalized'
+                'cannot dehydrate until package is finalized'
             )
         return super().dehydrate()
 
@@ -99,9 +104,9 @@ class SDistPackage(Package):
 
     @property
     def builder_types(self):
-        if not hasattr(self, 'builders'):
+        if not self._finalized:
             raise types.ConfigurationError(
-                'cannot get builder types until builders are finalized'
+                'cannot get builder types until package is finalized'
             )
         return [i.type for i in self.builders]
 
@@ -117,9 +122,10 @@ class SDistPackage(Package):
                 result.update(**i.path_values(metadata, result))
         return result
 
-    def _make_builders(self, builders, **kwargs):
+    def _make_builders(self, builders, *, field='build', **kwargs):
         path_owners = {}
         symbols = self._builder_expr_symbols
+        field = listify(field)
 
         def do_make(builder, field):
             nonlocal symbols
@@ -137,13 +143,17 @@ class SDistPackage(Package):
                             .format(path_owners[e.symbol].type))
                 raise FieldValueError(msg, field)
 
+        if builders is Unset:
+            builders = None
         if not isiterable(builders):
-            return [do_make(builders, 'build')]
+            return [do_make(builders, field)]
         else:
-            return [do_make(builder, ('build', i))
+            return [do_make(builder, field + [i])
                     for i, builder in enumerate(builders)]
 
     def _make_linkage(self, linkage, **kwargs):
+        if linkage is Unset:
+            linkage = None
         for i in self.builders:
             linkage = i.filter_linkage(linkage)
         return make_linkage(self, linkage, _symbols=self._linkage_expr_symbols,
@@ -153,40 +163,58 @@ class SDistPackage(Package):
         config = ChildConfig([srcdir], parent_config=parent_config,
                              parent_package=self)
 
-        if hasattr(self, 'builders'):
-            return config
-
-        if not config or not config.export:
+        if config and config.export:
+            export = config.export
+        elif self.pending_builders is Unset:
             raise types.ConfigurationError((
                 'build for package {!r} is not fully defined and package ' +
                 'has no exported config'
             ).format(self.name))
-        export = config.export
-
-        if not hasattr(self, 'submodules'):
-            with to_parse_error(export.config_file):
-                self.submodules = submodules_type('submodules',
-                                                  export.submodules)
+        else:
+            export = ChildConfig.Export({}, None)
 
         context = 'while constructing package {!r}'.format(self.name)
-        with to_parse_error(export.config_file):
-            with types.try_load_config(export.data, context, self.origin):
+
+        @contextmanager
+        def load_config(filename, data):
+            with to_parse_error(filename):
+                with types.try_load_config(data, context, self.origin):
+                    yield
+
+        T = types.TypeCheck(export, dest=self)
+        with load_config(export.config_file, export.data):
+            if self.submodules is Unset:
+                T.submodules(self.pkg_default(
+                    submodules_type(), default=Unset
+                ))
+
+        # TODO: Support package defaults for builders/linkage?
+
+        # Construct the builders from the exported mopack config.
+        if self.pending_builders is Unset and export.build:
+            with load_config(export.config_file, export.data):
                 self.builders = self._make_builders(export.build)
-
-        if not self.pending_linkage and export.linkage:
-            with to_parse_error(export.config_file):
-                with types.try_load_config(export.data, context, self.origin):
-                    self.linkage = self._make_linkage(export.linkage)
         else:
-            # Note: If this fails and `pending_linkage` is a string, this won't
-            # report any line number information for the error, since we've
-            # lost that info by now in that case.
-            with to_parse_error(self.config_file):
-                with types.try_load_config(self.pending_linkage, context,
-                                           self.origin):
-                    self.linkage = self._make_linkage(self.pending_linkage,
-                                                      field=None)
+            # NOTE: If this fails and `pending_builders` is a string, this
+            # won't report any line number information for the error, since
+            # we've lost that info by now in that case.
+            with load_config(self.config_file, self.pending_builders):
+                self.builders = self._make_builders(self.pending_builders,
+                                                    field=None)
 
+        # Construct the linkage from the exported mopack config.
+        if self.pending_linkage is Unset and export.linkage:
+            with load_config(export.config_file, export.data):
+                self.linkage = self._make_linkage(export.linkage)
+        else:
+            # NOTE: As above, this won't report any line number information for
+            # errors if `pending_linage` is a string.
+            with load_config(self.config_file, self.pending_linkage):
+                self.linkage = self._make_linkage(self.pending_linkage,
+                                                  field=None)
+
+        del self.pkg_default
+        del self.pending_builders
         del self.pending_linkage
         return config
 
@@ -314,40 +342,44 @@ class TarballPackage(SDistPackage):
 
     def fetch(self, metadata, parent_config):
         base_srcdir = self._base_srcdir(metadata)
-        if os.path.exists(base_srcdir):
-            log.pkg_fetch(self.name, 'already fetched')
-        else:
-            path_bases = {'cfgdir': self.config_dir}
-            where = self.url or self.path.string(path_bases)
-            log.pkg_fetch(self.name, 'from {}'.format(where))
+        try:
+            if os.path.exists(base_srcdir):
+                log.pkg_fetch(self.name, 'already fetched')
+            else:
+                path_bases = {'cfgdir': self.config_dir}
+                where = self.url or self.path.string(path_bases)
+                log.pkg_fetch(self.name, 'from {}'.format(where))
 
-            with (self._urlopen(self.url) if self.url else
-                  open(self.path.string(path_bases), 'rb')) as f:
-                with archive.open(f) as arc:
-                    names = arc.getnames()
-                    self.guessed_srcdir = (names[0].split('/', 1)[0] if names
-                                           else None)
-                    if self.files:
-                        # XXX: This doesn't extract parents of our globs, so
-                        # owners/permissions won't be applied to them...
-                        filtered = filter_glob(self.files, names)
-                        arc.extractall(base_srcdir, members=filtered)
-                    else:
-                        arc.extractall(base_srcdir)
+                with (self._urlopen(self.url) if self.url else
+                      open(self.path.string(path_bases), 'rb')) as f:
+                    with archive.open(f) as arc:
+                        names = arc.getnames()
+                        self.guessed_srcdir = (names[0].split('/', 1)[0]
+                                               if names else None)
+                        if self.files:
+                            # XXX: This doesn't extract parents of our globs,
+                            # so owners/permissions won't be applied to them...
+                            filtered = filter_glob(self.files, names)
+                            arc.extractall(base_srcdir, members=filtered)
+                        else:
+                            arc.extractall(base_srcdir)
 
-            if self.patch:
-                env = self._expr_symbols['env'].value(
-                    self.path_values(metadata, with_builders=False)
-                )
-                patch_cmd = get_cmd(env, 'PATCH', 'patch')
-                patch = self.patch.string(path_bases)
-                log.pkg_patch(self.name, 'with {}'.format(patch))
-                with LogFile.open(metadata.pkgdir, self.name) as logfile, \
-                     open(patch) as f, \
-                     pushd(self._srcdir(metadata)):
-                    logfile.check_call(patch_cmd + ['-p1'], stdin=f, env=env)
-
-        return self._find_mopack(parent_config, self._srcdir(metadata))
+                if self.patch:
+                    env = self._expr_symbols['env'].value(
+                        self.path_values(metadata, with_builders=False)
+                    )
+                    patch_cmd = get_cmd(env, 'PATCH', 'patch')
+                    patch = self.patch.string(path_bases)
+                    log.pkg_patch(self.name, 'with {}'.format(patch))
+                    with LogFile.open(metadata.pkgdir, self.name) as logfile, \
+                         open(patch) as f, \
+                         pushd(self._srcdir(metadata)):
+                        logfile.check_call(patch_cmd + ['-p1'], stdin=f,
+                                           env=env)
+            return self._find_mopack(parent_config, self._srcdir(metadata))
+        except SubprocessError:
+            self._find_mopack(parent_config, self._srcdir(metadata))
+            raise
 
 
 class GitPackage(SDistPackage):

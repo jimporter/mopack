@@ -6,6 +6,7 @@ from yaml.error import MarkedYAMLError
 
 from . import OriginTest
 
+from mopack.config import Config
 from mopack.path import Path
 from mopack.origins import make_package, try_make_package
 from mopack.origins.sdist import DirectoryPackage
@@ -21,6 +22,11 @@ class TestMakePackage(OriginTest):
         else:
             return os.path.join(self.pkgdir, 'build', name, pkgconfig)
 
+    def package_fetch(self, pkg):
+        with mock.patch('mopack.config.BaseConfig._accumulate_config'), \
+             mock.patch('mopack.yaml_tools.make_parse_error', lambda e, _: e):
+            return pkg.fetch(self.metadata, Config([]))
+
     def test_make(self):
         pkg = make_package('foo', {
             'origin': 'directory', 'path': '/path', 'build': 'bfg9000',
@@ -31,6 +37,8 @@ class TestMakePackage(OriginTest):
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         self.assertEqual(pkg.path, Path('/path'))
+
+        self.package_fetch(pkg)
         self.assertEqual(pkg.builder_types, ['bfg9000'])
 
         self.assertEqual(pkg.get_linkage(self.metadata, None), {
@@ -51,6 +59,8 @@ class TestMakePackage(OriginTest):
         self.assertEqual(pkg.should_deploy, False)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
         self.assertEqual(pkg.path, Path('/path'))
+
+        self.package_fetch(pkg)
         self.assertEqual(pkg.builder_types, ['bfg9000'])
 
         self.assertEqual(pkg.get_linkage(self.metadata, None), {
@@ -242,12 +252,12 @@ class TestMakePackage(OriginTest):
           path: /path
           build: goofy
         """), Loader=SafeLineLoader)
-        with self.assertRaisesRegex(MarkedYAMLError,
-                                    r'line 3, column 8:\n'
-                                    r'    build: goofy\n'
-                                    r'           \^$'):
-            try_make_package('foo', data, _options=self.make_options(),
-                             config_file='/path/to/mopack.yml')
+        pkg = try_make_package('foo', data, _options=self.make_options(),
+                               config_file='/path/to/mopack.yml')
+        # We can't get the file/line info for builders that are simple strings.
+        # Instead, we'll just get a `FieldError`.
+        with self.assertRaises(FieldError):
+            self.package_fetch(pkg)
 
         data = yaml.load(dedent("""\
           origin: directory
@@ -255,12 +265,13 @@ class TestMakePackage(OriginTest):
           build:
             type: goofy
         """), Loader=SafeLineLoader)
+        pkg = try_make_package('foo', data, _options=self.make_options(),
+                               config_file='/path/to/mopack.yml')
         with self.assertRaisesRegex(MarkedYAMLError,
                                     r'line 4, column 9:\n'
                                     r'      type: goofy\n'
                                     r'            \^$'):
-            try_make_package('foo', data, _options=self.make_options(),
-                             config_file='/path/to/mopack.yml')
+            self.package_fetch(pkg)
 
     def test_invalid_builder_keys(self):
         data = yaml.load(dedent("""\
@@ -270,12 +281,13 @@ class TestMakePackage(OriginTest):
             type: bfg9000
             unknown: blah
         """), Loader=SafeLineLoader)
+        pkg = try_make_package('foo', data, _options=self.make_options(),
+                               config_file='/path/to/mopack.yml')
         with self.assertRaisesRegex(MarkedYAMLError,
                                     r'line 5, column 3:\n'
                                     r'      unknown: blah\n'
                                     r'      \^$'):
-            try_make_package('foo', data, _options=self.make_options(),
-                             config_file='/path/to/mopack.yml')
+            self.package_fetch(pkg)
 
     def test_invalid_builder_values(self):
         data = yaml.load(dedent("""\
@@ -285,12 +297,13 @@ class TestMakePackage(OriginTest):
             type: bfg9000
             extra_args: 1
         """), Loader=SafeLineLoader)
+        pkg = try_make_package('foo', data, _options=self.make_options(),
+                               config_file='/path/to/mopack.yml')
         with self.assertRaisesRegex(MarkedYAMLError,
                                     r'line 5, column 15:\n'
                                     r'      extra_args: 1\n'
                                     r'                  \^$'):
-            try_make_package('foo', data, _options=self.make_options(),
-                             config_file='/path/to/mopack.yml')
+            self.package_fetch(pkg)
 
     def test_unknown_linkage(self):
         data = yaml.load(dedent("""\

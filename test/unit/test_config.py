@@ -5,6 +5,7 @@ from unittest import mock, TestCase
 from . import mock_open_files, MockPackage
 
 from mopack.config import *
+from mopack.metadata import Metadata
 from mopack.options import Options
 from mopack.yaml_tools import YamlParseError
 from mopack.origins.apt import AptPackage
@@ -32,9 +33,22 @@ bar_cfg = dedent("""\
 """)
 
 
-class TestConfig(TestCase):
+class ConfigTestCase(TestCase):
     default_opts = Options.default()
 
+    def setUp(self):
+        self.metadata = Metadata('/path/to/metadata')
+
+    def fetch_packages(self, cfg, pkgs=None):
+        if pkgs is None:
+            pkgs = cfg.packages.values()
+        for pkg in pkgs:
+            with mock.patch('mopack.log.pkg_fetch'), \
+                 mock.patch('mopack.config.load'):
+                pkg.fetch(self.metadata, cfg)
+
+
+class TestConfig(ConfigTestCase):
     def test_empty_file(self):
         with mock.patch('builtins.open', mock_open_files({'mopack.yml': ''})):
             cfg = Config(['mopack.yml'])
@@ -124,12 +138,14 @@ class TestConfig(TestCase):
         files = {'mopack.yml': data}
         with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack.yml'])
+        self.fetch_packages(cfg)
         cfg.finalize()
 
         opts = Options.default()
         self.assertEqual(cfg.options, opts)
 
         pkg = AptPackage('foo', _options=opts, config_file='mopack.yml')
+        self.fetch_packages(cfg, [pkg])
         self.assertEqual(list(cfg.packages.items()), [('foo', pkg)])
 
     def test_conditional_packages(self):
@@ -144,6 +160,7 @@ class TestConfig(TestCase):
         files = {'mopack.yml': data}
         with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack.yml'])
+        self.fetch_packages(cfg)
         cfg.finalize()
 
         opts = Options.default()
@@ -152,6 +169,7 @@ class TestConfig(TestCase):
 
         pkg = ConanPackage('foo', remote='foo/1.2.3', _options=opts,
                            config_file='mopack.yml')
+        self.fetch_packages(cfg, [pkg])
         self.assertEqual(list(cfg.packages.items()), [('foo', pkg)])
 
     def test_invalid_conditional_packages(self):
@@ -191,6 +209,7 @@ class TestConfig(TestCase):
         files = {'mopack.yml': data}
         with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack.yml'])
+        self.fetch_packages(cfg)
         cfg.finalize()
 
         opts = Options()
@@ -200,6 +219,7 @@ class TestConfig(TestCase):
         self.assertEqual(cfg.options, opts)
 
         pkg = AptPackage('foo', _options=opts, config_file='mopack.yml')
+        self.fetch_packages(cfg, [pkg])
         self.assertEqual(list(cfg.packages.items()), [('foo', pkg)])
 
     def test_multiple_common_options(self):
@@ -225,6 +245,7 @@ class TestConfig(TestCase):
         files = {'mopack.yml': data1, 'mopack2.yml': data2}
         with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack2.yml', 'mopack.yml'])
+        self.fetch_packages(cfg)
         cfg.finalize()
 
         opts = Options()
@@ -235,6 +256,7 @@ class TestConfig(TestCase):
 
         pkg1 = AptPackage('foo', _options=opts, config_file='mopack.yml')
         pkg2 = AptPackage('bar', _options=opts, config_file='mopack.yml')
+        self.fetch_packages(cfg, [pkg1, pkg2])
         self.assertEqual(list(cfg.packages.items()), [
             ('foo', pkg1), ('bar', pkg2)
         ])
@@ -258,6 +280,7 @@ class TestConfig(TestCase):
         files = {'mopack.yml': data}
         with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack.yml'])
+        self.fetch_packages(cfg)
         cfg.finalize()
 
         opts = Options.default()
@@ -269,6 +292,7 @@ class TestConfig(TestCase):
         pkg2 = DirectoryPackage('bar', path=normpath('/path/to/src'),
                                 build='bfg9000', _options=opts,
                                 config_file='mopack.yml')
+        self.fetch_packages(cfg, [pkg1, pkg2])
         self.assertEqual(list(cfg.packages.items()), [
             ('foo', pkg1), ('bar', pkg2)
         ])
@@ -298,6 +322,7 @@ class TestConfig(TestCase):
         files = {'mopack.yml': data1, 'mopack2.yml': data2}
         with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack2.yml', 'mopack.yml'])
+        self.fetch_packages(cfg)
         cfg.finalize()
 
         opts = Options.default()
@@ -309,6 +334,7 @@ class TestConfig(TestCase):
         pkg2 = DirectoryPackage('bar', path=normpath('/path/to/src'),
                                 build='bfg9000', _options=opts,
                                 config_file='mopack.yml')
+        self.fetch_packages(cfg, [pkg1, pkg2])
         self.assertEqual(list(cfg.packages.items()), [
             ('foo', pkg1), ('bar', pkg2)
         ])
@@ -331,6 +357,7 @@ class TestConfig(TestCase):
         files = {'mopack.yml': data}
         with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack.yml'])
+        self.fetch_packages(cfg)
         cfg.finalize()
 
         opts = Options.default()
@@ -341,6 +368,7 @@ class TestConfig(TestCase):
         pkg1 = AptPackage('foo', _options=opts, config_file='mopack.yml')
         pkg2 = ConanPackage('bar', remote='bar/1.2.3', _options=opts,
                             config_file='mopack.yml')
+        self.fetch_packages(cfg, [pkg1, pkg2])
         self.assertEqual(list(cfg.packages.items()), [
             ('foo', pkg1), ('bar', pkg2)
         ])
@@ -378,6 +406,7 @@ class TestConfig(TestCase):
         with mock.patch('builtins.open', mock_open_files(files)):
             cfg = Config(['mopack3.yml', 'mopack2.yml', 'mopack.yml'],
                          {'origins': {'conan': {'extra_args': '-A'}}})
+        self.fetch_packages(cfg)
         cfg.finalize()
 
         opts = Options.default()
@@ -388,14 +417,13 @@ class TestConfig(TestCase):
         pkg1 = AptPackage('foo', _options=opts, config_file='mopack.yml')
         pkg2 = ConanPackage('bar', remote='bar/1.2.3', _options=opts,
                             config_file='mopack.yml')
+        self.fetch_packages(cfg, [pkg1, pkg2])
         self.assertEqual(list(cfg.packages.items()), [
             ('foo', pkg1), ('bar', pkg2)
         ])
 
 
-class TestChildConfig(TestCase):
-    default_opts = Options.default()
-
+class TestChildConfig(ConfigTestCase):
     def test_empty_file(self):
         files = {'mopack.yml': '', 'mopack-child.yml': ''}
         with mock.patch('builtins.open', mock_open_files(files)):
@@ -537,6 +565,7 @@ class TestChildConfig(TestCase):
             child = ChildConfig(['mopack-child.yml'], parent, MockPackage())
 
         parent.add_children([child])
+        self.fetch_packages(parent)
         parent.finalize()
 
         opts = Options.default()
@@ -547,6 +576,7 @@ class TestChildConfig(TestCase):
         pkg2 = DirectoryPackage('bar', path=normpath('/path/to/src'),
                                 build='bfg9000', _options=opts,
                                 config_file='mopack.yml')
+        self.fetch_packages(parent, [pkg1, pkg2])
         self.assertEqual(list(parent.packages.items()), [
             ('foo', pkg1), ('bar', pkg2)
         ])
@@ -581,6 +611,7 @@ class TestChildConfig(TestCase):
             child = ChildConfig(['mopack-child.yml'], parent, MockPackage())
 
         parent.add_children([child])
+        self.fetch_packages(parent)
         parent.finalize()
 
         opts = Options.default()
@@ -591,6 +622,7 @@ class TestChildConfig(TestCase):
         pkg1 = AptPackage('foo', _options=opts, config_file='mopack.yml')
         pkg2 = ConanPackage('bar', remote='bar/1.2.3', _options=opts,
                             config_file='mopack.yml')
+        self.fetch_packages(parent, [pkg1, pkg2])
         self.assertEqual(list(parent.packages.items()), [
             ('foo', pkg1), ('bar', pkg2)
         ])

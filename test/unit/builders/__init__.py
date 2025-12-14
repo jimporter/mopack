@@ -1,7 +1,9 @@
 import os
+from unittest import mock
 
 from .. import OptionsTest, MockPackage, through_json  # noqa: F401
 
+from mopack.config import Config
 from mopack.metadata import Metadata
 from mopack.options import ExprSymbols
 
@@ -19,6 +21,11 @@ class BuilderTest(OptionsTest):
 
     def pkgconfdir(self, name, pkgconfig='pkgconfig'):
         return os.path.join(self.pkgdir, 'build', name, pkgconfig)
+
+    def package_fetch(self, pkg):
+        with mock.patch('mopack.log.pkg_fetch'), \
+             mock.patch('mopack.config.load'):
+            return pkg.fetch(self.metadata, Config([]))
 
     def make_options(self, builder_type=None, *, common_options=None,
                      this_options=None, deploy_dirs=None, config_file=None):

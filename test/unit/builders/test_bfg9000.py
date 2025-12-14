@@ -105,6 +105,7 @@ class TestBfg9000Builder(BuilderTest):
         opts = self.make_options()
         pkg = DirectoryPackage('foo', path=self.srcdir, build='bfg9000',
                                _options=opts, config_file=self.config_file)
+        self.package_fetch(pkg)
         pkg.get_linkage(self.metadata, None)
 
     def test_rehydrate(self):

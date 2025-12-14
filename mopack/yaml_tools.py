@@ -121,6 +121,9 @@ def _maybe_open(stream_or_filename, *args, **kwargs):
 
 
 def make_parse_error(e, stream_or_filename):
+    if not stream_or_filename:
+        return e
+
     with _maybe_open(stream_or_filename) as f:
         if isinstance(e, MarkedYAMLOffsetError) and e.offset != 0:
             start_mark, end_mark = e.problem_range
@@ -151,8 +154,9 @@ def to_parse_warning(stream_or_filename):
 
     def showwarning(message, *args, **kwargs):
         if isinstance(message, MarkedYAMLWarning):
-            with _maybe_open(stream_or_filename) as f:
-                message = UserWarning(make_parse_error(message, f))
+            message = UserWarning(make_parse_error(
+                message, stream_or_filename
+            ))
         return original(message, *args, **kwargs)
 
     warnings.showwarning = showwarning

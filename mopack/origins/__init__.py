@@ -26,15 +26,14 @@ _submodule_dict = types.dict_shape({
 }, desc='a list of submodules')
 
 
-def submodules_type(field, value):
-    if value is None:
-        return None
-    elif not ismapping(value):
-        value = {
-            'names': value,
-            'required': True,
-        }
-    return _submodule_dict(field, value)
+def submodules_type(*, raw=False):
+    def wrap(field, value):
+        if not ismapping(value):
+            value = {'names': value, 'required': True}
+        return _submodule_dict(field, value)
+
+    maybe = types.maybe_raw if raw else types.maybe
+    return maybe(wrap)
 
 
 @GenericFreezeDried.fields(rehydrate={'linkage': Linkage},
@@ -195,7 +194,7 @@ class BinaryPackage(Package):
         symbols = self._expr_symbols
         pkg_default = DefaultResolver(self, symbols, inherit_defaults, name)
         T = types.TypeCheck(locals(), symbols)
-        T.submodules(pkg_default(submodules_type))
+        T.submodules(pkg_default(submodules_type()))
 
         self.linkage = make_linkage(self, linkage, field=_linkage_field,
                                     _symbols=self._linkage_expr_symbols)

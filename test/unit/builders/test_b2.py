@@ -91,6 +91,7 @@ class TestB2Builder(BuilderTest):
         pkg = DirectoryPackage('foo', path=self.srcdir, build='b2',
                                linkage='pkg_config', _options=opts,
                                config_file=self.config_file)
+        self.package_fetch(pkg)
         pkg.get_linkage(self.metadata, None)
 
     def test_rehydrate(self):
