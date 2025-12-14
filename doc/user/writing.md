@@ -257,7 +257,9 @@ packages:
     origin: tarball
     path: greeter-1.0.tar.gz
     build: bfg9000
-    submodules: ['french', 'english']
+    submodules:
+      french:
+      english:
 ```
 
 This specifies a package with two submodules, *requiring* at least one to be

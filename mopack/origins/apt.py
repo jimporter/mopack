@@ -1,7 +1,7 @@
 import subprocess
 from itertools import chain
 
-from . import BatchPackage, BinaryPackage
+from . import BatchPackage, BinaryPackage, migrate_saved_submodules
 from .. import log, types
 from ..environment import get_cmd, subprocess_run
 from ..iterutils import uniques
@@ -10,10 +10,14 @@ from ..objutils import Unset
 
 class AptPackage(BinaryPackage, BatchPackage):
     origin = 'apt'
-    _version = 1
+    _version = 2
 
     @staticmethod
     def upgrade(config, version):
+        # v2 migrates the layout of `submodules`.
+        if version < 2:
+            migrate_saved_submodules(config)
+
         return config
 
     # TODO: Remove `usage` after v0.2 is released.

@@ -21,7 +21,6 @@ def evaluate_if(symbols, expression, submodule_name):
     return expr.evaluate(symbols, expression, if_context=True)
 
 
-# TODO: Remove these after v0.2 is released.
 def _migrate_submodule_map(submodule_map, *, mangle=False):
     if ismapping(submodule_map):
         return [{'_if' if mangle else 'if':
@@ -30,6 +29,7 @@ def _migrate_submodule_map(submodule_map, *, mangle=False):
     return submodule_map
 
 
+# TODO: Remove this after v0.2 is released.
 def migrate_submodule_map(submodule_map):
     warnings.warn(types.FieldKeyWarning(
         '`submodule_map` is deprecated; use `submodule_linkage` instead',

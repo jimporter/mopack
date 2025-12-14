@@ -9,7 +9,8 @@ from urllib.request import urlopen
 
 from verspec.loose import SpecifierSet
 
-from . import Package, submodules_type
+from . import (Package, submodules_type, submodule_required_type,
+               migrate_submodules, migrate_saved_submodules)
 from .. import archive, log, types
 from ..builders import Builder, make_builder
 from ..config import ChildConfig
@@ -35,10 +36,14 @@ from ..yaml_tools import to_parse_error
 }, skip_compare={'pkg_default', 'pending_builders', 'pending_linkage'})
 class SDistPackage(Package):
     # TODO: Remove `usage` after v0.2 is released.
-    def __init__(self, name, *, env=None, submodules=Unset, build=Unset,
-                 linkage=Unset, usage=Unset, inherit_defaults=False, _options,
-                 **kwargs):
-        if linkage is Unset and usage is not Unset:
+    def __init__(self, name, *, env=None, submodules=Unset,
+                 submodule_required=Unset, build=Unset, linkage=Unset,
+                 usage=Unset, inherit_defaults=False, _options, **kwargs):
+        submodules, submodule_required = migrate_submodules(
+            submodules, submodule_required
+        )
+
+        if linkage is None and usage is not Unset:
             warnings.warn(types.FieldKeyWarning(
                 '`usage` is deprecated; use `linkage` instead', 'usage'
             ))
@@ -58,6 +63,9 @@ class SDistPackage(Package):
         self._expr_symbols = self._expr_symbols.augment(env=self.env)
         T = types.TypeCheck(locals(), self._expr_symbols)
         T.submodules(submodules_type(raw=True))
+        T.submodule_required(submodule_required_type(
+            self.submodules, raw=True
+        ))
 
         self.pending_builders = build
         self.pending_linkage = linkage
@@ -185,11 +193,23 @@ class SDistPackage(Package):
                     yield
 
         T = types.TypeCheck(export, dest=self)
+        recheck = (self.submodules is Unset and
+                   self.submodule_required is not Unset)
         with load_config(export.config_file, export.data):
             if self.submodules is Unset:
                 T.submodules(self.pkg_default(
                     submodules_type(), default=Unset
                 ))
+            if self.submodule_required is Unset:
+                T.submodule_required(self.pkg_default(
+                    submodule_required_type(self.submodules), default=Unset
+                ))
+
+        if recheck:
+            # Re-check the `submodule_required` field for consistency.
+            submodule_required_type(self.submodules)(
+                'submodule_required', self.submodule_required
+            )
 
         # TODO: Support package defaults for builders/linkage?
 
@@ -255,7 +275,7 @@ class SDistPackage(Package):
 @GenericFreezeDried.fields(rehydrate={'path': Path})
 class DirectoryPackage(SDistPackage):
     origin = 'directory'
-    _version = 3
+    _version = 4
 
     @staticmethod
     def upgrade(config, version):
@@ -266,6 +286,10 @@ class DirectoryPackage(SDistPackage):
         # v3 adds the `env` field.
         if version < 3:  # pragma: no branch
             config['env'] = {}
+
+        # v4 migrates the layout of `submodules`.
+        if version < 4:
+            migrate_saved_submodules(config)
 
         return config
 
@@ -288,7 +312,7 @@ class DirectoryPackage(SDistPackage):
                            skip_compare={'guessed_srcdir'})
 class TarballPackage(SDistPackage):
     origin = 'tarball'
-    _version = 3
+    _version = 4
 
     @staticmethod
     def upgrade(config, version):
@@ -299,6 +323,10 @@ class TarballPackage(SDistPackage):
         # v3 adds the `env` field.
         if version < 3:  # pragma: no branch
             config['env'] = {}
+
+        # v4 migrates the layout of `submodules`.
+        if version < 4:
+            migrate_saved_submodules(config)
 
         return config
 
@@ -387,7 +415,7 @@ class TarballPackage(SDistPackage):
 
 class GitPackage(SDistPackage):
     origin = 'git'
-    _version = 3
+    _version = 4
 
     @staticmethod
     def upgrade(config, version):
@@ -398,6 +426,10 @@ class GitPackage(SDistPackage):
         # v3 adds the `env` field.
         if version < 3:  # pragma: no branch
             config['env'] = {}
+
+        # v4 migrates the layout of `submodules`.
+        if version < 4:
+            migrate_saved_submodules(config)
 
         return config
 

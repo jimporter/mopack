@@ -163,39 +163,42 @@ class TestSystemPackage(OriginTest):
         self.check_pkg_config('foo', None, {'libs': []})
 
     def test_submodules(self):
-        submodules_required = {'names': '*', 'required': True}
-        submodules_optional = {'names': '*', 'required': False}
-
-        pkg = self.make_package('foo', submodules=submodules_required)
+        pkg = self.make_package('foo', submodules='*', submodule_required=True)
         self.check_get_linkage(pkg, ['sub'])
         self.check_pkg_config('foo', ['sub'], {
             'libs': ['-L' + abspath('/mock/lib'), '-lfoo_sub'],
         })
 
-        pkg = self.make_package('foo', libraries='bar',
-                                submodules=submodules_required)
+        pkg = self.make_package('foo', libraries='bar', submodules='*',
+                                submodule_required=True)
         self.check_get_linkage(pkg, ['sub'])
         self.check_pkg_config('foo', ['sub'], {
             'libs': ['-L' + abspath('/mock/lib'), '-lbar', '-lfoo_sub'],
         })
 
-        pkg = self.make_package('foo', submodules=submodules_optional)
+        pkg = self.make_package('foo', submodules='*',
+                                submodule_required=False)
         self.check_get_linkage(pkg, ['sub'])
         self.check_pkg_config('foo', ['sub'], {
             'libs': ['-L' + abspath('/mock/lib'), '-lfoo', '-lfoo_sub'],
         })
 
-        pkg = self.make_package('foo', libraries='bar',
-                                submodules=submodules_optional)
+        pkg = self.make_package('foo', libraries='bar', submodules='*',
+                                submodule_required=False)
         self.check_get_linkage(pkg, ['sub'])
         self.check_pkg_config('foo', ['sub'], {
             'libs': ['-L' + abspath('/mock/lib'), '-lbar', '-lfoo_sub'],
         })
 
     def test_invalid_submodule(self):
-        pkg = self.make_package('foo', submodules={
-            'names': ['sub'], 'required': True
-        })
+        with self.assertRaises(TypeError):
+            self.make_package('foo', submodules={'sub': None},
+                              submodule_required=None)
+        with self.assertRaises(TypeError):
+            self.make_package('foo', submodule_required=True)
+
+        pkg = self.make_package('foo', submodules={'sub': None},
+                                submodule_required=True)
         with self.assertRaises(ValueError):
             pkg.get_linkage(self.metadata, ['invalid'])
 
@@ -259,10 +262,13 @@ class TestSystemPackage(OriginTest):
 
     def test_upgrade(self):
         opts = self.make_options()
-        data = {'origin': 'system', '_version': 0, 'name': 'foo',
+        data = {'origin': 'system', '_version': 1, 'name': 'foo',
+                'submodules': {'names': ['sub'], 'required': False},
                 'linkage': {'type': 'system', '_version': 3}}
         with mock.patch.object(SystemPackage, 'upgrade',
                                side_effect=SystemPackage.upgrade) as m:
             pkg = Package.rehydrate(data, _options=opts, **rehydrate_kwargs)
             self.assertIsInstance(pkg, SystemPackage)
+            self.assertEqual(pkg.submodules, {'sub': {}})
+            self.assertEqual(pkg.submodule_required, False)
             m.assert_called_once()

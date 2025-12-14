@@ -75,10 +75,12 @@ class MockPackage:
     cfgdir = '/path/to/cfgdir'
 
     def __init__(self, name='foo', *, version=None, env=None, srcdir=None,
-                 builddir=None, submodules=None, _options=None):
+                 builddir=None, submodules=None, submodule_required=True,
+                 _options=None):
         self.name = name
         self.env = env or {}
-        self.submodules = submodules
+        self.submodules = submodules or None
+        self.submodule_required = submodule_required if submodules else None
         self.builder = MockBuilder(builddir) if builddir else None
         self._version = version
         self._srcdir = srcdir

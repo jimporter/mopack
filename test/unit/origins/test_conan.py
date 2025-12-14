@@ -52,7 +52,7 @@ class TestConan(OriginTest):
 
     def check_linkage(self, pkg, *, submodules=None, linkage=None):
         if linkage is None:
-            pcnames = ([] if pkg.submodules and pkg.submodules['required'] else
+            pcnames = ([] if pkg.submodules and pkg.submodule_required else
                        [pkg.name])
             pcnames.extend('{}_{}'.format(pkg.name, i)
                            for i in iterate(submodules))
@@ -217,17 +217,14 @@ class TestConan(OriginTest):
             self.check_linkage(pkg)
 
     def test_submodules(self):
-        submodules_required = {'names': '*', 'required': True}
-        submodules_optional = {'names': '*', 'required': False}
-
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
-                                submodules=submodules_required)
+                                submodules='*', submodule_required=True)
         self.check_linkage(pkg, submodules=['sub'])
 
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
                                 linkage={'type': 'pkg_config', 'pcname': 'bar',
                                          'pkg_config_path': '.'},
-                                submodules=submodules_required)
+                                submodules='*', submodule_required=True)
         self.check_linkage(pkg, submodules=['sub'], linkage={
             'name': 'foo[sub]', 'type': 'pkg_config',
             'pcnames': ['bar', 'foo_sub'],
@@ -235,13 +232,13 @@ class TestConan(OriginTest):
         })
 
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
-                                submodules=submodules_optional)
+                                submodules='*', submodule_required=False)
         self.check_linkage(pkg, submodules=['sub'])
 
         pkg = self.make_package('foo', remote='foo/1.2.3@conan/stable',
                                 linkage={'type': 'pkg_config', 'pcname': 'bar',
                                          'pkg_config_path': '.'},
-                                submodules=submodules_optional)
+                                submodules='*', submodule_required=False)
         self.check_linkage(pkg, submodules=['sub'], linkage={
             'name': 'foo[sub]', 'type': 'pkg_config',
             'pcnames': ['bar', 'foo_sub'],
@@ -249,9 +246,15 @@ class TestConan(OriginTest):
         })
 
     def test_invalid_submodule(self):
+        with self.assertRaises(TypeError):
+            self.make_package('foo', submodules={'sub': None},
+                              submodule_required=None)
+        with self.assertRaises(TypeError):
+            self.make_package('foo', submodule_required=True)
+
         pkg = self.make_package(
             'foo', remote='foo/1.2.3@conan/stable',
-            submodules={'names': ['sub'], 'required': True}
+            submodules={'sub': None}, submodule_required=True
         )
         with self.assertRaises(ValueError):
             pkg.get_linkage(self.metadata, ['invalid'])
@@ -405,13 +408,16 @@ class TestConan(OriginTest):
 
     def test_upgrade(self):
         opts = self.make_options()
-        data = {'origin': 'conan', '_version': 0, 'name': 'foo',
+        data = {'origin': 'conan', '_version': 1, 'name': 'foo',
                 'remote': 'foo', 'build': False, 'options': None,
+                'submodules': {'names': ['sub'], 'required': False},
                 'linkage': {'type': 'system', '_version': 3}}
         with mock.patch.object(ConanPackage, 'upgrade',
                                side_effect=ConanPackage.upgrade) as m:
             pkg = Package.rehydrate(data, _options=opts, **rehydrate_kwargs)
             self.assertIsInstance(pkg, ConanPackage)
+            self.assertEqual(pkg.submodules, {'sub': {}})
+            self.assertEqual(pkg.submodule_required, False)
             m.assert_called_once()
 
 

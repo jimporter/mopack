@@ -74,10 +74,9 @@ class TestPkgConfig(LinkageTest):
 
     def test_submodules(self):
         pkg = MockPackage(builddir=self.builddir)
-        submodules_required = {'names': '*', 'required': True}
-        submodules_optional = {'names': '*', 'required': False}
 
-        linkage = self.make_linkage('foo', submodules=submodules_required)
+        linkage = self.make_linkage('foo', submodules='*',
+                                    submodule_required=True)
         self.assertEqual(linkage.pcname, None)
         self.assertEqual(linkage.pkg_config_path,
                          [Path('pkgconfig', 'builddir')])
@@ -87,8 +86,8 @@ class TestPkgConfig(LinkageTest):
              'pkg_config_path': [self.pkgconfdir]}
         )
 
-        linkage = self.make_linkage('foo', pcname='bar',
-                                    submodules=submodules_required)
+        linkage = self.make_linkage('foo', pcname='bar', submodules='*',
+                                    submodule_required=True)
         self.assertEqual(linkage.pcname, 'bar')
         self.assertEqual(linkage.pkg_config_path,
                          [Path('pkgconfig', 'builddir')])
@@ -99,7 +98,8 @@ class TestPkgConfig(LinkageTest):
              'pkg_config_path': [self.pkgconfdir]}
         )
 
-        linkage = self.make_linkage('foo', submodules=submodules_optional)
+        linkage = self.make_linkage('foo', submodules='*',
+                                    submodule_required=False)
         self.assertEqual(linkage.pcname, 'foo')
         self.assertEqual(linkage.pkg_config_path,
                          [Path('pkgconfig', 'builddir')])
@@ -110,8 +110,8 @@ class TestPkgConfig(LinkageTest):
              'pkg_config_path': [self.pkgconfdir]}
         )
 
-        linkage = self.make_linkage('foo', pcname='bar',
-                                    submodules=submodules_optional)
+        linkage = self.make_linkage('foo', pcname='bar', submodules='*',
+                                    submodule_required=False)
         self.assertEqual(linkage.pcname, 'bar')
         self.assertEqual(linkage.pkg_config_path,
                          [Path('pkgconfig', 'builddir')])
@@ -123,11 +123,10 @@ class TestPkgConfig(LinkageTest):
         )
 
     def test_submodule_linkage(self):
-        pkg = MockPackage(builddir=self.builddir)
-        submodules_required = {'names': '*', 'required': True}
+        pkg = MockPackage('foo', builddir=self.builddir, submodules='*',
+                          submodule_required=True)
 
-        linkage = self.make_linkage('foo', submodule_linkage='$submodule',
-                                    submodules=submodules_required)
+        linkage = self.make_linkage(pkg, submodule_linkage='$submodule')
         self.assertEqual(linkage.pcname, None)
         self.assertEqual(linkage.pkg_config_path,
                          [Path('pkgconfig', 'builddir')])
@@ -137,9 +136,9 @@ class TestPkgConfig(LinkageTest):
              'pkg_config_path': [self.pkgconfdir]}
         )
 
-        linkage = self.make_linkage('foo', submodule_linkage={
+        linkage = self.make_linkage(pkg, submodule_linkage={
             'pcname': '$submodule'
-        }, submodules=submodules_required)
+        })
         self.assertEqual(linkage.pcname, None)
         self.assertEqual(linkage.pkg_config_path,
                          [Path('pkgconfig', 'builddir')])
@@ -149,9 +148,9 @@ class TestPkgConfig(LinkageTest):
              'pkg_config_path': [self.pkgconfdir]}
         )
 
-        linkage = self.make_linkage('foo', submodule_linkage={
+        linkage = self.make_linkage(pkg, submodule_linkage={
             'pcname': '${{ submodule + "_" + target_platform }}'
-        }, submodules=submodules_required)
+        })
         self.assertEqual(linkage.pcname, None)
         self.assertEqual(linkage.pkg_config_path,
                          [Path('pkgconfig', 'builddir')])
@@ -162,13 +161,13 @@ class TestPkgConfig(LinkageTest):
              'pkg_config_path': [self.pkgconfdir]}
         )
 
-        linkage = self.make_linkage('foo', submodule_linkage=[
+        linkage = self.make_linkage(pkg, submodule_linkage=[
             {'if': 'submodule == "sub"',
              'pcname': 'foopc'},
             {'if': 'submodule == "sub2"',
              'pcname': '${{ submodule }}pc'},
             {'pcname': 'star${{ submodule }}pc'},
-        ], submodules=submodules_required)
+        ])
         self.assertEqual(linkage.pcname, None)
         self.assertEqual(linkage.pkg_config_path,
                          [Path('pkgconfig', 'builddir')])
@@ -188,11 +187,13 @@ class TestPkgConfig(LinkageTest):
              'pcnames': ['starsubfoopc'], 'pkg_config_path': [self.pkgconfdir]}
         )
 
-        submodules = {'names': '*', 'required': False}
-        linkage = self.make_linkage('foo', submodule_linkage=[
+        pkg = MockPackage('foo', builddir=self.builddir, submodules='*',
+                          submodule_required=False)
+
+        linkage = self.make_linkage(pkg, submodule_linkage=[
             {'if': 'submodule == "sub"', 'pcname': 'subpc'},
             {'if': 'submodule == "sub2"', 'pcname': None},
-        ], submodules=submodules)
+        ])
         self.assertEqual(linkage.pcname, 'foo')
         self.assertEqual(linkage.pkg_config_path,
                          [Path('pkgconfig', 'builddir')])
@@ -208,11 +209,10 @@ class TestPkgConfig(LinkageTest):
         )
 
     def test_boost(self):
-        pkg = MockPackage('boost', builddir=self.builddir)
-        submodules = {'names': '*', 'required': False}
+        pkg = MockPackage('boost', builddir=self.builddir, submodules='*',
+                          submodule_required=False)
 
-        linkage = self.make_linkage('boost', inherit_defaults=True,
-                                    submodules=submodules)
+        linkage = self.make_linkage(pkg, inherit_defaults=True)
         self.assertEqual(linkage.pcname, 'boost')
         self.assertEqual(linkage.pkg_config_path,
                          [Path('pkgconfig', 'builddir')])
@@ -227,9 +227,8 @@ class TestPkgConfig(LinkageTest):
              'pcnames': ['boost'], 'pkg_config_path': [self.pkgconfdir]}
         )
 
-        linkage = self.make_linkage('boost', inherit_defaults=True,
-                                    submodule_linkage='boost_$submodule',
-                                    submodules=submodules)
+        linkage = self.make_linkage(pkg, inherit_defaults=True,
+                                    submodule_linkage='boost_$submodule')
         self.assertEqual(linkage.pcname, 'boost')
         self.assertEqual(linkage.pkg_config_path,
                          [Path('pkgconfig', 'builddir')])

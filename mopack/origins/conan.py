@@ -3,7 +3,8 @@ import subprocess
 import warnings
 from itertools import chain
 
-from . import BatchPackage, BinaryPackage, PackageOptions
+from . import (BatchPackage, BinaryPackage, PackageOptions,
+               migrate_saved_submodules)
 from .. import log, types
 from ..environment import get_cmd
 from ..freezedried import GenericFreezeDried
@@ -15,7 +16,7 @@ from ..shell import ShellArguments
 
 class ConanPackage(BinaryPackage, BatchPackage):
     origin = 'conan'
-    _version = 1
+    _version = 2
 
     @GenericFreezeDried.fields(rehydrate={'extra_args': ShellArguments})
     class Options(PackageOptions):
@@ -41,6 +42,10 @@ class ConanPackage(BinaryPackage, BatchPackage):
 
     @staticmethod
     def upgrade(config, version):
+        # v2 migrates the layout of `submodules`.
+        if version < 2:
+            migrate_saved_submodules(config)
+
         return config
 
     # TODO: Remove `usage` after v0.2 is released.

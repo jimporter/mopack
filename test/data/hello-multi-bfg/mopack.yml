@@ -1,3 +1,5 @@
 export:
-  submodules: ['french', 'english']
+  submodules:
+      french:
+      english:
   build: bfg9000

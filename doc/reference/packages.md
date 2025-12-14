@@ -10,6 +10,7 @@ packages:
     inherit_defaults: <boolean>
     deploy: <boolean>
     submodules: <submodules>
+    submodule_required: <boolean>
 ```
 
 `origin` <span class="subtitle">*required*</span>
@@ -25,17 +26,19 @@ packages:
 : If true, deploy this package when calling `mopack deploy`.
 
 `submodules` <span class="subtitle">*optional, default*: `null`</span>
-: A list of available submodules, or `*` to indicate that any submodule name
-  should be accepted. If this is specified, using this package via `mopack
-  linkage` *must* specify a submodule. To declare that submodules are optional for
-  linkage, you can specify a dictionary:
-
-        submodules:
-          names: <submodules>
-          required: false
+: A dictionary of available submodule names, or `*` to indicate that any
+  submodule name should be accepted.
 
   This can also be set in a package's [`export`](file-structure.md#exports)
   section.
+
+`submodule_required` <span class="subtitle">*optional, default*: `true` or `null`</span>
+: If this is true (the default when `submodules` is non-`null`), using this
+  package via `mopack linkage` *must* specify a submodule. When the package has
+  no submodules, this must be `null`.
+
+  As with `submodules`, this can also be set in a package's
+  [`export`](file-structure.md#exports) section.
 
 ## Source distributions
 

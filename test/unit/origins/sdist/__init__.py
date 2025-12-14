@@ -27,7 +27,7 @@ class SDistTestCase(OriginTest):
 
     def check_linkage(self, pkg, *, submodules=None, linkage=None):
         if linkage is None:
-            pcnames = ([] if pkg.submodules and pkg.submodules['required'] else
+            pcnames = ([] if pkg.submodules and pkg.submodule_required else
                        [pkg.name])
             pcnames.extend('{}_{}'.format(pkg.name, i)
                            for i in iterate(submodules))

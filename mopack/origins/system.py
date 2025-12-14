@@ -1,4 +1,4 @@
-from . import BinaryPackage
+from . import BinaryPackage, migrate_saved_submodules
 from .. import log
 from ..types import FieldKeyError, Unset
 from ..iterutils import slice_dict
@@ -6,10 +6,14 @@ from ..iterutils import slice_dict
 
 class SystemPackage(BinaryPackage):
     origin = 'system'
-    _version = 1
+    _version = 2
 
     @staticmethod
     def upgrade(config, version):
+        # v2 migrates the layout of `submodules`.
+        if version < 2:
+            migrate_saved_submodules(config)
+
         return config
 
     def __init__(self, name, *, linkage=Unset, inherit_defaults=False,

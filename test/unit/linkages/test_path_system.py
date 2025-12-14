@@ -458,10 +458,7 @@ class TestPath(LinkageTest):
         })
 
     def test_submodules(self):
-        submodules_required = {'names': '*', 'required': True}
-        submodules_optional = {'names': '*', 'required': False}
-
-        pkg = MockPackage('foo', submodules=submodules_required,
+        pkg = MockPackage('foo', submodules='*', submodule_required=True,
                           _options=self.make_options())
         linkage = self.make_linkage(pkg)
         self.check_linkage(linkage, libraries=[])
@@ -477,7 +474,7 @@ class TestPath(LinkageTest):
             'libs': ['-L' + abspath('/mock/lib'), '-lbar', '-lfoo_sub'],
         })
 
-        pkg = MockPackage('foo', submodules=submodules_optional,
+        pkg = MockPackage('foo', submodules='*', submodule_required=False,
                           _options=self.make_options())
         linkage = self.make_linkage(pkg)
         self.check_linkage(linkage, libraries=['foo'])
@@ -494,10 +491,9 @@ class TestPath(LinkageTest):
         })
 
     def test_submodule_linkage(self):
-        submodules_required = {'names': '*', 'required': True}
-
-        pkg = MockPackage('foo', submodules=submodules_required,
+        pkg = MockPackage('foo', submodules='*', submodule_required=True,
                           _options=self.make_options())
+
         linkage = self.make_linkage(pkg, submodule_linkage='$submodule')
         self.check_linkage(linkage, libraries=[])
         self.check_get_linkage(linkage, 'foo', ['sub'], pkg=pkg)
@@ -537,7 +533,7 @@ class TestPath(LinkageTest):
         })
 
         pkg = MockPackage(srcdir=self.srcdir, builddir=self.builddir,
-                          submodules=submodules_required,
+                          submodules='*', submodule_required=True,
                           _options=self.make_options())
         linkage = self.make_linkage(pkg, submodule_linkage=[
             {'if': 'submodule == "sub"',
@@ -591,12 +587,13 @@ class TestPath(LinkageTest):
         header = dedent("""\
             #define BOOST_LIB_VERSION "1_23"
         """)
-        submodules = {'names': '*', 'required': False}
         for plat in ['linux', 'darwin', 'windows']:
             opts = self.make_options(common_options={'target_platform': plat},
                                      auto_link=(plat == 'windows'))
             metadata = Metadata(self.pkgdir, opts)
-            pkg = MockPackage('boost', submodules=submodules, _options=opts)
+            pkg = MockPackage('boost', submodules='*',
+                              submodule_required=False, _options=opts)
+
             linkage = self.make_linkage(pkg)
             self.check_linkage(linkage, name='boost')
             self.check_version(linkage, None, header=header)
@@ -673,7 +670,6 @@ class TestPath(LinkageTest):
         header = dedent("""\
             #define BOOST_LIB_VERSION "1_23"
         """)
-        submodules = {'names': '*', 'required': False}
         boost_root = abspath('/mock/boost')
         boost_inc = abspath('/mock/boost/inc')
         boost_lib = abspath('/mock/boost/lib')
@@ -688,7 +684,9 @@ class TestPath(LinkageTest):
 
         opts = self.make_options(common_options=common_opts)
         metadata = Metadata(self.pkgdir, opts)
-        pkg = MockPackage('boost', submodules=submodules, _options=opts)
+        pkg = MockPackage('boost', submodules='*', submodule_required=False,
+                          _options=opts)
+
         linkage = self.make_linkage(pkg, inherit_defaults=True)
         self.check_linkage(linkage, name='boost',
                            headers=['boost/version.hpp'], libraries=[],
@@ -810,7 +808,7 @@ class TestPath(LinkageTest):
         ))
 
         pkg = MockPackage('foo', srcdir=self.srcdir, builddir=self.builddir,
-                          submodules={'names': '*', 'required': False},
+                          submodules='*', submodule_required=False,
                           _options=opts)
         linkage = self.linkage_type(pkg, submodule_linkage=[
             {'if': 'submodule == "foosub"',
@@ -917,10 +915,9 @@ class TestSystem(TestPath):
         }, find_pkg_config=True)
 
     def test_system_submodule_linkage(self):
-        submodules_required = {'names': '*', 'required': True}
-
-        pkg = MockPackage('foo', submodules=submodules_required,
+        pkg = MockPackage('foo', submodules='*', submodule_required=True,
                           _options=self.make_options())
+
         linkage = self.make_linkage(pkg, submodule_linkage={
             'pcname': '$submodule'
         })

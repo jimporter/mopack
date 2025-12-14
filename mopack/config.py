@@ -236,6 +236,10 @@ class ChildConfig(BaseConfig):
             return self.data.get('submodules', Unset)
 
         @property
+        def submodule_required(self):
+            return self.data.get('submodule_required', Unset)
+
+        @property
         def build(self):
             return self.data.get('build', Unset)
 

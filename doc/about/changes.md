@@ -21,6 +21,8 @@ in progress
 - `auto_link` field for `path`/`system` linkage is now obsolete; instead, you
   can use the expression variable `auto_link` to define different linkage when
   auto-linking is available
+- `submodules` field is now a dictionary of submodule names; to set the
+  `required` field, use `submodule_required` instead
 
 ---
 

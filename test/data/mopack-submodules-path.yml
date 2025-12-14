@@ -3,7 +3,9 @@ packages:
     origin: directory
     path: hello-multi-bfg
     build: bfg9000
-    submodules: ['french', 'english']
+    submodules:
+      french:
+      english:
     linkage:
       type: path
       include_path: include

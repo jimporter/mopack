@@ -239,12 +239,19 @@ def one_of(*args, desc):
 
 
 def constant(*args):
+    if not args:
+        raise TypeError('expected at least one constant value')
+
     def check(field, value):
         if value in args:
             return value
-        raise FieldValueError('expected one of {}'.format(
-            ', '.join(repr(i) for i in args)
-        ), field)
+
+        if len(args) == 1:
+            raise FieldValueError('expected {}'.format(repr(args[0])), field)
+        else:
+            raise FieldValueError('expected one of {}'.format(
+                ', '.join(repr(i) for i in args)
+            ), field)
 
     return check
 

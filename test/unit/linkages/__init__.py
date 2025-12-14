@@ -15,7 +15,7 @@ class LinkageTest(OptionsTest):
         super().setUp()
         self.metadata = Metadata(self.pkgdir)
 
-    def make_linkage(self, *args, submodules=None, **kwargs):
+    def make_linkage(self, *args, **kwargs):
         if len(args) == 1:
             linkage_type = self.linkage_type
             pkg = args[0]
@@ -27,7 +27,10 @@ class LinkageTest(OptionsTest):
                 'common_options', 'deploy_dirs', 'auto_link',
             })
             options = self.make_options(**options_kwargs)
+            pkg_kwargs = slice_dict(kwargs, {
+                'submodules', 'submodule_required',
+            })
             pkg = MockPackage(pkg, srcdir=self.srcdir, builddir=self.builddir,
-                              submodules=submodules, _options=options)
+                              _options=options, **pkg_kwargs)
 
         return linkage_type(pkg, _symbols=pkg._linkage_expr_symbols, **kwargs)
