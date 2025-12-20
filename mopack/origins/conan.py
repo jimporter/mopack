@@ -8,6 +8,7 @@ from .. import log, types
 from ..environment import get_cmd
 from ..freezedried import GenericFreezeDried
 from ..iterutils import uniques
+from ..objutils import Unset
 from ..path import pushd
 from ..shell import ShellArguments
 
@@ -44,8 +45,8 @@ class ConanPackage(BinaryPackage, BatchPackage):
 
     # TODO: Remove `usage` after v0.2 is released.
     def __init__(self, name, remote, build=False, options=None,
-                 linkage=types.Unset, usage=types.Unset, **kwargs):
-        if linkage is types.Unset and usage is types.Unset:
+                 linkage=Unset, usage=Unset, **kwargs):
+        if linkage is Unset and usage is Unset:
             linkage = {'type': 'pkg_config', 'pkg_config_path': ''}
         super().__init__(name, linkage=linkage, usage=usage, **kwargs)
 

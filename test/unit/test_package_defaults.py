@@ -1,7 +1,7 @@
 from unittest import mock, TestCase
 
 from mopack.package_defaults import DefaultConfig, _get_default_config
-from mopack.types import Unset
+from mopack.objutils import Unset
 from mopack.yaml_tools import YamlParseError
 
 

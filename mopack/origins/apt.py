@@ -5,6 +5,7 @@ from . import BatchPackage, BinaryPackage
 from .. import log, types
 from ..environment import get_cmd, subprocess_run
 from ..iterutils import uniques
+from ..objutils import Unset
 
 
 class AptPackage(BinaryPackage, BatchPackage):
@@ -17,8 +18,8 @@ class AptPackage(BinaryPackage, BatchPackage):
 
     # TODO: Remove `usage` after v0.2 is released.
     def __init__(self, name, *, remote=None, repository=None,
-                 linkage=types.Unset, usage=types.Unset, **kwargs):
-        if linkage is types.Unset and usage is types.Unset:
+                 linkage=Unset, usage=Unset, **kwargs):
+        if linkage is Unset and usage is Unset:
             linkage = 'system'
         super().__init__(name, linkage=linkage, usage=usage, **kwargs)
 

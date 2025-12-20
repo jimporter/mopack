@@ -1,7 +1,30 @@
 import functools
 from .iterutils import isiterable, ismapping
 
-__all__ = ['hashify', 'memoize', 'memoize_method']
+__all__ = ['hashify', 'memoize', 'memoize_method', 'Unset']
+
+
+class _UnsetType:
+    def __bool__(self):
+        return False
+
+    def __eq__(self, rhs):
+        return isinstance(rhs, _UnsetType) or rhs is None
+
+    def dehydrate(self):
+        return None
+
+    @classmethod
+    def rehydrate(self, value, **kwargs):
+        if value is not None:
+            raise ValueError('expected None')
+        return Unset
+
+    def __repr__(self):
+        return '<Unset>'
+
+
+Unset = _UnsetType()
 
 
 def hashify(thing):

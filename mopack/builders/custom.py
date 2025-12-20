@@ -7,6 +7,7 @@ from . import DirectoryBuilder
 from .. import types
 from ..freezedried import GenericFreezeDried
 from ..log import LogFile
+from ..objutils import Unset
 from ..path import Path, pushd
 from ..shell import ShellArguments
 
@@ -45,9 +46,9 @@ class CustomBuilder(DirectoryBuilder):
         return config
 
     def __init__(self, pkg, *, build_commands, deploy_commands=None,
-                 directory=None, outdir=types.Unset, _symbols, **kwargs):
+                 directory=None, outdir=Unset, _symbols, **kwargs):
         # TODO: Remove this after v0.2 is released.
-        if outdir is types.Unset:
+        if outdir is Unset:
             warnings.warn(types.FieldKeyWarning(
                 ('`outdir` unspecified, defaulting to `build`; ' +
                  'this will default to `null` in a future release'),

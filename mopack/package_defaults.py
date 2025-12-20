@@ -3,8 +3,8 @@ import re
 from copy import deepcopy
 from yaml.error import MarkedYAMLError
 
-from . import expression as expr, iterutils, types
-from .objutils import memoize
+from . import expression as expr, iterutils
+from .objutils import memoize, Unset
 from .yaml_tools import load, SafeLineLoader
 
 
@@ -150,7 +150,7 @@ class DefaultResolver:
         symbols = self.symbols.augment(symbols=extra_symbols)
 
         def check(field, value):
-            if value is types.Unset:
+            if value is Unset:
                 if self.get_defaults:
                     value = get_default(
                         symbols, self.package_name, self.genus, self.species,

@@ -6,6 +6,7 @@ from contextlib import contextmanager
 
 from . import expression as expr, iterutils
 from .exceptions import ConfigurationError
+from .objutils import Unset
 from .path import Path, issemiabs
 from .placeholder import map_placeholder, PlaceholderString
 from .shell import ShellArguments, split_posix
@@ -116,29 +117,6 @@ def ensure_field_error(field):
         if isinstance(e, FieldError):
             raise
         raise FieldValueError(str(e), field)
-
-
-class _UnsetType:
-    def __bool__(self):
-        return False
-
-    def __eq__(self, rhs):
-        return isinstance(rhs, _UnsetType) or rhs is None
-
-    def dehydrate(self):
-        return None
-
-    @classmethod
-    def rehydrate(self, value, **kwargs):
-        if value is not None:
-            raise ValueError('expected None')
-        return Unset
-
-    def __repr__(self):
-        return '<Unset>'
-
-
-Unset = _UnsetType()
 
 
 @contextmanager

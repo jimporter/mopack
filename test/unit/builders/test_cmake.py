@@ -9,7 +9,7 @@ from mopack.builders.cmake import CMakeBuilder
 from mopack.options import ExprSymbols
 from mopack.origins.sdist import DirectoryPackage
 from mopack.shell import ShellArguments
-from mopack.types import Unset
+from mopack.objutils import Unset
 
 
 class TestCMakeBuilder(BuilderTest):

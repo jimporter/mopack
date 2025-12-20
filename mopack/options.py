@@ -10,6 +10,7 @@ from .objutils import memoize_method
 from .path import Path
 from .placeholder import placeholder
 from .platforms import platform_name
+from .objutils import Unset
 from .origins import make_package_options, PackageOptions
 
 
@@ -82,8 +83,8 @@ class CommonOptions(FreezeDried, BaseOptions):
         return config
 
     def __init__(self, deploy_dirs=None):
-        self.strict = types.Unset
-        self.target_platform = types.Unset
+        self.strict = Unset
+        self.target_platform = Unset
         self.env = {}
         self.deploy_dirs = deploy_dirs or {}
         self._finalized = False
@@ -102,14 +103,14 @@ class CommonOptions(FreezeDried, BaseOptions):
                     env[k] = v
         return env
 
-    def __call__(self, *, strict=None, target_platform=types.Unset, env=None):
+    def __call__(self, *, strict=None, target_platform=Unset, env=None):
         if self._finalized:
             raise RuntimeError('options are already finalized')
 
         T = types.TypeCheck(locals(), self._make_expr_symbols())
-        if self.strict is types.Unset and strict is not None:
+        if self.strict is Unset and strict is not None:
             T.strict(types.boolean)
-        if self.target_platform is types.Unset:
+        if self.target_platform is Unset:
             T.target_platform(types.maybe(types.string))
         T.env(types.maybe(types.dict_of(types.string, types.string)),
               reducer=self._fill_env)
@@ -126,7 +127,7 @@ class CommonOptions(FreezeDried, BaseOptions):
         )
 
     def finalize(self):
-        if self.strict is types.Unset:
+        if self.strict is Unset:
             self.strict = False
         if not self.target_platform:
             self.target_platform = platform_name()
