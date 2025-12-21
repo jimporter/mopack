@@ -19,11 +19,12 @@ if os.path.exists(test_stage_dir):
 os.makedirs(test_stage_dir)
 
 
-def call_pkg_config(package, options, *, path=None, split=True):
+def call_pkg_config(package, options, *, fn=lambda x: x, path=None,
+                    split=True):
     extra_kwargs = {}
     if path:
         env = os.environ.copy()
-        env['PKG_CONFIG_PATH'] = path
+        env['PKG_CONFIG_PATH'] = os.pathsep.join(listify(path))
         extra_kwargs['env'] = env
 
     pkg_config = os.environ.get('PKG_CONFIG', 'pkg-config')
@@ -35,6 +36,6 @@ def call_pkg_config(package, options, *, path=None, split=True):
     ).stdout.strip()
 
     if split:
-        return split_posix_str(output, escapes=True)
+        return [fn(i) for i in split_posix_str(output, escapes=True)]
     else:
-        return output
+        return fn(output)

@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import subprocess
 import tempfile
 import unittest
@@ -369,9 +370,16 @@ class IntegrationTest(SubprocessTestCase):
 
     def setUp(self):
         self.stage = stage_dir(self.name)
-        self.pkgbuilddir = os.path.join(self.stage, 'mopack', 'build')
+        self.mopackdir = os.path.join(self.stage, 'mopack')
+        self.pkgsrcdir = os.path.join(self.mopackdir, 'src')
+        self.pkgbuilddir = os.path.join(self.mopackdir, 'build')
         if self.deploy:
             self.prefix = stage_dir(self.name + '-install', chdir=False)
+
+    def assertEqualUnordered(self, first, second, msg=None):
+        if first is mock.ANY or second is mock.ANY:
+            return
+        self.assertCountEqual(first, second, msg)
 
     def assertLinkage(self, name, linkage='', extra_args=[], *, format='json',
                       submodules=[], extra_env=linkage_env, returncode=0):
@@ -412,43 +420,31 @@ class IntegrationTest(SubprocessTestCase):
             pcnames = ([dependency_string(name, [i]) for i in
                         iterate(submodules)] if submodules else [name])
 
-        pkgconfdir = os.path.join(self.stage, 'mopack', 'pkgconfig')
+        pkg_config_path = [os.path.join(self.mopackdir, 'pkgconfig')]
         self.assertLinkage(name, {
             'name': dependency_string(name, submodules), 'type': type,
             'generated': True, 'auto_link': auto_link, 'pcnames': pcnames,
-            'pkg_config_path': [pkgconfdir],
+            'pkg_config_path': pkg_config_path,
         }, submodules=submodules)
 
-        if include_path is not mock.ANY:
-            self.assertCountEqual(
-                call_pkg_config(pcnames, ['--cflags-only-I'], path=pkgconfdir),
-                ['-I' + i for i in include_path]
-            )
-        if library_path is not mock.ANY:
-            self.assertCountEqual(
-                call_pkg_config(pcnames, ['--libs-only-L'], path=pkgconfdir),
-                ['-L' + i for i in library_path]
-            )
-        if libraries is not mock.ANY:
-            self.assertCountEqual(
-                call_pkg_config(pcnames, ['--libs-only-l'], path=pkgconfdir),
-                ['-l' + i for i in libraries]
-            )
-        if compile_flags is not mock.ANY:
-            self.assertCountEqual(
-                call_pkg_config(pcnames, ['--cflags-only-other'],
-                                path=pkgconfdir),
-                compile_flags
-            )
-        if link_flags is not mock.ANY:
-            self.assertCountEqual(
-                call_pkg_config(pcnames, ['--libs-only-other'],
-                                path=pkgconfdir),
-                link_flags
-            )
-
-        self.assertEqual(
-            call_pkg_config(pcnames, ['--modversion'], path=pkgconfdir,
-                            split=False),
-            version
-        )
+        self.assertEqual(call_pkg_config(
+            pcnames, ['--modversion'], path=pkg_config_path, split=False
+        ), version)
+        self.assertEqualUnordered(call_pkg_config(
+            pcnames, ['--cflags-only-I'], path=pkg_config_path,
+            fn=lambda i: os.path.normpath(re.match('-I(.*)', i).group(1))
+        ), include_path)
+        self.assertEqualUnordered(call_pkg_config(
+            pcnames, ['--cflags-only-other'], path=pkg_config_path
+        ), compile_flags)
+        self.assertEqualUnordered(call_pkg_config(
+            pcnames, ['--libs-only-L'], path=pkg_config_path,
+            fn=lambda i: os.path.normpath(re.match('-L(.*)', i).group(1))
+        ), library_path)
+        self.assertEqualUnordered(call_pkg_config(
+            pcnames, ['--libs-only-l'], path=pkg_config_path,
+            fn=lambda i: re.match('-l(.*)', i).group(1),
+        ), libraries)
+        self.assertEqualUnordered(call_pkg_config(
+            pcnames, ['--libs-only-other'], path=pkg_config_path
+        ), link_flags)

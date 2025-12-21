@@ -24,7 +24,7 @@ class TestInnerCMake(IntegrationTest):
 
         self.assertPkgConfigLinkage('greeter')
 
-        include_path = [os.path.join(test_data_dir, 'hello-cmake/include')]
+        include_path = [os.path.join(test_data_dir, 'hello-cmake', 'include')]
         library_path = [os.path.join(self.pkgbuilddir, 'hello')]
         self.assertPathLinkage('hello', include_path=include_path,
                                library_path=library_path, version='1.0')
@@ -83,7 +83,8 @@ class TestOuterCMake(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        include_path = [os.path.join(test_data_dir, 'greeter-cmake/include')]
+        include_path = [os.path.join(test_data_dir, 'greeter-cmake',
+                                     'include')]
         library_path = [os.path.join(self.pkgbuilddir, 'greeter')]
         self.assertPathLinkage('greeter', include_path=include_path,
                                library_path=library_path, version='1.0')
