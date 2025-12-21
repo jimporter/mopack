@@ -568,7 +568,7 @@ class TestDirectory(SDistTestCase):
             'origin': 'directory', '_version': 0, 'name': 'foo',
             'path': {'base': 'cfgdir', 'path': '.'},
             'builder': {'type': 'none', '_version': 1, 'name': 'foo'},
-            'linkage': {'type': 'system', '_version': 1},
+            'linkage': {'type': 'system', '_version': 3},
         }
         with mock.patch.object(DirectoryPackage, 'upgrade',
                                side_effect=DirectoryPackage.upgrade) as m:

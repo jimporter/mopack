@@ -5,6 +5,7 @@ import warnings
 from contextlib import contextmanager
 
 from . import expression as expr, iterutils
+from .dependencies import Dependency
 from .exceptions import ConfigurationError
 from .objutils import Unset
 from .path import Path, issemiabs
@@ -43,17 +44,6 @@ _url_ex = re.compile(
     r'$'
 )
 
-_dependency_ex = re.compile(
-    r'^'
-    r'([^,[\]]+)'      # package name
-    r'(?:\[('
-    r'[^,[\]]+'        # first submodule
-    r'(?:,[^,[\]]+)*'  # extra submodules
-    r')\])?'
-    r'$'
-)
-
-_bad_dependency_ex = re.compile(r'[,[\]]')
 _field_context = []
 
 
@@ -400,27 +390,8 @@ def url(field, value):
 
 
 def dependency(field, value):
-    value = string(field, value)
-    m = _dependency_ex.match(value)
-    if not m:
-        raise FieldValueError('expected a dependency', field)
-
-    package, submodules = m.groups()
-    if submodules:
-        submodules = submodules.split(',')
-    return package, submodules
-
-
-def dependency_string(package, submodules):
-    def check(s):
-        if not s or _bad_dependency_ex.search(s):
-            raise ValueError('invalid dependency')
-        return s
-
-    submodules_str = ','.join(check(i) for i in iterutils.iterate(submodules))
-    if submodules_str:
-        return '{}[{}]'.format(check(package), submodules_str)
-    return check(package)
+    with ensure_field_error(field):
+        return Dependency(string(field, value))
 
 
 def shell_args(none_ok=False, escapes=False):

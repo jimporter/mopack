@@ -7,11 +7,12 @@ from . import OriginTest
 from .. import assert_logging, rehydrate_kwargs
 from ... import call_pkg_config, test_stage_dir
 
+from mopack.dependencies import Dependency
 from mopack.path import Path
 from mopack.origins import Package
 from mopack.origins.apt import AptPackage
 from mopack.origins.system import SystemPackage
-from mopack.types import dependency_string, FieldKeyError
+from mopack.types import FieldKeyError
 
 
 class TestSystemPackage(OriginTest):
@@ -34,7 +35,7 @@ class TestSystemPackage(OriginTest):
             return p.startswith(os.path.normcase(abspath('/mock')) + os.sep)
 
         if expected is None:
-            depname = dependency_string(pkg.name, submodules)
+            depname = str(Dependency(pkg.name, submodules))
             expected = {'name': depname, 'type': 'system', 'generated': True,
                         'auto_link': False, 'pcnames': [depname],
                         'pkg_config_path': [self.pkgconfdir]}
@@ -56,7 +57,7 @@ class TestSystemPackage(OriginTest):
                              expected)
 
     def check_pkg_config(self, name, submodules, expected={}):
-        pcname = dependency_string(name, submodules)
+        pcname = str(Dependency(name, submodules))
         self.assertCountEqual(
             call_pkg_config(pcname, ['--cflags'], path=self.pkgconfdir),
             expected.get('cflags', [])
@@ -259,7 +260,7 @@ class TestSystemPackage(OriginTest):
     def test_upgrade(self):
         opts = self.make_options()
         data = {'origin': 'system', '_version': 0, 'name': 'foo',
-                'linkage': {'type': 'system', '_version': 0}}
+                'linkage': {'type': 'system', '_version': 3}}
         with mock.patch.object(SystemPackage, 'upgrade',
                                side_effect=SystemPackage.upgrade) as m:
             pkg = Package.rehydrate(data, _options=opts, **rehydrate_kwargs)

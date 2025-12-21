@@ -7,6 +7,7 @@ from unittest import mock, TestCase
 
 from . import mock_open_data
 
+from mopack.dependencies import Dependency
 from mopack.placeholder import placeholder
 from mopack.path import Path
 from mopack.shell import ShellArguments
@@ -605,46 +606,22 @@ class TestUrl(TypeTestCase):
 
 class TestDependency(TypeTestCase):
     def test_package(self):
-        self.assertEqual(dependency('field', 'package'), ('package', None))
-        self.assertEqual(dependency('field', 'red-panda'), ('red-panda', None))
+        self.assertEqual(dependency('field', 'package'),
+                         Dependency('package', None))
+        self.assertEqual(dependency('field', 'red-panda'),
+                         Dependency('red-panda', None))
 
     def test_submodules(self):
-        self.assertEqual(dependency('field', 'pkg[sub]'), ('pkg', ['sub']))
+        self.assertEqual(dependency('field', 'pkg[sub]'),
+                         Dependency('pkg', ['sub']))
         self.assertEqual(dependency('field', 'pkg[foo,bar]'),
-                         ('pkg', ['foo', 'bar']))
+                         Dependency('pkg', ['foo', 'bar']))
 
     def test_invalid(self):
-        not_deps = ['pkg,',
-                    'pkg[',
-                    'pkg]',
-                    'pkg[]',
-                    'pkg[sub,]',
-                    'pkg[,sub]']
+        not_deps = ['pkg,', 'pkg[', 'pkg]', 'pkg[]', 'pkg[sub,]', 'pkg[,sub]']
         for i in not_deps:
             with self.assertFieldError(('field',)):
                 dependency('field', i)
-
-    def test_dependency_string(self):
-        self.assertEqual(dependency_string('pkg', None), 'pkg')
-        self.assertEqual(dependency_string('pkg', []), 'pkg')
-        self.assertEqual(dependency_string('pkg', 'foo'), 'pkg[foo]')
-        self.assertEqual(dependency_string('pkg', ['foo']), 'pkg[foo]')
-        self.assertEqual(dependency_string('pkg', ['foo', 'bar']),
-                         'pkg[foo,bar]')
-        self.assertEqual(dependency_string('pkg', iter(['foo', 'bar'])),
-                         'pkg[foo,bar]')
-
-    def test_invalid_dependency_string(self):
-        not_deps = [('pkg,', None),
-                    ('pkg[', None),
-                    ('pkg]', None),
-                    ('pkg', ['foo,']),
-                    ('pkg', ['foo[']),
-                    ('pkg', ['foo]']),
-                    ('pkg', ['foo', 'bar['])]
-        for i in not_deps:
-            with self.assertRaises(ValueError):
-                dependency_string(*i)
 
 
 class TestShellArgs(TypeTestCase):

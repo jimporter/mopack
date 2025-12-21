@@ -7,15 +7,16 @@ from typing import List
 from . import Linkage
 from . import submodules as submod
 from .. import types
+from ..dependencies import Dependency
 from ..environment import get_pkg_config, subprocess_run
 from ..freezedried import FreezeDried, GenericFreezeDried
-from ..iterutils import ismapping, listify, uniques
+from ..iterutils import ismapping, issequence, listify, uniques
 from ..package_defaults import DefaultResolver
 from ..path import file_outdated, isfile, Path
 from ..pkg_config import generated_pkg_config_dir, write_pkg_config
 from ..placeholder import placeholder
 from ..shell import ShellArguments, split_paths
-from ..types import dependency_string, mangle_keywords, Unset
+from ..types import mangle_keywords, Unset
 
 
 # XXX: Getting build configuration like this from the environment is a bit
@@ -123,13 +124,14 @@ class _PathSubmoduleLinkage(FreezeDried):
 
 
 @GenericFreezeDried.fields(rehydrate={
-    'include_path': List[Path], 'library_path': List[Path],
-    'compile_flags': ShellArguments, 'link_flags': ShellArguments,
+    'dependencies': List[Dependency], 'include_path': List[Path],
+    'library_path': List[Path], 'compile_flags': ShellArguments,
+    'link_flags': ShellArguments,
     'submodule_linkage': List[_PathSubmoduleLinkage],
 })
 class PathLinkage(Linkage):
     type = 'path'
-    _version = 2
+    _version = 3
     SubmoduleLinkage = _PathSubmoduleLinkage
 
     @staticmethod
@@ -139,6 +141,15 @@ class PathLinkage(Linkage):
             config['submodule_linkage'] = submod.migrate_saved_submodule_map(
                 config.pop('submodule_map', None)
             )
+
+        # v3 stores `dependencies` as a list of strings.
+        if version < 3:  # pragma: no branch
+            config['dependencies'] = [str(Dependency(*i)) for i in
+                                      config['dependencies']]
+            if issequence(config['submodule_linkage']):
+                for sub in config['submodule_linkage']:
+                    sub['dependencies'] = [str(Dependency(*i)) for i in
+                                           sub['dependencies']]
 
         return config
 
@@ -322,18 +333,18 @@ class PathLinkage(Linkage):
 
         path_values = pkg.path_values(metadata)
         pkgconfdir = generated_pkg_config_dir(metadata.pkgdir)
-        pcname = dependency_string(pkg.name, listify(submodule))
+        pcname = str(Dependency(pkg.name, submodule))
         pcpath = os.path.join(pkgconfdir, pcname + '.pc')
 
         # Ensure all dependencies are up-to-date and get their linkages.
         auto_link = self.auto_link
         deps_requires = []
         deps_paths = [pkgconfdir]
-        for dep_name, dep_subs in chain_attr('dependencies'):
+        for dep in chain_attr('dependencies'):
             # XXX: Cache linkage so we don't repeatedly process the same
             # package.
-            dep_pkg = metadata.get_package(dep_name)
-            linkage = dep_pkg.get_linkage(metadata, dep_subs)
+            dep_pkg = metadata.get_package(dep.package)
+            linkage = dep_pkg.get_linkage(metadata, dep.submodules)
 
             auto_link |= linkage.get('auto_link', False)
             deps_requires.extend(linkage.get('pcnames', []))

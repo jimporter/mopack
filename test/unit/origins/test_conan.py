@@ -7,12 +7,12 @@ from unittest import mock
 from . import OptionsTest, OriginTest, through_json
 from .. import assert_logging, mock_open_log, rehydrate_kwargs
 
+from mopack.dependencies import Dependency
 from mopack.iterutils import iterate
 from mopack.origins import Package, PackageOptions
 from mopack.origins.apt import AptPackage
 from mopack.origins.conan import ConanPackage
 from mopack.shell import ShellArguments
-from mopack.types import dependency_string
 
 
 def mock_open_write():
@@ -56,7 +56,7 @@ class TestConan(OriginTest):
                        [pkg.name])
             pcnames.extend('{}_{}'.format(pkg.name, i)
                            for i in iterate(submodules))
-            linkage = {'name': dependency_string(pkg.name, submodules),
+            linkage = {'name': str(Dependency(pkg.name, submodules)),
                        'type': 'pkg_config', 'pcnames': pcnames,
                        'pkg_config_path': [self.pkgconfdir]}
         self.assertEqual(pkg.get_linkage(self.metadata, submodules), linkage)
@@ -407,7 +407,7 @@ class TestConan(OriginTest):
         opts = self.make_options()
         data = {'origin': 'conan', '_version': 0, 'name': 'foo',
                 'remote': 'foo', 'build': False, 'options': None,
-                'linkage': {'type': 'system', '_version': 0}}
+                'linkage': {'type': 'system', '_version': 3}}
         with mock.patch.object(ConanPackage, 'upgrade',
                                side_effect=ConanPackage.upgrade) as m:
             pkg = Package.rehydrate(data, _options=opts, **rehydrate_kwargs)

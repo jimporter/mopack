@@ -8,13 +8,14 @@ from . import MockPackage, through_json, LinkageTest
 from .. import rehydrate_kwargs
 from ... import call_pkg_config, test_stage_dir
 
+from mopack.dependencies import Dependency
 from mopack.linkages import Linkage
 from mopack.linkages.path_system import PathLinkage, SystemLinkage
 from mopack.options import Options
 from mopack.metadata import Metadata
 from mopack.path import Path
 from mopack.shell import ShellArguments
-from mopack.types import dependency_string, FieldValueError
+from mopack.types import FieldValueError
 
 
 def abspathobj(p):
@@ -88,7 +89,7 @@ class TestPath(LinkageTest):
 
     def check_get_linkage(self, linkage, name, submodules, expected=None, *,
                           pkg=None, metadata=None, write_pkg_config=True):
-        depname = dependency_string(name, submodules)
+        depname = str(Dependency(name, submodules))
         if expected is None:
             expected = {'name': depname, 'type': self.type, 'generated': True,
                         'auto_link': False, 'pcnames': [depname],
@@ -115,7 +116,7 @@ class TestPath(LinkageTest):
                              expected)
 
     def check_pkg_config(self, name, submodules, expected={}):
-        pcname = dependency_string(name, submodules)
+        pcname = str(Dependency(name, submodules))
         self.assertCountEqual(
             call_pkg_config(pcname, ['--cflags'], path=self.pkgconfdir),
             expected.get('cflags', [])
@@ -225,7 +226,7 @@ class TestPath(LinkageTest):
 
     def test_dependencies(self):
         linkage = self.make_linkage('foo', dependencies=['bar'])
-        self.check_linkage(linkage, dependencies=[('bar', None)])
+        self.check_linkage(linkage, dependencies=[Dependency('bar')])
         self.check_get_linkage(linkage, 'foo', None)
         self.check_pkg_config('foo', None, {
             'libs': ['-L' + abspath('/mock/lib'), '-lfoo', '-lbar'],
@@ -836,11 +837,15 @@ class TestPath(LinkageTest):
         opts = self.make_options()
         symbols = opts.expr_symbols.augment(path_bases=['builddir'])
         data = {
-            'type': self.type, '_version': 1, 'include_path': [],
+            'type': self.type, '_version': 1,
+            'dependencies': [['dep', ['submodule']]],
+            'include_path': [],
             'library_path': [], 'compile_flags': [], 'link_flags': [],
             'submodule_map': {
-                'sub': {'libraries': ['sub']},
-                '*': {'libraries': ['star$submodule']},
+                'sub': {'dependencies': [['subdep', ['sub1']]],
+                        'libraries': ['sub']},
+                '*': {'dependencies': [['stardep', ['sub2']]],
+                      'libraries': ['star$submodule']},
             }
         }
         with mock.patch.object(self.linkage_type, 'upgrade',
@@ -848,8 +853,15 @@ class TestPath(LinkageTest):
             linkage = Linkage.rehydrate(data, name='foo', _options=opts,
                                         _symbols=symbols, **rehydrate_kwargs)
             self.assertIsInstance(linkage, self.linkage_type)
+            self.assertEqual(linkage.dependencies,
+                             [Dependency('dep[submodule]')])
+
             self.assertEqual([i._if for i in linkage.submodule_linkage],
                              ["submodule == 'sub'", True])
+            self.assertEqual(
+                [i.dependencies for i in linkage.submodule_linkage],
+                [['subdep[sub1]'], ['stardep[sub2]']]
+            )
             self.assertEqual([i.libraries for i in linkage.submodule_linkage],
                              [['sub'], ['star$submodule']])
 

@@ -5,11 +5,11 @@ from unittest import mock
 from . import OriginTest, through_json
 from .. import assert_logging, mock_open_log, rehydrate_kwargs
 
+from mopack.dependencies import Dependency
 from mopack.iterutils import iterate
 from mopack.origins import Package
 from mopack.origins.apt import AptPackage
 from mopack.origins.conan import ConanPackage
-from mopack.types import dependency_string
 
 
 def mock_run(args, **kwargs):
@@ -46,7 +46,7 @@ class TestApt(OriginTest):
 
     def check_linkage(self, pkg, *, submodules=None, linkage=None):
         if linkage is None:
-            depname = dependency_string(pkg.name, submodules)
+            depname = str(Dependency(pkg.name, submodules))
             libs = ([] if pkg.submodules and pkg.submodules['required']
                     else [pkg.name])
             libs.extend('{}_{}'.format(pkg.name, i)
@@ -277,7 +277,7 @@ class TestApt(OriginTest):
         opts = self.make_options()
         data = {'origin': 'apt', '_version': 0, 'name': 'foo',
                 'remote': 'libfoo-dev', 'repository': None,
-                'linkage': {'type': 'system', '_version': 0}}
+                'linkage': {'type': 'system', '_version': 3}}
         with mock.patch.object(AptPackage, 'upgrade',
                                side_effect=AptPackage.upgrade) as m:
             pkg = Package.rehydrate(data, _options=opts, **rehydrate_kwargs)

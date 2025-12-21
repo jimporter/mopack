@@ -1,8 +1,9 @@
 import importlib_metadata as metadata
 
 from ..base_options import OptionsHolder
+from ..dependencies import Dependency
 from ..freezedried import GenericFreezeDried
-from ..types import FieldValueError, dependency_string, wrap_field_error
+from ..types import FieldValueError, wrap_field_error
 
 
 def _get_linkage_type(type, field='type'):
@@ -34,7 +35,7 @@ class Linkage(OptionsHolder):
         raise NotImplementedError('Linkage.version not implemented')
 
     def _linkage(self, submodules, **kwargs):
-        return {'name': dependency_string(self.name, submodules),
+        return {'name': str(Dependency(self.name, submodules)),
                 'type': self.type, **kwargs}
 
     def get_linkage(self, metadata, pkg, submodules):

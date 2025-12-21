@@ -153,10 +153,10 @@ def deploy(pkgdir):
         pkg.deploy(metadata)
 
 
-def linkage(pkgdir, name, submodules=None, strict=False):
+def linkage(pkgdir, dependency, strict=False):
     metadata = Metadata.try_load(pkgdir, strict)
-    package = metadata.get_package(name)
-    return package.get_linkage(metadata, submodules)
+    package = metadata.get_package(dependency.package)
+    return package.get_linkage(metadata, dependency.submodules)
 
 
 def list_files(pkgdir, implicit=False, strict=False):

@@ -650,7 +650,7 @@ class TestGit(SDistTestCase):
             'repository': 'repo', 'tag': None, 'branch': None, 'commit': None,
             'srcdir': '.',
             'builder': {'type': 'none', '_version': 1, 'name': 'foo'},
-            'linkage': {'type': 'system', '_version': 1},
+            'linkage': {'type': 'system', '_version': 3},
         }
         with mock.patch.object(GitPackage, 'upgrade',
                                side_effect=GitPackage.upgrade) as m:

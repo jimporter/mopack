@@ -9,10 +9,10 @@ from unittest import mock
 
 from .. import *
 
+from mopack.dependencies import Dependency
 from mopack.environment import get_cmd
 from mopack.iterutils import iterate, listify
 from mopack.platforms import platform_name
-from mopack.types import dependency_string
 from mopack.path import Path
 
 
@@ -290,7 +290,7 @@ def cfg_path_linkage(*, auto_link=False, explicit_version=None,
                      submodule_linkage=None):
     result = {
         'type': 'path',
-        '_version': 2,
+        '_version': 3,
         'auto_link': auto_link,
         'dependencies': dependencies,
         'explicit_version': explicit_version,
@@ -389,7 +389,7 @@ class IntegrationTest(SubprocessTestCase):
         }
 
         output = self.assertPopen(mopack_cmd(
-            'linkage', dependency_string(name, submodules),
+            'linkage', str(Dependency(name, submodules)),
             *(['--json'] if format == 'json' else []),
             *extra_args
         ), extra_env=extra_env, returncode=returncode)
@@ -406,7 +406,7 @@ class IntegrationTest(SubprocessTestCase):
             pcnames = [name]
 
         self.assertLinkage(name, {
-            'name': dependency_string(name, submodules), 'type': type,
+            'name': str(Dependency(name, submodules)), 'type': type,
             'pcnames': pcnames, 'pkg_config_path': pkg_config_path,
         }, submodules=submodules)
 
@@ -417,12 +417,12 @@ class IntegrationTest(SubprocessTestCase):
         if libraries is None:
             libraries = [name]
         if pcnames is None:
-            pcnames = ([dependency_string(name, [i]) for i in
+            pcnames = ([str(Dependency(name, [i])) for i in
                         iterate(submodules)] if submodules else [name])
 
         pkg_config_path = [os.path.join(self.mopackdir, 'pkgconfig')]
         self.assertLinkage(name, {
-            'name': dependency_string(name, submodules), 'type': type,
+            'name': str(Dependency(name, submodules)), 'type': type,
             'generated': True, 'auto_link': auto_link, 'pcnames': pcnames,
             'pkg_config_path': pkg_config_path,
         }, submodules=submodules)

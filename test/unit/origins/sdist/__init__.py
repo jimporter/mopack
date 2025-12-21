@@ -4,8 +4,8 @@ from unittest import mock
 from .. import OriginTest, through_json  # noqa: F401
 from ... import assert_logging, mock_open_log
 
+from mopack.dependencies import Dependency
 from mopack.iterutils import iterate
-from mopack.types import dependency_string
 
 mock_bfgclean = 'mopack.builders.bfg9000.Bfg9000Builder.clean'
 
@@ -22,9 +22,10 @@ class SDistTestCase(OriginTest):
     def check_linkage(self, pkg, *, submodules=None, linkage=None):
         if linkage is None:
             pcnames = ([] if pkg.submodules and pkg.submodules['required'] else
-                       ['foo'])
-            pcnames.extend('foo_{}'.format(i) for i in iterate(submodules))
-            linkage = {'name': dependency_string(pkg.name, submodules),
+                       [pkg.name])
+            pcnames.extend('{}_{}'.format(pkg.name, i)
+                           for i in iterate(submodules))
+            linkage = {'name': str(Dependency(pkg.name, submodules)),
                        'type': 'pkg_config', 'pcnames': pcnames,
                        'pkg_config_path': [self.pkgconfdir('foo')]}
 

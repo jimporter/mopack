@@ -1,12 +1,11 @@
 import os
-import functools
 import json
 import sys
 
 from . import arguments, commands, config, log, yaml_tools
 from .app_version import version
 from .environment import nested_invoke
-from .types import dependency
+from .dependencies import Dependency
 
 logger = log.getLogger(__name__)
 
@@ -49,11 +48,6 @@ output. This requires the Python package `shtab`.
 """
 
 
-@functools.wraps(dependency)
-def dependency_type(s):
-    return dependency(None, s)
-
-
 def resolve(parser, args):
     if os.environ.get(nested_invoke):
         return 3
@@ -67,7 +61,7 @@ def linkage(parser, args):
     directory = os.environ.get(nested_invoke, args.directory)
     try:
         linkage = commands.linkage(commands.get_package_dir(directory),
-                                   *args.dependency, strict=args.strict)
+                                   args.dependency, strict=args.strict)
     except Exception as e:
         if not args.json:
             raise
@@ -217,7 +211,7 @@ def main():
                            help='display results as JSON')
     linkage_p.add_argument('--strict', action='store_true',
                            help='return an error if package is not defined')
-    linkage_p.add_argument('dependency', type=dependency_type,
+    linkage_p.add_argument('dependency', type=Dependency,
                            metavar='DEPENDENCY',
                            help='the name of the dependency to query')
 
