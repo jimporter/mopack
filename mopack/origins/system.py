@@ -1,10 +1,10 @@
-from . import BinaryPackage, migrate_saved_submodules
+from . import UnmanagedBinaryPackage, migrate_saved_submodules
 from .. import log
 from ..types import FieldKeyError, Unset
 from ..iterutils import slice_dict
 
 
-class SystemPackage(BinaryPackage):
+class SystemPackage(UnmanagedBinaryPackage):
     origin = 'system'
     _version = 2
 

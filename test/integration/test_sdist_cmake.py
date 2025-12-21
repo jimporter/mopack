@@ -20,7 +20,9 @@ class TestInnerCMake(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigLinkage('greeter')
+        self.assertPkgConfigLinkage('greeter', pkg_config_path=[
+            os.path.join('build', 'greeter', 'pkgconfig'), 'pkgconfig',
+        ],)
 
         include_path = [os.path.join(test_data_dir, 'hello-cmake', 'include')]
         library_path = [os.path.join(self.pkgbuilddir, 'hello')]
@@ -50,6 +52,7 @@ class TestInnerCMake(IntegrationTest):
                 ),
                 cfg_directory_pkg(
                     'greeter', config,
+                    dependencies=['hello'],
                     path={'base': 'cfgdir', 'path': 'greeter-bfg'},
                     builders=[cfg_bfg9000_builder()],
                     linkage=cfg_pkg_config_linkage(pcname='greeter')
@@ -79,11 +82,20 @@ class TestOuterCMake(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        include_path = [os.path.join(test_data_dir, 'greeter-cmake',
-                                     'include')]
-        library_path = [os.path.join(self.pkgbuilddir, 'greeter')]
-        self.assertPathLinkage('greeter', include_path=include_path,
-                               library_path=library_path, version='1.0')
+        include_path = [
+            os.path.join(test_data_dir, 'greeter-cmake', 'include'),
+            os.path.join(self.pkgsrcdir, 'hello', 'hello-bfg', 'include'),
+        ]
+        library_path = [
+            os.path.join(self.pkgbuilddir, 'greeter'),
+            os.path.join(self.pkgbuilddir, 'hello'),
+        ]
+        self.assertPathLinkage(
+            'greeter', pkg_config_path=[
+                'pkgconfig', os.path.join('build', 'hello', 'pkgconfig'),
+            ], include_path=include_path, library_path=library_path,
+            libraries=['greeter', 'hello'], version='1.0'
+        )
 
         self.assertPkgConfigLinkage('hello')
 
@@ -106,6 +118,7 @@ class TestOuterCMake(IntegrationTest):
                 ),
                 cfg_directory_pkg(
                     'greeter', config,
+                    dependencies=['hello'],
                     path={'base': 'cfgdir', 'path': 'greeter-cmake'},
                     builders=[cfg_cmake_builder()],
                     linkage=cfg_path_linkage(

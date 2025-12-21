@@ -31,7 +31,10 @@ class TestNested(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigLinkage('greeter')
+        self.assertPkgConfigLinkage('greeter', pkg_config_path=[
+            os.path.join('build', 'greeter', 'pkgconfig'),
+            os.path.join('build', 'hello', 'pkgconfig'),
+        ])
         self.assertPkgConfigLinkage('hello')
 
         output = json.loads(slurp('mopack/mopack.json'))
@@ -53,6 +56,7 @@ class TestNested(IntegrationTest):
                 ),
                 cfg_directory_pkg(
                     'greeter', config,
+                    dependencies=['hello'],
                     path={'base': 'cfgdir', 'path': 'greeter-bfg'},
                     builders=[cfg_bfg9000_builder()],
                     linkage=cfg_pkg_config_linkage(pcname='greeter')
@@ -93,7 +97,10 @@ class TestNested(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigLinkage('greeter')
+        self.assertPkgConfigLinkage('greeter', pkg_config_path=[
+            os.path.join('build', 'greeter', 'pkgconfig'),
+            os.path.join('build', 'hello', 'pkgconfig'),
+        ])
         self.assertPkgConfigLinkage('hello')
 
         output = json.loads(slurp('mopack/mopack.json'))
@@ -111,6 +118,7 @@ class TestNested(IntegrationTest):
                 ),
                 cfg_directory_pkg(
                     'greeter', config,
+                    dependencies=['hello'],
                     path={'base': 'cfgdir', 'path': 'greeter-bfg'},
                     builders=[cfg_bfg9000_builder(extra_args=['--extra'])],
                     linkage=cfg_pkg_config_linkage(pcname='greeter')

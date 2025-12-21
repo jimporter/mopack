@@ -1,11 +1,14 @@
 import importlib_metadata as metadata
 import os
 import warnings
+from typing import Dict, List, Union
 
+from .submodules import *
 from .. import types
 from ..base_options import BaseOptions, OptionsHolder
+from ..dependencies import Dependency
 from ..freezedried import GenericFreezeDried
-from ..iterutils import ismapping, listify
+from ..iterutils import iterate, listify
 from ..linkages import Linkage, make_linkage
 from ..package_defaults import DefaultResolver
 from ..types import (FieldKeyError, FieldValueError, try_load_config,
@@ -19,56 +22,7 @@ def _get_origin_type(origin, field='origin'):
         raise FieldValueError('unknown origin {!r}'.format(origin), field)
 
 
-def submodules_type(*, raw=False):
-    maybe = types.maybe_raw if raw else types.maybe
-    return maybe(types.one_of(
-        types.dict_of(types.string, types.maybe(
-            types.dict_shape({}, desc='a submodule definition'),
-            default={}
-        )),
-        types.constant('*'),
-        desc='a dictionary of submodules'
-    ))
-
-
-def submodule_required_type(submodules, *, raw=False):
-    if submodules is Unset:
-        default = None
-        t = types.one_of(types.boolean, types.constant(None),
-                         desc='a boolean or null')
-    elif submodules:
-        default = True
-        t = types.boolean
-    else:  # not submodules
-        default = None
-        t = types.constant(None)
-
-    if raw:
-        return types.maybe_raw(t, empty=(Unset,))
-    else:
-        return types.maybe(t, default=default, empty=(Unset,))
-
-
-# TODO: Remove this after v0.2 is released.
-def migrate_submodules(submodules, submodule_required):
-    if ( ismapping(submodules) and
-         set(submodules.keys()) == {'names', 'required'} ):
-        warnings.warn(types.FieldKeyWarning(
-            ('`submodules` now takes a dictionary of submodules; use ' +
-             '`submodule_required` to set whether submodules are ' +
-             'required instead'), 'submodules'
-        ))
-        submodule_required = submodules.get('required', True)
-        submodules = {i: {} for i in submodules['names']}
-    return submodules, submodule_required
-
-
-def migrate_saved_submodules(config):
-    if config['submodules']:
-        config['submodule_required'] = config['submodules']['required']
-        config['submodules'] = {
-            i: {} for i in config['submodules']['names']
-        }
+dependencies_type = types.list_of(types.dependency, listify=True)
 
 
 @GenericFreezeDried.fields(rehydrate={'linkage': Linkage},
@@ -210,11 +164,35 @@ class BatchPackage(Package):
         pass
 
 
+@GenericFreezeDried.fields(rehydrate={
+    'submodules': Union[str, Dict[str, ManagedSubmoduleProps]],
+})
+class ManagedPackage(Package):
+    def get_dependencies(self, submodules):
+        # Managed packages handle dependencies on their own, so mopack has no
+        # need to define dependencies for them as well.
+        return []
+
+
+@GenericFreezeDried.fields(rehydrate={
+    'dependencies': List[Dependency],
+    'submodules': Union[str, Dict[str, UnmanagedSubmoduleProps]],
+})
+class UnmanagedPackage(Package):
+    def get_dependencies(self, submodules):
+        # Unmanaged packages handle dependencies via mopack.
+        dependencies = self.dependencies.copy()
+        if self.submodules != '*':
+            for i in iterate(self._check_submodules(submodules)):
+                dependencies.extend(self.submodules[i].dependencies)
+        return dependencies
+
+
 class BinaryPackage(Package):
     # TODO: Remove `usage` after v0.2 is released.
     def __init__(self, name, *, submodules=Unset, submodule_required=Unset,
                  linkage=Unset, usage=Unset, inherit_defaults=False, _options,
-                 _linkage_field='linkage', **kwargs):
+                 _submodule_props_type, _linkage_field='linkage', **kwargs):
         submodules, submodule_required = migrate_submodules(
             submodules, submodule_required
         )
@@ -233,13 +211,34 @@ class BinaryPackage(Package):
         symbols = self._expr_symbols
         pkg_default = DefaultResolver(self, symbols, inherit_defaults, name)
         T = types.TypeCheck(locals(), symbols)
-        T.submodules(pkg_default(submodules_type()))
+        T.submodules(pkg_default(submodules_type(
+            symbols, _submodule_props_type
+        )))
         T.submodule_required(pkg_default(
             submodule_required_type(self.submodules), default=Unset
         ))
 
         self.linkage = make_linkage(self, linkage, field=_linkage_field,
                                     _symbols=self._linkage_expr_symbols)
+
+
+class ManagedBinaryPackage(BinaryPackage, ManagedPackage):
+    def __init__(self, name, **kwargs):
+        super().__init__(name, _submodule_props_type=ManagedSubmoduleProps,
+                         **kwargs)
+
+
+class UnmanagedBinaryPackage(BinaryPackage, UnmanagedPackage):
+    def __init__(self, name, *, dependencies=Unset, inherit_defaults=False,
+                 **kwargs):
+        super().__init__(name, inherit_defaults=inherit_defaults,
+                         _submodule_props_type=UnmanagedSubmoduleProps,
+                         **kwargs)
+
+        symbols = self._expr_symbols
+        pkg_default = DefaultResolver(self, symbols, inherit_defaults, name)
+        T = types.TypeCheck(locals(), symbols)
+        T.dependencies(pkg_default(dependencies_type))
 
 
 class PackageOptions(GenericFreezeDried, BaseOptions):

@@ -232,6 +232,10 @@ class ChildConfig(BaseConfig):
             self.data = data
 
         @property
+        def dependencies(self):
+            return self.data.get('dependencies', Unset)
+
+        @property
         def submodules(self):
             return self.data.get('submodules', Unset)
 

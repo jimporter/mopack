@@ -23,6 +23,7 @@ in progress
   auto-linking is available
 - `submodules` field is now a dictionary of submodule names; to set the
   `required` field, use `submodule_required` instead
+- `dependencies` are now defined at the package level, instead of in the linkage
 
 ---
 

@@ -13,6 +13,7 @@ from mopack.linkages.path_system import SystemLinkage
 from mopack.origins import Package
 from mopack.origins.apt import AptPackage
 from mopack.origins.sdist import TarballPackage
+from mopack.origins.submodules import UnmanagedSubmoduleProps
 from mopack.path import Path
 from mopack.types import ConfigurationError, Unset
 
@@ -658,7 +659,9 @@ class TestTarball(SDistTestCase):
             self.assertIsInstance(pkg, TarballPackage)
             self.assertIsInstance(pkg.linkage, SystemLinkage)
             self.assertEqual([type(i) for i in pkg.builders], [NoneBuilder])
-            self.assertEqual(pkg.submodules, {'sub': {}})
+            self.assertEqual(pkg.submodules, {
+                'sub': UnmanagedSubmoduleProps(opts.expr_symbols)
+            })
             self.assertEqual(pkg.submodule_required, False)
             m.assert_called_once()
 

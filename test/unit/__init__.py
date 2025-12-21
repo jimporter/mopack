@@ -74,10 +74,11 @@ class MockBuilder:
 class MockPackage:
     cfgdir = '/path/to/cfgdir'
 
-    def __init__(self, name='foo', *, version=None, env=None, srcdir=None,
-                 builddir=None, submodules=None, submodule_required=True,
-                 _options=None):
+    def __init__(self, name='foo', *, version=None, dependencies=None,
+                 env=None, srcdir=None, builddir=None, submodules=None,
+                 submodule_required=True, _options=None):
         self.name = name
+        self.dependencies = dependencies or []
         self.env = env or {}
         self.submodules = submodules or None
         self.submodule_required = submodule_required if submodules else None
@@ -118,6 +119,9 @@ class MockPackage:
 
     def guessed_version(self, metadata):
         return self._version
+
+    def get_dependencies(self, submodules):
+        return self.dependencies
 
 
 def through_json(data, *args, **kwargs):

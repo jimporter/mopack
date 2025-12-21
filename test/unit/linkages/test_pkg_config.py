@@ -5,6 +5,7 @@ from unittest import mock
 from . import MockPackage, through_json, LinkageTest
 from .. import rehydrate_kwargs
 
+from mopack.dependencies import Dependency
 from mopack.linkages import Linkage
 from mopack.linkages.pkg_config import PkgConfigLinkage
 from mopack.path import Path
@@ -71,6 +72,28 @@ class TestPkgConfig(LinkageTest):
             {'name': 'foo', 'type': 'pkg_config', 'pcnames': ['foo'],
              'pkg_config_path': [os.path.join(self.builddir, 'pkgconf')]}
         )
+
+    def test_dependencies(self):
+        pkg = MockPackage('foo', srcdir=self.srcdir, builddir=self.builddir,
+                          dependencies=[Dependency('bar')],
+                          _options=self.make_options())
+
+        linkage = self.make_linkage(pkg)
+        self.assertEqual(linkage.pcname, 'foo')
+        self.assertEqual(linkage.pkg_config_path,
+                         [Path('pkgconfig', 'builddir')])
+
+        path = '/mock/pkgconfig'
+        dep_linkage = {'name': 'bar', 'type': 'system', 'generated': True,
+                       'auto_link': True, 'pcnames': ['bar'],
+                       'pkg_config_path': [path]}
+        with mock.patch('mopack.origins.Package.get_linkage',
+                        return_value=dep_linkage):
+            self.assertEqual(
+                linkage.get_linkage(self.metadata, pkg, None),
+                {'name': 'foo', 'type': 'pkg_config', 'pcnames': ['foo'],
+                 'pkg_config_path': [self.pkgconfdir, path]}
+            )
 
     def test_submodules(self):
         pkg = MockPackage(builddir=self.builddir)

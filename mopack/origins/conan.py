@@ -3,7 +3,7 @@ import subprocess
 import warnings
 from itertools import chain
 
-from . import (BatchPackage, BinaryPackage, PackageOptions,
+from . import (BatchPackage, ManagedBinaryPackage, PackageOptions,
                migrate_saved_submodules)
 from .. import log, types
 from ..environment import get_cmd
@@ -14,7 +14,7 @@ from ..path import pushd
 from ..shell import ShellArguments
 
 
-class ConanPackage(BinaryPackage, BatchPackage):
+class ConanPackage(ManagedBinaryPackage, BatchPackage):
     origin = 'conan'
     _version = 2
 
@@ -44,7 +44,7 @@ class ConanPackage(BinaryPackage, BatchPackage):
     def upgrade(config, version):
         # v2 migrates the layout of `submodules`.
         if version < 2:
-            migrate_saved_submodules(config)
+            migrate_saved_submodules(config, managed=True)
 
         return config
 

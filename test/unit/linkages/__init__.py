@@ -28,7 +28,7 @@ class LinkageTest(OptionsTest):
             })
             options = self.make_options(**options_kwargs)
             pkg_kwargs = slice_dict(kwargs, {
-                'submodules', 'submodule_required',
+                'dependencies', 'submodules', 'submodule_required',
             })
             pkg = MockPackage(pkg, srcdir=self.srcdir, builddir=self.builddir,
                               _options=options, **pkg_kwargs)

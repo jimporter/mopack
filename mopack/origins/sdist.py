@@ -4,13 +4,13 @@ import subprocess
 import warnings
 from contextlib import contextmanager
 from io import BytesIO
-from typing import Dict, List
+from typing import Dict, List, Union
 from urllib.request import urlopen
 
 from verspec.loose import SpecifierSet
 
-from . import (Package, submodules_type, submodule_required_type,
-               migrate_submodules, migrate_saved_submodules)
+from . import UnmanagedPackage, dependencies_type
+from .submodules import *
 from .. import archive, log, types
 from ..builders import Builder, make_builder
 from ..config import ChildConfig
@@ -32,11 +32,12 @@ from ..yaml_tools import to_parse_error
 
 @GenericFreezeDried.fields(rehydrate={
     'env': Dict[str, MaybePlaceholderString],
+    'submodules': Union[str, Dict[str, UnmanagedSubmoduleProps]],
     'builders': List[Builder]
 }, skip_compare={'pkg_default', 'pending_builders', 'pending_linkage'})
-class SDistPackage(Package):
+class SDistPackage(UnmanagedPackage):
     # TODO: Remove `usage` after v0.2 is released.
-    def __init__(self, name, *, env=None, submodules=Unset,
+    def __init__(self, name, *, env=None, dependencies=Unset, submodules=Unset,
                  submodule_required=Unset, build=Unset, linkage=Unset,
                  usage=Unset, inherit_defaults=False, _options, **kwargs):
         submodules, submodule_required = migrate_submodules(
@@ -62,7 +63,10 @@ class SDistPackage(Package):
 
         self._expr_symbols = self._expr_symbols.augment(env=self.env)
         T = types.TypeCheck(locals(), self._expr_symbols)
-        T.submodules(submodules_type(raw=True))
+        T.dependencies(types.maybe_raw(dependencies_type, empty=(Unset,)))
+        T.submodules(submodules_type(
+            self._expr_symbols, UnmanagedSubmoduleProps, raw=True
+        ))
         T.submodule_required(submodule_required_type(
             self.submodules, raw=True
         ))
@@ -197,12 +201,24 @@ class SDistPackage(Package):
                    self.submodule_required is not Unset)
         with load_config(export.config_file, export.data):
             if self.submodules is Unset:
-                T.submodules(self.pkg_default(
-                    submodules_type(), default=Unset
-                ))
+                T.submodules(self.pkg_default(submodules_type(
+                    self._expr_symbols, UnmanagedSubmoduleProps
+                ), default=Unset))
             if self.submodule_required is Unset:
                 T.submodule_required(self.pkg_default(
                     submodule_required_type(self.submodules), default=Unset
+                ))
+
+            if self.dependencies is Unset:
+                # TODO: Some way of automatically determining dependencies with
+                # only the necessary submodules would be nice. This probably
+                # requires some significant changes to package listings, e.g.
+                # making the key be the package + submodule, and then having
+                # some way to go to the "parent" dependency, i.e. the whole
+                # package.
+                default_deps = list(config.packages.keys()) if config else []
+                T.dependencies(self.pkg_default(
+                    dependencies_type, default=default_deps
                 ))
 
         if recheck:
@@ -246,7 +262,7 @@ class SDistPackage(Package):
         # optional fields aren't real differences though: they get filled in by
         # the package itself.
         return not self.equal(new_package, optional_fields={
-            'builders', 'linkage', 'submodules'
+            'dependencies', 'builders', 'linkage', 'submodules'
         })
 
     def clean_post(self, metadata, new_package, quiet=False):

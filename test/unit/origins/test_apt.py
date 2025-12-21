@@ -10,6 +10,7 @@ from mopack.iterutils import iterate
 from mopack.origins import Package
 from mopack.origins.apt import AptPackage
 from mopack.origins.conan import ConanPackage
+from mopack.origins.submodules import ManagedSubmoduleProps
 
 
 def mock_run(args, **kwargs):
@@ -281,6 +282,8 @@ class TestApt(OriginTest):
                                side_effect=AptPackage.upgrade) as m:
             pkg = Package.rehydrate(data, _options=opts, **rehydrate_kwargs)
             self.assertIsInstance(pkg, AptPackage)
-            self.assertEqual(pkg.submodules, {'sub': {}})
+            self.assertEqual(pkg.submodules, {
+                'sub': ManagedSubmoduleProps(opts.expr_symbols)
+            })
             self.assertEqual(pkg.submodule_required, False)
             m.assert_called_once()

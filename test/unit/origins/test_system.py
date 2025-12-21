@@ -11,6 +11,7 @@ from mopack.dependencies import Dependency
 from mopack.path import Path
 from mopack.origins import Package
 from mopack.origins.apt import AptPackage
+from mopack.origins.submodules import UnmanagedSubmoduleProps
 from mopack.origins.system import SystemPackage
 from mopack.types import FieldKeyError
 
@@ -269,6 +270,8 @@ class TestSystemPackage(OriginTest):
                                side_effect=SystemPackage.upgrade) as m:
             pkg = Package.rehydrate(data, _options=opts, **rehydrate_kwargs)
             self.assertIsInstance(pkg, SystemPackage)
-            self.assertEqual(pkg.submodules, {'sub': {}})
+            self.assertEqual(pkg.submodules, {
+                'sub': UnmanagedSubmoduleProps(opts.expr_symbols)
+            })
             self.assertEqual(pkg.submodule_required, False)
             m.assert_called_once()

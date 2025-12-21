@@ -343,7 +343,8 @@ class PathLinkage(Linkage):
         # Ensure all dependencies are up-to-date and get their linkages.
         requires = requires[:]
         pkg_config_path = [pkgconfdir]
-        for dep in chain_attr('dependencies'):
+        for dep in chain(pkg.get_dependencies(submodule),
+                         chain_attr('dependencies')):
             # XXX: Cache linkage so we don't repeatedly process the same
             # package.
             dep_pkg = metadata.get_package(dep.package)

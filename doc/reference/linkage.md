@@ -72,7 +72,6 @@ packages:
       type: system
       version: <string>
       pcname: <string>  # system only
-      dependencies: <list[dependency]>
       include_path: <list[path]>
       library_path: <list[path]>
       headers: <list[header]>
@@ -90,10 +89,6 @@ packages:
   [submodules](packages.md) are *required* for this package, this instead
   defaults to `null`. If this file isn't found, use the other options to
   generate a pkg-config file.
-
-`dependencies` <span class="subtitle">*optional, default*: `null`</span>
-: A list of package dependencies that are required to use this package. This
-  corresponds to the `Requires` field of a pkg-config `.pc` file.
 
 `include_path` <span class="subtitle">*optional, default*: `null`</span>
 : A list of paths to search for header files (as specified in `headers`). Any
@@ -131,7 +126,6 @@ packages:
       # ...
       submodule_linkage:
         - pcname: <string>  # system only
-          dependencies: <list[dependency]>
           include_path: <list[path]>
           library_path: <list[path]>
           headers: <list[header]>
@@ -144,7 +138,6 @@ packages:
 : The name of the pkg-config `.pc` file, without the extension. If this file
   isn't found, use the other options to generate a pkg-config file.
 
-`dependencies` <span class="subtitle">*optional, default*: `null`</span>
 `include_path` <span class="subtitle">*optional, default*: `null`</span>
 `library_path` <span class="subtitle">*optional, default*: `null`</span>
 `headers` <span class="subtitle">*optional, default*: `null`</span>

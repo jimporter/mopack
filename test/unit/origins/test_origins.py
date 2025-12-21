@@ -10,6 +10,7 @@ from mopack.config import Config
 from mopack.path import Path
 from mopack.origins import make_package, try_make_package
 from mopack.origins.sdist import DirectoryPackage
+from mopack.origins.submodules import UnmanagedSubmoduleProps
 from mopack.origins.system import SystemPackage
 from mopack.types import FieldError
 from mopack.yaml_tools import SafeLineLoader
@@ -73,9 +74,10 @@ class TestMakePackage(OriginTest):
             pkg.get_linkage(self.metadata, ['sub'])
 
     def test_make_submodules(self):
+        opts = self.make_options()
         pkg = make_package('foo', {
             'origin': 'system', 'submodules': '*',
-        }, _options=self.make_options(), config_file='/path/to/mopack.yml')
+        }, _options=opts, config_file='/path/to/mopack.yml')
         self.assertIsInstance(pkg, SystemPackage)
         self.assertEqual(pkg.name, 'foo')
         self.assertEqual(pkg.submodules, '*')
@@ -98,10 +100,12 @@ class TestMakePackage(OriginTest):
 
         pkg = make_package('foo', {
             'origin': 'system', 'submodules': {'sub': None},
-        }, _options=self.make_options(), config_file='/path/to/mopack.yml')
+        }, _options=opts, config_file='/path/to/mopack.yml')
         self.assertIsInstance(pkg, SystemPackage)
         self.assertEqual(pkg.name, 'foo')
-        self.assertEqual(pkg.submodules, {'sub': {}})
+        self.assertEqual(pkg.submodules, {
+            'sub': UnmanagedSubmoduleProps(opts.expr_symbols)
+        })
         self.assertEqual(pkg.submodule_required, True)
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
@@ -123,12 +127,15 @@ class TestMakePackage(OriginTest):
 
         pkg = make_package('foo', {
             'origin': 'system',
-            'submodules': {'sub': None},
+            'submodules': {'sub': {'dependencies': ['dep']}},
             'submodule_required': False,
-        }, _options=self.make_options(), config_file='/path/to/mopack.yml')
+        }, _options=opts, config_file='/path/to/mopack.yml')
         self.assertIsInstance(pkg, SystemPackage)
         self.assertEqual(pkg.name, 'foo')
-        self.assertEqual(pkg.submodules, {'sub': {}})
+        self.assertEqual(pkg.submodules, {
+            'sub': UnmanagedSubmoduleProps(opts.expr_symbols,
+                                           dependencies=['dep'])
+        })
         self.assertEqual(pkg.submodule_required, False)
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')

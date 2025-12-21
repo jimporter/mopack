@@ -42,25 +42,28 @@ packages:
 
 ## Source distributions
 
-### directory
-
 ```yaml
 packages:
   my_pkg:
-    origin: directory
+    dependencies: <list[dependency]>
+    submodules:
+      my_submodule:
+        dependencies: <list[dependency]>
+      # ...
     env: <env_vars>
-    path: <path>
     build: <build>
     linkage: <linkage>
 ```
+
+`dependencies` <span class="subtitle">*optional, default*: *from package*</span>
+: A list of package dependencies that are required to use this package. By
+  default, this field is equal to the list of package dependencies defined in
+  *my_pkg*'s `mopack.yml` file.
 
 `env` <span class="subtitle">*optional, default*: `{}`</span>
 : A dictionary of environment variables to use when running any commands for
   this builder. This partially overrides any environment variables set
   [globally](file-structure.md#options).
-
-`path` <span class="subtitle">*required*</span>
-: The path to the source directory of the dependency.
 
 `build` <span class="subtitle">*required*</span>
 : The [builders](builders.md) to use when resolving this package. This can
@@ -74,26 +77,30 @@ packages:
   the dependency can also define the linkage in its
   [`export`](file-structure.md#exports) section.
 
+### directory
+
+```yaml
+packages:
+  my_pkg:
+    origin: directory
+    path: <path>
+```
+
+`path` <span class="subtitle">*required*</span>
+: The path to the source directory of the dependency.
+
 ### git
 
 ```yaml
 packages:
   my_pkg:
     origin: git
-    env: <env_vars>
     repository: <url | path>
     tag: <tag_name>  # or...
     branch: <branch_name>  # or...
     commit: <commit_sha>
     srcdir: <inner_path>
-    build: <build>
-    linkage: <linkage>
 ```
-
-`env` <span class="subtitle">*optional, default*: `{}`</span>
-: A dictionary of environment variables to use when running any commands for
-  this builder. This partially overrides any environment variables set
-  [globally](file-structure.md#options).
 
 `repository` <span class="subtitle">*required*</span>
 : The URL or path to the repository.
@@ -107,37 +114,18 @@ packages:
 `srcdir` <span class="subtitle">*optional; default:* `.`</span>
 : The directory within the repository containing the dependency's source code.
 
-`build` <span class="subtitle">*required*</span>
-: The [builders](builders.md) to use when resolving this package. This can
-  either be a single builder or a list thereof. Note that while this is
-  required, it can be unset if the dependency defines the builder in its
-  [`export`](file-structure.md#exports) section.
-
-`linkage` <span class="subtitle">*optional, default: from builder*</span>
-: The [linkage](linkage.md) to use when using this package. Some builders require
-  this to be set, but others provide a default linkage specification; the
-  dependency can also define the linkage in its `export` section.
-
 ### tarball
 
 ```yaml
 packages:
   my_pkg:
     origin: tarball
-    env: <env_vars>
     path: <path>  # or...
     url: <url>
     files: <list[glob]>
     srcdir: <inner_path>
     patch: <path>
-    build: <build>
-    linkage: <linkage>
 ```
-
-`env` <span class="subtitle">*optional, default*: `{}`</span>
-: A dictionary of environment variables to use when running any commands for
-  this builder. This partially overrides any environment variables set
-  [globally](file-structure.md#options).
 
 `path` <span class="subtitle">*required*</span>
 `url`
@@ -152,17 +140,6 @@ packages:
 
 `patch` <span class="subtitle">*optional; default:* `null`</span>
 : The path to a patch file to apply to the extract source files.
-
-`build` <span class="subtitle">*required*</span>
-: The [builders](builders.md) to use when resolving this package. This can
-  either be a single builder or a list thereof. Note that while this is
-  required, it can be unset if the dependency defines the builder in its
-  [`export`](file-structure.md#exports) section.
-
-`linkage` <span class="subtitle">*optional, default: from builder*</span>
-: The [linkage](linkage.md) to use when using this package. Some builders require
-  this to be set, but others provide a default linkage specification; the
-  dependency can also define the linkage in its `export` section.
 
 ## Other origins
 
@@ -237,9 +214,12 @@ packages:
 packages:
   my_pkg:
     origin: system
+    dependencies: <list[dependency]>
+    submodules:
+      my_submodule:
+        dependencies: <list[dependency]>
     version: <string>
     pcname: <string>
-    dependencies: <list[dependency]>
     include_path: <list[path]>
     library_path: <list[path]>
     headers: <list[header]>
@@ -253,9 +233,12 @@ packages:
       # ...
 ```
 
+`dependencies` <span class="subtitle">*optional, default*: `null`</span>
+: A list of package dependencies that are required to use this package. This
+  corresponds to the `Requires` field of a pkg-config `.pc` file.
+
 `version` <span class="subtitle">*optional, default*: `null`</span>
 `pcname` <span class="subtitle">*optional, default*: `{my_pkg}`</span>
-`dependencies` <span class="subtitle">*optional, default*: `null`</span>
 `include_path` <span class="subtitle">*optional, default*: `null`</span>
 `library_path` <span class="subtitle">*optional, default*: `null`</span>
 `headers` <span class="subtitle">*optional, default*: `null`</span>
