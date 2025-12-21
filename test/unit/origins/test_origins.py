@@ -7,6 +7,7 @@ from yaml.error import MarkedYAMLError
 from . import OriginTest
 
 from mopack.config import Config
+from mopack.dependencies import Dependency
 from mopack.path import Path
 from mopack.origins import make_package, try_make_package
 from mopack.origins.sdist import DirectoryPackage
@@ -102,7 +103,7 @@ class TestMakePackage(OriginTest):
         }, _options=self.make_options(), config_file='/path/to/mopack.yml')
         self.assertIsInstance(pkg, SystemPackage)
         self.assertEqual(pkg.name, 'foo')
-        self.assertEqual(pkg.submodules, {'sub': {}})
+        self.assertEqual(pkg.submodules, {'sub': {'dependencies': []}})
         self.assertEqual(pkg.submodule_required, True)
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')
@@ -125,12 +126,13 @@ class TestMakePackage(OriginTest):
 
         pkg = make_package('foo', {
             'origin': 'system',
-            'submodules': {'sub': None},
+            'submodules': {'sub': {'dependencies': ['dep']}},
             'submodule_required': False,
         }, _options=self.make_options(), config_file='/path/to/mopack.yml')
         self.assertIsInstance(pkg, SystemPackage)
         self.assertEqual(pkg.name, 'foo')
-        self.assertEqual(pkg.submodules, {'sub': {}})
+        self.assertEqual(pkg.submodules,
+                         {'sub': {'dependencies': [Dependency('dep')]}})
         self.assertEqual(pkg.submodule_required, False)
         self.assertEqual(pkg.should_deploy, True)
         self.assertEqual(pkg.config_file, '/path/to/mopack.yml')

@@ -3,18 +3,20 @@ import shutil
 import warnings
 from contextlib import contextmanager
 from io import BytesIO
-from typing import Dict, List
+from typing import Dict, List, Union
 from urllib.request import urlopen
 from subprocess import SubprocessError
 
-from . import Package, submodules_type, submodule_required_type
+from . import (dependencies_type, Package, submodules_type,
+               submodule_required_type)
 from .. import archive, log, types
 from ..builders import Builder, make_builder
 from ..config import ChildConfig
+from ..dependencies import Dependency
 from ..environment import get_cmd
 from ..freezedried import GenericFreezeDried
 from ..glob import filter_glob
-from ..iterutils import flatten, isiterable, ismapping, listify
+from ..iterutils import flatten, isiterable, ismapping, iterate, listify
 from ..linkages import make_linkage
 from ..log import LogFile
 from ..objutils import Unset
@@ -27,12 +29,15 @@ from ..yaml_tools import to_parse_error
 
 
 @GenericFreezeDried.fields(rehydrate={
+    'dependencies': List[Dependency],
     'env': Dict[str, MaybePlaceholderString],
+    # FIXME: This is a mess.
+    'submodules': Union[str, Dict[str, Dict[str, List[Dependency]]]],
     'builders': List[Builder]
 }, skip_compare={'pkg_default', 'pending_builders', 'pending_linkage'})
 class SDistPackage(Package):
     # TODO: Remove `usage` after v0.2 is released.
-    def __init__(self, name, *, env=None, submodules=Unset,
+    def __init__(self, name, *, env=None, dependencies=Unset, submodules=Unset,
                  submodule_required=Unset, build=Unset, linkage=Unset,
                  usage=Unset, inherit_defaults=False, _options, **kwargs):
         # TODO: Remove this after v0.2 is released.
@@ -65,6 +70,7 @@ class SDistPackage(Package):
 
         self._expr_symbols = self._expr_symbols.augment(env=self.env)
         T = types.TypeCheck(locals(), self._expr_symbols)
+        T.dependencies(types.maybe_raw(dependencies_type, empty=(Unset,)))
         T.submodules(submodules_type(raw=True))
         T.submodule_required(submodule_required_type(
             self.submodules, raw=True
@@ -200,12 +206,23 @@ class SDistPackage(Package):
                    self.submodule_required is not Unset)
         with load_config(export.config_file, export.data):
             if self.submodules is Unset:
-                T.submodules(self.pkg_default(
-                    submodules_type(), default=Unset
-                ))
+                T.submodules(self.pkg_default(submodules_type(),
+                                              default=Unset))
             if self.submodule_required is Unset:
                 T.submodule_required(self.pkg_default(
                     submodule_required_type(self.submodules), default=Unset
+                ))
+
+            if self.dependencies is Unset:
+                # TODO: Some way of automatically determining dependencies with
+                # only the necessary submodules would be nice. This probably
+                # requires some significant changes to package listings, e.g.
+                # making the key be the package + submodule, and then having
+                # some way to go to the "parent" dependency, i.e. the whole
+                # package.
+                default_deps = list(config.packages.keys()) if config else []
+                T.dependencies(self.pkg_default(
+                    dependencies_type, default=default_deps
                 ))
 
         if recheck:
@@ -249,7 +266,7 @@ class SDistPackage(Package):
         # optional fields aren't real differences though: they get filled in by
         # the package itself.
         return not self.equal(new_package, optional_fields={
-            'builders', 'linkage', 'submodules'
+            'dependencies', 'builders', 'linkage', 'submodules'
         })
 
     def clean_post(self, metadata, new_package, quiet=False):
@@ -273,6 +290,15 @@ class SDistPackage(Package):
             log.pkg_deploy(self.name)
             if self.builders:
                 self.builders[-1].deploy(metadata, self)
+
+    def get_dependencies(self, submodules):
+        # Managed binary packages handle dependencies on their own, so mopack
+        # has no need to define dependencies for them as well.
+        dependencies = self.dependencies[:]
+        if self.submodules != '*':
+            for i in iterate(self._check_submodules(submodules)):
+                dependencies.extend(self.submodules[i]['dependencies'])
+        return dependencies
 
 
 @GenericFreezeDried.fields(rehydrate={'path': Path})

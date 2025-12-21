@@ -138,6 +138,11 @@ class PkgConfigLinkage(Linkage):
         else:
             sublinks = []
 
+        for dep in pkg.get_dependencies(submodules):
+            dep_pkg = metadata.get_package(dep.package)
+            linkage = dep_pkg.get_linkage(metadata, dep.submodules)
+            pkgconfpath.extend(linkage.get('pkg_config_path', []))
+
         pcnames = listify(self.pcname)
         for i in sublinks:
             if i.pcname:

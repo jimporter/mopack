@@ -27,7 +27,8 @@ class TestSubmodules(IntegrationTest):
             'packages': [
                 cfg_directory_pkg(
                     'hello', config,
-                    submodules={'english': {}, 'french': {}},
+                    submodules={'english': {'dependencies': []},
+                                'french': {'dependencies': []}},
                     submodule_required=True,
                     path={'base': 'cfgdir', 'path': 'hello-multi-bfg'},
                     builders=[cfg_bfg9000_builder()],
@@ -74,7 +75,8 @@ class TestSubmodulesPath(IntegrationTest):
             'packages': [
                 cfg_directory_pkg(
                     'hello', config,
-                    submodules={'english': {}, 'french': {}},
+                    submodules={'english': {'dependencies': []},
+                                'french': {'dependencies': []}},
                     submodule_required=True,
                     path={'base': 'cfgdir', 'path': 'hello-multi-bfg'},
                     builders=[cfg_bfg9000_builder()],

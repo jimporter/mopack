@@ -1,11 +1,13 @@
 import importlib_metadata as metadata
 import os
 import warnings
+from typing import List
 
 from .. import types
 from ..base_options import BaseOptions, OptionsHolder
+from ..dependencies import Dependency
 from ..freezedried import GenericFreezeDried
-from ..iterutils import ismapping, listify
+from ..iterutils import ismapping, iterate, listify
 from ..linkages import Linkage, make_linkage
 from ..package_defaults import DefaultResolver
 from ..types import (FieldKeyError, FieldValueError, try_load_config,
@@ -19,14 +21,20 @@ def _get_origin_type(origin, field='origin'):
         raise FieldValueError('unknown origin {!r}'.format(origin), field)
 
 
-def submodules_type(*, raw=False):
+dependencies_type = types.list_of(types.dependency, listify=True)
+
+
+def submodule_props_type(managed=False):
+    shape = {} if managed else {'dependencies': dependencies_type}
+    default = {} if managed else {'dependencies': []}
+    return types.maybe(types.dict_shape(shape, desc='a submodule definition'),
+                       default=default)
+
+
+def submodules_type(base_type=submodule_props_type(), *, raw=False):
     maybe = types.maybe_raw if raw else types.maybe
     return maybe(types.one_of(
-        types.dict_of(types.string, types.maybe(
-            types.dict_shape({}, desc='a submodule definition'),
-            default={}
-        )),
-        types.constant('*'),
+        types.dict_of(types.string, base_type), types.constant('*'),
         desc='a dictionary of submodules'
     ))
 
@@ -192,8 +200,9 @@ class BinaryPackage(Package):
     # TODO: Remove `usage` after v0.2 is released.
     def __init__(self, name, *, submodules=Unset, submodule_required=Unset,
                  linkage=Unset, usage=Unset, inherit_defaults=False, _options,
-                 _linkage_field='linkage', **kwargs):
-        # TODO: Remove this after v0.2 is released.
+                 _submodule_props_type, _linkage_field='linkage', **kwargs):
+        # TODO: Remove this after v0.2 is released.  Maybe move all the
+        # submodule logic to Managed/UnmanagedBinaryPackage below?
         if ( ismapping(submodules) and
              set(submodules.keys()) == {'names', 'required'} ):
             warnings.warn(types.FieldKeyWarning(
@@ -218,13 +227,49 @@ class BinaryPackage(Package):
         symbols = self._expr_symbols
         pkg_default = DefaultResolver(self, symbols, inherit_defaults, name)
         T = types.TypeCheck(locals(), symbols)
-        T.submodules(pkg_default(submodules_type()))
+        T.submodules(pkg_default(submodules_type(_submodule_props_type)))
         T.submodule_required(pkg_default(
             submodule_required_type(self.submodules), default=Unset
         ))
 
         self.linkage = make_linkage(self, linkage, field=_linkage_field,
                                     _symbols=self._linkage_expr_symbols)
+
+
+class ManagedBinaryPackage(BinaryPackage):
+    def __init__(self, name, **kwargs):
+        super().__init__(
+            name, _submodule_props_type=submodule_props_type(True), **kwargs
+        )
+
+    def get_dependencies(self, submodules):
+        # Managed binary packages handle dependencies on their own, so mopack
+        # has no need to define dependencies for them as well.
+        return []
+
+
+@GenericFreezeDried.fields(rehydrate={
+    'dependencies': List[Dependency],
+})
+class UnmanagedBinaryPackage(BinaryPackage):
+    def __init__(self, name, *, dependencies=Unset, inherit_defaults=False,
+                 **kwargs):
+        super().__init__(name, _submodule_props_type=submodule_props_type(),
+                         inherit_defaults=inherit_defaults, **kwargs)
+
+        symbols = self._expr_symbols
+        pkg_default = DefaultResolver(self, symbols, inherit_defaults, name)
+        T = types.TypeCheck(locals(), symbols)
+        T.dependencies(pkg_default(dependencies_type))
+
+    def get_dependencies(self, submodules):
+        # Managed binary packages handle dependencies on their own, so mopack
+        # has no need to define dependencies for them as well.
+        dependencies = self.dependencies[:]
+        if self.submodules != '*':
+            for i in iterate(self._check_submodules(submodules)):
+                dependencies.extend(self.submodules[i]['dependencies'])
+        return dependencies
 
 
 class PackageOptions(GenericFreezeDried, BaseOptions):

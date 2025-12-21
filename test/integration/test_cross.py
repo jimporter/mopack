@@ -28,7 +28,10 @@ class TestCross(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigLinkage('greeter')
+        self.assertPkgConfigLinkage('greeter', pkg_config_path=[
+            os.path.join('build', 'greeter', 'pkgconfig'),
+            os.path.join('build', 'hello', 'pkgconfig'),
+        ])
         self.assertPkgConfigLinkage('hello')
 
         output = json.loads(slurp('mopack/mopack.json'))

@@ -90,7 +90,7 @@ def cfg_options(**kwargs):
     return result
 
 
-def _cfg_package(origin, api_version, name, config_file, parent=None,
+def _cfg_package(origin, api_version, name, config_file, *, parent=None,
                  resolved=True, submodules=None, submodule_required=None,
                  should_deploy=True):
     return {
@@ -106,46 +106,46 @@ def _cfg_package(origin, api_version, name, config_file, parent=None,
     }
 
 
-def cfg_directory_pkg(name, config_file, *, path, env={}, builders=[], linkage,
-                      **kwargs):
-    result = _cfg_package('directory', 4, name, config_file, **kwargs)
+def _cfg_sdist_pkg(origin, api_version, name, config_file, *, dependencies=[],
+                   env={}, builders=[], linkage, **kwargs):
+    result = _cfg_package(origin, api_version, name, config_file, **kwargs)
     result.update({
+        'dependencies': dependencies,
         'env': env,
-        'path': path,
         'builders': builders,
         'linkage': linkage,
     })
     return result
 
 
-def cfg_tarball_pkg(name, config_file, *, env={}, path=None, url=None,
-                    files=[], srcdir=None, guessed_srcdir=None, patch=None,
-                    builders=[], linkage, **kwargs):
-    result = _cfg_package('tarball', 4, name, config_file, **kwargs)
+def cfg_directory_pkg(name, config_file, *, path, **kwargs):
+    result = _cfg_sdist_pkg('directory', 4, name, config_file, **kwargs)
     result.update({
-        'env': env,
+        'path': path,
+    })
+    return result
+
+
+def cfg_tarball_pkg(name, config_file, *, path=None, url=None, files=[],
+                    srcdir=None, guessed_srcdir=None, patch=None, **kwargs):
+    result = _cfg_sdist_pkg('tarball', 4, name, config_file, **kwargs)
+    result.update({
         'path': path,
         'url': url,
         'files': files,
         'srcdir': srcdir,
         'guessed_srcdir': guessed_srcdir,
         'patch': patch,
-        'builders': builders,
-        'linkage': linkage,
     })
     return result
 
 
-def cfg_git_pkg(name, config_file, *, env={}, repository, rev, srcdir='.',
-                builders=[], linkage, **kwargs):
-    result = _cfg_package('git', 4, name, config_file, **kwargs)
+def cfg_git_pkg(name, config_file, *, repository, rev, srcdir='.', **kwargs):
+    result = _cfg_sdist_pkg('git', 4, name, config_file, **kwargs)
     result.update({
-        'env': env,
         'repository': repository,
         'rev': rev,
         'srcdir': srcdir,
-        'builders': builders,
-        'linkage': linkage,
     })
     return result
 
@@ -173,9 +173,10 @@ def cfg_conan_pkg(name, config_file, *, remote, build=False, options={},
     return result
 
 
-def cfg_system_pkg(name, config_file, *, linkage, **kwargs):
+def cfg_system_pkg(name, config_file, *, dependencies=[], linkage, **kwargs):
     result = _cfg_package('system', 2, name, config_file, **kwargs)
     result.update({
+        'dependencies': dependencies,
         'linkage': linkage,
     })
     return result
@@ -400,12 +401,14 @@ class IntegrationTest(SubprocessTestCase):
         return output
 
     def assertPkgConfigLinkage(self, name, submodules=[], *, type='pkg_config',
-                               pcnames=None, pkg_config_path=['pkgconfig']):
-        pkg_config_path = [(i if os.path.isabs(i) else
-                            os.path.join(self.pkgbuilddir, name, i))
-                           for i in pkg_config_path]
+                               pcnames=None, pkg_config_path=None):
         if pcnames is None:
             pcnames = [name]
+        if pkg_config_path is None:
+            pkg_config_path = [os.path.join('build', name, 'pkgconfig')]
+        pkg_config_path = [(i if os.path.isabs(i) else
+                            os.path.join(self.mopackdir, i))
+                           for i in pkg_config_path]
 
         self.assertLinkage(name, {
             'name': str(Dependency(name, submodules)), 'type': type,
@@ -414,15 +417,21 @@ class IntegrationTest(SubprocessTestCase):
 
     def assertPathLinkage(self, name, submodules=[], *, type='path',
                           version='', auto_link=False, pcnames=None,
-                          include_path=[], library_path=[], libraries=None,
-                          compile_flags=[], link_flags=[]):
-        if libraries is None:
-            libraries = [name]
+                          pkg_config_path=None, include_path=[],
+                          library_path=[], libraries=None, compile_flags=[],
+                          link_flags=[]):
         if pcnames is None:
             pcnames = ([str(Dependency(name, [i])) for i in
                         iterate(submodules)] if submodules else [name])
+        if pkg_config_path is None:
+            pkg_config_path = ['pkgconfig']
+        pkg_config_path = [(i if os.path.isabs(i) else
+                            os.path.join(self.mopackdir, i))
+                           for i in pkg_config_path]
 
-        pkg_config_path = [os.path.join(self.mopackdir, 'pkgconfig')]
+        if libraries is None:
+            libraries = [name]
+
         self.assertLinkage(name, {
             'name': str(Dependency(name, submodules)), 'type': type,
             'generated': True, 'auto_link': auto_link, 'pcnames': pcnames,

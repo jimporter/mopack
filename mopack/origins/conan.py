@@ -3,7 +3,7 @@ import subprocess
 import warnings
 from itertools import chain
 
-from . import BatchPackage, BinaryPackage, PackageOptions
+from . import BatchPackage, ManagedBinaryPackage, PackageOptions
 from .. import log, types
 from ..environment import get_cmd
 from ..freezedried import GenericFreezeDried
@@ -13,7 +13,7 @@ from ..path import pushd
 from ..shell import ShellArguments
 
 
-class ConanPackage(BinaryPackage, BatchPackage):
+class ConanPackage(ManagedBinaryPackage, BatchPackage):
     origin = 'conan'
     _version = 2
 

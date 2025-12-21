@@ -1,14 +1,14 @@
 import subprocess
 from itertools import chain
 
-from . import BatchPackage, BinaryPackage
+from . import BatchPackage, ManagedBinaryPackage
 from .. import log, types
 from ..environment import get_cmd, subprocess_run
 from ..iterutils import uniques
 from ..objutils import Unset
 
 
-class AptPackage(BinaryPackage, BatchPackage):
+class AptPackage(ManagedBinaryPackage, BatchPackage):
     origin = 'apt'
     _version = 2
 

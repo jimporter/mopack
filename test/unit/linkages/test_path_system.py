@@ -60,13 +60,11 @@ class TestPath(LinkageTest):
             shutil.rmtree(self.pkgdir)
 
     def check_linkage(self, linkage, *, name='foo', auto_link=False,
-                      dependencies=[], include_path=[], library_path=[],
-                      headers=[], libraries=None, compile_flags=[],
-                      link_flags=[]):
+                      include_path=[], library_path=[], headers=[],
+                      libraries=None, compile_flags=[], link_flags=[]):
         if libraries is None:
             libraries = [name]
         self.assertEqual(linkage.auto_link, auto_link)
-        self.assertEqual(linkage.dependencies, dependencies)
         self.assertEqual(linkage.include_path, include_path)
         self.assertEqual(linkage.library_path, library_path)
         self.assertEqual(linkage.headers, headers)
@@ -225,15 +223,20 @@ class TestPath(LinkageTest):
             self.make_linkage('foo', version={'type': 'goofy'})
 
     def test_dependencies(self):
-        linkage = self.make_linkage('foo', dependencies=['bar'])
-        self.check_linkage(linkage, dependencies=[Dependency('bar')])
-        self.check_get_linkage(linkage, 'foo', None)
+        pkg = MockPackage('foo', srcdir=self.srcdir, builddir=self.builddir,
+                          dependencies=[Dependency('bar')],
+                          _options=self.make_options())
+
+        linkage = self.make_linkage(pkg)
+        self.check_linkage(linkage)
+        self.check_get_linkage(linkage, 'foo', None, pkg=pkg)
         self.check_pkg_config('foo', None, {
             'libs': ['-L' + abspath('/mock/lib'), '-lfoo', '-lbar'],
         })
 
+        # Try getting linkage again with a different dependency linkage.
         path = '/mock/pkgconfig'
-        dep_linkage = {'name': 'foo', 'type': self.type, 'generated': True,
+        dep_linkage = {'name': 'bar', 'type': self.type, 'generated': True,
                        'auto_link': True, 'pcnames': ['bar'],
                        'pkg_config_path': [path]}
         with mock.patch('mopack.origins.Package.get_linkage',
@@ -242,7 +245,7 @@ class TestPath(LinkageTest):
                 'name': 'foo', 'type': self.type, 'generated': True,
                 'auto_link': True, 'pcnames': ['foo'],
                 'pkg_config_path': [self.pkgconfdir, path],
-            })
+            }, pkg=pkg)
 
     def test_include_path_relative(self):
         pkg = MockPackage(srcdir=self.srcdir, builddir=self.builddir)

@@ -340,7 +340,8 @@ class PathLinkage(Linkage):
         auto_link = self.auto_link
         deps_requires = []
         deps_paths = [pkgconfdir]
-        for dep in chain_attr('dependencies'):
+        for dep in chain(pkg.get_dependencies(submodule),
+                         chain_attr('dependencies')):
             # XXX: Cache linkage so we don't repeatedly process the same
             # package.
             dep_pkg = metadata.get_package(dep.package)
