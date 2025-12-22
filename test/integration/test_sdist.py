@@ -31,7 +31,9 @@ class TestDirectory(SDistTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigLinkage('hello')
+        self.assertPkgConfigLinkage('hello', include_path=[
+            os.path.join(test_data_dir, 'hello-bfg', 'include'),
+        ])
         implicit_cfg = os.path.join(test_data_dir, 'hello-bfg', 'mopack.yml')
         self.check_list_files([config], [implicit_cfg])
 
@@ -59,7 +61,9 @@ class TestDirectory(SDistTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigLinkage('hello')
+        self.assertPkgConfigLinkage('hello', include_path=[
+            os.path.join(test_data_dir, 'hello-bfg', 'include'),
+        ])
         implicit_cfg = os.path.join(test_data_dir, 'hello-bfg', 'mopack.yml')
         self.check_list_files([config], [implicit_cfg])
 
@@ -91,7 +95,9 @@ class TestTarball(SDistTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigLinkage('hello')
+        self.assertPkgConfigLinkage('hello', include_path=[
+            os.path.join(self.pkgsrcdir, 'hello', 'hello-bfg', 'include'),
+        ])
         self.check_list_files([config])
 
         output = json.loads(slurp('mopack/mopack.json'))
@@ -133,7 +139,9 @@ class TestTarballPatch(SDistTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigLinkage('hello')
+        self.assertPkgConfigLinkage('hello', include_path=[
+            os.path.join(self.pkgsrcdir, 'hello', 'hello-bfg', 'include'),
+        ])
         self.check_list_files([config])
 
         output = json.loads(slurp('mopack/mopack.json'))
@@ -177,7 +185,8 @@ class TestGit(SDistTest):
         self.assertExists('mopack/logs/bencodehpp.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigLinkage('bencodehpp')
+        self.assertPkgConfigLinkage('bencodehpp', version='1.0.1',
+                                    libraries=[], library_path=[])
         implicit_cfg = os.path.join(self.stage, 'mopack', 'src', 'bencodehpp',
                                     'mopack.yml')
         self.check_list_files([config], [implicit_cfg])

@@ -400,8 +400,34 @@ class IntegrationTest(SubprocessTestCase):
             self.assertEqual(loader[format](output), linkage)
         return output
 
+    def assertLinkageResult(self, pcnames, pkg_config_path, *, version='',
+                            include_path=[], compile_flags=[], library_path=[],
+                            libraries=[], link_flags=[]):
+        self.assertEqual(call_pkg_config(
+            pcnames, ['--modversion'], path=pkg_config_path, split=False
+        ), version)
+        self.assertEqual(call_pkg_config(
+            pcnames, ['--cflags-only-I'], path=pkg_config_path,
+            fn=lambda i: os.path.normpath(re.match('-I(.*)', i).group(1))
+        ), include_path)
+        self.assertEqual(call_pkg_config(
+            pcnames, ['--cflags-only-other'], path=pkg_config_path
+        ), compile_flags)
+        self.assertEqualUnordered(call_pkg_config(
+            pcnames, ['--libs-only-L'], path=pkg_config_path,
+            fn=lambda i: os.path.normpath(re.match('-L(.*)', i).group(1))
+        ), library_path)
+        self.assertEqualUnordered(call_pkg_config(
+            pcnames, ['--libs-only-l'], path=pkg_config_path,
+            # Strip ".dll" from libraries, which show up on MinGW builds.
+            fn=lambda i: re.match(r'-l(.*?)(?:\.dll)?$', i).group(1),
+        ), libraries)
+        self.assertEqualUnordered(call_pkg_config(
+            pcnames, ['--libs-only-other'], path=pkg_config_path
+        ), link_flags)
+
     def assertPkgConfigLinkage(self, name, submodules=[], *, type='pkg_config',
-                               pcnames=None, pkg_config_path=None):
+                               pcnames=None, pkg_config_path=None, **kwargs):
         if pcnames is None:
             pcnames = [name]
         if pkg_config_path is None:
@@ -415,11 +441,17 @@ class IntegrationTest(SubprocessTestCase):
             'pcnames': pcnames, 'pkg_config_path': pkg_config_path,
         }, submodules=submodules)
 
+        kwargs.setdefault('version', '1.0')
+        kwargs.setdefault('include_path',
+                          [os.path.join(self.pkgsrcdir, name, 'include')])
+        kwargs.setdefault('library_path',
+                          [os.path.join(self.pkgbuilddir, name)])
+        kwargs.setdefault('libraries', [name])
+        self.assertLinkageResult(pcnames, pkg_config_path, **kwargs)
+
     def assertPathLinkage(self, name, submodules=[], *, type='path',
-                          version='', auto_link=False, pcnames=None,
-                          pkg_config_path=None, include_path=[],
-                          library_path=[], libraries=None, compile_flags=[],
-                          link_flags=[]):
+                          auto_link=False, pcnames=None, pkg_config_path=None,
+                          **kwargs):
         if pcnames is None:
             pcnames = ([str(Dependency(name, [i])) for i in
                         iterate(submodules)] if submodules else [name])
@@ -429,33 +461,11 @@ class IntegrationTest(SubprocessTestCase):
                             os.path.join(self.mopackdir, i))
                            for i in pkg_config_path]
 
-        if libraries is None:
-            libraries = [name]
-
         self.assertLinkage(name, {
             'name': str(Dependency(name, submodules)), 'type': type,
             'generated': True, 'auto_link': auto_link, 'pcnames': pcnames,
             'pkg_config_path': pkg_config_path,
         }, submodules=submodules)
 
-        self.assertEqual(call_pkg_config(
-            pcnames, ['--modversion'], path=pkg_config_path, split=False
-        ), version)
-        self.assertEqualUnordered(call_pkg_config(
-            pcnames, ['--cflags-only-I'], path=pkg_config_path,
-            fn=lambda i: os.path.normpath(re.match('-I(.*)', i).group(1))
-        ), include_path)
-        self.assertEqualUnordered(call_pkg_config(
-            pcnames, ['--cflags-only-other'], path=pkg_config_path
-        ), compile_flags)
-        self.assertEqualUnordered(call_pkg_config(
-            pcnames, ['--libs-only-L'], path=pkg_config_path,
-            fn=lambda i: os.path.normpath(re.match('-L(.*)', i).group(1))
-        ), library_path)
-        self.assertEqualUnordered(call_pkg_config(
-            pcnames, ['--libs-only-l'], path=pkg_config_path,
-            fn=lambda i: re.match('-l(.*)', i).group(1),
-        ), libraries)
-        self.assertEqualUnordered(call_pkg_config(
-            pcnames, ['--libs-only-other'], path=pkg_config_path
-        ), link_flags)
+        kwargs.setdefault('libraries', [name])
+        self.assertLinkageResult(pcnames, pkg_config_path, **kwargs)

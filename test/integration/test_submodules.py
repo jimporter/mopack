@@ -17,7 +17,13 @@ class TestSubmodules(IntegrationTest):
 
         for submodules in (['french'], ['english'], ['french', 'english']):
             self.assertPkgConfigLinkage(
-                'hello', submodules, pcnames=['hello_' + i for i in submodules]
+                'hello', submodules,
+                pcnames=['hello_' + i for i in submodules],
+                version=mock.ANY,
+                include_path=[
+                    os.path.join(test_data_dir, 'hello-multi-bfg', 'include'),
+                ],
+                libraries=['hello_' + i for i in submodules]
             )
         self.assertLinkage('hello', returncode=1)
 

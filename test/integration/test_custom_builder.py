@@ -18,7 +18,9 @@ class TestCustomBuilder(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigLinkage('hello')
+        self.assertPkgConfigLinkage('hello', include_path=[
+            os.path.join(self.pkgsrcdir, 'hello', 'hello-bfg', 'include'),
+        ])
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -59,7 +61,9 @@ class TestCustomBuilderDeploy(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigLinkage('hello')
+        self.assertPkgConfigLinkage('hello', include_path=[
+            os.path.join(self.pkgsrcdir, 'hello', 'hello-bfg', 'include'),
+        ])
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {

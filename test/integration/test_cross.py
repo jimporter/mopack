@@ -28,11 +28,16 @@ class TestCross(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigLinkage('greeter', pkg_config_path=[
-            os.path.join('build', 'greeter', 'pkgconfig'),
-            os.path.join('build', 'hello', 'pkgconfig'),
-        ])
-        self.assertPkgConfigLinkage('hello')
+        include_greeter = os.path.join(test_data_dir, 'greeter-bfg', 'include')
+        include_hello = os.path.join(self.pkgsrcdir, 'hello', 'hello-bfg',
+                                     'include')
+
+        self.assertPkgConfigLinkage(
+            'greeter', pkg_config_path=[
+                os.path.join('build', 'greeter', 'pkgconfig'),
+                os.path.join('build', 'hello', 'pkgconfig'),
+            ], include_path=[include_greeter, include_hello])
+        self.assertPkgConfigLinkage('hello', include_path=[include_hello])
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -50,6 +55,7 @@ class TestCross(IntegrationTest):
                 ),
                 cfg_directory_pkg(
                     'greeter', config,
+                    dependencies=['hello'],
                     path={'base': 'cfgdir', 'path': 'greeter-bfg'},
                     builders=[cfg_bfg9000_builder()],
                     linkage=cfg_pkg_config_linkage(pcname='greeter')

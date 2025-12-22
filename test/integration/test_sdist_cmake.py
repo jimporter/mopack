@@ -22,14 +22,21 @@ class TestInnerCMake(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigLinkage('greeter', pkg_config_path=[
-            os.path.join('build', 'greeter', 'pkgconfig'), 'pkgconfig',
-        ],)
+        include_greeter = os.path.join(test_data_dir, 'greeter-bfg', 'include')
+        include_hello = os.path.join(test_data_dir, 'hello-cmake', 'include')
+        library_greeter = os.path.join(self.pkgbuilddir, 'greeter')
+        library_hello = os.path.join(self.pkgbuilddir, 'hello')
 
-        include_path = [os.path.join(test_data_dir, 'hello-cmake', 'include')]
-        library_path = [os.path.join(self.pkgbuilddir, 'hello')]
-        self.assertPathLinkage('hello', include_path=include_path,
-                               library_path=library_path, version='1.0')
+        self.assertPkgConfigLinkage(
+            'greeter', pkg_config_path=[
+                os.path.join('build', 'greeter', 'pkgconfig'), 'pkgconfig',
+            ],
+            include_path=[include_greeter, include_hello],
+            library_path=[library_greeter]
+        )
+        self.assertPathLinkage('hello', version='1.0',
+                               include_path=[include_hello],
+                               library_path=[library_hello])
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
@@ -86,22 +93,23 @@ class TestOuterCMake(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        include_path = [
-            os.path.join(test_data_dir, 'greeter-cmake', 'include'),
-            os.path.join(self.pkgsrcdir, 'hello', 'hello-bfg', 'include'),
-        ]
-        library_path = [
-            os.path.join(self.pkgbuilddir, 'greeter'),
-            os.path.join(self.pkgbuilddir, 'hello'),
-        ]
+        include_greeter = os.path.join(test_data_dir, 'greeter-cmake',
+                                       'include')
+        include_hello = os.path.join(self.pkgsrcdir, 'hello', 'hello-bfg',
+                                     'include')
+        library_greeter = os.path.join(self.pkgbuilddir, 'greeter')
+        library_hello = os.path.join(self.pkgbuilddir, 'hello')
+
         self.assertPathLinkage(
             'greeter', pkg_config_path=[
                 'pkgconfig', os.path.join('build', 'hello', 'pkgconfig'),
-            ], include_path=include_path, library_path=library_path,
-            libraries=['greeter', 'hello'], version='1.0'
+            ], version='1.0',
+            include_path=[include_greeter, include_hello],
+            library_path=[library_greeter, library_hello],
+            libraries=['greeter', 'hello']
         )
-
-        self.assertPkgConfigLinkage('hello')
+        self.assertPkgConfigLinkage('hello', include_path=[include_hello],
+                                    library_path=[library_hello])
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {

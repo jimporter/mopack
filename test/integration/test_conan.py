@@ -17,9 +17,12 @@ class TestConan(IntegrationTest):
         self.assertExists('mopack/conan/zlib.pc')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigLinkage('zlib', pkg_config_path=[os.path.join(
-            self.stage, 'mopack', 'conan'
-        )])
+        self.assertPkgConfigLinkage(
+            'zlib', pkg_config_path=[
+                os.path.join(self.stage, 'mopack', 'conan'),
+            ], version='1.2.13', include_path=mock.ANY, library_path=mock.ANY,
+            libraries=['zdll' if platform_name() == 'windows' else 'z']
+        )
 
         output = json.loads(slurp('mopack/mopack.json'))
         self.assertEqual(output['metadata'], {
