@@ -417,42 +417,10 @@ class IntegrationTest(SubprocessTestCase):
             self.assertEqual(loader[format](output), linkage)
         return output
 
-    def assertPkgConfigLinkage(self, name, submodules=[], *, type='pkg_config',
-                               pcnames=None, pkg_config_path=None):
-        if pcnames is None:
-            pcnames = [name]
-        if pkg_config_path is None:
-            pkg_config_path = [os.path.join('build', name, 'pkgconfig')]
-        pkg_config_path = [(i if os.path.isabs(i) else
-                            os.path.join(self.mopackdir, i))
-                           for i in pkg_config_path]
-
-        self.assertLinkage(name, {
-            'name': str(Dependency(name, submodules)), 'type': type,
-            'pcnames': pcnames, 'pkg_config_path': pkg_config_path,
-        }, submodules=submodules)
-
-    def assertPathLinkage(self, name, submodules=[], *, type='path',
-                          version='', pcnames=None, pkg_config_path=None,
-                          include_path=[], library_path=[], libraries=None,
-                          compile_flags=[], link_flags=[]):
-        if pcnames is None:
-            pcnames = ([str(Dependency(name, [i])) for i in
-                        iterate(submodules)] if submodules else [name])
-        if pkg_config_path is None:
-            pkg_config_path = ['pkgconfig']
-        pkg_config_path = [(i if os.path.isabs(i) else
-                            os.path.join(self.mopackdir, i))
-                           for i in pkg_config_path]
-
-        if libraries is None:
-            libraries = [name]
-
-        self.assertLinkage(name, {
-            'name': str(Dependency(name, submodules)), 'type': type,
-            'pcnames': pcnames, 'pkg_config_path': pkg_config_path,
-        }, submodules=submodules)
-
+    def assertLinkageResult(self, pcnames, pkg_config_path, *, version='',
+                            mopack_generated=False, include_path=[],
+                            compile_flags=[], library_path=[], libraries=[],
+                            link_flags=[]):
         for pcname in pcnames:
             self.assertEqual(call_pkg_config(
                 pcname, ['--modversion'], path=pkg_config_path, split=False
@@ -460,7 +428,7 @@ class IntegrationTest(SubprocessTestCase):
             self.assertEqual(call_pkg_config(
                 pcname, ['--variable=mopack_generated'], path=pkg_config_path,
                 split=False
-            ), '1')
+            ), '1' if mopack_generated else '')
         self.assertEqualUnordered(call_pkg_config(
             pcnames, ['--cflags-only-I'], path=pkg_config_path,
             fn=lambda i: os.path.normpath(re.match('-I(.*)', i).group(1))
@@ -474,8 +442,52 @@ class IntegrationTest(SubprocessTestCase):
         ), library_path)
         self.assertEqualUnordered(call_pkg_config(
             pcnames, ['--libs-only-l'], path=pkg_config_path,
-            fn=lambda i: re.match('-l(.*)', i).group(1),
+            # Strip ".dll" from libraries, which show up on MinGW builds.
+            fn=lambda i: re.match(r'-l(.*?)(?:\.dll)?$', i).group(1),
         ), libraries)
         self.assertEqualUnordered(call_pkg_config(
             pcnames, ['--libs-only-other'], path=pkg_config_path
         ), link_flags)
+
+    def assertPkgConfigLinkage(self, name, submodules=[], *, type='pkg_config',
+                               pcnames=None, pkg_config_path=None, **kwargs):
+        if pcnames is None:
+            pcnames = [name]
+        if pkg_config_path is None:
+            pkg_config_path = [os.path.join('build', name, 'pkgconfig')]
+        pkg_config_path = [(i if os.path.isabs(i) else
+                            os.path.join(self.mopackdir, i))
+                           for i in pkg_config_path]
+
+        self.assertLinkage(name, {
+            'name': str(Dependency(name, submodules)), 'type': type,
+            'pcnames': pcnames, 'pkg_config_path': pkg_config_path,
+        }, submodules=submodules)
+
+        kwargs.setdefault('version', '1.0')
+        kwargs.setdefault('include_path',
+                          [os.path.join(self.pkgsrcdir, name, 'include')])
+        kwargs.setdefault('library_path',
+                          [os.path.join(self.pkgbuilddir, name)])
+        kwargs.setdefault('libraries', [name])
+        self.assertLinkageResult(pcnames, pkg_config_path, **kwargs)
+
+    def assertPathLinkage(self, name, submodules=[], *, type='path',
+                          pcnames=None, pkg_config_path=None, **kwargs):
+        if pcnames is None:
+            pcnames = ([str(Dependency(name, [i])) for i in
+                        iterate(submodules)] if submodules else [name])
+        if pkg_config_path is None:
+            pkg_config_path = ['pkgconfig']
+        pkg_config_path = [(i if os.path.isabs(i) else
+                            os.path.join(self.mopackdir, i))
+                           for i in pkg_config_path]
+
+        self.assertLinkage(name, {
+            'name': str(Dependency(name, submodules)), 'type': type,
+            'pcnames': pcnames, 'pkg_config_path': pkg_config_path,
+        }, submodules=submodules)
+
+        kwargs.setdefault('libraries', [name])
+        self.assertLinkageResult(pcnames, pkg_config_path,
+                                 mopack_generated=True, **kwargs)

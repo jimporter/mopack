@@ -14,15 +14,23 @@ class TestQt(IntegrationTest):
         self.assertExists('mopack/mopack.json')
 
         if platform_name() == 'windows':
-            self.assertPathLinkage('Qt5', ['Widgets'], type='system',
-                                   include_path=mock.ANY,
-                                   library_path=mock.ANY,
-                                   libraries=['Qt5Widgets', 'Qt5Core'],
-                                   version='')
+            self.assertPathLinkage(
+                'Qt5', ['Widgets'], type='system', version='',
+                include_path=mock.ANY, library_path=mock.ANY,
+                libraries=['Qt5Widgets', 'Qt5Core']
+            )
         else:
-            self.assertPkgConfigLinkage('Qt5', ['Widgets'], type='system',
-                                        pcnames=['Qt5Widgets'],
-                                        pkg_config_path=[])
+            if platform_name() == 'darwin':
+                # Qt on macOS uses frameworks, not libraries.
+                libraries = mock.ANY
+            else:
+                libraries = ['Qt5Widgets', 'Qt5Gui', 'Qt5Core']
+            self.assertPkgConfigLinkage(
+                'Qt5', ['Widgets'], type='system', pcnames=['Qt5Widgets'],
+                pkg_config_path=[], version=mock.ANY, include_path=mock.ANY,
+                compile_flags=mock.ANY, library_path=mock.ANY,
+                libraries=libraries, link_flags=mock.ANY
+            )
 
         self.assertLinkage('Qt5', returncode=1)
 

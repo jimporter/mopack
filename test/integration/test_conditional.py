@@ -20,7 +20,12 @@ class TestConditional(IntegrationTest):
         self.assertExists('mopack/logs/hello.log')
         self.assertExists('mopack/mopack.json')
 
-        self.assertPkgConfigLinkage('hello')
+        if want_tarball:
+            include = os.path.join(self.pkgsrcdir, 'hello', 'hello-bfg',
+                                   'include')
+        else:
+            include = os.path.join(test_data_dir, 'hello-bfg', 'include')
+        self.assertPkgConfigLinkage('hello', include_path=[include])
 
         output = json.loads(slurp('mopack/mopack.json'))
         if want_tarball:
