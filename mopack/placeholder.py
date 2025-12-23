@@ -1,4 +1,5 @@
 import re
+from typing import Union
 
 from . import iterutils
 from .freezedried import auto_dehydrate
@@ -177,19 +178,7 @@ def placeholder(value):
     return PlaceholderString(PlaceholderValue(value), _canonicalized=True)
 
 
-class PlaceholderFreezeDryer:
-    @staticmethod
-    def dehydrate(value):
-        if isinstance(value, str):
-            return value
-        elif isinstance(value, PlaceholderString):
-            return value.dehydrate()
-
-    @staticmethod
-    def rehydrate(value, **kwargs):
-        if isinstance(value, str):
-            return value
-        return PlaceholderString.rehydrate(value, **kwargs)
+MaybePlaceholderString = Union[str, PlaceholderString]
 
 
 def to_string(value, symbols={}):

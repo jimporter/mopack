@@ -2,10 +2,12 @@ import json
 import os
 
 from .config import Options
-from .freezedried import DictToListFreezeDryer
+from .freezedried import DictToList, auto_dehydrate, rehydrate
 from .origins import Package
 from .origins.system import fallback_system_package
 from .yaml_tools import MarkedJSONEncoder
+
+_PackageList = DictToList[Package, lambda x: x.name]
 
 
 class MetadataVersionError(RuntimeError):
@@ -13,7 +15,6 @@ class MetadataVersionError(RuntimeError):
 
 
 class Metadata:
-    _PackagesFD = DictToListFreezeDryer(Package, lambda x: x.name)
     metadata_filename = 'mopack.json'
     version = 4
 
@@ -55,7 +56,7 @@ class Metadata:
                 },
                 'metadata': {
                     'options': self.options.dehydrate(),
-                    'packages': self._PackagesFD.dehydrate(self.packages),
+                    'packages': auto_dehydrate(self.packages, _PackageList),
                 }
             }, f, cls=MarkedJSONEncoder)
 
@@ -97,10 +98,9 @@ class Metadata:
         if strict:
             metadata.options.common.strict = True
 
-        metadata.packages = cls._PackagesFD.rehydrate(
-            data['packages'], _options=metadata.options,
-            _global_version=version
-        )
+        metadata.packages = rehydrate(data['packages'], _PackageList,
+                                      _options=metadata.options,
+                                      _global_version=version)
 
         return metadata
 

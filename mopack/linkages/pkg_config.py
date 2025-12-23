@@ -1,11 +1,12 @@
 import subprocess
 from collections import ChainMap
+from typing import List
 
 from . import Linkage
 from . import submodules as submod
 from .. import types
 from ..environment import get_pkg_config, subprocess_run
-from ..freezedried import FreezeDried, GenericFreezeDried, ListFreezeDryer
+from ..freezedried import FreezeDried, GenericFreezeDried
 from ..iterutils import listify
 from ..package_defaults import DefaultResolver
 from ..path import Path
@@ -58,8 +59,8 @@ def _submodule_linkage(symbols):
 
 
 @GenericFreezeDried.fields(rehydrate={
-    'pkg_config_path': ListFreezeDryer(Path),
-    'submodule_linkage': ListFreezeDryer(_SubmoduleLinkage),
+    'pkg_config_path': List[Path],
+    'submodule_linkage': List[_SubmoduleLinkage],
 })
 class PkgConfigLinkage(Linkage):
     type = 'pkg_config'

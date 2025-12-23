@@ -1,12 +1,13 @@
 import importlib_metadata as metadata
 import os
 import shutil
+from typing import Dict
 
 from .. import types
 from ..base_options import BaseOptions, OptionsHolder
-from ..freezedried import GenericFreezeDried, DictFreezeDryer
+from ..freezedried import GenericFreezeDried
 from ..path import Path
-from ..placeholder import PlaceholderFreezeDryer
+from ..placeholder import MaybePlaceholderString
 
 
 def _get_builder_type(type, field='type'):
@@ -17,7 +18,7 @@ def _get_builder_type(type, field='type'):
 
 
 @GenericFreezeDried.fields(rehydrate={
-    'env': DictFreezeDryer(value_type=PlaceholderFreezeDryer)
+    'env': Dict[str, MaybePlaceholderString],
 }, skip={'name'})
 class Builder(OptionsHolder):
     _options_type = 'builders'

@@ -2,12 +2,13 @@ import os
 import re
 import subprocess
 from itertools import chain
+from typing import List
 
 from . import Linkage
 from . import submodules as submod
 from .. import types
 from ..environment import get_pkg_config, subprocess_run
-from ..freezedried import FreezeDried, GenericFreezeDried, ListFreezeDryer
+from ..freezedried import FreezeDried, GenericFreezeDried
 from ..iterutils import ismapping, listify, uniques
 from ..package_defaults import DefaultResolver
 from ..path import file_outdated, isfile, Path
@@ -69,8 +70,6 @@ _list_of_dependencies = types.list_of(types.dependency, listify=True)
 _list_of_headers = types.list_of(types.string, listify=True)
 _list_of_libraries = types.list_of(_library, listify=True)
 
-_PathListFD = ListFreezeDryer(Path)
-
 
 @GenericFreezeDried.fields(include={'_if'})
 class _PathSubmoduleLinkage(FreezeDried):
@@ -124,9 +123,9 @@ class _PathSubmoduleLinkage(FreezeDried):
 
 
 @GenericFreezeDried.fields(rehydrate={
-    'include_path': _PathListFD, 'library_path': _PathListFD,
+    'include_path': List[Path], 'library_path': List[Path],
     'compile_flags': ShellArguments, 'link_flags': ShellArguments,
-    'submodule_linkage': ListFreezeDryer(_PathSubmoduleLinkage),
+    'submodule_linkage': List[_PathSubmoduleLinkage],
 })
 class PathLinkage(Linkage):
     type = 'path'
@@ -435,7 +434,7 @@ class _SystemSubmoduleLinkage(_PathSubmoduleLinkage):
 
 
 @GenericFreezeDried.fields(rehydrate={
-    'submodule_linkage': ListFreezeDryer(_SystemSubmoduleLinkage),
+    'submodule_linkage': List[_SystemSubmoduleLinkage],
 })
 class SystemLinkage(PathLinkage):
     type = 'system'

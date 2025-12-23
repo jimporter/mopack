@@ -1,23 +1,52 @@
 import functools
+import typing
 from itertools import chain
+from typing import TypeVar
 
 from .iterutils import each_attr, merge_dicts
+
+_type_database = {}
+_primitives = typing.Union[str, int, float, bool, type(None)]
+
+
+def freezedryer_for(*types):
+    def wrapper(freezedryer):
+        for t in types:
+            _type_database[t] = freezedryer
+        return freezedryer
+    return wrapper
+
+
+def _resolve_freezedryer(freezedryer):
+    if hasattr(freezedryer, 'dehydrate'):
+        return freezedryer
+
+    origin = typing.get_origin(freezedryer) or freezedryer
+    args = typing.get_args(freezedryer)
+    return _type_database[origin](origin, *args)
 
 
 def auto_dehydrate(value, freezedryer=None):
     # If freezedryer is not set, try to dehydrate the value or just return the
     # original value. Otherwise, check if the value is an instance of the
-    # freezedryer. If so, dehydrate using the value's `dehydrate()` method; if
-    # not, use the freezerdryer's `dehydrate()` method. This lets the value's
-    # subtype extend `dehydrate()` if needed.
+    # freezedryer. If so, dehydrate using the value's `dehydrate()` method;
+    # this lets the value's subtype extend `dehydrate()` if needed.
+    #
+    # Otherwise, try to use the freezedryer's `dehydrate()` method, or look up
+    # the freezedryer as a type annotation in our type database.
 
     if value is None:
         return None
     if freezedryer is None:
         return value.dehydrate() if hasattr(value, 'dehydrate') else value
-    if isinstance(freezedryer, type) and isinstance(value, freezedryer):
+    if ( isinstance(freezedryer, type) and isinstance(value, freezedryer) and
+         hasattr(value, 'dehydrate') ):
         return value.dehydrate()
-    return freezedryer.dehydrate(value)
+    return _resolve_freezedryer(freezedryer).dehydrate(value)
+
+
+def rehydrate(value, freezedryer, **kwargs):
+    return _resolve_freezedryer(freezedryer).rehydrate(value, **kwargs)
 
 
 def _maybe_upgrade_config(cls, config):
@@ -91,7 +120,7 @@ class FreezeDried:
 
         for k, v in config.items():
             if k in cls._rehydrate_fields and v is not None:
-                v = cls._rehydrate_fields[k].rehydrate(v, **kwargs)
+                v = rehydrate(v, cls._rehydrate_fields[k], **kwargs)
             setattr(result, k, v)
 
         return result
@@ -157,31 +186,40 @@ class GenericFreezeDried(FreezeDried):
         return super(GenericFreezeDried, cls).rehydrate(config, **kwargs)
 
 
+@freezedryer_for(str, int, float, bool, type(None))
 class PrimitiveFreezeDryer:
-    @staticmethod
-    def dehydrate(value):
-        assert isinstance(value, (str, int, bool))
-        return value
-
-    @staticmethod
-    def rehydrate(value, **kwargs):
-        return value
-
-
-class ListFreezeDryer:
     def __init__(self, type):
         self.type = type
 
     def dehydrate(self, value):
-        return [auto_dehydrate(i, self.type) for i in value]
+        if not isinstance(value, self.type):
+            raise TypeError('expected a {}'.format(self.type.__name__))
+        return value
 
     def rehydrate(self, value, **kwargs):
-        return [self.type.rehydrate(i, **kwargs) for i in value]
+        if not isinstance(value, self.type):
+            raise TypeError('expected a {}'.format(self.type.__name__))
+        return value
 
 
+@freezedryer_for(list)
+class ListFreezeDryer:
+    def __init__(self, type, elem_type):
+        self.type = type
+        self.elem_type = elem_type
+
+    def dehydrate(self, value):
+        if not isinstance(value, self.type):
+            raise TypeError('expected a {}'.format(self.type.__name__))
+        return [auto_dehydrate(i, self.elem_type) for i in value]
+
+    def rehydrate(self, value, **kwargs):
+        return [self.elem_type.rehydrate(i, **kwargs) for i in value]
+
+
+@freezedryer_for(dict)
 class DictFreezeDryer:
-    def __init__(self, key_type=PrimitiveFreezeDryer,
-                 value_type=PrimitiveFreezeDryer):
+    def __init__(self, type, key_type, value_type):
         self.key_type = key_type
         self.value_type = value_type
 
@@ -191,13 +229,44 @@ class DictFreezeDryer:
                 for k, v in value.items()}
 
     def rehydrate(self, value, **kwargs):
-        return {self.key_type.rehydrate(k, **kwargs):
-                self.value_type.rehydrate(v, **kwargs)
+        return {rehydrate(k, self.key_type, **kwargs):
+                rehydrate(v, self.value_type, **kwargs)
                 for k, v in value.items()}
 
 
+@freezedryer_for(typing.Union)
+class UnionFreezeDryer:
+    def __init__(self, _, *types):
+        self.types = types
+
+    def dehydrate(self, value):
+        for t in self.types:
+            try:
+                return auto_dehydrate(value, t)
+            except TypeError:
+                pass
+        raise ValueError('expected one of {}'.format(
+            ','.join(t.__name__ for t in self.types)
+        ))
+
+    def rehydrate(self, value, **kwargs):
+        for t in self.types:
+            try:
+                return rehydrate(value, t, **kwargs)
+            except TypeError:
+                pass
+        raise ValueError('expected one of {}'.format(
+            ','.join(t.__name__ for t in self.types)
+        ))
+
+
+class DictToList(typing.Generic[TypeVar('Type'), TypeVar('Key')]):
+    pass
+
+
+@freezedryer_for(DictToList)
 class DictToListFreezeDryer:
-    def __init__(self, type, key):
+    def __init__(self, _, type, key):
         self.type = type
         self.key = key
 
@@ -205,5 +274,5 @@ class DictToListFreezeDryer:
         return [auto_dehydrate(i, self.type) for i in value.values()]
 
     def rehydrate(self, value, **kwargs):
-        rehydrated = (self.type.rehydrate(i, **kwargs) for i in value)
+        rehydrated = (rehydrate(i, self.type, **kwargs) for i in value)
         return {self.key(i): i for i in rehydrated}

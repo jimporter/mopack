@@ -5,7 +5,7 @@ from . import types
 from .base_options import BaseOptions
 from .builders import BuilderOptions, make_builder_options
 from .environment import Environment
-from .freezedried import DictToListFreezeDryer, FreezeDried
+from .freezedried import DictToList, FreezeDried
 from .objutils import memoize_method
 from .path import Path
 from .placeholder import placeholder
@@ -147,8 +147,8 @@ class CommonOptions(FreezeDried, BaseOptions):
 
 @FreezeDried.fields(rehydrate={
     'common': CommonOptions,
-    'origins': DictToListFreezeDryer(PackageOptions, lambda x: x.origin),
-    'builders': DictToListFreezeDryer(BuilderOptions, lambda x: x.type),
+    'origins': DictToList[PackageOptions, lambda x: x.origin],
+    'builders': DictToList[BuilderOptions, lambda x: x.type],
 })
 class Options(FreezeDried):
     _option_makers = {'origins': make_package_options,

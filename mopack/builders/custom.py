@@ -1,10 +1,11 @@
 import os
 import shutil
 import warnings
+from typing import List
 
 from . import DirectoryBuilder
 from .. import types
-from ..freezedried import GenericFreezeDried, ListFreezeDryer
+from ..freezedried import GenericFreezeDried
 from ..log import LogFile
 from ..path import Path, pushd
 from ..shell import ShellArguments
@@ -12,12 +13,13 @@ from ..shell import ShellArguments
 _known_install_types = ('prefix', 'exec-prefix', 'bindir', 'libdir',
                         'includedir')
 
-CommandsFD = ListFreezeDryer(ShellArguments)
 _cmds_type = types.maybe(types.list_of(types.shell_args()), default=[])
 
 
-@GenericFreezeDried.fields(rehydrate={'build_commands': CommandsFD,
-                                      'deploy_commands': CommandsFD})
+@GenericFreezeDried.fields(rehydrate={
+    'build_commands': List[ShellArguments],
+    'deploy_commands': List[ShellArguments],
+})
 class CustomBuilder(DirectoryBuilder):
     type = 'custom'
     _version = 5

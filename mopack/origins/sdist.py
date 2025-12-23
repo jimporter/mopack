@@ -2,6 +2,7 @@ import os
 import shutil
 import warnings
 from io import BytesIO
+from typing import Dict, List
 from urllib.request import urlopen
 
 from . import Package, submodules_type
@@ -9,7 +10,7 @@ from .. import archive, log, types
 from ..builders import Builder, make_builder
 from ..config import ChildConfig
 from ..environment import get_cmd
-from ..freezedried import GenericFreezeDried, DictFreezeDryer, ListFreezeDryer
+from ..freezedried import GenericFreezeDried
 from ..glob import filter_glob
 from ..iterutils import flatten, isiterable
 from ..linkages import make_linkage
@@ -17,14 +18,14 @@ from ..log import LogFile
 from ..options import DuplicateSymbolError
 from ..package_defaults import DefaultResolver
 from ..path import Path, pushd
-from ..placeholder import PlaceholderFreezeDryer
+from ..placeholder import MaybePlaceholderString
 from ..types import FieldValueError
 from ..yaml_tools import to_parse_error
 
 
 @GenericFreezeDried.fields(rehydrate={
-    'env': DictFreezeDryer(value_type=PlaceholderFreezeDryer),
-    'builders': ListFreezeDryer(Builder)
+    'env': Dict[str, MaybePlaceholderString],
+    'builders': List[Builder]
 }, skip_compare={'pending_linkage'})
 class SDistPackage(Package):
     # TODO: Remove `usage` after v0.2 is released.

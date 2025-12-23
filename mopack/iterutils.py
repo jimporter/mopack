@@ -1,3 +1,4 @@
+import typing
 from collections.abc import Iterable, Mapping, Sequence
 
 __all__ = ['isiterable', 'ismapping', 'issequence', 'iterate', 'iteritems',
@@ -6,7 +7,7 @@ __all__ = ['isiterable', 'ismapping', 'issequence', 'iterate', 'iteritems',
 
 def isiterable(thing):
     return (isinstance(thing, Iterable) and not isinstance(thing, str) and
-            not ismapping(thing))
+            not ismapping(thing) and not typing.get_origin(thing))
 
 
 def issequence(thing):
