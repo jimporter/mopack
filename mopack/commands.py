@@ -74,7 +74,11 @@ def fetch(config, pkgdir):
     except ConfigurationError:
         raise
     except Exception:
-        _fill_metadata(config, pkgdir).save()
+        try:
+            # Try to save the metadata object, if we can.
+            _fill_metadata(config, pkgdir).save()
+        except Exception:
+            pass
         raise
 
     metadata = _fill_metadata(config, pkgdir)
