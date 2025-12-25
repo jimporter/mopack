@@ -138,15 +138,16 @@ class PathLinkage(Linkage):
     def upgrade(config, version):
         # v2 replaces `submodule_map` with `submodule_linkage`.
         if version < 2:  # pragma: no branch
-            config['submodule_linkage'] = submod.migrate_saved_submodule_map(
-                config.pop('submodule_map', None)
-            )
+            if 'submodule_map' in config:
+                config['submodule_linkage'] = (
+                    submod.migrate_saved_submodule_map(config['submodule_map'])
+                )
 
         # v3 stores `dependencies` as a list of strings.
         if version < 3:  # pragma: no branch
             config['dependencies'] = [str(Dependency(*i)) for i in
                                       config['dependencies']]
-            if issequence(config['submodule_linkage']):
+            if issequence(config.get('submodule_linkage')):
                 for sub in config['submodule_linkage']:
                     sub['dependencies'] = [str(Dependency(*i)) for i in
                                            sub['dependencies']]

@@ -70,9 +70,10 @@ class PkgConfigLinkage(Linkage):
     def upgrade(config, version):
         # v2 replaces `submodule_map` with `submodule_linkage`.
         if version < 2:  # pragma: no branch
-            config['submodule_linkage'] = submod.migrate_saved_submodule_map(
-                config.pop('submodule_map', None)
-            )
+            if 'submodule_map' in config:
+                config['submodule_linkage'] = (
+                    submod.migrate_saved_submodule_map(config['submodule_map'])
+                )
 
         return config
 
