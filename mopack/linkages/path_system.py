@@ -339,8 +339,8 @@ class PathLinkage(Linkage):
 
         # Ensure all dependencies are up-to-date and get their linkages.
         auto_link = self.auto_link
-        deps_requires = []
-        deps_paths = [pkgconfdir]
+        requires = requires[:]
+        pkg_config_path = [pkgconfdir]
         for dep in chain_attr('dependencies'):
             # XXX: Cache linkage so we don't repeatedly process the same
             # package.
@@ -348,8 +348,8 @@ class PathLinkage(Linkage):
             linkage = dep_pkg.get_linkage(metadata, dep.submodules)
 
             auto_link |= linkage.get('auto_link', False)
-            deps_requires.extend(linkage.get('pcnames', []))
-            deps_paths.extend(linkage.get('pkg_config_path', []))
+            requires.extend(linkage.get('pcnames', []))
+            pkg_config_path.extend(linkage.get('pkg_config_path', []))
 
         should_write = file_outdated(pcpath, metadata.path)
 
@@ -383,13 +383,14 @@ class PathLinkage(Linkage):
             # ... and write it.
             os.makedirs(pkgconfdir, exist_ok=True)
             with open(pcpath, 'w') as f:
-                write_pkg_config(f, pcname, version=version,
-                                 requires=requires + deps_requires,
-                                 cflags=cflags, libs=libs,
-                                 variables=path_values)
+                write_pkg_config(
+                    f, pcname, version=version, requires=requires,
+                    cflags=cflags, libs=libs,
+                    variables={'mopack_generated': '1', **path_values}
+                )
 
         result = {'auto_link': auto_link, 'pcname': pcname,
-                  'pkg_config_path': uniques(deps_paths)}
+                  'pkg_config_path': uniques(pkg_config_path)}
         if get_version:
             result['version'] = version
         return result
@@ -426,10 +427,8 @@ class PathLinkage(Linkage):
             pcnames = [data['pcname']]
             pkgconfpath = data['pkg_config_path']
 
-        return self._linkage(
-            submodules, generated=True, auto_link=auto_link,
-            pcnames=pcnames, pkg_config_path=uniques(pkgconfpath)
-        )
+        return self._linkage(submodules, auto_link=auto_link, pcnames=pcnames,
+                             pkg_config_path=uniques(pkgconfpath))
 
 
 class _SystemSubmoduleLinkage(_PathSubmoduleLinkage):

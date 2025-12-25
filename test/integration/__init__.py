@@ -423,13 +423,18 @@ class IntegrationTest(SubprocessTestCase):
         pkg_config_path = [os.path.join(self.mopackdir, 'pkgconfig')]
         self.assertLinkage(name, {
             'name': str(Dependency(name, submodules)), 'type': type,
-            'generated': True, 'auto_link': auto_link, 'pcnames': pcnames,
+            'auto_link': auto_link, 'pcnames': pcnames,
             'pkg_config_path': pkg_config_path,
         }, submodules=submodules)
 
-        self.assertEqual(call_pkg_config(
-            pcnames, ['--modversion'], path=pkg_config_path, split=False
-        ), version)
+        for pcname in pcnames:
+            self.assertEqual(call_pkg_config(
+                pcname, ['--modversion'], path=pkg_config_path, split=False
+            ), version)
+            self.assertEqual(call_pkg_config(
+                pcname, ['--variable=mopack_generated'], path=pkg_config_path,
+                split=False
+            ), '1')
         self.assertEqualUnordered(call_pkg_config(
             pcnames, ['--cflags-only-I'], path=pkg_config_path,
             fn=lambda i: os.path.normpath(re.match('-I(.*)', i).group(1))

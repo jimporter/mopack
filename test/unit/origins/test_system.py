@@ -36,9 +36,10 @@ class TestSystemPackage(OriginTest):
 
         if expected is None:
             depname = str(Dependency(pkg.name, submodules))
-            expected = {'name': depname, 'type': 'system', 'generated': True,
-                        'auto_link': False, 'pcnames': [depname],
-                        'pkg_config_path': [self.pkgconfdir]}
+            expected = {
+                'name': depname, 'type': 'system', 'auto_link': False,
+                'pcnames': [depname], 'pkg_config_path': [self.pkgconfdir],
+            }
 
         self.clear_pkgdir()
         side_effect = None if find_pkg_config else OSError()
@@ -97,9 +98,8 @@ class TestSystemPackage(OriginTest):
         with assert_logging([('resolve', 'foo from system')]):
             pkg.resolve(self.metadata)
         self.check_get_linkage(pkg, None, {
-            'name': 'foo', 'type': 'system', 'generated': True,
-            'auto_link': True, 'pcnames': ['foo'],
-            'pkg_config_path': [self.pkgconfdir],
+            'name': 'foo', 'type': 'system', 'auto_link': True,
+            'pcnames': ['foo'], 'pkg_config_path': [self.pkgconfdir],
         })
         self.check_pkg_config('foo', None, {
             'libs': ['-L' + abspath('/mock/lib')],

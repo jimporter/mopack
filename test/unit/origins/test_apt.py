@@ -52,9 +52,10 @@ class TestApt(OriginTest):
             libs.extend('{}_{}'.format(pkg.name, i)
                         for i in iterate(submodules))
 
-            linkage = {'name': depname, 'type': 'system', 'generated': True,
-                       'auto_link': False, 'pcnames': [depname],
-                       'pkg_config_path': [self.pkgconfdir]}
+            linkage = {
+                'name': depname, 'type': 'system', 'auto_link': False,
+                'pcnames': [depname], 'pkg_config_path': [self.pkgconfdir],
+            }
 
         with mock.patch('subprocess.run', mock_run), \
              mock.patch('mopack.linkages.path_system.PathLinkage._filter_path',
@@ -185,9 +186,8 @@ class TestApt(OriginTest):
         )
         self.check_resolve_all([pkg], ['libfoo-dev'])
         self.check_linkage(pkg, submodules=['sub'], linkage={
-            'name': 'foo[sub]', 'type': 'system', 'generated': True,
-            'auto_link': False, 'pcnames': ['foo[sub]'],
-            'pkg_config_path': [self.pkgconfdir],
+            'name': 'foo[sub]', 'type': 'system', 'auto_link': False,
+            'pcnames': ['foo[sub]'], 'pkg_config_path': [self.pkgconfdir],
         })
 
         pkg = self.make_package('foo', submodules=submodules_optional)
@@ -200,9 +200,8 @@ class TestApt(OriginTest):
         )
         self.check_resolve_all([pkg], ['libfoo-dev'])
         self.check_linkage(pkg, submodules=['sub'], linkage={
-            'name': 'foo[sub]', 'type': 'system', 'generated': True,
-            'auto_link': False, 'pcnames': ['foo[sub]'],
-            'pkg_config_path': [self.pkgconfdir],
+            'name': 'foo[sub]', 'type': 'system', 'auto_link': False,
+            'pcnames': ['foo[sub]'], 'pkg_config_path': [self.pkgconfdir],
         })
 
     def test_invalid_submodule(self):
