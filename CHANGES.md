@@ -16,6 +16,9 @@
 - `custom` builders that use the `build/` output directory should set
   `outdir: build`
 - Linkages now use `submodule_linkage` instead of `submodule_map`
+- `auto_link` field for `path`/`system` linkage is now obsolete; instead, you
+  can use the expression variable `auto_link` to define different linkage when
+  auto-linking is available
 
 ---
 

@@ -20,7 +20,7 @@ class SystemPackage(BinaryPackage):
                 'pass linkage options directly'
             ), 'linkage')
 
-        # TODO: Remove `submodule_map` after v0.2 is released.
+        # TODO: Remove `auto_link` and `submodule_map` after v0.2 is released.
         linkage_kwargs = slice_dict(kwargs, {
             'auto_link', 'version', 'pcname', 'dependencies', 'include_path',
             'library_path', 'headers', 'libraries', 'compile_flags',

@@ -32,8 +32,8 @@ class TestLinkage(IntegrationTest):
         # Linkage for `fake`.
         pkgconfdir = os.path.join(self.stage, 'mopack', 'pkgconfig')
         self.assertLinkageOutput('fake', {
-            'name': 'fake', 'type': 'system', 'auto_link': False,
-            'pcnames': ['fake'], 'pkg_config_path': [pkgconfdir],
+            'name': 'fake', 'type': 'system', 'pcnames': ['fake'],
+            'pkg_config_path': [pkgconfdir],
         }, extra_env=linkage_env)
         self.assertCountEqual(
             call_pkg_config('fake', ['--cflags'], path=pkgconfdir), []
@@ -55,8 +55,8 @@ class TestLinkage(IntegrationTest):
         self.assertEqual(json.loads(output),
                          {'error': "unable to find library 'hello'"})
         self.assertLinkageOutput('fake', {
-            'name': 'fake', 'type': 'system', 'auto_link': False,
-            'pcnames': ['fake'], 'pkg_config_path': [pkgconfdir],
+            'name': 'fake', 'type': 'system', 'pcnames': ['fake'],
+            'pkg_config_path': [pkgconfdir],
         }, wrongdir_args, extra_env=linkage_env)
         self.assertCountEqual(
             call_pkg_config('fake', ['--cflags'], path=pkgconfdir), []

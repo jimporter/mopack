@@ -87,8 +87,7 @@ class TestMakePackage(OriginTest):
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):
             self.assertEqual(pkg.get_linkage(self.metadata, ['sub']), {
-                'name': 'foo[sub]', 'type': 'system', 'auto_link': False,
-                'pcnames': ['foo[sub]'],
+                'name': 'foo[sub]', 'type': 'system', 'pcnames': ['foo[sub]'],
                 'pkg_config_path': [self.pkgconfdir(None)],
             })
         with self.assertRaises(ValueError):
@@ -110,8 +109,7 @@ class TestMakePackage(OriginTest):
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):
             self.assertEqual(pkg.get_linkage(self.metadata, ['sub']), {
-                'name': 'foo[sub]', 'type': 'system', 'auto_link': False,
-                'pcnames': ['foo[sub]'],
+                'name': 'foo[sub]', 'type': 'system', 'pcnames': ['foo[sub]'],
                 'pkg_config_path': [self.pkgconfdir(None)],
             })
         with self.assertRaises(ValueError):
@@ -136,8 +134,7 @@ class TestMakePackage(OriginTest):
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):
             self.assertEqual(pkg.get_linkage(self.metadata, ['sub']), {
-                'name': 'foo[sub]', 'type': 'system', 'auto_link': False,
-                'pcnames': ['foo[sub]'],
+                'name': 'foo[sub]', 'type': 'system', 'pcnames': ['foo[sub]'],
                 'pkg_config_path': [self.pkgconfdir(None)],
             })
         with mock.patch('subprocess.run', side_effect=OSError()), \
@@ -148,8 +145,8 @@ class TestMakePackage(OriginTest):
              mock.patch('os.makedirs'), \
              mock.patch('builtins.open'):
             self.assertEqual(pkg.get_linkage(self.metadata, None), {
-                'name': 'foo', 'type': 'system', 'auto_link': False,
-                'pcnames': ['foo'], 'pkg_config_path': [self.pkgconfdir(None)],
+                'name': 'foo', 'type': 'system', 'pcnames': ['foo'],
+                'pkg_config_path': [self.pkgconfdir(None)],
             })
         with self.assertRaises(ValueError):
             pkg.get_linkage(self.metadata, ['bar'])

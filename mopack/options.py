@@ -4,7 +4,7 @@ from copy import deepcopy
 from . import types
 from .base_options import BaseOptions
 from .builders import BuilderOptions, make_builder_options
-from .environment import Environment
+from .environment import Environment, env_as_flag
 from .freezedried import DictToList, FreezeDried
 from .objutils import memoize_method
 from .path import Path
@@ -76,15 +76,20 @@ class ExprSymbols(dict):
 class CommonOptions(FreezeDried, BaseOptions):
     _context = 'while adding common options'
     type = 'common'
-    _version = 1
+    _version = 2
 
     @staticmethod
     def upgrade(config, version):
+        # v2 adds `auto_link`.
+        if version < 2:  # pragma: no cover
+            config['auto_link'] = False
+
         return config
 
     def __init__(self, deploy_dirs=None):
         self.strict = Unset
         self.target_platform = Unset
+        self.auto_link = Unset
         self.env = {}
         self.deploy_dirs = deploy_dirs or {}
         self._finalized = False
@@ -119,19 +124,26 @@ class CommonOptions(FreezeDried, BaseOptions):
         deploy_vars = {k: placeholder(Path(v)) for k, v in
                        self.deploy_dirs.items()}
 
+        extra = {'auto_link': self.auto_link} if self._finalized else {}
         return ExprSymbols(
             host_platform=platform_name(),
             target_platform=self.target_platform,
             env=Environment(self.env),
             deploy_dirs=deploy_vars,
+            **extra
         )
 
     def finalize(self):
+        if self._finalized:
+            raise RuntimeError('CommonOptions already finalized')
         if self.strict is Unset:
             self.strict = False
         if not self.target_platform:
             self.target_platform = platform_name()
         self._fill_env(self.env, os.environ)
+        # Set `auto_link` from the environment. XXX: This is a bit awkward and
+        # could probably use a better method.
+        self.auto_link = env_as_flag('MOPACK_AUTO_LINK', self.env)
         self._finalized = True
 
     @property

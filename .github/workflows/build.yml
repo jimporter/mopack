@@ -130,6 +130,10 @@ jobs:
             echo "QT_ROOT=${env:Qt5_DIR}" >> ${env:GITHUB_ENV}
           }
 
+          # XXX: We have to set this differently, since auto-linking is handled
+          # when resolving, but lib names when getting linkage. We should
+          # harmonize these.
+          echo "MOPACK_AUTO_LINK=true" >> ${env:GITHUB_ENV}
           echo "MOPACK_LIB_NAMES={}.lib;lib{}.dll.a" >> .mopack_test_env
       - name: Install macOS dependencies
         if: startsWith(matrix.os, 'macos-')

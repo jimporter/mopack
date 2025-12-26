@@ -3,15 +3,19 @@ import shutil
 import subprocess
 from subprocess import run as subprocess_run
 
+from mopack.environment import env_as_flag
 from mopack.iterutils import listify
 from mopack.shell import split_posix_str
 
 
-__all__ = ['call_pkg_config', 'test_dir', 'test_data_dir', 'test_stage_dir']
+__all__ = ['auto_link_default', 'call_pkg_config', 'test_dir', 'test_data_dir',
+           'test_stage_dir']
 
 test_dir = os.path.abspath(os.path.dirname(__file__))
 test_data_dir = os.path.join(test_dir, 'data')
 test_stage_dir = os.path.join(test_dir, 'stage')
+
+auto_link_default = env_as_flag('MOPACK_AUTO_LINK')
 
 # Clear the stage directory for this test run.
 if os.path.exists(test_stage_dir):

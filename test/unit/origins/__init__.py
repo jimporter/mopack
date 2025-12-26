@@ -2,6 +2,7 @@ import os
 
 from .. import OptionsTest, through_json  # noqa: F401
 
+from mopack.iterutils import slice_dict
 from mopack.metadata import Metadata
 
 
@@ -13,9 +14,10 @@ class OriginTest(OptionsTest):
         super().setUp()
         self.metadata = Metadata(self.pkgdir)
 
-    def make_options(self, pkg_type=None, *, common_options=None,
-                     this_options=None, deploy_dirs=None, config_file=None):
-        options = super().make_options(common_options, deploy_dirs)
+    def make_options(self, pkg_type=None, *, this_options=None,
+                     config_file=None, common_options=None, deploy_dirs=None,
+                     auto_link=False):
+        options = super().make_options(common_options, deploy_dirs, auto_link)
         if this_options:
             origin = (pkg_type or self.pkg_type).origin
             options.origins[origin].accumulate(
@@ -24,8 +26,7 @@ class OriginTest(OptionsTest):
             )
         return options
 
-    def make_package(self, *args, common_options=None, this_options=None,
-                     deploy_dirs=None, **kwargs):
+    def make_package(self, *args, **kwargs):
         if len(args) == 1:
             pkg_type = self.pkg_type
             name = args[0]
@@ -33,7 +34,8 @@ class OriginTest(OptionsTest):
             pkg_type, name = args
 
         kwargs.setdefault('config_file', self.config_file)
-        opts = self.make_options(pkg_type, common_options=common_options,
-                                 this_options=this_options,
-                                 deploy_dirs=deploy_dirs)
+        options_kwargs = slice_dict(kwargs, {
+            'this_options', 'common_options', 'deploy_dirs', 'auto_link',
+        })
+        opts = self.make_options(pkg_type, **options_kwargs)
         return pkg_type(name, _options=opts, **kwargs)

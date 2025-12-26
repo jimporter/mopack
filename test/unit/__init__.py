@@ -129,11 +129,13 @@ class OptionsTest(TestCase):
     def config_dir(self):
         return os.path.dirname(self.config_file)
 
-    def make_options(self, common_options=None, deploy_dirs=None):
+    def make_options(self, common_options=None, deploy_dirs=None,
+                     auto_link=False):
         options = Options(deploy_dirs)
         if common_options:
             options.common.accumulate(common_options)
-        with mock.patch.object(os, 'environ', return_value={}):
+        env = {'MOPACK_AUTO_LINK': 'true'} if auto_link else {}
+        with mock.patch('os.environ', env):
             options.common.finalize()
 
         for i in metadata.entry_points(group='mopack.origins'):

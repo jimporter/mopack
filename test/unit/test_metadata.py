@@ -79,4 +79,5 @@ class TestMetadata(OptionsTest):
                          {'host_platform': mock.ANY,
                           'target_platform': 'linux',
                           'env': {},
-                          'deploy_dirs': {}})
+                          'deploy_dirs': {},
+                          'auto_link': False})

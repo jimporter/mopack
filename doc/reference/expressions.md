@@ -109,7 +109,12 @@ to programmatically define how to resolve or use your dependencies.
   environment or overridden in the [`options`](file-structure.md#options)
   section.
 
+`auto_link` <span class="subtitle">*availability*: everywhere</span>
+: True if the compiler in use supports auto-linking (e.g.
+  [MSVC][msvc-auto-link]).
+
 `submodule` <span class="subtitle">*availability*: [submodule maps](linkage.md)</span>
 : The name of the user-specified submodule. You can use this to automatically
   generate submodule configuration for the `*` placeholder submodule.
 
+[msvc-auto-link]: https://learn.microsoft.com/en-us/cpp/preprocessor/comment-c-cpp?view=msvc-170#lib
