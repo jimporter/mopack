@@ -1,6 +1,7 @@
 import os
 import re
 import subprocess
+import warnings
 from itertools import chain
 from typing import List
 
@@ -131,7 +132,7 @@ class _PathSubmoduleLinkage(FreezeDried):
 })
 class PathLinkage(Linkage):
     type = 'path'
-    _version = 3
+    _version = 4
     SubmoduleLinkage = _PathSubmoduleLinkage
 
     @staticmethod
@@ -152,15 +153,22 @@ class PathLinkage(Linkage):
                     sub['dependencies'] = [str(Dependency(*i)) for i in
                                            sub['dependencies']]
 
+        # v4 removes `auto_link`.
+        if version < 4:  # pragma: no branch
+            config.pop('auto_link', None)
+
         return config
 
-    # TODO: Remove `submodule_map` after v0.2 is released.
+    # TODO: Remove `auto_link` and `submodule_map` after v0.2 is released.
     def __init__(self, pkg, *, auto_link=Unset, version=Unset,
                  dependencies=Unset, include_path=Unset, library_path=Unset,
                  headers=Unset, libraries=Unset, compile_flags=Unset,
                  link_flags=Unset, submodule_linkage=Unset,
                  submodule_map=Unset, inherit_defaults=False, **kwargs):
         super().__init__(pkg, inherit_defaults=inherit_defaults, **kwargs)
+        if auto_link is not Unset:
+            warnings.warn('`auto_link` is no longer used; check the ' +
+                          '`auto_link` variable instead')
         if submodule_linkage is Unset and submodule_map is not Unset:
             submodule_linkage = submod.migrate_submodule_map(submodule_map)
 
@@ -171,9 +179,6 @@ class PathLinkage(Linkage):
         buildbase = symbols.best_path_base('builddir')
 
         T = types.TypeCheck(locals(), symbols)
-        # XXX: Maybe have the compiler tell *us* if it supports auto-linking,
-        # instead of us telling it?
-        T.auto_link(pkg_default(types.boolean, default=False))
 
         T.version(pkg_default(_version_def), dest_field='explicit_version')
         T.dependencies(pkg_default(_list_of_dependencies))
@@ -186,7 +191,7 @@ class PathLinkage(Linkage):
 
         T.headers(pkg_default(_list_of_headers))
 
-        if self.auto_link or pkg.submodules and pkg.submodules['required']:
+        if auto_link or pkg.submodules and pkg.submodules['required']:
             # If auto-linking or if submodules are required, default to an
             # empty list of libraries, since we likely don't have a "base"
             # library that always needs linking to.
@@ -250,27 +255,26 @@ class PathLinkage(Linkage):
                 raise ValueError('unable to find {} {!r}'.format(kind, f))
         return list(filtered.keys())
 
-    @classmethod
-    def _include_dirs(cls, headers, include_path, path_vars):
+    def _include_dirs(self, headers, include_path, path_vars):
         headers = listify(headers, scalar_ok=False)
         include_path = (listify(include_path, scalar_ok=False) or
                         _system_include_path())
-        return cls._filter_path(
+        return self._filter_path(
             lambda p, f: isfile(p.append(f), path_vars),
             include_path, headers, 'header'
         )
 
-    @classmethod
-    def _library_dirs(cls, auto_link, libraries, library_path, path_vars):
+    def _library_dirs(self, libraries, library_path, path_vars):
         library_path = (listify(library_path, scalar_ok=False)
                         or _system_lib_path())
-        if auto_link:
-            # When auto-linking, we can't determine the library dirs that are
-            # actually used, so include them all.
+        if self._options.common.auto_link and not libraries:
+            # If no libraries are specified (e.g. when auto-linking), we can't
+            # determine the library dirs that are actually used, so include
+            # them all.
             return library_path
 
         lib_names = _system_lib_names()
-        return cls._filter_path(
+        return self._filter_path(
             lambda p, f: any(isfile(p.append(i.format(f)), path_vars)
                              for i in lib_names),
             library_path, (i for i in libraries if isinstance(i, str)),
@@ -338,7 +342,6 @@ class PathLinkage(Linkage):
         pcpath = os.path.join(pkgconfdir, pcname + '.pc')
 
         # Ensure all dependencies are up-to-date and get their linkages.
-        auto_link = self.auto_link
         requires = requires[:]
         pkg_config_path = [pkgconfdir]
         for dep in chain_attr('dependencies'):
@@ -347,7 +350,6 @@ class PathLinkage(Linkage):
             dep_pkg = metadata.get_package(dep.package)
             linkage = dep_pkg.get_linkage(metadata, dep.submodules)
 
-            auto_link |= linkage.get('auto_link', False)
             requires.extend(linkage.get('pcnames', []))
             pkg_config_path.extend(linkage.get('pkg_config_path', []))
 
@@ -366,8 +368,7 @@ class PathLinkage(Linkage):
             # Generate the pkg-config data...
             libraries = list(chain_attr('libraries'))
             library_dirs = self._library_dirs(
-                self.auto_link, libraries, chain_attr('library_path'),
-                path_values
+                libraries, chain_attr('library_path'), path_values
             )
 
             cflags = (
@@ -389,7 +390,7 @@ class PathLinkage(Linkage):
                     variables={'mopack_generated': '1', **path_values}
                 )
 
-        result = {'auto_link': auto_link, 'pcname': pcname,
+        result = {'pcname': pcname,
                   'pkg_config_path': uniques(pkg_config_path)}
         if get_version:
             result['version'] = version
@@ -398,7 +399,6 @@ class PathLinkage(Linkage):
     def get_linkage(self, metadata, pkg, submodules):
         if submodules and self.submodule_linkage:
             pkgconfpath, requires = [], []
-            auto_link = False
             version = None
 
             if pkg.submodules['required']:
@@ -408,7 +408,6 @@ class PathLinkage(Linkage):
             else:
                 sublinks = []
                 data = self._write_pkg_config(metadata, pkg, get_version=True)
-                auto_link |= data['auto_link']
                 requires.append(data['pcname'])
                 pkgconfpath.extend(data['pkg_config_path'])
                 version = data['version']
@@ -418,16 +417,14 @@ class PathLinkage(Linkage):
                 sublink = self._get_submodule_linkage(self._expr_symbols, i)
                 data = self._write_pkg_config(metadata, pkg, i, version,
                                               requires, sublinks + [sublink])
-                auto_link |= data['auto_link']
                 pcnames.append(data['pcname'])
                 pkgconfpath.extend(data['pkg_config_path'])
         else:
             data = self._write_pkg_config(metadata, pkg)
-            auto_link = data['auto_link']
             pcnames = [data['pcname']]
             pkgconfpath = data['pkg_config_path']
 
-        return self._linkage(submodules, auto_link=auto_link, pcnames=pcnames,
+        return self._linkage(submodules, pcnames=pcnames,
                              pkg_config_path=uniques(pkgconfpath))
 
 

@@ -14,7 +14,6 @@ class TestBoost(IntegrationTest):
         self.assertExists('mopack/mopack.json')
 
         self.assertPathLinkage('boost', type='system',
-                               auto_link=platform_name() == 'windows',
                                include_path=mock.ANY,
                                library_path=mock.ANY,
                                libraries=[],
@@ -26,7 +25,6 @@ class TestBoost(IntegrationTest):
 
         self.assertPathLinkage(
             'boost', ['regex'], type='system',
-            auto_link=platform_name() == 'windows',
             pcnames=(['boost'] if platform_name() == 'windows'
                      else ['boost[regex]']),
             include_path=mock.ANY,
@@ -45,7 +43,6 @@ class TestBoost(IntegrationTest):
                     submodules={'names': '*', 'required': False},
                     linkage=cfg_system_linkage(
                         pcname='boost',
-                        auto_link=platform_name() == 'windows',
                         explicit_version={
                             'type': 'regex',
                             'file': 'boost/version.hpp',
@@ -76,7 +73,6 @@ class TestBoostSource(IntegrationTest):
         self.assertExists('mopack/mopack.json')
 
         self.assertPathLinkage('boost', type='path',
-                               auto_link=platform_name() == 'windows',
                                include_path=mock.ANY,
                                library_path=mock.ANY,
                                libraries=[],
@@ -88,7 +84,6 @@ class TestBoostSource(IntegrationTest):
 
         self.assertPathLinkage(
             'boost', ['iostreams'], type='path',
-            auto_link=platform_name() == 'windows',
             pcnames=(['boost'] if platform_name() == 'windows'
                      else ['boost[iostreams]']),
             include_path=mock.ANY,
@@ -122,7 +117,6 @@ class TestBoostSource(IntegrationTest):
                         ),
                     ],
                     linkage=cfg_path_linkage(
-                        auto_link=platform_name() == 'windows',
                         explicit_version={
                             'type': 'regex',
                             'file': 'boost/version.hpp',

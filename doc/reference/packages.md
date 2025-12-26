@@ -234,7 +234,6 @@ packages:
 packages:
   my_pkg:
     origin: system
-    auto_link: <boolean>
     version: <string>
     pcname: <string>
     dependencies: <list[dependency]>
@@ -251,7 +250,6 @@ packages:
       # ...
 ```
 
-`auto_link` <span class="subtitle">*optional, default*: `false`</span>
 `version` <span class="subtitle">*optional, default*: `null`</span>
 `pcname` <span class="subtitle">*optional, default*: `{my_pkg}`</span>
 `dependencies` <span class="subtitle">*optional, default*: `null`</span>

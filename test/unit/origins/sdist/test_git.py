@@ -252,8 +252,8 @@ class TestGit(SDistTestCase):
              mock.patch('builtins.open'):
             self.check_resolve(pkg)
         self.check_linkage(pkg, linkage={
-            'name': 'foo', 'type': 'system', 'auto_link': False,
-            'pcnames': ['foo'], 'pkg_config_path': [self.pkgconfdir(None)],
+            'name': 'foo', 'type': 'system', 'pcnames': ['foo'],
+            'pkg_config_path': [self.pkgconfdir(None)],
         })
 
     def test_infer_build_override(self):
@@ -340,8 +340,8 @@ class TestGit(SDistTestCase):
         self.assertEqual(pkg.builders, [builder])
         self.check_resolve(pkg)
         self.check_linkage(pkg, linkage={
-            'name': 'foo', 'type': 'path', 'auto_link': False,
-            'pcnames': ['foo'], 'pkg_config_path': [self.pkgconfdir(None)],
+            'name': 'foo', 'type': 'path', 'pcnames': ['foo'],
+            'pkg_config_path': [self.pkgconfdir(None)],
         })
 
         with mock.patch('subprocess.run') as mrun:

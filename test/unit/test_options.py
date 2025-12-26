@@ -3,6 +3,7 @@ import os
 from unittest import mock, TestCase
 
 from . import through_json
+from .. import auto_link_default
 
 from mopack.options import *
 from mopack.environment import Environment
@@ -178,6 +179,7 @@ class TestCommonOptions(TestCase):
             'target_platform': platform_name(),
             'env': os.environ,
             'deploy_dirs': {},
+            'auto_link': auto_link_default
         })
 
     def test_finalize(self):
@@ -187,6 +189,23 @@ class TestCommonOptions(TestCase):
         opts.finalize()
         with self.assertRaises(RuntimeError):
             opts(env={'FOO': 'foo'})
+        self.assertEqual(opts.auto_link, auto_link_default)
+
+    def test_auto_link(self):
+        for env, auto_link in (({}, False),
+                               ({'MOPACK_AUTO_LINK': 'true'}, True)):
+            opts = CommonOptions()
+            with mock.patch('os.environ', env):
+                opts.finalize()
+
+            self.assertEqual(opts.auto_link, auto_link)
+            self.assertEqual(opts.expr_symbols, {
+                'host_platform': platform_name(),
+                'target_platform': platform_name(),
+                'env': env,
+                'deploy_dirs': {},
+                'auto_link': auto_link,
+            })
 
     def test_rehydrate(self):
         opts = CommonOptions()

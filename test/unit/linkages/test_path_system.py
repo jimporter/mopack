@@ -59,13 +59,11 @@ class TestPath(LinkageTest):
         if os.path.exists(self.pkgdir):
             shutil.rmtree(self.pkgdir)
 
-    def check_linkage(self, linkage, *, name='foo', auto_link=False,
-                      dependencies=[], include_path=[], library_path=[],
-                      headers=[], libraries=None, compile_flags=[],
-                      link_flags=[]):
+    def check_linkage(self, linkage, *, name='foo', dependencies=[],
+                      include_path=[], library_path=[], headers=[],
+                      libraries=None, compile_flags=[], link_flags=[]):
         if libraries is None:
             libraries = [name]
-        self.assertEqual(linkage.auto_link, auto_link)
         self.assertEqual(linkage.dependencies, dependencies)
         self.assertEqual(linkage.include_path, include_path)
         self.assertEqual(linkage.library_path, library_path)
@@ -92,8 +90,8 @@ class TestPath(LinkageTest):
         depname = str(Dependency(name, submodules))
         if expected is None:
             expected = {
-                'name': depname, 'type': self.type, 'auto_link': False,
-                'pcnames': [depname], 'pkg_config_path': [self.pkgconfdir],
+                'name': depname, 'type': self.type, 'pcnames': [depname],
+                'pkg_config_path': [self.pkgconfdir],
             }
 
         if pkg is None:
@@ -147,25 +145,28 @@ class TestPath(LinkageTest):
         ))
 
     def test_auto_link(self):
-        pkg = MockPackage(srcdir=self.srcdir, builddir=self.builddir)
-        linkage = self.make_linkage('foo', auto_link=True)
-        self.check_linkage(linkage, auto_link=True, libraries=[])
+        opts = self.make_options(auto_link=True)
+        pkg = MockPackage(srcdir=self.srcdir, builddir=self.builddir,
+                          _options=opts)
+
+        linkage = self.make_linkage(pkg, libraries=[])
+        self.check_linkage(linkage, libraries=[])
         self.check_get_linkage(linkage, 'foo', None, {
-            'name': 'foo', 'type': self.type, 'auto_link': True,
-            'pcnames': ['foo'], 'pkg_config_path': [self.pkgconfdir],
+            'name': 'foo', 'type': self.type, 'pcnames': ['foo'],
+            'pkg_config_path': [self.pkgconfdir],
         }, pkg=pkg)
         self.check_pkg_config('foo', None, {
             'libs': ['-L' + abspath('/mock/lib')],
         })
 
         libdir = abspath('/mock/path/to/lib')
-        linkage = self.make_linkage('foo', auto_link=True,
+        linkage = self.make_linkage(pkg, libraries=[],
                                     library_path='/mock/path/to/lib')
-        self.check_linkage(linkage, auto_link=True, libraries=[],
+        self.check_linkage(linkage, libraries=[],
                            library_path=[abspathobj('/mock/path/to/lib')])
         self.check_get_linkage(linkage, 'foo', None, {
-            'name': 'foo', 'type': self.type, 'auto_link': True,
-            'pcnames': ['foo'], 'pkg_config_path': [self.pkgconfdir],
+            'name': 'foo', 'type': self.type, 'pcnames': ['foo'],
+            'pkg_config_path': [self.pkgconfdir],
         }, pkg=pkg)
         self.check_pkg_config('foo', None, {'libs': ['-L' + libdir]})
 
@@ -232,13 +233,13 @@ class TestPath(LinkageTest):
         })
 
         path = '/mock/pkgconfig'
-        dep_linkage = {'name': 'foo', 'type': self.type, 'auto_link': True,
-                       'pcnames': ['bar'], 'pkg_config_path': [path]}
+        dep_linkage = {'name': 'foo', 'type': self.type, 'pcnames': ['bar'],
+                       'pkg_config_path': [path]}
         with mock.patch('mopack.origins.Package.get_linkage',
                         return_value=dep_linkage):
             self.check_get_linkage(linkage, 'foo', None, {
-                'name': 'foo', 'type': self.type, 'auto_link': True,
-                'pcnames': ['foo'], 'pkg_config_path': [self.pkgconfdir, path],
+                'name': 'foo', 'type': self.type, 'pcnames': ['foo'],
+                'pkg_config_path': [self.pkgconfdir, path],
             })
 
     def test_include_path_relative(self):
@@ -591,19 +592,20 @@ class TestPath(LinkageTest):
         """)
         submodules = {'names': '*', 'required': False}
         for plat in ['linux', 'darwin', 'windows']:
-            opts = self.make_options(common_options={'target_platform': plat})
+            opts = self.make_options(common_options={'target_platform': plat},
+                                     auto_link=(plat == 'windows'))
             metadata = Metadata(self.pkgdir, opts)
             pkg = MockPackage('boost', submodules=submodules, _options=opts)
             linkage = self.make_linkage(pkg)
             self.check_linkage(linkage, name='boost')
             self.check_version(linkage, None, header=header)
             self.check_get_linkage(linkage, 'boost', None, {
-                'name': 'boost', 'type': self.type, 'auto_link': False,
-                'pcnames': ['boost'], 'pkg_config_path': [self.pkgconfdir],
+                'name': 'boost', 'type': self.type, 'pcnames': ['boost'],
+                'pkg_config_path': [self.pkgconfdir],
             }, pkg=pkg)
             self.check_pkg_config('boost', None)
             self.check_get_linkage(linkage, 'boost', ['thread'], {
-                'name': 'boost[thread]', 'type': self.type, 'auto_link': False,
+                'name': 'boost[thread]', 'type': self.type,
                 'pcnames': ['boost[thread]'],
                 'pkg_config_path': [self.pkgconfdir],
             }, pkg=pkg, metadata=metadata)
@@ -614,12 +616,10 @@ class TestPath(LinkageTest):
 
             linkage = self.make_linkage(pkg, inherit_defaults=True)
             self.check_linkage(linkage, name='boost',
-                               auto_link=(plat == 'windows'),
                                headers=['boost/version.hpp'], libraries=[])
             self.check_version(linkage, '1.23', header=header)
             self.check_get_linkage(linkage, 'boost', None, {
-                'name': 'boost', 'type': self.type,
-                'auto_link': plat == 'windows', 'pcnames': ['boost'],
+                'name': 'boost', 'type': self.type, 'pcnames': ['boost'],
                 'pkg_config_path': [self.pkgconfdir],
             }, pkg=pkg, metadata=metadata)
             self.check_pkg_config('boost', None, {
@@ -629,7 +629,6 @@ class TestPath(LinkageTest):
             })
             self.check_get_linkage(linkage, 'boost', ['thread'], {
                 'name': 'boost[thread]', 'type': self.type,
-                'auto_link': plat == 'windows',
                 'pcnames': ['boost[thread]' if plat != 'windows' else 'boost'],
                 'pkg_config_path': [self.pkgconfdir],
             }, pkg=pkg, metadata=metadata)
@@ -645,14 +644,12 @@ class TestPath(LinkageTest):
             linkage = self.make_linkage(pkg, inherit_defaults=True,
                                         libraries=['boost'])
             self.check_linkage(
-                linkage, name='boost', auto_link=(plat == 'windows'),
-                headers=['boost/version.hpp'], libraries=['boost'],
-                include_path=[], library_path=[]
+                linkage, name='boost', headers=['boost/version.hpp'],
+                libraries=['boost'], include_path=[], library_path=[]
             )
             self.check_version(linkage, '1.23', header=header)
             self.check_get_linkage(linkage, 'boost', None, {
-                'name': 'boost', 'type': self.type,
-                'auto_link': plat == 'windows', 'pcnames': ['boost'],
+                'name': 'boost', 'type': self.type, 'pcnames': ['boost'],
                 'pkg_config_path': [self.pkgconfdir],
             }, pkg=pkg, metadata=metadata)
             self.check_pkg_config('boost', None, {
@@ -661,7 +658,6 @@ class TestPath(LinkageTest):
             extra_libs = ['boost_regex'] if plat != 'windows' else []
             self.check_get_linkage(linkage, 'boost', ['regex'], {
                 'name': 'boost[regex]', 'type': self.type,
-                'auto_link': plat == 'windows',
                 'pcnames': ['boost[regex]' if plat != 'windows' else 'boost'],
                 'pkg_config_path': [self.pkgconfdir],
             }, pkg=pkg, metadata=metadata)
@@ -693,7 +689,7 @@ class TestPath(LinkageTest):
         metadata = Metadata(self.pkgdir, opts)
         pkg = MockPackage('boost', submodules=submodules, _options=opts)
         linkage = self.make_linkage(pkg, inherit_defaults=True)
-        self.check_linkage(linkage, name='boost', auto_link=False,
+        self.check_linkage(linkage, name='boost',
                            headers=['boost/version.hpp'], libraries=[],
                            **pathobjs)
         self.check_get_linkage(linkage, 'boost', None, pkg=pkg,
@@ -711,7 +707,7 @@ class TestPath(LinkageTest):
 
         linkage = self.make_linkage(pkg, inherit_defaults=True,
                                     libraries=['boost'])
-        self.check_linkage(linkage, name='boost', auto_link=False,
+        self.check_linkage(linkage, name='boost',
                            headers=['boost/version.hpp'], libraries=['boost'],
                            **pathobjs)
         self.check_version(linkage, '1.23', header=header)

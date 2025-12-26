@@ -20,6 +20,10 @@ class Environment(ChainMap):
         return map_placeholder(self, lambda i: to_string(i, symbols))
 
 
+def env_as_flag(variable, env=os.environ):
+    return env.get(variable, '').lower() in ('true', '1')
+
+
 def which(names, env=os.environ, resolve=False, kind='executable'):
     names = listify(names)
     if len(names) == 0:

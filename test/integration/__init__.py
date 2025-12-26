@@ -58,10 +58,13 @@ def slurp(filename):
 
 
 def cfg_common_options(*, strict=False, target_platform=platform_name(),
-                       env=mock.ANY, deploy_dirs={}):
-    return {'_version': 1, 'strict': strict,
+                       env=mock.ANY, deploy_dirs={}, auto_link=None):
+    if auto_link is None:
+        auto_link = auto_link_default
+    return {'_version': 2, 'strict': strict,
             'target_platform': target_platform, 'env': env,
-            'deploy_dirs': deploy_dirs}
+            'deploy_dirs': deploy_dirs,
+            'auto_link': auto_link}
 
 
 def cfg_bfg9000_options(toolchain=None):
@@ -284,14 +287,13 @@ def _cfg_path_submodule_linkage(*, _if=True, dependencies=None,
     }
 
 
-def cfg_path_linkage(*, auto_link=False, explicit_version=None,
-                     dependencies=[], include_path=[], library_path=[],
-                     headers=[], libraries=[], compile_flags=[], link_flags=[],
+def cfg_path_linkage(*, explicit_version=None, dependencies=[],
+                     include_path=[], library_path=[], headers=[],
+                     libraries=[], compile_flags=[], link_flags=[],
                      submodule_linkage=None):
     result = {
         'type': 'path',
-        '_version': 3,
-        'auto_link': auto_link,
+        '_version': 4,
         'dependencies': dependencies,
         'explicit_version': explicit_version,
         'include_path': include_path,
@@ -411,7 +413,7 @@ class IntegrationTest(SubprocessTestCase):
         }, submodules=submodules)
 
     def assertPathLinkage(self, name, submodules=[], *, type='path',
-                          version='', auto_link=False, pcnames=None,
+                          version='', pcnames=None,
                           include_path=[], library_path=[], libraries=None,
                           compile_flags=[], link_flags=[]):
         if libraries is None:
@@ -423,8 +425,7 @@ class IntegrationTest(SubprocessTestCase):
         pkg_config_path = [os.path.join(self.mopackdir, 'pkgconfig')]
         self.assertLinkage(name, {
             'name': str(Dependency(name, submodules)), 'type': type,
-            'auto_link': auto_link, 'pcnames': pcnames,
-            'pkg_config_path': pkg_config_path,
+            'pcnames': pcnames, 'pkg_config_path': pkg_config_path,
         }, submodules=submodules)
 
         for pcname in pcnames:

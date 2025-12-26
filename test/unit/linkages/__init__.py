@@ -2,6 +2,7 @@ import os
 
 from .. import OptionsTest, MockPackage, through_json  # noqa: F401
 
+from mopack.iterutils import slice_dict
 from mopack.metadata import Metadata
 
 
@@ -14,8 +15,7 @@ class LinkageTest(OptionsTest):
         super().setUp()
         self.metadata = Metadata(self.pkgdir)
 
-    def make_linkage(self, *args, common_options=None, deploy_dirs=None,
-                     submodules=None, **kwargs):
+    def make_linkage(self, *args, submodules=None, **kwargs):
         if len(args) == 1:
             linkage_type = self.linkage_type
             pkg = args[0]
@@ -23,7 +23,10 @@ class LinkageTest(OptionsTest):
             linkage_type, pkg = args
 
         if isinstance(pkg, str):
-            options = self.make_options(common_options, deploy_dirs)
+            options_kwargs = slice_dict(kwargs, {
+                'common_options', 'deploy_dirs', 'auto_link',
+            })
+            options = self.make_options(**options_kwargs)
             pkg = MockPackage(pkg, srcdir=self.srcdir, builddir=self.builddir,
                               submodules=submodules, _options=options)
 

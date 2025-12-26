@@ -35,7 +35,6 @@ class TestQt(IntegrationTest):
                     submodules={'names': '*', 'required': True},
                     linkage=cfg_system_linkage(
                         pcname='Qt5',
-                        auto_link=False,
                         explicit_version=None,
                         include_path=mock.ANY,
                         library_path=mock.ANY,
