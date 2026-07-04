@@ -332,6 +332,9 @@ to programmatically define how to resolve or use your dependencies.</p>
 <dd>A dictionary of environment variables. These can be set by the calling
   environment or overridden in the <a href="../file-structure/#options"><code>options</code></a>
   section.</dd>
+<dt><code>auto_link</code> <span class="subtitle"><em>availability</em>: everywhere</span></dt>
+<dd>True if the compiler in use supports auto-linking (e.g.
+  <a href="https://learn.microsoft.com/en-us/cpp/preprocessor/comment-c-cpp?view=msvc-170#lib">MSVC</a>).</dd>
 <dt><code>submodule</code> <span class="subtitle"><em>availability</em>: <a href="../linkage/">submodule maps</a></span></dt>
 <dd>The name of the user-specified submodule. You can use this to automatically
   generate submodule configuration for the <code>*</code> placeholder submodule.</dd>
