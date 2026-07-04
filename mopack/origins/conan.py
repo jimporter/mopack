@@ -92,7 +92,7 @@ class ConanPackage(BinaryPackage, BatchPackage):
         conan = get_cmd(self._common_options.env, 'CONAN', 'conan')
         return subprocess.run(
             conan + ['inspect', '--raw=version', self.remote],
-            check=True, stdout=subprocess.PIPE, universal_newlines=True
+            text=True, check=True, stdout=subprocess.PIPE
         ).stdout
 
     def clean_post(self, metadata, new_package, quiet=False):

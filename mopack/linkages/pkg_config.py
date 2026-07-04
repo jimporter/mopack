@@ -118,8 +118,8 @@ class PkgConfigLinkage(Linkage):
                        self._common_options.env)
 
         return subprocess_run(
-            pkg_config + [self.pcname, '--modversion'], check=True,
-            stdout=subprocess.PIPE, universal_newlines=True, env=env
+            pkg_config + [self.pcname, '--modversion'], text=True, check=True,
+            stdout=subprocess.PIPE, env=env
         ).stdout.strip()
 
     def _get_submodule_linkage(self, symbols, submodule):

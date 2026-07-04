@@ -463,9 +463,8 @@ class SystemLinkage(PathLinkage):
         try:
             # XXX: Make sure this works when submodules are required.
             return subprocess_run(
-                pkg_config + [self.pcname, '--modversion'], check=True,
-                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                universal_newlines=True,
+                pkg_config + [self.pcname, '--modversion'], text=True,
+                check=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
                 env=self._common_options.env
             ).stdout.strip()
         except (OSError, subprocess.CalledProcessError):

@@ -291,8 +291,8 @@ class TestTarball(SDistTestCase):
             pkg.version(self.metadata)
             mrun.assert_called_once_with(
                 ['pkg-config', 'foo', '--modversion'],
-                check=True, env={'PKG_CONFIG_PATH': self.pkgconfdir('foo')},
-                stdout=subprocess.PIPE, universal_newlines=True
+                text=True, check=True, stdout=subprocess.PIPE,
+                env={'PKG_CONFIG_PATH': self.pkgconfdir('foo')}
             )
 
         linkage = {'type': 'pkg_config', 'pkg_config_path': 'pkgconf'}

@@ -79,14 +79,13 @@ class TestApt(OriginTest):
             self.assertEqual(pkg.version(self.metadata), '1.2.3')
             mrun.assert_has_calls([
                 mock.call(
-                    ['pkg-config', 'foo', '--modversion'], check=True,
-                    stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                    universal_newlines=True, env={}
+                    ['pkg-config', 'foo', '--modversion'],
+                    text=True, check=True, stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL, env={}
                 ),
                 mock.call(
                     ['dpkg-query', '-W', '-f${Version}', 'libfoo-dev'],
-                    check=True, stdout=subprocess.PIPE,
-                    universal_newlines=True, env={}
+                    text=True, check=True, stdout=subprocess.PIPE, env={}
                 ),
             ])
 
@@ -102,14 +101,13 @@ class TestApt(OriginTest):
             self.assertEqual(pkg.version(self.metadata), '1.2.3')
             mrun.assert_has_calls([
                 mock.call(
-                    ['pkg-config', 'foo', '--modversion'], check=True,
-                    stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                    universal_newlines=True, env={}
+                    ['pkg-config', 'foo', '--modversion'], text=True,
+                    check=True, stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL, env={}
                 ),
                 mock.call(
                     ['dpkg-query', '-W', '-f${Version}', 'foo-dev'],
-                    check=True, stdout=subprocess.PIPE,
-                    universal_newlines=True, env={}
+                    text=True, check=True, stdout=subprocess.PIPE, env={}
                 ),
             ])
 
@@ -124,14 +122,13 @@ class TestApt(OriginTest):
             pkg.version(self.metadata)
             mrun.assert_has_calls([
                 mock.call(
-                    ['pkg-config', 'foo', '--modversion'], check=True,
-                    stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                    universal_newlines=True, env={}
+                    ['pkg-config', 'foo', '--modversion'], text=True,
+                    check=True, stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL, env={}
                 ),
                 mock.call(
                     ['dpkg-query', '-W', '-f${Version}', 'foo-dev'],
-                    check=True, stdout=subprocess.PIPE,
-                    universal_newlines=True, env={}
+                    text=True, check=True, stdout=subprocess.PIPE, env={}
                 ),
             ])
 
@@ -158,9 +155,8 @@ class TestApt(OriginTest):
         with mock.patch('subprocess.run', side_effect=mock_run) as mrun:
             self.assertEqual(pkg.version(self.metadata), '2.0')
             mrun.assert_called_once_with(
-                ['pkg-config', 'foo', '--modversion'], check=True,
-                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                universal_newlines=True, env={}
+                ['pkg-config', 'foo', '--modversion'], text=True, check=True,
+                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, env={}
             )
 
         self.check_linkage(pkg)

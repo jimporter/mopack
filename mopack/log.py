@@ -157,8 +157,8 @@ class LogFile:
         proc = None
         try:
             proc = subprocess.Popen(
-                args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                universal_newlines=True, env=nest_env(env), **kwargs
+                args, text=True, stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT, env=nest_env(env), **kwargs
             )
             with proc.stdout:
                 while proc.poll() is None:

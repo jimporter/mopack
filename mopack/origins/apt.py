@@ -37,8 +37,7 @@ class AptPackage(BinaryPackage, BatchPackage):
         dpkgq = get_cmd(env, 'DPKG_QUERY', 'dpkg-query')
         return subprocess_run(
             dpkgq + ['-W', '-f${Version}', self.remote[0]],
-            check=True, stdout=subprocess.PIPE, universal_newlines=True,
-            env=env
+            text=True, check=True, stdout=subprocess.PIPE, env=env
         ).stdout
 
     @classmethod

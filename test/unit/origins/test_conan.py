@@ -84,7 +84,7 @@ class TestConan(OriginTest):
             mrun.assert_called_once_with(
                 ['conan', 'inspect', '--raw=version',
                  'foo/1.2.3@conan/stable'],
-                check=True, stdout=subprocess.PIPE, universal_newlines=True
+                text=True, check=True, stdout=subprocess.PIPE
             )
 
         self.check_linkage(pkg)

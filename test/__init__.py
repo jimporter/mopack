@@ -35,7 +35,7 @@ def call_pkg_config(package, options, *, fn=lambda x: x, path=None,
     # Use subprocess_run to ensure that we get the real function, not a mock.
     output = subprocess_run(
         [pkg_config] + listify(package) + options,
-        check=True, universal_newlines=True, stdout=subprocess.PIPE,
+        text=True, check=True, stdout=subprocess.PIPE,
         **extra_kwargs
     ).stdout.strip()
 

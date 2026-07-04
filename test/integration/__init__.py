@@ -352,8 +352,8 @@ class SubprocessTestCase(unittest.TestCase):
             final_env.update(extra_env)
 
         proc = subprocess.run(
-            command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            env=final_env, universal_newlines=True
+            command, text=True, stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT, env=final_env
         )
         if not (returncode == 'any' or
                 (returncode == 'fail' and proc.returncode != 0) or
