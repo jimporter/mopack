@@ -12,6 +12,7 @@ from .. import *
 from mopack.dependencies import Dependency
 from mopack.environment import get_cmd
 from mopack.iterutils import iterate, listify
+from mopack.objutils import Unset
 from mopack.platforms import platform_name
 from mopack.path import Path
 
@@ -25,16 +26,16 @@ for i in os.getenv('MOPACK_SKIPPED_TESTS', '').split(' '):
     if i:
         test_features.remove(i)
 
-# Get additional environment variables to use when getting linkage. This
+# Get additional environment variables to use when resolving. This
 # is useful for setting things up to properly detect headers/libs for `path`
 # linkage.
-linkage_env = {}
+test_env = {}
 try:
     test_env_file = os.path.join(test_dir, '../.mopack_test_env')
     with open(os.getenv('MOPACK_TEST_ENV_FILE', test_env_file)) as f:
         for line in f.readlines():
             k, v = line.rstrip('\n').split('=', 1)
-            linkage_env[k] = v
+            test_env[k] = v
 except FileNotFoundError:
     pass
 
@@ -377,14 +378,26 @@ class IntegrationTest(SubprocessTestCase):
         self.pkgbuilddir = os.path.join(self.mopackdir, 'build')
         if self.deploy:
             self.prefix = stage_dir(self.name + '-install', chdir=False)
+        else:
+            self.prefix = None
 
     def assertEqualUnordered(self, first, second, msg=None):
         if first is mock.ANY or second is mock.ANY:
             return
         self.assertCountEqual(first, second, msg)
 
+    def assertResolve(self, filename, extra_args=[], *, prefix=Unset,
+                      extra_env=test_env, returncode=0):
+        if prefix is Unset:
+            prefix = self.prefix
+        return self.assertPopen(mopack_cmd(
+            'resolve', filename,
+            *(['-dprefix=' + prefix] if prefix is not None else []),
+            *extra_args
+        ), extra_env=extra_env, returncode=returncode)
+
     def assertLinkage(self, name, linkage='', extra_args=[], *, format='json',
-                      submodules=[], extra_env=linkage_env, returncode=0):
+                      submodules=[], extra_env={}, returncode=0):
         loader = {
             'json': json.loads,
             'yaml': yaml.safe_load,

@@ -25,7 +25,7 @@ class TestDirectory(SDistTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-directory-implicit.yml')
-        self.assertPopen(mopack_cmd('resolve', config))
+        self.assertResolve(config)
         self.assertNotExists('mopack/src/hello/hello-bfg/build.bfg')
         self.assertExists('mopack/build/hello/')
         self.assertExists('mopack/logs/hello.log')
@@ -50,7 +50,7 @@ class TestDirectory(SDistTest):
 
     def test_resolve_verbose(self):
         config = os.path.join(test_data_dir, 'mopack-directory-implicit.yml')
-        output = self.assertPopen(mopack_cmd('--verbose', 'resolve', config))
+        output = self.assertResolve(config)
         cfg_line = r'(?m)^    \$ bfg9000 configure .+\bhello\b.*$'
         self.assertRegex(output, cfg_line)
 
@@ -83,9 +83,7 @@ class TestTarball(SDistTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-tarball.yml')
-        self.assertPopen(mopack_cmd(
-            'resolve', config, '-dprefix=' + self.prefix
-        ))
+        self.assertResolve(config)
         self.assertExists('mopack/src/hello/hello-bfg/build.bfg')
         self.assertExists('mopack/build/hello/')
         self.assertExists('mopack/logs/hello.log')
@@ -125,9 +123,7 @@ class TestTarballPatch(SDistTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-tarball-patch.yml')
-        self.assertPopen(mopack_cmd(
-            'resolve', config, '-dprefix=' + self.prefix
-        ))
+        self.assertResolve(config)
         self.assertExists('mopack/src/hello/hello-bfg/build.bfg')
         self.assertExists('mopack/build/hello/')
         self.assertExists('mopack/logs/hello.log')
@@ -169,9 +165,7 @@ class TestGit(SDistTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-git.yml')
-        self.assertPopen(mopack_cmd(
-            'resolve', config, '-dprefix=' + self.prefix
-        ))
+        self.assertResolve(config)
         self.assertExists('mopack/src/bencodehpp/build.bfg')
         self.assertExists('mopack/build/bencodehpp/')
         self.assertExists('mopack/logs/bencodehpp.log')

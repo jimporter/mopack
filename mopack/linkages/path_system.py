@@ -23,15 +23,15 @@ from ..types import mangle_keywords, Unset
 # XXX: Getting build configuration like this from the environment is a bit
 # hacky. Maybe there's a better way?
 
-def _system_include_path(env=os.environ):
+def _system_include_path(env):
     return [Path(i) for i in split_paths(env.get('MOPACK_INCLUDE_PATH'))]
 
 
-def _system_lib_path(env=os.environ):
+def _system_lib_path(env):
     return [Path(i) for i in split_paths(env.get('MOPACK_LIB_PATH'))]
 
 
-def _system_lib_names(env=os.environ):
+def _system_lib_names(env):
     return split_paths(env.get('MOPACK_LIB_NAMES'))
 
 
@@ -262,7 +262,7 @@ class PathLinkage(Linkage):
     def _include_dirs(self, headers, include_path, path_vars):
         headers = listify(headers, scalar_ok=False)
         include_path = (listify(include_path, scalar_ok=False) or
-                        _system_include_path())
+                        _system_include_path(self._common_options.env))
         return self._filter_path(
             lambda p, f: isfile(p.append(f), path_vars),
             include_path, headers, 'header', path_vars
@@ -270,14 +270,14 @@ class PathLinkage(Linkage):
 
     def _library_dirs(self, libraries, library_path, path_vars):
         library_path = (listify(library_path, scalar_ok=False)
-                        or _system_lib_path())
+                        or _system_lib_path(self._common_options.env))
         if self._options.common.auto_link and not libraries:
             # If no libraries are specified when auto-linking, we can't
             # determine the library dirs that are actually used, so include
             # them all.
             return library_path
 
-        lib_names = _system_lib_names()
+        lib_names = _system_lib_names(self._common_options.env)
         return self._filter_path(
             lambda p, f: any(isfile(p.append(i.format(f)), path_vars)
                              for i in lib_names),
@@ -318,17 +318,9 @@ class PathLinkage(Linkage):
 
     def version(self, metadata, pkg):
         path_values = pkg.path_values(metadata)
-        try:
-            include_dirs = self._include_dirs(
-                self.headers, self.include_path, path_values
-            )
-        except ValueError:  # pragma: no cover
-            # XXX: This is a hack to work around the fact that we currently
-            # require the build system to pass include dirs during `linkage`
-            # (and really, during `list-packages` too). We should handle this
-            # in a smarter way and then remove this.
-            include_dirs = []
-
+        include_dirs = self._include_dirs(
+            self.headers, self.include_path, path_values
+        )
         return self._get_version(metadata, pkg, include_dirs, path_values)
 
     def _write_pkg_config(self, metadata, pkg, submodule=None, version=None,

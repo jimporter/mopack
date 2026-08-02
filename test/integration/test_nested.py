@@ -23,9 +23,7 @@ class TestNested(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-nested.yml')
-        self.assertPopen(mopack_cmd(
-            'resolve', config, '-dprefix=' + self.prefix
-        ))
+        self.assertResolve(config)
         self.assertExists('mopack/build/greeter/')
         self.assertExists('mopack/logs/greeter.log')
         self.assertExists('mopack/src/hello/hello-bfg/')
@@ -87,9 +85,7 @@ class TestNested(IntegrationTest):
 
     def test_resolve_extra(self):
         config = os.path.join(test_data_dir, 'mopack-nested-extra.yml')
-        self.assertPopen(mopack_cmd(
-            'resolve', config, '-dprefix=' + self.prefix
-        ))
+        self.assertResolve(config)
         self.assertExists('mopack/build/greeter/')
         self.assertExists('mopack/logs/greeter.log')
         self.assertNotExists('mopack/src/hello/hello-bfg/')

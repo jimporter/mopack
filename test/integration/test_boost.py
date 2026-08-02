@@ -10,7 +10,7 @@ class TestBoost(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-boost.yml')
-        self.assertPopen(mopack_cmd('resolve', config))
+        self.assertResolve(config)
         self.assertExists('mopack/mopack.json')
 
         self.assertPathLinkage('boost', type='system',
@@ -69,7 +69,7 @@ class TestBoostSource(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-boost-source.yml')
-        self.assertPopen(mopack_cmd('resolve', config))
+        self.assertResolve(config)
         self.assertExists('mopack/mopack.json')
 
         self.assertPathLinkage('boost', type='path',

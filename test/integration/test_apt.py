@@ -12,8 +12,9 @@ class TestApt(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-apt.yml')
-        self.assertPopen(mopack_cmd('resolve', config),
-                         extra_env={'PKG_CONFIG': 'nonexist'})
+        self.assertResolve(config, extra_env={
+            **test_env, 'PKG_CONFIG': 'nonexist',
+        })
         self.assertExists('mopack/logs/apt.log')
         self.assertExists('mopack/mopack.json')
 

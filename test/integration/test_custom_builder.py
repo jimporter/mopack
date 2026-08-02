@@ -12,7 +12,7 @@ class TestCustomBuilder(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-custom-builder.yml')
-        self.assertPopen(mopack_cmd('resolve', config))
+        self.assertResolve(config)
         self.assertExists('mopack/src/hello/hello-bfg/build.bfg')
         self.assertExists('mopack/build/hello/')
         self.assertExists('mopack/logs/hello.log')
@@ -51,9 +51,7 @@ class TestCustomBuilderDeploy(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'mopack-custom-builder.yml')
-        self.assertPopen(mopack_cmd(
-            'resolve', config, '-dprefix=' + self.prefix
-        ))
+        self.assertResolve(config)
         self.assertExists('mopack/src/hello/hello-bfg/build.bfg')
         self.assertExists('mopack/build/hello/')
         self.assertExists('mopack/logs/hello.log')

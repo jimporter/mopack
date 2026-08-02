@@ -9,7 +9,7 @@ class TestLocal(IntegrationTest):
 
     def test_resolve(self):
         config = os.path.join(test_data_dir, 'local')
-        self.assertPopen(mopack_cmd('resolve', config))
+        self.assertResolve(config)
         self.assertExists('mopack/logs/conan.log')
         self.assertExists('mopack/mopack.json')
 
