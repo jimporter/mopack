@@ -52,8 +52,8 @@ class TestLinkage(IntegrationTest):
                            format='yaml', returncode=1)
         output = self.assertLinkage('hello', extra_args=wrongdir_args,
                                     returncode=1)
-        self.assertEqual(json.loads(output),
-                         {'error': "unable to find library 'hello'"})
+        self.assertRegex(json.loads(output)['error'],
+                         "^unable to find library 'hello'")
         self.assertLinkageOutput('fake', {
             'name': 'fake', 'type': 'system', 'pcnames': ['fake'],
             'pkg_config_path': [pkgconfdir],

@@ -244,7 +244,7 @@ class PathLinkage(Linkage):
         return ['-framework', lib['name']]
 
     @staticmethod
-    def _filter_path(fn, path, files, kind):
+    def _filter_path(fn, path, files, kind, path_vars):
         filtered = {}
         for f in files:
             for p in path:
@@ -252,7 +252,11 @@ class PathLinkage(Linkage):
                     filtered[p] = True
                     break
             else:
-                raise ValueError('unable to find {} {!r}'.format(kind, f))
+                tried = [i.string(path_vars) for i in path] or ['(none)']
+                raise FileNotFoundError(
+                    'unable to find {} {!r}, tried:\n{}'
+                    .format(kind, f, '  ' + '\n  '.join(tried))
+                )
         return list(filtered.keys())
 
     def _include_dirs(self, headers, include_path, path_vars):
@@ -261,7 +265,7 @@ class PathLinkage(Linkage):
                         _system_include_path())
         return self._filter_path(
             lambda p, f: isfile(p.append(f), path_vars),
-            include_path, headers, 'header'
+            include_path, headers, 'header', path_vars
         )
 
     def _library_dirs(self, libraries, library_path, path_vars):
@@ -278,7 +282,7 @@ class PathLinkage(Linkage):
             lambda p, f: any(isfile(p.append(i.format(f)), path_vars)
                              for i in lib_names),
             library_path, (i for i in libraries if isinstance(i, str)),
-            'library'
+            'library', path_vars
         )
 
     @staticmethod
