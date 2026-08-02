@@ -5,6 +5,8 @@ from enum import Enum
 from itertools import chain
 from shlex import shlex
 
+from verspec.loose import Version
+
 from . import placeholder
 from .freezedried import auto_dehydrate, rehydrate
 from .iterutils import isiterable, ismapping
@@ -12,9 +14,10 @@ from .placeholder import PlaceholderString, MaybePlaceholderString
 from .platforms import platform_name
 
 __all__ = [
-    'join_paths', 'quote_posix', 'quote_native', 'quote_str', 'quote_windows',
-    'ShellArguments', 'split_native', 'split_native_str', 'split_paths',
-    'split_posix', 'split_posix_str', 'split_windows', 'split_windows_str',
+    'detect_version', 'join_paths', 'quote_posix', 'quote_native', 'quote_str',
+    'quote_windows', 'ShellArguments', 'split_native', 'split_native_str',
+    'split_paths', 'split_posix', 'split_posix_str', 'split_windows',
+    'split_windows_str',
 ]
 
 _Token = Enum('Token', ['char', 'quote', 'space'])
@@ -24,6 +27,11 @@ _bad_posix_chars = re.compile(r'[^\w@%+=:,./-]')
 # XXX: We need a way to escape cmd.exe-specific characters.
 _bad_windows_chars = re.compile(r'(\s|["&<>|]|\\$)')
 _windows_replace = re.compile(r'(\\*)("|$)')
+
+
+def detect_version(string, pre='', post='', flags=0):
+    m = re.search(pre + r'(\d+(?:\.\d+)+)' + post, string, flags)
+    return Version(m.group(1)) if m else None
 
 
 class quote_str:

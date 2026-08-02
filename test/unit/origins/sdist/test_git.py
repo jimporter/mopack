@@ -2,6 +2,8 @@ import os
 import subprocess
 from unittest import mock
 
+from verspec.loose import Version, SpecifierSet
+
 from . import *
 from ... import assert_logging, rehydrate_kwargs
 from .... import *
@@ -36,16 +38,28 @@ class TestGit(SDistTestCase):
              mock.patch('mopack.log.LogFile.check_call'):
             pkg.fetch(self.metadata, self.config)
 
-    def check_fetch(self, pkg, env={}):
+    def check_fetch(self, pkg, env={}, git_version=Version('2.49.0')):
         srcdir = os.path.join(self.pkgdir, 'src', 'foo')
-        git_cmds = [['git', 'clone', pkg.repository, srcdir]]
-        if pkg.rev[0] in ['branch', 'tag']:
-            git_cmds[0].extend(['--branch', pkg.rev[1]])
-        else:
-            git_cmds.append(['git', 'checkout', pkg.rev[1]])
+        if pkg.rev[0] == 'branch':
+            git_cmds = [['git', 'clone', pkg.repository, srcdir,
+                         '--single-branch', '--branch', pkg.rev[1]]]
+        elif pkg.rev[0] == 'tag':
+            git_cmds = [['git', '-c', 'advice.detachedHead=false', 'clone',
+                         pkg.repository, srcdir, '--depth=1', '--branch',
+                         pkg.rev[1]]]
+        else:  # pkg.rev[0] == 'commit'
+            if git_version in SpecifierSet('>=2.49.0'):
+                git_cmds = [['git', '-c', 'advice.detachedHead=false', 'clone',
+                             pkg.repository, srcdir, '--depth=1', '--revision',
+                             pkg.rev[1]]]
+            else:
+                git_cmds = [['git', 'clone', pkg.repository, srcdir],
+                            ['git', 'checkout', pkg.rev[1]]]
 
         with mock_open_log(), \
              mock.patch('mopack.origins.sdist.pushd'), \
+             mock.patch.object(GitPackage, '_git_version',
+                               return_value=git_version), \
              mock.patch('mopack.log.LogFile.check_call') as mcall:
             with assert_logging([('fetch',
                                   'foo from {}'.format(pkg.repository))]):
@@ -120,21 +134,22 @@ class TestGit(SDistTestCase):
         self.check_linkage(pkg)
 
     def test_commit(self):
-        pkg = self.make_package('foo', repository=self.srcssh,
-                                commit='abcdefg', build='bfg9000')
-        builder = self.make_builder(Bfg9000Builder, pkg)
-        self.assertEqual(pkg.env, {})
-        self.assertEqual(pkg.repository, self.srcssh)
-        self.assertEqual(pkg.rev, ['commit', 'abcdefg'])
-        self.assertEqual(pkg.srcdir, '.')
-        self.assertEqual(pkg.pending_builders, 'bfg9000')
-        self.assertEqual(pkg.needs_dependencies, True)
-        self.assertEqual(pkg.should_deploy, True)
+        for v in [Version('2.25.0'), Version('2.49.0')]:
+            pkg = self.make_package('foo', repository=self.srcssh,
+                                    commit='abcdefg', build='bfg9000')
+            builder = self.make_builder(Bfg9000Builder, pkg)
+            self.assertEqual(pkg.env, {})
+            self.assertEqual(pkg.repository, self.srcssh)
+            self.assertEqual(pkg.rev, ['commit', 'abcdefg'])
+            self.assertEqual(pkg.srcdir, '.')
+            self.assertEqual(pkg.pending_builders, 'bfg9000')
+            self.assertEqual(pkg.needs_dependencies, True)
+            self.assertEqual(pkg.should_deploy, True)
 
-        self.check_fetch(pkg)
-        self.assertEqual(pkg.builders, [builder])
-        self.check_resolve(pkg)
-        self.check_linkage(pkg)
+            self.check_fetch(pkg, git_version=v)
+            self.assertEqual(pkg.builders, [builder])
+            self.check_resolve(pkg)
+            self.check_linkage(pkg)
 
     def test_invalid_tag_branch_commit(self):
         with self.assertRaises(TypeError):

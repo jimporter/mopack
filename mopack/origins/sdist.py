@@ -1,11 +1,13 @@
 import os
 import shutil
+import subprocess
 import warnings
 from contextlib import contextmanager
 from io import BytesIO
 from typing import Dict, List
 from urllib.request import urlopen
-from subprocess import SubprocessError
+
+from verspec.loose import SpecifierSet
 
 from . import Package, submodules_type
 from .. import archive, log, types
@@ -17,11 +19,12 @@ from ..glob import filter_glob
 from ..iterutils import flatten, isiterable, listify
 from ..linkages import make_linkage
 from ..log import LogFile
-from ..objutils import Unset
+from ..objutils import memoize_method, Unset
 from ..options import DuplicateSymbolError
 from ..package_defaults import DefaultResolver
 from ..path import Path, pushd
 from ..placeholder import MaybePlaceholderString
+from ..shell import detect_version
 from ..types import FieldValueError
 from ..yaml_tools import to_parse_error
 
@@ -377,7 +380,7 @@ class TarballPackage(SDistPackage):
                         logfile.check_call(patch_cmd + ['-p1'], stdin=f,
                                            env=env)
             return self._find_mopack(parent_config, self._srcdir(metadata))
-        except SubprocessError:
+        except subprocess.SubprocessError:
             self._find_mopack(parent_config, self._srcdir(metadata))
             raise
 
@@ -432,6 +435,12 @@ class GitPackage(SDistPackage):
         return os.path.normpath(os.path.join(self._base_srcdir(metadata),
                                              self.srcdir))
 
+    @memoize_method
+    def _git_version(self, git):
+        return detect_version(subprocess.run(
+            git + ['version'], text=True, check=True, stdout=subprocess.PIPE
+        ).stdout)
+
     def clean_pre(self, metadata, new_package, quiet=False):
         if not self._needs_clean(new_package):
             return False
@@ -453,16 +462,31 @@ class GitPackage(SDistPackage):
                     with pushd(base_srcdir):
                         logfile.check_call(git + ['pull'], env=env)
             else:
+                detached_args = ['-c', 'advice.detachedHead=false']
                 log.pkg_fetch(self.name, 'from {}'.format(self.repository))
-                clone = ['git', 'clone', self.repository, base_srcdir]
-                if self.rev[0] in ['branch', 'tag']:
-                    clone.extend(['--branch', self.rev[1]])
-                    logfile.check_call(clone, env=env)
+                if self.rev[0] == 'branch':
+                    logfile.check_call(git + [
+                        'clone', self.repository, base_srcdir,
+                        '--single-branch', '--branch', self.rev[1],
+                    ], env=env)
+                elif self.rev[0] == 'tag':
+                    logfile.check_call(git + detached_args + [
+                        'clone', self.repository, base_srcdir, '--depth=1',
+                        '--branch', self.rev[1],
+                    ], env=env)
                 elif self.rev[0] == 'commit':
-                    logfile.check_call(clone, env=env)
-                    with pushd(base_srcdir):
-                        logfile.check_call(git + ['checkout', self.rev[1]],
-                                           env=env)
+                    if self._git_version(git) in SpecifierSet('>=2.49.0'):
+                        logfile.check_call(git + detached_args + [
+                            'clone', self.repository, base_srcdir, '--depth=1',
+                            '--revision', self.rev[1],
+                        ], env=env)
+                    else:
+                        logfile.check_call(git + [
+                            'clone', self.repository, base_srcdir,
+                        ], env=env)
+                        with pushd(base_srcdir):
+                            logfile.check_call(git + ['checkout', self.rev[1]],
+                                               env=env)
                 else:  # pragma: no cover
                     raise ValueError('unknown revision type {!r}'
                                      .format(self.rev[0]))
