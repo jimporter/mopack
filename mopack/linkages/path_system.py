@@ -1,6 +1,7 @@
 import os
 import re
 import subprocess
+import textwrap
 import warnings
 from itertools import chain
 from typing import List
@@ -18,6 +19,8 @@ from ..pkg_config import generated_pkg_config_dir, write_pkg_config
 from ..placeholder import placeholder
 from ..shell import ShellArguments, split_paths
 from ..types import mangle_keywords, Unset
+
+from .. import log
 
 
 # XXX: Getting build configuration like this from the environment is a bit
@@ -480,12 +483,22 @@ class SystemLinkage(PathLinkage):
         pkg_config = get_pkg_config(env)
         if pcnames:
             try:
-                subprocess_run(pkg_config + pcnames, check=True,
-                               stdout=subprocess.DEVNULL,
-                               stderr=subprocess.DEVNULL,
-                               env=env)
+                subprocess_run(
+                    pkg_config + ['--print-errors'] + pcnames, text=True,
+                    check=True, stdout=subprocess.DEVNULL,
+                    stderr=subprocess.PIPE, env=env
+                )
                 return self._linkage(submodules, pcnames=pcnames,
                                      pkg_config_path=[])
-            except (OSError, subprocess.CalledProcessError):
+            except subprocess.CalledProcessError as e:
+                msg = 'pkg-config failed to find package{} {}'.format(
+                    's' if len(pcnames) > 1 else '',
+                    ', '.join(repr(i) for i in pcnames)
+                )
+                stderr = e.stderr.strip()
+                if stderr:
+                    msg += ':\n' + textwrap.indent(stderr, ' ' * 2)
+                log.warning(msg)
+            except OSError:
                 pass
         return super().get_linkage(metadata, pkg, submodules)

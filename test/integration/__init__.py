@@ -346,15 +346,15 @@ class SubprocessTestCase(unittest.TestCase):
     def assertNotExists(self, path):
         self.assertExistence(path, False)
 
-    def assertPopen(self, command, *, env=None, extra_env=None, returncode=0):
+    def assertPopen(self, command, *, env=None, extra_env=None, returncode=0,
+                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT):
         final_env = env if env is not None else os.environ
         if extra_env:
             final_env = final_env.copy()
             final_env.update(extra_env)
 
         proc = subprocess.run(
-            command, text=True, stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT, env=final_env
+            command, text=True, stdout=stdout, stderr=stderr, env=final_env
         )
         if not (returncode == 'any' or
                 (returncode == 'fail' and proc.returncode != 0) or
@@ -403,11 +403,13 @@ class IntegrationTest(SubprocessTestCase):
             'yaml': yaml.safe_load,
         }
 
-        output = self.assertPopen(mopack_cmd(
-            'linkage', str(Dependency(name, submodules)),
-            *(['--json'] if format == 'json' else []),
-            *extra_args
-        ), extra_env=extra_env, returncode=returncode)
+        output = self.assertPopen(
+            mopack_cmd('linkage', str(Dependency(name, submodules)),
+                       *(['--json'] if format == 'json' else []),
+                       *extra_args),
+            extra_env=extra_env, returncode=returncode,
+            stderr=subprocess.DEVNULL
+        )
         if returncode == 0:
             self.assertEqual(loader[format](output), linkage)
         return output

@@ -36,7 +36,8 @@ class SDistTestCase(OriginTest):
                        'pkg_config_path': [self.pkgconfdir('foo')]}
 
         with mock.patch('mopack.linkages.path_system.file_outdated',
-                        return_value=False):
+                        return_value=False), \
+             mock.patch('mopack.log.warning'):
             self.assertEqual(pkg.get_linkage(self.metadata, submodules),
                              linkage)
 

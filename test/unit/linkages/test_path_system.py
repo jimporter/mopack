@@ -110,7 +110,8 @@ class TestPath(LinkageTest):
              mock.patch('mopack.linkages.path_system._system_lib_names',
                         return_value=['lib{}.so']), \
              mock.patch('mopack.linkages.path_system.isfile',
-                        mock_isfile):
+                        mock_isfile), \
+             mock.patch('mopack.log.warning'):
             self.assertEqual(linkage.get_linkage(metadata, pkg, submodules),
                              expected)
 

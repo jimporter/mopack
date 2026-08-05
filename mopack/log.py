@@ -6,8 +6,8 @@ import subprocess
 import textwrap
 import warnings
 from contextlib import contextmanager
-from logging import (getLogger, info, debug,  # noqa: F401
-                     CRITICAL, ERROR, WARNING, INFO, DEBUG)
+from logging import (getLogger, critical, error, warning, info,  # noqa: F401
+                     debug, CRITICAL, ERROR, WARNING, INFO, DEBUG)
 
 from .iterutils import listify
 from .environment import nest_env
