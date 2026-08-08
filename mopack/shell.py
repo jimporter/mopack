@@ -235,7 +235,7 @@ class ShellArguments(MutableSequence):
         return [auto_dehydrate(i) for i in self]
 
     @classmethod
-    def rehydrate(self, value, **kwargs):
+    def rehydrate(cls, value, **kwargs):
         global_version = kwargs['_global_version']
 
         def rehydrate_each(value):
