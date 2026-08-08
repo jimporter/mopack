@@ -149,6 +149,10 @@ class FreezeDried:
     def __eq__(self, rhs):
         return self.equal(rhs)
 
+    def __repr__(self):
+        members = ', '.join('{}={!r}'.format(*i) for i in vars(self).items())
+        return '<{}({})>'.format(type(self).__name__, members)
+
 
 def _generic_rehydrator(fn):
     @functools.wraps(fn)
