@@ -208,7 +208,6 @@ pkg_config_path: &lt;list[path]&gt;
       type: system
       version: &lt;string&gt;
       pcname: &lt;string&gt;  # system only
-      dependencies: &lt;list[dependency]&gt;
       include_path: &lt;list[path]&gt;
       library_path: &lt;list[path]&gt;
       headers: &lt;list[header]&gt;
@@ -225,9 +224,6 @@ pkg_config_path: &lt;list[path]&gt;
   <a href="../packages/">submodules</a> are <em>required</em> for this package, this instead
   defaults to <code>null</code>. If this file isn't found, use the other options to
   generate a pkg-config file.</dd>
-<dt><code>dependencies</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
-<dd>A list of package dependencies that are required to use this package. This
-  corresponds to the <code>Requires</code> field of a pkg-config <code>.pc</code> file.</dd>
 <dt><code>include_path</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dd>A list of paths to search for header files (as specified in <code>headers</code>). Any
   paths that include the required headers will be used when compiling with this
@@ -258,7 +254,6 @@ pkg_config_path: &lt;list[path]&gt;
       # ...
       submodule_linkage:
         - pcname: &lt;string&gt;  # system only
-          dependencies: &lt;list[dependency]&gt;
           include_path: &lt;list[path]&gt;
           library_path: &lt;list[path]&gt;
           headers: &lt;list[header]&gt;
@@ -270,7 +265,6 @@ pkg_config_path: &lt;list[path]&gt;
 <dt><code>pcname</code> <span class="subtitle"><em>optional, default</em>: <code>{my_pkg}</code></span></dt>
 <dd>The name of the pkg-config <code>.pc</code> file, without the extension. If this file
   isn't found, use the other options to generate a pkg-config file.</dd>
-<dt><code>dependencies</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dt><code>include_path</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dt><code>library_path</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dt><code>headers</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>

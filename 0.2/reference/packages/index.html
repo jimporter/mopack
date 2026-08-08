@@ -155,6 +155,7 @@ all the necessary details to actually use it in the parent project.</p>
     inherit_defaults: &lt;boolean&gt;
     deploy: &lt;boolean&gt;
     submodules: &lt;submodules&gt;
+    submodule_required: &lt;boolean&gt;
 </code></pre>
 <dl>
 <dt><code>origin</code> <span class="subtitle"><em>required</em></span></dt>
@@ -167,34 +168,40 @@ all the necessary details to actually use it in the parent project.</p>
 <dt><code>deploy</code> <span class="subtitle"><em>optional, default</em>: <code>true</code></span></dt>
 <dd>If true, deploy this package when calling <code>mopack deploy</code>.</dd>
 <dt><code>submodules</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
-<dd>A list of available submodules, or <code>*</code> to indicate that any submodule name
-  should be accepted. If this is specified, using this package via <code>mopack
-  linkage</code> <em>must</em> specify a submodule. To declare that submodules are optional for
-  linkage, you can specify a dictionary:<pre><code>submodules:
-  names: &lt;submodules&gt;
-  required: false
-</code></pre>
-</dd>
+<dd>A dictionary of available submodule names, or <code>*</code> to indicate that any
+  submodule name should be accepted.</dd>
 </dl>
 <p>This can also be set in a package's <a href="../file-structure/#exports"><code>export</code></a>
   section.</p>
+<dl>
+<dt><code>submodule_required</code> <span class="subtitle"><em>optional, default</em>: <code>true</code> or <code>null</code></span></dt>
+<dd>If this is true (the default when <code>submodules</code> is non-<code>null</code>), using this
+  package via <code>mopack linkage</code> <em>must</em> specify a submodule. When the package has
+  no submodules, this must be <code>null</code>.</dd>
+</dl>
+<p>As with <code>submodules</code>, this can also be set in a package's
+  <a href="../file-structure/#exports"><code>export</code></a> section.</p>
 <h2 id="source-distributions">Source distributions<a class="headerlink" href="#source-distributions" title="Permanent link">§</a></h2>
-<h3 id="directory">directory<a class="headerlink" href="#directory" title="Permanent link">§</a></h3>
 <pre><code class="language-yaml">packages:
   my_pkg:
-    origin: directory
+    dependencies: &lt;list[dependency]&gt;
+    submodules:
+      my_submodule:
+        dependencies: &lt;list[dependency]&gt;
+      # ...
     env: &lt;env_vars&gt;
-    path: &lt;path&gt;
     build: &lt;build&gt;
     linkage: &lt;linkage&gt;
 </code></pre>
 <dl>
+<dt><code>dependencies</code> <span class="subtitle"><em>optional, default</em>: <em>from package</em></span></dt>
+<dd>A list of package dependencies that are required to use this package. By
+  default, this field is equal to the list of package dependencies defined in
+  <em>my_pkg</em>'s <code>mopack.yml</code> file.</dd>
 <dt><code>env</code> <span class="subtitle"><em>optional, default</em>: <code>{}</code></span></dt>
 <dd>A dictionary of environment variables to use when running any commands for
   this builder. This partially overrides any environment variables set
   <a href="../file-structure/#options">globally</a>.</dd>
-<dt><code>path</code> <span class="subtitle"><em>required</em></span></dt>
-<dd>The path to the source directory of the dependency.</dd>
 <dt><code>build</code> <span class="subtitle"><em>required</em></span></dt>
 <dd>The <a href="../builders/">builders</a> to use when resolving this package. This can
   either be a single builder or a list thereof. Note that while this is
@@ -206,24 +213,27 @@ all the necessary details to actually use it in the parent project.</p>
   the dependency can also define the linkage in its
   <a href="../file-structure/#exports"><code>export</code></a> section.</dd>
 </dl>
+<h3 id="directory">directory<a class="headerlink" href="#directory" title="Permanent link">§</a></h3>
+<pre><code class="language-yaml">packages:
+  my_pkg:
+    origin: directory
+    path: &lt;path&gt;
+</code></pre>
+<dl>
+<dt><code>path</code> <span class="subtitle"><em>required</em></span></dt>
+<dd>The path to the source directory of the dependency.</dd>
+</dl>
 <h3 id="git">git<a class="headerlink" href="#git" title="Permanent link">§</a></h3>
 <pre><code class="language-yaml">packages:
   my_pkg:
     origin: git
-    env: &lt;env_vars&gt;
     repository: &lt;url | path&gt;
     tag: &lt;tag_name&gt;  # or...
     branch: &lt;branch_name&gt;  # or...
     commit: &lt;commit_sha&gt;
     srcdir: &lt;inner_path&gt;
-    build: &lt;build&gt;
-    linkage: &lt;linkage&gt;
 </code></pre>
 <dl>
-<dt><code>env</code> <span class="subtitle"><em>optional, default</em>: <code>{}</code></span></dt>
-<dd>A dictionary of environment variables to use when running any commands for
-  this builder. This partially overrides any environment variables set
-  <a href="../file-structure/#options">globally</a>.</dd>
 <dt><code>repository</code> <span class="subtitle"><em>required</em></span></dt>
 <dd>The URL or path to the repository.</dd>
 <dt><code>tag</code> <span class="subtitle"><em>optional</em></span></dt>
@@ -233,34 +243,18 @@ all the necessary details to actually use it in the parent project.</p>
   specified.</dd>
 <dt><code>srcdir</code> <span class="subtitle"><em>optional; default:</em> <code>.</code></span></dt>
 <dd>The directory within the repository containing the dependency's source code.</dd>
-<dt><code>build</code> <span class="subtitle"><em>required</em></span></dt>
-<dd>The <a href="../builders/">builders</a> to use when resolving this package. This can
-  either be a single builder or a list thereof. Note that while this is
-  required, it can be unset if the dependency defines the builder in its
-  <a href="../file-structure/#exports"><code>export</code></a> section.</dd>
-<dt><code>linkage</code> <span class="subtitle"><em>optional, default: from builder</em></span></dt>
-<dd>The <a href="../linkage/">linkage</a> to use when using this package. Some builders require
-  this to be set, but others provide a default linkage specification; the
-  dependency can also define the linkage in its <code>export</code> section.</dd>
 </dl>
 <h3 id="tarball">tarball<a class="headerlink" href="#tarball" title="Permanent link">§</a></h3>
 <pre><code class="language-yaml">packages:
   my_pkg:
     origin: tarball
-    env: &lt;env_vars&gt;
     path: &lt;path&gt;  # or...
     url: &lt;url&gt;
     files: &lt;list[glob]&gt;
     srcdir: &lt;inner_path&gt;
     patch: &lt;path&gt;
-    build: &lt;build&gt;
-    linkage: &lt;linkage&gt;
 </code></pre>
 <dl>
-<dt><code>env</code> <span class="subtitle"><em>optional, default</em>: <code>{}</code></span></dt>
-<dd>A dictionary of environment variables to use when running any commands for
-  this builder. This partially overrides any environment variables set
-  <a href="../file-structure/#options">globally</a>.</dd>
 <dt><code>path</code> <span class="subtitle"><em>required</em></span></dt>
 <dt><code>url</code></dt>
 <dd>The path or URL to the archive. Exactly one of these must be specified.</dd>
@@ -271,15 +265,6 @@ all the necessary details to actually use it in the parent project.</p>
 <dd>The directory within the repository containing the dependency's source code.</dd>
 <dt><code>patch</code> <span class="subtitle"><em>optional; default:</em> <code>null</code></span></dt>
 <dd>The path to a patch file to apply to the extract source files.</dd>
-<dt><code>build</code> <span class="subtitle"><em>required</em></span></dt>
-<dd>The <a href="../builders/">builders</a> to use when resolving this package. This can
-  either be a single builder or a list thereof. Note that while this is
-  required, it can be unset if the dependency defines the builder in its
-  <a href="../file-structure/#exports"><code>export</code></a> section.</dd>
-<dt><code>linkage</code> <span class="subtitle"><em>optional, default: from builder</em></span></dt>
-<dd>The <a href="../linkage/">linkage</a> to use when using this package. Some builders require
-  this to be set, but others provide a default linkage specification; the
-  dependency can also define the linkage in its <code>export</code> section.</dd>
 </dl>
 <h2 id="other-origins">Other origins<a class="headerlink" href="#other-origins" title="Permanent link">§</a></h2>
 <h3 id="apt">apt<a class="headerlink" href="#apt" title="Permanent link">§</a></h3>
@@ -340,9 +325,12 @@ all the necessary details to actually use it in the parent project.</p>
 <pre><code class="language-yaml">packages:
   my_pkg:
     origin: system
+    dependencies: &lt;list[dependency]&gt;
+    submodules:
+      my_submodule:
+        dependencies: &lt;list[dependency]&gt;
     version: &lt;string&gt;
     pcname: &lt;string&gt;
-    dependencies: &lt;list[dependency]&gt;
     include_path: &lt;list[path]&gt;
     library_path: &lt;list[path]&gt;
     headers: &lt;list[header]&gt;
@@ -356,9 +344,11 @@ all the necessary details to actually use it in the parent project.</p>
       # ...
 </code></pre>
 <dl>
+<dt><code>dependencies</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
+<dd>A list of package dependencies that are required to use this package. This
+  corresponds to the <code>Requires</code> field of a pkg-config <code>.pc</code> file.</dd>
 <dt><code>version</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dt><code>pcname</code> <span class="subtitle"><em>optional, default</em>: <code>{my_pkg}</code></span></dt>
-<dt><code>dependencies</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dt><code>include_path</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dt><code>library_path</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
 <dt><code>headers</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>

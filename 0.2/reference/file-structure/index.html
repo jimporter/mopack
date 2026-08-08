@@ -158,19 +158,18 @@ it as a dependency, when used as a <a href="../packages/#source-distributions">s
 distribution</a>.</p>
 <pre><code class="language-yaml">export:
   submodules: &lt;submodules&gt;
+  submodule_required: &lt;boolean&gt;
   build: &lt;build&gt;
   linkage: &lt;linkage&gt;
 </code></pre>
 <dl>
 <dt><code>submodules</code> <span class="subtitle"><em>optional, default</em>: <code>null</code></span></dt>
-<dd>A list of available submodules, or <code>*</code> to indicate that any submodule name
-  should be accepted. If this is specified, using this package via <code>mopack
-  linkage</code> <em>must</em> specify a submodule. To declare that submodules are optional
-  for linkage, you can specify a dictionary:<pre><code>submodules:
-  names: &lt;submodules&gt;
-  required: false
-</code></pre>
-</dd>
+<dd>A dictionary of available submodule names, or <code>*</code> to indicate that any
+  submodule name should be accepted.</dd>
+<dt><code>submodule_required</code> <span class="subtitle"><em>optional, default</em>: <code>true</code> or <code>null</code></span></dt>
+<dd>If this is true (the default when <code>submodules</code> is non-<code>null</code>), using this
+  package via <code>mopack linkage</code> <em>must</em> specify a submodule. When the package has
+  no submodules, this must be <code>null</code>.</dd>
 <dt><code>build</code> <span class="subtitle"><em>optional, default:</em> <code>null</code></span></dt>
 <dd>The <a href="../builders/">builder</a> to use when resolving this package. If unspecified,
   other packages using this one will have to define the <code>build</code> in their own

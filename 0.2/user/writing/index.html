@@ -355,7 +355,9 @@ available submodule names:</p>
     origin: tarball
     path: greeter-1.0.tar.gz
     build: bfg9000
-    submodules: ['french', 'english']
+    submodules:
+      french:
+      english:
 </code></pre>
 <p>This specifies a package with two submodules, <em>requiring</em> at least one to be
 specified whenever <a href="../resolving/#linkage"><code>mopack linkage</code></a> is invoked.</p></div>
