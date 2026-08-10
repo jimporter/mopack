@@ -85,8 +85,7 @@ def fetch(config, pkgdir):
 
     # Clean out old package data if needed.
     for pkg in config.packages.values():
-        old = old_metadata.packages.pop(pkg.name, None)
-        if old:
+        if old := old_metadata.packages.pop(pkg.name, None):
             old.clean_post(old_metadata, pkg)
 
     # Clean removed packages.

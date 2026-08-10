@@ -105,8 +105,7 @@ class Glob:
 
     def match(self, path):
         path_bits = path.replace('\\', '/').split(posixpath.sep)
-        is_directory = path_bits[-1] == ''
-        if is_directory:
+        if is_directory := (path_bits[-1] == ''):
             del path_bits[-1]
         path_bits = list_view(path_bits)
 

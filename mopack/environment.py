@@ -110,18 +110,15 @@ _c_to_pkgconf = _make_command_converter([
 
 
 def get_c_compiler(env=os.environ):
-    cmd = env.get('CC')
-    if cmd:
+    if cmd := env.get('CC'):
         return split_native_str(cmd)
 
     candidates = []
-    sibling = env.get('OBJC')
-    if sibling:
+    if sibling := env.get('OBJC'):
         candidates.append(sibling)
 
     for i in ['CXX', 'OBJCXX']:
-        sibling = env.get(i)
-        if sibling:
+        if sibling := env.get(i):
             cmd = _cxx_to_c(sibling)
             if cmd is not None:
                 candidates.append(cmd)
@@ -135,8 +132,7 @@ def get_c_compiler(env=os.environ):
 
 
 def get_pkg_config(env=os.environ):
-    cmd = env.get('PKG_CONFIG')
-    if cmd:
+    if cmd := env.get('PKG_CONFIG'):
         return split_native_str(cmd)
 
     sibling = get_c_compiler(env)

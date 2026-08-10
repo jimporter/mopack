@@ -496,8 +496,7 @@ class SystemLinkage(PathLinkage):
                     's' if len(pcnames) > 1 else '',
                     ', '.join(repr(i) for i in pcnames)
                 )
-                stderr = e.stderr.strip()
-                if stderr:
+                if stderr := e.stderr.strip():
                     msg += ':\n' + textwrap.indent(stderr, ' ' * 2)
                 log.warning(msg)
             except OSError:

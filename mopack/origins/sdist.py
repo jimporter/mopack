@@ -128,8 +128,7 @@ class SDistPackage(UnmanagedPackage):
     def path_values(self, metadata, *, with_builders=True):
         result = super().path_values(metadata)
 
-        srcdir = self._srcdir(metadata)
-        if srcdir:
+        if srcdir := self._srcdir(metadata):
             result['srcdir'] = srcdir
 
         if with_builders:

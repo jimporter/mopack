@@ -145,13 +145,11 @@ class OptionsTest(TestCase):
             options.common.finalize()
 
         for i in metadata.entry_points(group='mopack.origins'):
-            opts_type = i.load().Options
-            if opts_type:
+            if opts_type := i.load().Options:
                 options.origins[opts_type.origin] = opts_type()
 
         for i in metadata.entry_points(group='mopack.builders'):
-            opts_type = i.load().Options
-            if opts_type:
+            if opts_type := i.load().Options:
                 options.builders[opts_type.type] = opts_type()
 
         return options
