@@ -163,8 +163,7 @@ class TestSplitPosix(TestCase):
         self.assertSplitEqual('foo bar baz', ('foo', 'bar', 'baz'), type=tuple)
 
     def test_escapes(self):
-        self.assertSplitEqual('foo\\ bar', ['foo\\', 'bar'])
-        self.assertSplitEqual('foo\\ bar', ['foo bar'], escapes=True)
+        self.assertSplitEqual('foo\\ bar', ['foo bar'])
 
     def test_placeholder(self):
         self.assertEqual(split_posix(srcdir_ph), ShellArguments([srcdir_ph]))

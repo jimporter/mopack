@@ -656,8 +656,7 @@ class TestShellArgs(TypeTestCase):
         self.assertShellArgs(['foo', 'bar baz'], ['foo', 'bar baz'])
 
     def test_escapes(self):
-        self.assertShellArgs('foo\\ bar', ['foo\\', 'bar'])
-        self.assertShellArgs('foo\\ bar', ['foo bar'], escapes=True)
+        self.assertShellArgs('foo\\ bar', ['foo bar'])
 
     def test_placeholder_string(self):
         self.assertShellArgs(srcdir_ph, [srcdir_ph])

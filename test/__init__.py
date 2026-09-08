@@ -40,6 +40,6 @@ def call_pkg_config(package, options, *, fn=lambda x: x, path=None,
     ).stdout.strip()
 
     if split:
-        return [fn(i) for i in split_posix_str(output, escapes=True)]
+        return [fn(i) for i in split_posix_str(output)]
     else:
         return fn(output)

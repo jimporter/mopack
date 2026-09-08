@@ -23,6 +23,10 @@
   `required` field, use `submodule_required` instead
 - `dependencies` are now defined at the package level, instead of in the linkage
 
+### Bug fixes
+- On POSIX systems, backslashes in command strings are now properly treated as
+  escapes
+
 ---
 
 ## v0.1.0 (2023-05-15)

@@ -405,7 +405,7 @@ def dependency(field, value):
         return Dependency(string(field, value))
 
 
-def shell_args(none_ok=False, escapes=False):
+def shell_args(none_ok=False):
     def check_item(field, value):
         with ensure_field_error(field):
             if isinstance(value, (str, PlaceholderString)):
@@ -424,7 +424,7 @@ def shell_args(none_ok=False, escapes=False):
                                       enumerate(value))
 
         with ensure_field_error(field):
-            return split_posix(value, escapes=escapes)
+            return split_posix(value)
 
     return check
 

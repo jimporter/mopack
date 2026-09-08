@@ -137,13 +137,11 @@ def quote_native(s, force=False):
     return quote_posix(s, force)
 
 
-def split_posix_str(s, type=list, escapes=False):
+def split_posix_str(s, type=list):
     if not isinstance(s, str):
         raise TypeError('expected a string')
     lexer = shlex(s, posix=True)
     lexer.commenters = ''
-    if not escapes:
-        lexer.escape = ''
     lexer.whitespace_split = True
     return type(lexer)
 
