@@ -180,12 +180,12 @@ setup(
 
     python_requires='>=3.8',
     install_requires=['colorama', 'importlib_metadata',
-                      'importlib_resources >= 6.4', 'pyparsing >= 3.0',
-                      'pyyaml'],
+                      'importlib_resources >= 6.4',
+                      'pyparsing >= 3.0, != 3.3.3', 'pyyaml', 'verspec'],
     extras_require={
         'dev': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6',
                 'flake8-quotes', 'mike >= 2.0.0',
-                'mkdocs-bootswatch-classic >= 1.0', 'verspec', 'shtab'],
+                'mkdocs-bootswatch-classic >= 1.0', 'shtab'],
         'test': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6',
                  'flake8-quotes', 'shtab'],
     },
