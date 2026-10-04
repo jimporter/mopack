@@ -2,6 +2,30 @@ cmake_minimum_required(VERSION 3.0...4.0)
 
 find_package(PkgConfig REQUIRED)
 
+macro(_to_unix_path VAR)
+  string(REPLACE ";" ":" ${VAR} "${${VAR}}")
+endmacro()
+
+macro(_to_windows_path VAR)
+  string(REPLACE ":" ";" ${VAR} "${${VAR}}")
+endmacro()
+
+macro(_get_path KIND OUTVAR)
+  string(TOUPPER ${KIND} _get_path_kindupper)
+  list(TRANSFORM CMAKE_SYSTEM_PREFIX_PATH APPEND "/${KIND}"
+    OUTPUT_VARIABLE ${OUTVAR})
+  # Remove any double-slashes from our list; `CMAKE_SYSTEM_PREFIX_PATH` can
+  # include just "/" as a directory.
+  string(REPLACE "//" "/" ${OUTVAR} "${${OUTVAR}}")
+
+  list(APPEND ${OUTVAR} ${CMAKE_SYSTEM_${_get_path_kindupper}_PATH})
+  list(PREPEND ${OUTVAR} ${CMAKE_${_get_path_kindupper}_PATH})
+
+  set(_get_path_env $ENV{CMAKE_${_get_path_kindupper}_PATH})
+  _to_windows_path(_get_path_env)
+  list(PREPEND ${OUTVAR} ${_get_path_env})
+endmacro()
+
 function(_checked_execute_error COMMAND STATUS STDERR)
   set(errmsg "${COMMAND} failed with status ${STATUS}")
     if(NOT STDERR STREQUAL "")
@@ -35,6 +59,37 @@ macro(_jq FILE)
 endmacro()
 
 function(mopack_resolve)
+  # First, set up environment variables for mopack.
+
+  # MOPACK_INCLUDE_PATH
+  _get_path(include include_path)
+  if(NOT WINDOWS)
+    _to_unix_path(include_path)
+  endif()
+  set(ENV{MOPACK_INCLUDE_PATH} "${include_path}")
+
+  # MOPACK_LIB_PATH
+  _get_path(lib lib_path)
+  if(NOT WINDOWS)
+    _to_unix_path(lib_path)
+  endif()
+  set(ENV{MOPACK_LIB_PATH} "${lib_path}")
+
+  # MOPACK_LIB_NAMES
+  set(lib_names "\
+${CMAKE_STATIC_LIBRARY_PREFIX}{}${CMAKE_STATIC_LIBRARY_SUFFIX};\
+${CMAKE_SHARED_LIBRARY_PREFIX}{}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+  if(NOT WINDOWS)
+    _to_unix_path(lib_names)
+  endif()
+  set(ENV{MOPACK_LIB_NAMES} ${lib_names})
+
+  # MOPACK_AUTO_LINE
+  if(MSVC)
+    set(ENV{MOPACK_AUTO_LINK} "true")
+  endif()
+
+  # Finally, call `mopack resolve`.
   execute_process(
     COMMAND mopack resolve ${CMAKE_SOURCE_DIR} --directory ${CMAKE_BINARY_DIR}
     ERROR_VARIABLE stderr
@@ -56,7 +111,7 @@ function(mopack_linkage package)
   _jq(${linkage_file} QUERY ".pcnames | join(\" \")" OUT pkgconf_pcnames)
 
   if(WINDOWS)
-    string(REPLACE ":" ";" pkgconf_path "${pkgconf_path}")
+    _to_windows_path(pkgconf_path)
   endif()
 
   set(ENV{PKG_CONFIG_PATH} "${pkgconf_path}")
