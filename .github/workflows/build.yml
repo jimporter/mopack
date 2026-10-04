@@ -164,7 +164,7 @@ jobs:
         with:
           files: ./coverage.xml
   build-cygwin:
-    name: build (windows-latest[cygwin], 3.8)
+    name: build (windows-latest[cygwin], 3.12)
     runs-on: windows-latest
     env:
       CYGROOT: C:\cygwin
@@ -180,8 +180,8 @@ jobs:
 
           .\setup-x86_64.exe -qgnNdO -R %CYGROOT% -l %CYGCACHE%
           -s http://mirrors.kernel.org/sourceware/cygwin/
-          -P cmake,gcc-g++,git,jq,libboost-devel,make,ninja,pkg-config,python38
-          -P python38-pip,python38-setuptools,python38-wheel
+          -P cmake,gcc-g++,git,jq,libboost-devel,make,ninja,pkg-config,python312
+          -P python312-pip,python312-setuptools,python312-wheel
       - name: Copy mopack to Cygwin
         run: |
           echo "MOPACK_INCLUDE_PATH=/usr/include" >> .mopack_test_env
@@ -194,7 +194,8 @@ jobs:
         run: >
           C:\cygwin\bin\bash -lc
           "cd mopack &&
-          pip3.8 install git+https://github.com/jimporter/bfg9000.git '.[test]'"
+          pip3.12 install git+https://github.com/jimporter/bfg9000.git
+          '.[test]'"
       - name: Configure environment
         run: >
           C:\cygwin\bin\bash -lc
@@ -208,7 +209,7 @@ jobs:
         run: >
           C:\cygwin\bin\bash -lc
           "cd mopack &&
-          python3.8 setup.py coverage -q &&
+          python3.12 setup.py coverage -q &&
           coverage xml"
       - name: Copy coverage from Cygwin
         run: |
