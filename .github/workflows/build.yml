@@ -187,22 +187,23 @@ jobs:
           echo "MOPACK_INCLUDE_PATH=/usr/include" >> .mopack_test_env
           echo "MOPACK_LIB_NAMES=lib{}.dll.a" >> .mopack_test_env
           echo "MOPACK_LIB_PATH=/usr/lib" >> .mopack_test_env
+
           robocopy . ${env:CYGROOT}\home\runneradmin\mopack /E
           if(${LastExitCode} -le 7) { ${LastExitCode} = 0 }
-      - name: Install Conan
-        run: >
-          C:\cygwin\bin\bash -lc
-          "pip3.8 install conan &&
-          conan profile detect &&
-          sed -i 's/CYGWIN_NT.*/Windows/' ~/.conan2/profiles/default &&
-          echo tools.microsoft.bash:subsystem=cygwin >> ~/.conan2/global.conf &&
-          echo tools.microsoft.bash:active=True >> ~/.conan2/global.conf &&
-          echo tools.cmake.cmaketoolchain:generator=Ninja >> ~/.conan2/global.conf"
       - name: Install Python dependencies
         run: >
           C:\cygwin\bin\bash -lc
           "cd mopack &&
           pip3.8 install git+https://github.com/jimporter/bfg9000.git '.[test]'"
+      - name: Configure environment
+        run: >
+          C:\cygwin\bin\bash -lc
+          "conan profile detect &&
+          sed -i 's/CYGWIN_NT.*/Windows/' ~/.conan2/profiles/default &&
+          echo tools.microsoft.bash:subsystem=cygwin >> ~/.conan2/global.conf &&
+          echo tools.microsoft.bash:active=True >> ~/.conan2/global.conf &&
+          echo tools.cmake.cmaketoolchain:generator=Ninja >> ~/.conan2/global.conf &&
+          ln -s /usr/bin/make /usr/bin/gmake"
       - name: Run tests
         run: >
           C:\cygwin\bin\bash -lc
