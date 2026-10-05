@@ -2,6 +2,14 @@ cmake_minimum_required(VERSION 3.0...4.0)
 
 find_package(PkgConfig REQUIRED)
 
+if(DEFINED ENV{MOPACK})
+  set(_MOPACK $ENV{MOPACK})
+  separate_arguments(_MOPACK NATIVE_COMMAND ${_MOPACK})
+else()
+  set(_MOPACK "mopack")
+endif()
+set(MOPACK ${_MOPACK} CACHE PATH "mopack command")
+
 macro(_to_unix_path VAR)
   string(REPLACE ";" ":" ${VAR} "${${VAR}}")
 endmacro()
@@ -90,20 +98,22 @@ ${CMAKE_SHARED_LIBRARY_PREFIX}{}${CMAKE_SHARED_LIBRARY_SUFFIX}")
   endif()
 
   # Finally, call `mopack resolve`.
+  message(STATUS "Resolving mopack dependencies")
   execute_process(
-    COMMAND mopack resolve ${CMAKE_SOURCE_DIR} --directory ${CMAKE_BINARY_DIR}
-    ERROR_VARIABLE stderr
+    COMMAND ${MOPACK} resolve ${CMAKE_SOURCE_DIR}
+      --directory ${CMAKE_BINARY_DIR}
     RESULT_VARIABLE exit_status
   )
   if(NOT ${exit_status} EQUAL 0 AND NOT ${exit_status} EQUAL 3)
-    _checked_execute_error("mopack" "${exit_status}" "${stderr}")
+    _checked_execute_error("mopack" "${exit_status}" "$")
   endif()
+  message(STATUS "Resolving mopack dependencies - done")
 endfunction()
 
 function(mopack_linkage package)
   set(linkage_file "${CMAKE_BINARY_DIR}/.cmake_mopack_linkage")
   _checked_execute_process(
-    COMMAND mopack linkage ${package} --json --directory ${CMAKE_BINARY_DIR}
+    COMMAND ${MOPACK} linkage ${package} --json --directory ${CMAKE_BINARY_DIR}
     OUTPUT_FILE ${linkage_file}
   )
 
