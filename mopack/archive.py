@@ -1,5 +1,6 @@
 import os.path
 import tarfile
+import warnings
 import zipfile
 
 from .path import issemiabs
@@ -41,12 +42,16 @@ class TarArchive(Archive):
         return result
 
     def extract(self, member, path='.'):
-        return self._archive.extract(member.rstrip('/'), path)
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', message='.*filter argument')
+            return self._archive.extract(member.rstrip('/'), path)
 
     def extractall(self, path='.', members=None):
         if members:
             members = (self._archive.getmember(i.rstrip('/')) for i in members)
-        return self._archive.extractall(path, members)
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', message='.*filter argument')
+            return self._archive.extractall(path, members)
 
 
 class ZipArchive(Archive):
