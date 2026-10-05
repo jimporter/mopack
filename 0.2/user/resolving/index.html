@@ -143,6 +143,7 @@
             <li><a href="#resolution">Resolution</a></li>
             <li><a href="#linkage">Linkage</a></li>
             <li><a href="#deployment">Deployment</a></li>
+            <li><a href="#build-system-integration">Build system integration</a></li>
     </ul>
 </div></div>
                 <div class="col-md-9" role="main">
@@ -170,10 +171,11 @@ typically involves downloading the appropriate files from some remote origin
 distributions</a>) and then compiling
 any projects as needed in the proper order, using their respective build
 systems.</p>
-<p>In most cases, this step should occur <em>before</em> configuration of the
-root project's build (for build configuration systems that natively support
-mopack, such as <a href="https://jimporter.github.io/bfg9000/">bfg9000</a>, this happens automatically). However, when
-run manually, users should invoke the following command:</p>
+<p>In most cases, this step should occur <em>before</em> configuration of the root
+project's build (for <a href="#build-system-integration">build configuration systems</a>
+that natively support mopack, such as <a href="https://jimporter.github.io/bfg9000/">bfg9000</a>, this happens
+automatically). However, when run manually, users should invoke the following
+command:</p>
 <pre><code class="language-sh">$ mopack resolve /path/to/project/
 </code></pre>
 <p>This will get all the dependencies specified in <code>/path/to/project/mopack.yml</code>
@@ -226,7 +228,28 @@ destination:</p>
 <pre><code class="language-sh">$ mopack deploy
 </code></pre>
 <p>Any dependency whose <code>deploy</code> property is true (the default) will then be
-deployed.</p></div>
+deployed.</p>
+<h2 id="build-system-integration">Build system integration<a class="headerlink" href="#build-system-integration" title="Permanent link">§</a></h2>
+<p>Some build systems integrate with mopack, or you can install scripts to
+integrate the two.</p>
+<h3 id="bfg9000">bfg9000<a class="headerlink" href="#bfg9000" title="Permanent link">§</a></h3>
+<p><a href="https://jimporter.github.io/bfg9000/">bfg9000</a> contains built-in support for mopack (and in fact, mopack is
+designed with bfg9000 in mind). When configuring a build for bfg9000-based
+project, it will automatically call <code>mopack resolve</code> unless you pass
+<code>--no-resolve-packages</code>. You can also supply additional package files to resolve
+via bfg9000's <code>-p</code>/<code>--package-file</code> option as well as additional flags to pass
+to <code>mopack</code> via <code>-P</code>/<code>--package-flag</code>.</p>
+<h3 id="cmake">CMake<a class="headerlink" href="#cmake" title="Permanent link">§</a></h3>
+<p>CMake can integrate with mopack via the <a href="https://github.com/jimporter/mopack/tree/master/scripts/mopack.cmake">mopack.cmake</a> script.
+After copying that file to your project, you can use it in your <code>CMakeLists.txt</code>
+to resolve packages:</p>
+<pre><code class="language-cmake">include(mopack.cmake)
+mopack_resolve()
+mopack_linkage(my_package)
+
+# ...
+target_link_libraries(some_program PUBLIC PkgConfig::my_package)
+</code></pre></div>
         </div>
 
         <footer class="col-md-12">
