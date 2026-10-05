@@ -7,6 +7,7 @@ configurations using expressions.
 
 ## Introducing expressions
 
+{% raw %}
 You can introduce expressions with `${{ ... }}`, or `$` if the expression is
 just a variable name:
 
@@ -23,6 +24,7 @@ packages:
       # ...
       compile_flags: -I$srcdir/include
 ```
+{% endraw %}
 
 When defining the expression for [conditional package
 definitions](file-structure.md#conditional-package-definitions), this introducer

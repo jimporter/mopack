@@ -23,10 +23,11 @@ distributions](../reference/packages.md#source-distribution)) and then compiling
 any projects as needed in the proper order, using their respective build
 systems.
 
-In most cases, this step should occur *before* configuration of the
-root project's build (for build configuration systems that natively support
-mopack, such as [bfg9000][bfg9000], this happens automatically). However, when
-run manually, users should invoke the following command:
+In most cases, this step should occur *before* configuration of the root
+project's build (for [build configuration systems](#build-system-integration)
+that natively support mopack, such as [bfg9000][bfg9000], this happens
+automatically). However, when run manually, users should invoke the following
+command:
 
 ```sh
 $ mopack resolve /path/to/project/
@@ -104,4 +105,34 @@ $ mopack deploy
 Any dependency whose `deploy` property is true (the default) will then be
 deployed.
 
+## Build system integration
+
+Some build systems integrate with mopack, or you can install scripts to
+integrate the two.
+
+### bfg9000
+
+[bfg9000][bfg9000] contains built-in support for mopack (and in fact, mopack is
+designed with bfg9000 in mind). When configuring a build for bfg9000-based
+project, it will automatically call `mopack resolve` unless you pass
+`--no-resolve-packages`. You can also supply additional package files to resolve
+via bfg9000's `-p`/`--package-file` option as well as additional flags to pass
+to `mopack` via `-P`/`--package-flag`.
+
+### CMake
+
+CMake can integrate with mopack via the [mopack.cmake][mopack-cmake] script.
+After copying that file to your project, you can use it in your `CMakeLists.txt`
+to resolve packages:
+
+```cmake
+include(mopack.cmake)
+mopack_resolve()
+mopack_linkage(my_package)
+
+# ...
+target_link_libraries(some_program PUBLIC PkgConfig::my_package)
+```
+
 [bfg9000]: https://jimporter.github.io/bfg9000/
+[mopack-cmake]: {{ repo_src_url }}scripts/mopack.cmake

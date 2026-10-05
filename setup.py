@@ -185,7 +185,8 @@ setup(
     extras_require={
         'dev': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6',
                 'flake8-quotes', 'mike >= 2.0.0',
-                'mkdocs-bootswatch-classic >= 1.0', 'shtab'],
+                'mkdocs-bootswatch-classic >= 1.0', 'mkdocs-macros-plugin',
+                'shtab'],
         'test': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6',
                  'flake8-quotes', 'shtab'],
     },

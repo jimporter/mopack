@@ -16,6 +16,10 @@ markdown_extensions:
   - def_list
   - toc:
       permalink: §
+plugins:
+  - search
+  - macros:
+      module_name: mkdocs
 
 nav:
   - Home: index.md

@@ -184,10 +184,12 @@ packages:
     linkage: pkg_config
 ```
 
+{% raw %}
 Here, `$builddir` represents a unique path for the current project that it can
 use as a build directory. You can also spell this variable as `${{builddir}}`,
 which can be useful if you need to append some alphanumeric characters to the
 variable's value.
+{% endraw %}
 
 ### Interpolating expressions
 
@@ -196,6 +198,7 @@ we haven't told the build system where to copy `foo_pkg`'s files. Here, we can
 take advantage of expression interpolation to conditionally pass command line
 arguments to bfg9000:
 
+{% raw %}
 ```yaml
 packages:
   foo_pkg:
@@ -214,15 +217,18 @@ packages:
         - ninja install
     linkage: pkg_config
 ```
+{% endraw %}
 
 ### Conditional package specification
 
+{% raw %}
 In some cases, a package's configuration should be *much* different depending on
 the state of a variable, and the variable interpolation described above isn't
 flexible enough to support this easily. To support this, a package's
 configuration can be specified as a *list* of configurations with an added `if`
 key to describe the conditions to use a particular configuration. Note that,
 since `if` always takes an expression, the `$`/`${{ }}` sigil is not required:
+{% endraw %}
 
 ```yaml
 packages:
