@@ -160,6 +160,7 @@ jobs:
           python setup.py coverage -q
           coverage xml
       - name: Upload coverage
+        continue-on-error: true
         uses: codecov/codecov-action@v3
         with:
           files: ./coverage.xml
@@ -215,6 +216,7 @@ jobs:
         run: |
           copy C:\cygwin\home\runneradmin\mopack\coverage.xml .
       - name: Upload coverage
+        continue-on-error: true
         uses: codecov/codecov-action@v3
         with:
           files: ./coverage.xml
