@@ -5,7 +5,7 @@ from enum import Enum
 from itertools import chain
 from shlex import shlex
 
-from verspec.loose import Version
+from inversion.loose import Version
 
 from . import placeholder
 from .freezedried import auto_dehydrate, rehydrate

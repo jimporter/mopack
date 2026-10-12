@@ -2,7 +2,7 @@ import os
 import subprocess
 from unittest import mock
 
-from verspec.loose import Version, SpecifierSet
+from inversion.loose import Version, SpecifierSet
 
 from . import *
 from ... import assert_logging, rehydrate_kwargs

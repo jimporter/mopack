@@ -53,7 +53,7 @@ custom_cmds = {
 }
 
 try:
-    from verspec.python import Version
+    from inversion.python import Version
 
     class DocServe(Command):
         description = 'serve the documentation locally'
@@ -180,8 +180,8 @@ setup(
 
     python_requires='>=3.8',
     install_requires=['colorama', 'importlib_metadata',
-                      'importlib_resources >= 6.4',
-                      'pyparsing >= 3.0, != 3.3.3', 'pyyaml', 'verspec'],
+                      'importlib_resources >= 6.4', 'inversion',
+                      'pyparsing >= 3.0, != 3.3.3', 'pyyaml'],
     extras_require={
         'dev': ['bfg9000', 'conan', 'coverage', 'flake8 >= 3.6',
                 'flake8-quotes', 'mike >= 2.0.0',

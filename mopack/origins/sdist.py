@@ -7,7 +7,7 @@ from io import BytesIO
 from typing import Dict, List, Union
 from urllib.request import urlopen
 
-from verspec.loose import SpecifierSet
+from inversion.loose import SpecifierSet
 
 from . import UnmanagedPackage, dependencies_type
 from .submodules import *
